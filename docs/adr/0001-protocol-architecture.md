@@ -380,7 +380,7 @@ We chose **Option 2 (JSON-RPC to Playwright Server)** because it is the **only o
 - [x] Implement Phase 1: Slice 1 (Server launch) - **Completed 2025-11-05**
 - [x] Implement Phase 1: Slice 2 (Transport layer) - **Completed 2025-11-05**
 - [x] Implement Phase 1: Slice 3 (Connection layer) - **Completed 2025-11-06**
-- [ ] Implement Phase 1: Slice 4 (Object factory)
+- [x] Implement Phase 1: Slice 4 (Object factory) - **Completed 2025-11-06**
 - [ ] Implement Phase 1: Slice 5 (Entry point)
 - [ ] Benchmark IPC performance vs. direct CDP (if concerns arise)
 - [ ] Test cross-browser compatibility (Chromium, Firefox, WebKit)
@@ -391,7 +391,9 @@ We chose **Option 2 (JSON-RPC to Playwright Server)** because it is the **only o
 - [x] Can launch Playwright server from Rust
 - [x] Can send/receive JSON-RPC messages over stdio
 - [x] Can correlate requests/responses with message IDs
-- [ ] Can create protocol objects (Browser, Page, etc.) - In progress (Slice 4)
+- [x] Can create protocol objects (Playwright, BrowserType) - **Completed Slice 4**
+- [x] Can handle protocol lifecycle messages (__create__, __dispose__, __adopt__) - **Completed Slice 4**
+- [ ] Can launch browsers and access full API (Slice 5)
 - [ ] Latency overhead <5ms per operation - To be measured
 - [ ] API matches playwright-python for implemented features
 - [x] Tests pass on macOS, Ubuntu, and Windows (CI validated)
@@ -468,12 +470,31 @@ Phase 1 implementation (see [phase1-protocol-foundation.md](../implementation-pl
    - `#[serde(untagged)]` enum for automatic message discrimination
    - Connection spawns transport loop internally (clean API)
 
-4. **Object Factory** (`src/object_factory.rs`)
-   - Create typed objects from protocol messages
-   - GUID-based object registry
-   - Route events to objects
+4. **Object Factory** (`src/object_factory.rs`) - ✅ Complete (2025-11-06)
+   - Type-to-constructor mapping (`create_object()` function)
+   - Currently supports "Playwright" and "BrowserType"
+   - Extensible for future types (Browser, Page, etc.)
+   - Object registry in Connection (register/unregister/get)
+   - Protocol message handlers: `__create__`, `__dispose__`, `__adopt__`
+   - Event routing to objects by GUID
 
-5. **Entry Point** (`src/playwright.rs`)
+   **Object Factory Implementation Details (2025-11-06):**
+
+   ChannelOwner pattern across all official bindings:
+   - **Base trait/class** for all protocol objects
+   - **GUID-based identity** for object lookup
+   - **Parent-child hierarchy** for lifecycle management
+   - **Channel proxy** for RPC communication
+   - **Event handling** via `on_event()` method
+
+   **Rust approach**:
+   - `ChannelOwner` trait with `ChannelOwnerImpl` base struct
+   - `ConnectionLike` trait for object-safe connection references
+   - `Arc<dyn ChannelOwner>` for polymorphic object storage
+   - Downcasting via `as_any()` for concrete type access
+   - Protocol objects: `Playwright` (root) and `BrowserType`
+
+5. **Entry Point** (`src/playwright.rs`) - ⏳ In Progress (Slice 5)
    - `Playwright::launch()` - Public API
    - Access to `chromium()`, `firefox()`, `webkit()`
 

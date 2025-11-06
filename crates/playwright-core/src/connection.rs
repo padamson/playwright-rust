@@ -63,6 +63,35 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot, Mutex};
 
+use std::future::Future;
+use std::pin::Pin;
+
+/// Trait defining the interface that ChannelOwner needs from a Connection
+///
+/// This trait allows ChannelOwner to work with Connection without needing to know
+/// the generic parameters W and R. The Connection struct implements this trait.
+pub trait ConnectionLike: Send + Sync {
+    /// Send a message to the Playwright server and await response
+    fn send_message(
+        &self,
+        guid: &str,
+        method: &str,
+        params: Value,
+    ) -> Pin<Box<dyn Future<Output = Result<Value>> + Send + '_>>;
+
+    /// Register an object in the connection's registry
+    fn register_object(&self, guid: String, object: Arc<dyn ChannelOwner>);
+
+    /// Unregister an object from the connection's registry
+    fn unregister_object(&self, guid: &str);
+
+    /// Get an object by GUID
+    fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>>;
+}
+
+// Forward declaration - will be used for object registry
+use crate::channel_owner::ChannelOwner;
+
 /// Protocol request message sent to Playwright server
 ///
 /// Format matches Playwright's JSON-RPC protocol:
@@ -212,7 +241,12 @@ where
     transport: Arc<Mutex<PipeTransport<W, R>>>,
     /// Receiver for incoming messages from transport
     message_rx: Arc<Mutex<Option<mpsc::UnboundedReceiver<Value>>>>,
+    /// Registry of all protocol objects by GUID
+    objects: Arc<Mutex<HashMap<String, Arc<dyn ChannelOwner>>>>,
 }
+
+// Type alias for Connection using concrete transport (most common case)
+pub type RealConnection = Connection<tokio::process::ChildStdin, tokio::process::ChildStdout>;
 
 impl<W, R> Connection<W, R>
 where
@@ -248,6 +282,7 @@ where
             callbacks: Arc::new(Mutex::new(HashMap::new())),
             transport: Arc::new(Mutex::new(transport)),
             message_rx: Arc::new(Mutex::new(Some(message_rx))),
+            objects: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -372,18 +407,14 @@ where
 
         while let Some(message_value) = message_rx.recv().await {
             // Parse message as Response or Event
-            match serde_json::from_value::<Message>(message_value.clone()) {
+            match serde_json::from_value::<Message>(message_value) {
                 Ok(message) => {
                     if let Err(e) = self.dispatch(message).await {
                         tracing::error!("Error dispatching message: {}", e);
                     }
                 }
                 Err(e) => {
-                    tracing::error!(
-                        "Failed to parse message: {} - message: {}",
-                        e,
-                        message_value
-                    );
+                    tracing::error!("Failed to parse message: {}", e);
                 }
             }
         }
@@ -438,16 +469,147 @@ where
                 Ok(())
             }
             Message::Event(event) => {
-                // TODO: Implement event dispatch in Slice 4 (Object Factory)
-                // For now, just log events
+                // Handle special protocol methods
+                match event.method.as_str() {
+                    "__create__" => self.handle_create(&event).await,
+                    "__dispose__" => self.handle_dispose(&event).await,
+                    "__adopt__" => self.handle_adopt(&event).await,
+                    _ => {
+                        // Regular event - dispatch to object
+                        match self.objects.lock().await.get(&event.guid) {
+                            Some(object) => {
+                                object.on_event(&event.method, event.params);
+                                Ok(())
+                            }
+                            None => {
+                                tracing::warn!(
+                                    "Event for unknown object: guid={}, method={}",
+                                    event.guid,
+                                    event.method
+                                );
+                                Ok(())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Handle `__create__` protocol message
+    ///
+    /// Creates a new protocol object and registers it in the connection.
+    async fn handle_create(&self, event: &Event) -> Result<()> {
+        use crate::channel_owner::ParentOrConnection;
+        use crate::object_factory::create_object;
+
+        // Extract parameters from event
+        let type_name = event.params["type"]
+            .as_str()
+            .ok_or_else(|| Error::ProtocolError("__create__ missing 'type'".to_string()))?
+            .to_string();
+
+        let object_guid = event.params["guid"]
+            .as_str()
+            .ok_or_else(|| Error::ProtocolError("__create__ missing 'guid'".to_string()))?
+            .to_string();
+
+        let initializer = event.params["initializer"].clone();
+
+        // Determine parent
+        // Note: Root Playwright object creation will be handled separately in Slice 5
+        // via explicit initialization, not via __create__ message
+        let parent_obj = self
+            .objects
+            .lock()
+            .await
+            .get(&event.guid)
+            .cloned()
+            .ok_or_else(|| {
+                Error::ProtocolError(format!("Parent object not found: {}", event.guid))
+            })?;
+
+        // Create object using factory
+        // TODO: optimize - avoid cloning type_name and object_guid by changing create_object to accept &str
+        let object = create_object(
+            ParentOrConnection::Parent(parent_obj.clone()),
+            type_name.clone(),
+            object_guid.clone(),
+            initializer,
+        )?;
+
+        // Register in connection
+        // TODO: optimize - avoid cloning object_guid by using entry API or accepting owned String
+        self.objects
+            .lock()
+            .await
+            .insert(object_guid.clone(), object.clone());
+
+        // Register in parent
+        // TODO: optimize - avoid cloning object_guid by using entry API or accepting owned String
+        parent_obj.add_child(object_guid.clone(), object);
+
+        tracing::debug!("Created object: type={}, guid={}", type_name, object_guid);
+
+        Ok(())
+    }
+
+    /// Handle `__dispose__` protocol message
+    ///
+    /// Disposes an object and removes it from the registry.
+    async fn handle_dispose(&self, event: &Event) -> Result<()> {
+        use crate::channel_owner::DisposeReason;
+
+        let reason = match event.params.get("reason").and_then(|r| r.as_str()) {
+            Some("gc") => DisposeReason::GarbageCollected,
+            _ => DisposeReason::Closed,
+        };
+
+        // Get object from registry
+        let object = self.objects.lock().await.get(&event.guid).cloned();
+
+        if let Some(obj) = object {
+            // Dispose the object (this will remove from parent and unregister)
+            obj.dispose(reason);
+
+            tracing::debug!("Disposed object: guid={}", event.guid);
+        } else {
+            tracing::warn!("Dispose for unknown object: guid={}", event.guid);
+        }
+
+        Ok(())
+    }
+
+    /// Handle `__adopt__` protocol message
+    ///
+    /// Moves a child object from one parent to another.
+    async fn handle_adopt(&self, event: &Event) -> Result<()> {
+        let child_guid = event.params["guid"]
+            .as_str()
+            .ok_or_else(|| Error::ProtocolError("__adopt__ missing 'guid'".to_string()))?;
+
+        // Get new parent and child from registry
+        let new_parent = self.objects.lock().await.get(&event.guid).cloned();
+        let child = self.objects.lock().await.get(child_guid).cloned();
+
+        match (new_parent, child) {
+            (Some(parent), Some(child_obj)) => {
+                parent.adopt(child_obj);
                 tracing::debug!(
-                    "Received event: guid={}, method={}, params={}",
-                    event.guid,
-                    event.method,
-                    event.params
+                    "Adopted object: child={}, new_parent={}",
+                    child_guid,
+                    event.guid
                 );
                 Ok(())
             }
+            (None, _) => Err(Error::ProtocolError(format!(
+                "Parent object not found: {}",
+                event.guid
+            ))),
+            (_, None) => Err(Error::ProtocolError(format!(
+                "Child object not found: {}",
+                child_guid
+            ))),
         }
     }
 }
@@ -458,6 +620,44 @@ fn parse_protocol_error(error: ErrorPayload) -> Error {
         Some("TimeoutError") => Error::Timeout(error.message),
         Some("TargetClosedError") => Error::TargetClosed(error.message),
         _ => Error::ProtocolError(error.message),
+    }
+}
+
+// Implement ConnectionLike trait for Connection
+impl<W, R> ConnectionLike for Connection<W, R>
+where
+    W: tokio::io::AsyncWrite + Unpin + Send + Sync + 'static,
+    R: tokio::io::AsyncRead + Unpin + Send + Sync + 'static,
+{
+    fn send_message(
+        &self,
+        guid: &str,
+        method: &str,
+        params: Value,
+    ) -> Pin<Box<dyn Future<Output = Result<Value>> + Send + '_>> {
+        // Convert to owned strings to avoid lifetime issues
+        let guid = guid.to_string();
+        let method = method.to_string();
+
+        // Box the future returned by the async method
+        Box::pin(async move { Connection::send_message(self, &guid, &method, params).await })
+    }
+
+    fn register_object(&self, guid: String, object: Arc<dyn ChannelOwner>) {
+        // Use blocking_lock since this may be called from sync context
+        self.objects.blocking_lock().insert(guid, object);
+    }
+
+    fn unregister_object(&self, guid: &str) {
+        self.objects.blocking_lock().remove(guid);
+    }
+
+    fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>> {
+        self.objects
+            .blocking_lock()
+            .get(guid)
+            .cloned()
+            .ok_or_else(|| Error::ProtocolError(format!("Object not found: {}", guid)))
     }
 }
 

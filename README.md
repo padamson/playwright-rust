@@ -43,15 +43,17 @@ This means:
 
 ## Quick Example
 
+> **Note:** This example shows the target API. Phase 1 (protocol foundation) is nearly complete, with browser launching (`BrowserType::launch()`) coming in Phase 2.
+
 ```rust
 use playwright::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Launch Playwright
+    // Launch Playwright (Phase 1 - in progress)
     let playwright = Playwright::launch().await?;
 
-    // Launch browser
+    // Launch browser (Phase 2 - coming soon)
     let browser = playwright
         .chromium()
         .launch()
@@ -64,11 +66,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Navigate and interact
     page.goto("https://playwright.dev").await?;
 
-    // Use Playwright-style locators
+    // Use Playwright-style locators (Phase 3)
     let title = page.locator("h1").text_content().await?;
     println!("Title: {}", title);
 
-    // Playwright assertions
+    // Playwright assertions (Phase 4)
     playwright::expect(page.locator(".hero__title"))
         .to_be_visible()
         .await?;
@@ -87,21 +89,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Project Status
 
-**Current Phase:** Foundation & Protocol Implementation
+**Current Phase:** Phase 1 - Protocol Foundation (90% complete, Slice 5 in progress)
 
-- [x] Project structure and planning
-- [ ] JSON-RPC protocol client
-- [ ] Playwright server management (download, launch, lifecycle)
-- [ ] Core API: Browser, Context, Page
-- [ ] Locators and selectors
-- [ ] Actions (click, fill, etc.)
-- [ ] Assertions (`expect()` API)
-- [ ] Screenshots and videos
-- [ ] Network interception
-- [ ] Mobile emulation
-- [ ] Comprehensive test suite
+### Phase 1 Progress (4 of 5 slices complete)
+- [x] **Slice 1:** Server management (download, launch, lifecycle)
+- [x] **Slice 2:** Transport layer (stdio, length-prefixed messages)
+- [x] **Slice 3:** Connection layer (JSON-RPC request/response correlation)
+- [x] **Slice 4:** Object factory and channel owners
+- [ ] **Slice 5:** Entry point (`Playwright::launch()` and initialization flow)
 
-See [Development Roadmap](docs/roadmap.md) for detailed plans.
+### Upcoming Phases
+- [ ] **Phase 2:** Browser API (Browser, Context, Page lifecycle, `BrowserType::launch()`)
+- [ ] **Phase 3:** Page Interactions (navigation, locators, actions)
+- [ ] **Phase 4:** Advanced Features (assertions, network interception, mobile)
+- [ ] **Phase 5:** Production Hardening (comprehensive testing, docs, polish)
+
+See [Development Roadmap](docs/roadmap.md) and [Phase 1 Implementation Plan](docs/implementation-plans/phase1-protocol-foundation.md) for detailed plans.
 
 ## Installation
 
