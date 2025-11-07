@@ -42,7 +42,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 **Goal:** Implement browser launching and basic browser/context/page management with cross-browser testing.
 
-**Status:** In Progress (1/7 slices) - See [phase2-browser-api.md](implementation-plans/phase2-browser-api.md)
+**Status:** In Progress (2/7 slices) - See [phase2-browser-api.md](implementation-plans/phase2-browser-api.md)
 
 **Key Deliverables:**
 - `BrowserType::launch()` - Launch browsers (Chromium, Firefox, WebKit)

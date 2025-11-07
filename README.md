@@ -108,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Project Status
 
-**Current Phase:** 🚀 Phase 2 in Progress (Slice 1/7 Complete)
+**Current Phase:** 🚀 Phase 2 in Progress (Slice 2/7 Complete)
 
 ### Phase 1: Protocol Foundation (✅ Complete!)
 - [x] **Slice 1:** Server management (download, launch, lifecycle)
@@ -119,9 +119,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 **Result:** JSON-RPC communication working, Playwright server integration complete. See [Phase 1 Technical Summary](docs/technical/phase1-technical-summary.md).
 
-### Phase 2: Browser API (🚀 In Progress - 1/7 Slices Complete)
+### Phase 2: Browser API (🚀 In Progress - 2/7 Slices Complete)
 - [x] **Slice 1:** Browser object foundation (protocol object, ChannelOwner, object factory)
-- [ ] **Slice 2:** Launch options API (LaunchOptions struct, builder pattern, normalization)
+- [x] **Slice 2:** Launch options API (LaunchOptions struct, builder pattern, normalization)
 - [ ] **Slice 3:** BrowserType::launch() (RPC implementation, integration tests)
 - [ ] **Slice 4:** Browser::close() (graceful shutdown)
 - [ ] **Slice 5:** BrowserContext object (contexts, isolation)
@@ -229,7 +229,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 ## Roadmap to Broad Adoption
 
 1. ✅ **Phase 1:** Protocol Foundation (complete!)
-2. 🚀 **Phase 2:** Browser API - in progress (1/7 slices)
+2. 🚀 **Phase 2:** Browser API - in progress (2/7 slices)
 3. **Phase 3:** Page Interactions (navigation, locators, actions)
 4. **Phase 4:** Advanced Features (assertions, network, mobile)
 5. **Phase 5:** Production Hardening (testing, docs, polish)
