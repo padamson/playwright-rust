@@ -108,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Project Status
 
-**Current Phase:** 🚀 Phase 2 in Progress (Slice 5/7 Complete)
+**Current Phase:** 🚀 Phase 2 in Progress (Slice 6/7 Complete)
 
 ### Phase 1: Protocol Foundation (✅ Complete!)
 - [x] **Slice 1:** Server management (download, launch, lifecycle)
@@ -119,18 +119,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 **Result:** JSON-RPC communication working, Playwright server integration complete. See [Phase 1 Technical Summary](docs/technical/phase1-technical-summary.md).
 
-### Phase 2: Browser API (🚀 In Progress - 5/7 Slices Complete)
+### Phase 2: Browser API (🚀 In Progress - 6/7 Slices Complete)
 - [x] **Slice 1:** Browser object foundation (protocol object, ChannelOwner, object factory)
 - [x] **Slice 2:** Launch options API (LaunchOptions struct, builder pattern, normalization)
 - [x] **Slice 3:** BrowserType::launch() (RPC implementation, integration tests) ✅
 - [x] **Slice 4:** Browser::close() (graceful shutdown) ✅
 - [x] **Slice 5:** BrowserContext object (Browser::new_context(), BrowserContext::close()) ✅
-- [ ] **Slice 6:** Page object (page creation, basic methods)
+- [x] **Slice 6:** Page object (BrowserContext::new_page(), Browser::new_page(), Page::close()) ✅
 - [ ] **Slice 7:** Documentation and examples
 
 **Goal:** Enable browser launching and page lifecycle management. See [Phase 2 Implementation Plan](docs/implementation-plans/phase2-browser-api.md).
 
-**Latest:** BrowserContext support! Can now create isolated browser contexts with proper cleanup.
+**Latest:** Page support! Can now create pages within contexts. Complete browser → context → page hierarchy working.
 
 ### Upcoming Phases
 - [ ] **Phase 3:** Page Interactions (navigation, locators, actions)

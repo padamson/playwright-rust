@@ -1,11 +1,13 @@
 // Basic example of using Playwright in Rust
 //
-// This example demonstrates the Phase 1 functionality:
+// This example demonstrates Phase 1 & 2 functionality:
 // - Launching Playwright
 // - Accessing browser types (Chromium, Firefox, WebKit)
+// - Launching a browser
+// - Creating a page
+// - Proper cleanup
 //
-// Note: Phase 1 only provides access to browser type objects.
-// Actual browser launching will be implemented in Phase 2.
+// Note: Navigation and interaction will be implemented in Phase 3.
 
 use playwright::Playwright;
 
@@ -27,8 +29,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   • Firefox:  {}", playwright.firefox().executable_path());
     println!("   • WebKit:   {}", playwright.webkit().executable_path());
 
-    println!("\n🎉 Phase 1 complete! Browser types are accessible.");
-    println!("   (Browser launching will be implemented in Phase 2)");
+    // Launch a browser (Phase 2)
+    println!("\n🌐 Launching Chromium...");
+    let browser = playwright.chromium().launch().await?;
+    println!(
+        "✅ Browser launched: {} version {}",
+        browser.name(),
+        browser.version()
+    );
+
+    // Create a page
+    println!("\n📄 Creating page...");
+    let page = browser.new_page().await?;
+    println!("✅ Page created (URL: {})", page.url());
+
+    // Cleanup
+    println!("\n🧹 Cleaning up...");
+    page.close().await?;
+    browser.close().await?;
+
+    println!("\n🎉 Phases 1 & 2 complete!");
+    println!("   (Navigation and interaction coming in Phase 3)");
 
     Ok(())
 }

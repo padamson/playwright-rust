@@ -14,11 +14,13 @@
 pub mod browser;
 pub mod browser_context;
 pub mod browser_type;
+pub mod page;
 pub mod playwright;
 pub mod root;
 
 pub use browser::Browser;
 pub use browser_context::BrowserContext;
 pub use browser_type::BrowserType;
+pub use page::Page;
 pub use playwright::Playwright;
 pub use root::Root;

@@ -5,7 +5,7 @@
 use crate::channel::Channel;
 use crate::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::error::Result;
-use crate::protocol::BrowserContext;
+use crate::protocol::{BrowserContext, Page};
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
@@ -210,6 +210,48 @@ impl Browser {
             })?;
 
         Ok(context.clone())
+    }
+
+    /// Creates a new page in a new browser context.
+    ///
+    /// This is a convenience method that creates a default context and then
+    /// creates a page in it. This is equivalent to calling `browser.new_context().await?.new_page().await?`.
+    ///
+    /// The created context is not directly accessible, but will be cleaned up
+    /// when the page is closed.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    ///
+    /// // Create page directly (creates default context automatically)
+    /// let page = browser.new_page().await?;
+    ///
+    /// // Do work with page...
+    ///
+    /// // Cleanup
+    /// page.close().await?;
+    /// browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Browser has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-new-page>
+    pub async fn new_page(&self) -> Result<Page> {
+        // Create a default context and then create a page in it
+        let context = self.new_context().await?;
+        context.new_page().await
     }
 
     /// Closes the browser and all of its pages (if any were opened).
