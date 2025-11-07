@@ -267,6 +267,43 @@ impl Page {
         frame.title().await
     }
 
+    /// Creates a locator for finding elements on the page.
+    ///
+    /// Locators are the central piece of Playwright's auto-waiting and retry-ability.
+    /// They don't execute queries until an action is performed.
+    ///
+    /// # Arguments
+    ///
+    /// * `selector` - CSS selector or other locating strategy
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// page.goto("https://example.com", None).await?;
+    ///
+    /// // Create a locator
+    /// let heading = page.locator("h1").await;
+    ///
+    /// // Get text content (locator executes now)
+    /// let text = heading.text_content().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-locator>
+    pub async fn locator(&self, selector: &str) -> crate::protocol::Locator {
+        // Get the main frame
+        let frame = self.main_frame().await.expect("Main frame should exist");
+
+        crate::protocol::Locator::new(Arc::new(frame), selector.to_string())
+    }
+
     /// Reloads the current page.
     ///
     /// # Arguments

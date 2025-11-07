@@ -63,6 +63,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Page URL: {}", page.url());
     println!("Page title: {}", page.title().await?);
 
+    // Find elements with locators
+    let heading = page.locator("h1").await;
+    let text = heading.text_content().await?;
+    println!("Heading text: {:?}", text);
+
+    // Query element state
+    let visible = heading.is_visible().await?;
+    println!("Heading visible: {}", visible);
+
     // Cleanup
     page.close().await?;
     browser.close().await?;
@@ -71,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-> **Note:** Element interaction (locators, click, fill) and assertions are coming soon.
+> **Note:** Element actions (click, fill, type) and assertions are coming soon.
 > See [Development Roadmap](docs/roadmap.md) for details.
 
 ## Project Status
@@ -81,9 +90,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - ✅ Create browser contexts and pages
 - ✅ Page navigation (`goto()`, `reload()`, `title()`)
 - ✅ URL tracking and response handling
+- ✅ Locators for finding elements
+- ✅ Query methods (`count()`, `text_content()`, `inner_text()`, etc.)
+- ✅ State queries (`is_visible()`, `is_enabled()`, `is_checked()`, etc.)
+- ✅ Locator chaining (`first()`, `last()`, `nth()`, nested locators)
 - ✅ Proper lifecycle management and cleanup
 
-**Coming next:** Locators, element interactions, screenshots
+**Coming next:** Element actions (click, fill, type), screenshots, assertions
 
 See [Development Roadmap](docs/roadmap.md) for the complete vision and timeline.
 

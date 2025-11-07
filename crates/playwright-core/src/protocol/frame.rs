@@ -168,6 +168,203 @@ impl Frame {
         let response: TitleResponse = self.channel().send("title", serde_json::json!({})).await?;
         Ok(response.value)
     }
+
+    // Locator delegate methods
+    // These are called by Locator to perform actual queries
+
+    /// Returns the number of elements matching the selector.
+    pub(crate) async fn locator_count(&self, selector: &str) -> Result<usize> {
+        // Use querySelectorAll which returns array of element handles
+        #[derive(Deserialize)]
+        struct QueryAllResponse {
+            elements: Vec<serde_json::Value>,
+        }
+
+        let response: QueryAllResponse = self
+            .channel()
+            .send(
+                "querySelectorAll",
+                serde_json::json!({
+                    "selector": selector
+                }),
+            )
+            .await?;
+
+        Ok(response.elements.len())
+    }
+
+    /// Returns the text content of the element.
+    pub(crate) async fn locator_text_content(&self, selector: &str) -> Result<Option<String>> {
+        #[derive(Deserialize)]
+        struct TextContentResponse {
+            value: Option<String>,
+        }
+
+        let response: TextContentResponse = self
+            .channel()
+            .send(
+                "textContent",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns the inner text of the element.
+    pub(crate) async fn locator_inner_text(&self, selector: &str) -> Result<String> {
+        #[derive(Deserialize)]
+        struct InnerTextResponse {
+            value: String,
+        }
+
+        let response: InnerTextResponse = self
+            .channel()
+            .send(
+                "innerText",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns the inner HTML of the element.
+    pub(crate) async fn locator_inner_html(&self, selector: &str) -> Result<String> {
+        #[derive(Deserialize)]
+        struct InnerHTMLResponse {
+            value: String,
+        }
+
+        let response: InnerHTMLResponse = self
+            .channel()
+            .send(
+                "innerHTML",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns the value of the specified attribute.
+    pub(crate) async fn locator_get_attribute(
+        &self,
+        selector: &str,
+        name: &str,
+    ) -> Result<Option<String>> {
+        #[derive(Deserialize)]
+        struct GetAttributeResponse {
+            value: Option<String>,
+        }
+
+        let response: GetAttributeResponse = self
+            .channel()
+            .send(
+                "getAttribute",
+                serde_json::json!({
+                    "selector": selector,
+                    "name": name,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns whether the element is visible.
+    pub(crate) async fn locator_is_visible(&self, selector: &str) -> Result<bool> {
+        #[derive(Deserialize)]
+        struct IsVisibleResponse {
+            value: bool,
+        }
+
+        let response: IsVisibleResponse = self
+            .channel()
+            .send(
+                "isVisible",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns whether the element is enabled.
+    pub(crate) async fn locator_is_enabled(&self, selector: &str) -> Result<bool> {
+        #[derive(Deserialize)]
+        struct IsEnabledResponse {
+            value: bool,
+        }
+
+        let response: IsEnabledResponse = self
+            .channel()
+            .send(
+                "isEnabled",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns whether the checkbox or radio button is checked.
+    pub(crate) async fn locator_is_checked(&self, selector: &str) -> Result<bool> {
+        #[derive(Deserialize)]
+        struct IsCheckedResponse {
+            value: bool,
+        }
+
+        let response: IsCheckedResponse = self
+            .channel()
+            .send(
+                "isChecked",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
+
+    /// Returns whether the element is editable.
+    pub(crate) async fn locator_is_editable(&self, selector: &str) -> Result<bool> {
+        #[derive(Deserialize)]
+        struct IsEditableResponse {
+            value: bool,
+        }
+
+        let response: IsEditableResponse = self
+            .channel()
+            .send(
+                "isEditable",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true
+                }),
+            )
+            .await?;
+
+        Ok(response.value)
+    }
 }
 
 impl ChannelOwner for Frame {
