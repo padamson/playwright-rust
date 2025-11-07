@@ -189,6 +189,8 @@ npx playwright@1.49.0 install chromium firefox webkit
 - If you run `npx playwright install` without version, you'll get the latest browsers
 - Mismatched versions will cause "Executable doesn't exist" errors during tests
 
+**Note:** CI automatically installs the correct browser versions - see `.github/workflows/test.yml`
+
 **Verify installation:**
 ```bash
 # Browsers are cached in:

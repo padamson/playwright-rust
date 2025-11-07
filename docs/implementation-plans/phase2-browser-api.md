@@ -264,6 +264,12 @@ async fn test_launch_all_three_browsers() // ✅ Passing
 - ⚠️ Browser versions must match Playwright server version
 - Server 1.49.0 requires: `npx playwright@1.49.0 install`
 - Documented in README.md to prevent "Executable doesn't exist" errors
+- Updated CI workflow to install matching browsers automatically
+
+**CI Updates:**
+- Added browser installation step: `npx playwright@1.49.0 install chromium firefox webkit --with-deps`
+- Added browser caching to speed up CI runs
+- Cache key: `${{ runner.os }}-playwright-browsers-1.49.0`
 
 ---
 

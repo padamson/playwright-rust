@@ -49,10 +49,24 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-playwright-drivers-
 
+    - name: Cache Playwright Browsers
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~/Library/Caches/ms-playwright
+          %USERPROFILE%\AppData\Local\ms-playwright
+        key: ${{ runner.os }}-playwright-browsers-1.49.0
+        restore-keys: |
+          ${{ runner.os }}-playwright-browsers-
+
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+
+    - name: Install Playwright browsers
+      run: npx playwright@1.49.0 install chromium firefox webkit --with-deps
 
     - name: Check formatting
       run: cargo fmt --all -- --check
