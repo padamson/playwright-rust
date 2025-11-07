@@ -14,7 +14,9 @@
 
 use crate::channel_owner::{ChannelOwner, ParentOrConnection};
 use crate::error::{Error, Result};
-use crate::protocol::{Browser, BrowserContext, BrowserType, Page, Playwright};
+use crate::protocol::{
+    Browser, BrowserContext, BrowserType, Frame, Page, Playwright, Request, ResponseObject,
+};
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -149,8 +151,54 @@ pub async fn create_object(
             Arc::new(Page::new(parent_owner, type_name, guid, initializer)?)
         }
 
+        "Frame" => {
+            // Frame has Page as parent
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "Frame must have Page as parent".to_string(),
+                    ))
+                }
+            };
+
+            Arc::new(Frame::new(parent_owner, type_name, guid, initializer)?)
+        }
+
+        "Request" => {
+            // Request has Frame as parent
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "Request must have Frame as parent".to_string(),
+                    ))
+                }
+            };
+
+            Arc::new(Request::new(parent_owner, type_name, guid, initializer)?)
+        }
+
+        "Response" => {
+            // Response has Request as parent (not Frame!)
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "Response must have Request as parent".to_string(),
+                    ))
+                }
+            };
+
+            Arc::new(ResponseObject::new(
+                parent_owner,
+                type_name,
+                guid,
+                initializer,
+            )?)
+        }
+
         // TODO: Add more types as they are implemented in future phases:
-        // "Frame" => Arc::new(Frame::new(parent_owner, type_name, guid, initializer)?),
         // "ElementHandle" => Arc::new(ElementHandle::new(parent_owner, type_name, guid, initializer)?),
         // ... etc
         _ => {

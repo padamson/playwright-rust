@@ -44,21 +44,24 @@ This means:
 ## Quick Example
 
 ```rust
-use playwright::Playwright;
+use playwright_core::protocol::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Launch Playwright
     let playwright = Playwright::launch().await?;
 
-    // Launch a browser
+    // Launch a browser (Chromium, Firefox, or WebKit)
     let browser = playwright.chromium().launch().await?;
 
     // Create a page
     let page = browser.new_page().await?;
 
-    // Page starts at about:blank
+    // Navigate to a URL
+    let response = page.goto("https://example.com", None).await?;
+    println!("Response status: {}", response.status());
     println!("Page URL: {}", page.url());
+    println!("Page title: {}", page.title().await?);
 
     // Cleanup
     page.close().await?;
@@ -68,17 +71,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-> **Note:** Navigation (`page.goto()`), element interaction, and assertions are coming in Phase 3+.
-> See [examples/](crates/playwright/examples/) for more complete demos.
+> **Note:** Element interaction (locators, click, fill) and assertions are coming soon.
+> See [Development Roadmap](docs/roadmap.md) for details.
 
 ## Project Status
 
 **What works now:**
 - ✅ Launch browsers (Chromium, Firefox, WebKit)
 - ✅ Create browser contexts and pages
+- ✅ Page navigation (`goto()`, `reload()`, `title()`)
+- ✅ URL tracking and response handling
 - ✅ Proper lifecycle management and cleanup
 
-**Coming next:** Navigation (`page.goto()`), locators, page interactions
+**Coming next:** Locators, element interactions, screenshots
 
 See [Development Roadmap](docs/roadmap.md) for the complete vision and timeline.
 
@@ -205,8 +210,6 @@ This project aims for **production-quality** Rust bindings matching Playwright's
 - Maintain type safety
 - Document public APIs with examples
 - Pass CI checks (fmt, clippy, tests)
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Roadmap
 

@@ -33,7 +33,9 @@
 pub use playwright_core::error::{Error, Result};
 
 // Re-export Playwright main entry point and browser API
-pub use playwright_core::protocol::{Browser, BrowserContext, BrowserType, Page, Playwright};
+pub use playwright_core::protocol::{
+    Browser, BrowserContext, BrowserType, GotoOptions, Page, Playwright, Response, WaitUntil,
+};
 
 // Re-export API types
 pub use playwright_core::api::LaunchOptions;

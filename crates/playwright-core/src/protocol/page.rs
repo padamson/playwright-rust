@@ -6,9 +6,10 @@
 use crate::channel::Channel;
 use crate::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::error::Result;
+use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 /// Page represents a web page within a browser context.
 ///
@@ -46,6 +47,11 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct Page {
     base: ChannelOwnerImpl,
+    /// Current URL of the page
+    /// Wrapped in RwLock to allow updates from events
+    url: Arc<RwLock<String>>,
+    /// GUID of the main frame
+    main_frame_guid: String,
 }
 
 impl Page {
@@ -70,6 +76,16 @@ impl Page {
         guid: String,
         initializer: Value,
     ) -> Result<Self> {
+        // Extract mainFrame GUID from initializer
+        let main_frame_guid = initializer["mainFrame"]["guid"]
+            .as_str()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Page initializer missing 'mainFrame.guid' field".to_string(),
+                )
+            })?
+            .to_string();
+
         let base = ChannelOwnerImpl::new(
             ParentOrConnection::Parent(parent),
             type_name,
@@ -77,7 +93,14 @@ impl Page {
             initializer,
         );
 
-        Ok(Self { base })
+        // Initialize URL to about:blank
+        let url = Arc::new(RwLock::new("about:blank".to_string()));
+
+        Ok(Self {
+            base,
+            url,
+            main_frame_guid,
+        })
     }
 
     /// Returns the channel for sending protocol messages
@@ -85,6 +108,27 @@ impl Page {
     /// Used internally for sending RPC calls to the page.
     fn channel(&self) -> &Channel {
         self.base.channel()
+    }
+
+    /// Returns the main frame of the page.
+    ///
+    /// The main frame is where navigation and DOM operations actually happen.
+    async fn main_frame(&self) -> Result<crate::protocol::Frame> {
+        // Get the Frame object from the connection's object registry
+        let frame_arc = self.connection().get_object(&self.main_frame_guid).await?;
+
+        // Downcast to Frame
+        let frame = frame_arc
+            .as_any()
+            .downcast_ref::<crate::protocol::Frame>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(format!(
+                    "Expected Frame object, got {}",
+                    frame_arc.type_name()
+                ))
+            })?;
+
+        Ok(frame.clone())
     }
 
     /// Returns the current URL of the page.
@@ -111,11 +155,9 @@ impl Page {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-url>
-    pub fn url(&self) -> &str {
-        // The URL is stored in the mainFrame's initializer
-        // For Phase 2, we'll return "about:blank" as pages start there
-        // In Phase 3, we'll track URL changes through events
-        "about:blank"
+    pub fn url(&self) -> String {
+        // Return a clone of the current URL
+        self.url.read().unwrap().clone()
     }
 
     /// Closes the page.
@@ -153,6 +195,189 @@ impl Page {
         self.channel()
             .send_no_result("close", serde_json::json!({}))
             .await
+    }
+
+    /// Navigates to the specified URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL to navigate to
+    /// * `options` - Optional navigation options (timeout, wait_until)
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// // Navigate to URL
+    /// let response = page.goto("https://example.com", None).await?;
+    /// assert!(response.ok);
+    /// assert_eq!(page.url(), "https://example.com/");
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - URL is invalid
+    /// - Navigation timeout (default 30s)
+    /// - Network error
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-goto>
+    pub async fn goto(&self, url: &str, options: Option<GotoOptions>) -> Result<Response> {
+        // Delegate to main frame
+        let frame = self.main_frame().await?;
+        let response = frame.goto(url, options).await?;
+
+        // Update the page's URL
+        if let Ok(mut page_url) = self.url.write() {
+            *page_url = response.url().to_string();
+        }
+
+        Ok(response)
+    }
+
+    /// Returns the page's title.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// page.goto("https://example.com", None).await?;
+    /// let title = page.title().await?;
+    /// println!("Page title: {}", title);
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-title>
+    pub async fn title(&self) -> Result<String> {
+        // Delegate to main frame
+        let frame = self.main_frame().await?;
+        frame.title().await
+    }
+
+    /// Reloads the current page.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional reload options (timeout, wait_until)
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// page.goto("https://example.com", None).await?;
+    /// let response = page.reload(None).await?;
+    /// assert!(response.ok);
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-reload>
+    pub async fn reload(&self, options: Option<GotoOptions>) -> Result<Response> {
+        // Build params
+        let mut params = serde_json::json!({});
+
+        if let Some(opts) = options {
+            if let Some(timeout) = opts.timeout {
+                params["timeout"] = serde_json::json!(timeout.as_millis() as u64);
+            }
+            if let Some(wait_until) = opts.wait_until {
+                params["waitUntil"] = serde_json::json!(wait_until.as_str());
+            }
+        }
+
+        // Send reload RPC directly to Page (not Frame!)
+        #[derive(Deserialize)]
+        struct ReloadResponse {
+            response: Option<ResponseReference>,
+        }
+
+        #[derive(Deserialize)]
+        struct ResponseReference {
+            guid: String,
+        }
+
+        let reload_result: ReloadResponse = self.channel().send("reload", params).await?;
+
+        // If reload returned a response, get the Response object
+        if let Some(response_ref) = reload_result.response {
+            // Wait for Response object to be created
+            let response_arc = {
+                let mut attempts = 0;
+                let max_attempts = 20;
+                loop {
+                    match self.connection().get_object(&response_ref.guid).await {
+                        Ok(obj) => break obj,
+                        Err(_) if attempts < max_attempts => {
+                            attempts += 1;
+                            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
+            };
+
+            // Extract response data from initializer
+            let initializer = response_arc.initializer();
+
+            let status = initializer["status"].as_u64().ok_or_else(|| {
+                crate::error::Error::ProtocolError("Response missing status".to_string())
+            })? as u16;
+
+            let headers = initializer["headers"]
+                .as_array()
+                .ok_or_else(|| {
+                    crate::error::Error::ProtocolError("Response missing headers".to_string())
+                })?
+                .iter()
+                .filter_map(|h| {
+                    let name = h["name"].as_str()?;
+                    let value = h["value"].as_str()?;
+                    Some((name.to_string(), value.to_string()))
+                })
+                .collect();
+
+            let response = Response {
+                url: initializer["url"]
+                    .as_str()
+                    .ok_or_else(|| {
+                        crate::error::Error::ProtocolError("Response missing url".to_string())
+                    })?
+                    .to_string(),
+                status,
+                status_text: initializer["statusText"].as_str().unwrap_or("").to_string(),
+                ok: (200..300).contains(&status),
+                headers,
+            };
+
+            // Update the page's URL
+            if let Ok(mut page_url) = self.url.write() {
+                *page_url = response.url().to_string();
+            }
+
+            Ok(response)
+        } else {
+            Err(crate::error::Error::ProtocolError(
+                "Reload did not return a response".to_string(),
+            ))
+        }
     }
 }
 
@@ -197,9 +422,23 @@ impl ChannelOwner for Page {
         self.base.remove_child(guid)
     }
 
-    fn on_event(&self, _method: &str, _params: Value) {
-        // TODO: Handle page events in future phases
-        // Events: load, domcontentloaded, close, crash, etc.
+    fn on_event(&self, method: &str, params: Value) {
+        match method {
+            "navigated" => {
+                // Update URL when page navigates
+                if let Some(url_value) = params.get("url") {
+                    if let Some(url_str) = url_value.as_str() {
+                        if let Ok(mut url) = self.url.write() {
+                            *url = url_str.to_string();
+                        }
+                    }
+                }
+            }
+            _ => {
+                // Other events will be handled in future phases
+                // Events: load, domcontentloaded, close, crash, etc.
+            }
+        }
     }
 
     fn was_collected(&self) -> bool {
@@ -217,5 +456,108 @@ impl std::fmt::Debug for Page {
             .field("guid", &self.guid())
             .field("url", &self.url())
             .finish()
+    }
+}
+
+/// Options for page.goto() and page.reload()
+#[derive(Debug, Clone)]
+pub struct GotoOptions {
+    /// Maximum operation time in milliseconds. Default: 30000 (30 seconds)
+    pub timeout: Option<std::time::Duration>,
+    /// When to consider operation succeeded
+    pub wait_until: Option<WaitUntil>,
+}
+
+impl GotoOptions {
+    /// Creates new GotoOptions with default values
+    pub fn new() -> Self {
+        Self {
+            timeout: None,
+            wait_until: None,
+        }
+    }
+
+    /// Sets the timeout
+    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = Some(timeout);
+        self
+    }
+
+    /// Sets the wait_until option
+    pub fn wait_until(mut self, wait_until: WaitUntil) -> Self {
+        self.wait_until = Some(wait_until);
+        self
+    }
+}
+
+impl Default for GotoOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// When to consider navigation succeeded
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WaitUntil {
+    /// Consider operation to be finished when the `load` event is fired
+    Load,
+    /// Consider operation to be finished when the `DOMContentLoaded` event is fired
+    DomContentLoaded,
+    /// Consider operation to be finished when there are no network connections for at least 500ms
+    NetworkIdle,
+    /// Consider operation to be finished when the commit event is fired
+    Commit,
+}
+
+impl WaitUntil {
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            WaitUntil::Load => "load",
+            WaitUntil::DomContentLoaded => "domcontentloaded",
+            WaitUntil::NetworkIdle => "networkidle",
+            WaitUntil::Commit => "commit",
+        }
+    }
+}
+
+/// Response from navigation operations
+#[derive(Debug, Clone)]
+pub struct Response {
+    /// URL of the response
+    pub url: String,
+    /// HTTP status code
+    pub status: u16,
+    /// HTTP status text
+    pub status_text: String,
+    /// Whether the response was successful (status 200-299)
+    pub ok: bool,
+    /// Response headers
+    pub headers: std::collections::HashMap<String, String>,
+}
+
+impl Response {
+    /// Returns the URL of the response
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
+    /// Returns the HTTP status code
+    pub fn status(&self) -> u16 {
+        self.status
+    }
+
+    /// Returns the HTTP status text
+    pub fn status_text(&self) -> &str {
+        &self.status_text
+    }
+
+    /// Returns whether the response was successful (status 200-299)
+    pub fn ok(&self) -> bool {
+        self.ok
+    }
+
+    /// Returns the response headers
+    pub fn headers(&self) -> &std::collections::HashMap<String, String> {
+        &self.headers
     }
 }

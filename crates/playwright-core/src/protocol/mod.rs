@@ -14,13 +14,19 @@
 pub mod browser;
 pub mod browser_context;
 pub mod browser_type;
+pub mod frame;
 pub mod page;
 pub mod playwright;
+pub mod request;
+pub mod response;
 pub mod root;
 
 pub use browser::Browser;
 pub use browser_context::BrowserContext;
 pub use browser_type::BrowserType;
-pub use page::Page;
+pub use frame::Frame;
+pub use page::{GotoOptions, Page, Response, WaitUntil};
 pub use playwright::Playwright;
+pub use request::Request;
+pub use response::ResponseObject;
 pub use root::Root;

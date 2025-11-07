@@ -739,6 +739,11 @@ where
             .ok_or_else(|| Error::ProtocolError("__create__ missing 'guid'".to_string()))?
             .to_string();
 
+        eprintln!(
+            "DEBUG __create__: type={}, guid={}, parent_guid={}",
+            type_name, object_guid, event.guid
+        );
+
         let initializer = event.params["initializer"].clone();
 
         // Determine parent
@@ -748,6 +753,10 @@ where
             .get(&event.guid)
             .cloned()
             .ok_or_else(|| {
+                eprintln!(
+                    "DEBUG: Parent object not found for type={}, parent_guid={}",
+                    type_name, event.guid
+                );
                 Error::ProtocolError(format!("Parent object not found: {}", event.guid))
             })?;
 
@@ -759,13 +768,23 @@ where
             ParentOrConnection::Parent(parent_obj.clone())
         };
 
-        let object = create_object(
+        let object = match create_object(
             parent_or_conn,
             type_name.clone(),
             object_guid.clone(),
             initializer,
         )
-        .await?;
+        .await
+        {
+            Ok(obj) => obj,
+            Err(e) => {
+                eprintln!(
+                    "DEBUG: Failed to create object type={}, guid={}, error={}",
+                    type_name, object_guid, e
+                );
+                return Err(e);
+            }
+        };
 
         // Register in connection
         self.register_object(object_guid.clone(), object.clone())
@@ -774,6 +793,10 @@ where
         // Register in parent
         parent_obj.add_child(object_guid.clone(), object);
 
+        eprintln!(
+            "DEBUG: Successfully created and registered object: type={}, guid={}",
+            type_name, object_guid
+        );
         tracing::debug!("Created object: type={}, guid={}", type_name, object_guid);
 
         Ok(())
