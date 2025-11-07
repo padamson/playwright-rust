@@ -53,8 +53,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-      # Node.js is required to run the Playwright driver
-      # The driver itself is downloaded automatically during cargo build (via build.rs)
 
     - name: Check formatting
       run: cargo fmt --all -- --check
@@ -69,9 +67,7 @@ jobs:
       run: cargo test --verbose --workspace
 
     - name: Run examples
-      run: |
-        cargo run --example basic || echo "Examples will work once API is implemented"
-      continue-on-error: true
+      run: cargo run --package playwright --example basic
 
     - name: Generate documentation
       run: cargo doc --no-deps --workspace
