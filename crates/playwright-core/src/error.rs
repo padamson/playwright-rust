@@ -16,6 +16,10 @@ pub enum Error {
     #[error("Failed to launch Playwright server: {0}")]
     LaunchFailed(String),
 
+    /// Server error (runtime issue with Playwright server)
+    #[error("Server error: {0}")]
+    ServerError(String),
+
     /// Failed to establish connection with the server
     #[error("Failed to connect to Playwright server: {0}")]
     ConnectionFailed(String),

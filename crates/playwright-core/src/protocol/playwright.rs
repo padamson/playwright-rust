@@ -42,15 +42,99 @@ use std::sync::Arc;
 pub struct Playwright {
     /// Base ChannelOwner implementation
     base: ChannelOwnerImpl,
-    /// Chromium browser type (stored as Arc<dyn ChannelOwner>, downcast on access)
+    /// Chromium browser type (stored as `Arc<dyn ChannelOwner>`, downcast on access)
     chromium: Arc<dyn ChannelOwner>,
-    /// Firefox browser type (stored as Arc<dyn ChannelOwner>, downcast on access)
+    /// Firefox browser type (stored as `Arc<dyn ChannelOwner>`, downcast on access)
     firefox: Arc<dyn ChannelOwner>,
-    /// WebKit browser type (stored as Arc<dyn ChannelOwner>, downcast on access)
+    /// WebKit browser type (stored as `Arc<dyn ChannelOwner>`, downcast on access)
     webkit: Arc<dyn ChannelOwner>,
 }
 
 impl Playwright {
+    /// Launches Playwright and returns a handle to interact with browser types.
+    ///
+    /// This is the main entry point for the Playwright API. It will:
+    /// 1. Launch the Playwright server process
+    /// 2. Establish a connection via stdio
+    /// 3. Initialize the protocol
+    /// 4. Return a Playwright instance with access to browser types
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use playwright_core::protocol::Playwright;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let playwright = Playwright::launch().await?;
+    ///     println!("Chromium: {}", playwright.chromium().name());
+    ///     println!("Firefox: {}", playwright.firefox().name());
+    ///     println!("WebKit: {}", playwright.webkit().name());
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Playwright server is not found or fails to launch
+    /// - Connection to server fails
+    /// - Protocol initialization fails
+    /// - Server doesn't respond within timeout (30s)
+    pub async fn launch() -> Result<Self> {
+        use crate::connection::Connection;
+        use crate::server::PlaywrightServer;
+        use crate::transport::PipeTransport;
+
+        // 1. Launch Playwright server
+        tracing::debug!("Launching Playwright server");
+        let mut server = PlaywrightServer::launch().await?;
+
+        // 2. Take stdio streams from server process
+        let stdin = server.process.stdin.take().ok_or_else(|| {
+            crate::error::Error::ServerError("Failed to get server stdin".to_string())
+        })?;
+
+        let stdout = server.process.stdout.take().ok_or_else(|| {
+            crate::error::Error::ServerError("Failed to get server stdout".to_string())
+        })?;
+
+        // 3. Create transport and connection
+        tracing::debug!("Creating transport and connection");
+        let (transport, message_rx) = PipeTransport::new(stdin, stdout);
+        let connection: Arc<Connection<_, _>> = Arc::new(Connection::new(transport, message_rx));
+
+        // 4. Spawn connection message loop in background
+        let conn_for_loop: Arc<Connection<_, _>> = Arc::clone(&connection);
+        tokio::spawn(async move {
+            conn_for_loop.run().await;
+        });
+
+        // 5. Initialize Playwright (sends initialize message, waits for Playwright object)
+        tracing::debug!("Initializing Playwright protocol");
+        let playwright_obj = connection.initialize_playwright().await?;
+
+        // 6. Downcast to Playwright type
+        let playwright = playwright_obj
+            .as_any()
+            .downcast_ref::<Playwright>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Initialized object is not Playwright type".to_string(),
+                )
+            })?;
+
+        // Clone the Playwright object to return it
+        // Note: We need to own the Playwright, not just borrow it
+        // Since we only have &Playwright from downcast_ref, we need to extract the data
+        Ok(Self {
+            base: playwright.base.clone(),
+            chromium: Arc::clone(&playwright.chromium),
+            firefox: Arc::clone(&playwright.firefox),
+            webkit: Arc::clone(&playwright.webkit),
+        })
+    }
+
     /// Creates a new Playwright object from protocol initialization.
     ///
     /// Called by the object factory when server sends __create__ message for root object.
@@ -71,7 +155,7 @@ impl Playwright {
     ///   "webkit": { "guid": "browserType@webkit" }
     /// }
     /// ```
-    pub fn new(
+    pub async fn new(
         connection: Arc<dyn ConnectionLike>,
         type_name: String,
         guid: String,
@@ -106,9 +190,9 @@ impl Playwright {
         // Get BrowserType objects from connection registry
         // Note: These objects should already exist (created by earlier __create__ messages)
         // We store them as Arc<dyn ChannelOwner> and downcast when accessed
-        let chromium = connection.get_object(chromium_guid)?;
-        let firefox = connection.get_object(firefox_guid)?;
-        let webkit = connection.get_object(webkit_guid)?;
+        let chromium = connection.get_object(chromium_guid).await?;
+        let firefox = connection.get_object(firefox_guid).await?;
+        let webkit = connection.get_object(webkit_guid).await?;
 
         Ok(Self {
             base,

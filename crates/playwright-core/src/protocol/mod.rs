@@ -13,6 +13,8 @@
 
 pub mod browser_type;
 pub mod playwright;
+pub mod root;
 
 pub use browser_type::BrowserType;
 pub use playwright::Playwright;
+pub use root::Root;

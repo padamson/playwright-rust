@@ -55,13 +55,15 @@
 //! - .NET: `Microsoft.Playwright/Core/Connection.cs`
 
 use crate::error::{Error, Result};
-use crate::transport::{PipeTransport, Transport};
+use crate::transport::PipeTransport;
+use parking_lot::Mutex as ParkingLotMutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
-use tokio::sync::{mpsc, oneshot, Mutex};
+use tokio::sync::Mutex as TokioMutex;
+use tokio::sync::{mpsc, oneshot};
 
 use std::future::Future;
 use std::pin::Pin;
@@ -80,17 +82,72 @@ pub trait ConnectionLike: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<Value>> + Send + '_>>;
 
     /// Register an object in the connection's registry
-    fn register_object(&self, guid: String, object: Arc<dyn ChannelOwner>);
+    fn register_object(
+        &self,
+        guid: String,
+        object: Arc<dyn ChannelOwner>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>;
 
     /// Unregister an object from the connection's registry
-    fn unregister_object(&self, guid: &str);
+    fn unregister_object(&self, guid: &str) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>;
 
     /// Get an object by GUID
-    fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>>;
+    fn get_object(&self, guid: &str) -> AsyncChannelOwnerResult<'_>;
 }
+
+// Type alias for complex async return type
+type AsyncChannelOwnerResult<'a> =
+    Pin<Box<dyn Future<Output = Result<Arc<dyn ChannelOwner>>> + Send + 'a>>;
 
 // Forward declaration - will be used for object registry
 use crate::channel_owner::ChannelOwner;
+
+/// Metadata attached to every Playwright protocol message
+///
+/// Contains timing information and optional location data for debugging.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Metadata {
+    /// Unix timestamp in milliseconds
+    #[serde(rename = "wallTime")]
+    pub wall_time: i64,
+    /// Whether this is an internal call (not user-facing API)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub internal: Option<bool>,
+    /// Source location where the API was called
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<Location>,
+    /// Optional title for the operation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+}
+
+/// Source code location for a protocol call
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Location {
+    /// Source file path
+    pub file: String,
+    /// Line number (1-indexed)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line: Option<i32>,
+    /// Column number (1-indexed)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub column: Option<i32>,
+}
+
+impl Metadata {
+    /// Create minimal metadata with current timestamp
+    pub fn now() -> Self {
+        Self {
+            wall_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as i64,
+            internal: Some(false),
+            location: None,
+            title: None,
+        }
+    }
+}
 
 /// Protocol request message sent to Playwright server
 ///
@@ -102,6 +159,10 @@ use crate::channel_owner::ChannelOwner;
 ///   "method": "goto",
 ///   "params": {
 ///     "url": "https://example.com"
+///   },
+///   "metadata": {
+///     "wallTime": 1699876543210,
+///     "internal": false
 ///   }
 /// }
 /// ```
@@ -115,6 +176,8 @@ pub struct Request {
     pub method: String,
     /// Method parameters as JSON object
     pub params: Value,
+    /// Metadata with timing and location information
+    pub metadata: Metadata,
 }
 
 /// Protocol response message from Playwright server
@@ -236,13 +299,15 @@ where
     /// Sequential request ID counter (atomic for thread safety)
     last_id: AtomicU32,
     /// Pending request callbacks keyed by request ID
-    callbacks: Arc<Mutex<HashMap<u32, oneshot::Sender<Result<Value>>>>>,
-    /// Transport layer for sending/receiving messages
-    transport: Arc<Mutex<PipeTransport<W, R>>>,
+    callbacks: Arc<TokioMutex<HashMap<u32, oneshot::Sender<Result<Value>>>>>,
+    /// Stdin for sending messages (mutex-wrapped for concurrent sends)
+    stdin: Arc<TokioMutex<W>>,
     /// Receiver for incoming messages from transport
-    message_rx: Arc<Mutex<Option<mpsc::UnboundedReceiver<Value>>>>,
-    /// Registry of all protocol objects by GUID
-    objects: Arc<Mutex<HashMap<String, Arc<dyn ChannelOwner>>>>,
+    message_rx: Arc<TokioMutex<Option<mpsc::UnboundedReceiver<Value>>>>,
+    /// Receiver half of transport (owned by run loop, only needed once)
+    transport_receiver: Arc<TokioMutex<Option<crate::transport::PipeTransportReceiver<R>>>>,
+    /// Registry of all protocol objects by GUID (parking_lot for sync+async access)
+    objects: Arc<ParkingLotMutex<HashMap<String, Arc<dyn ChannelOwner>>>>,
 }
 
 // Type alias for Connection using concrete transport (most common case)
@@ -277,12 +342,18 @@ where
     /// # }
     /// ```
     pub fn new(transport: PipeTransport<W, R>, message_rx: mpsc::UnboundedReceiver<Value>) -> Self {
+        // Split transport into send and receive parts
+        // This prevents deadlock: stdin can be locked for sends while
+        // the transport receiver runs independently
+        let (stdin, transport_receiver) = transport.into_parts();
+
         Self {
             last_id: AtomicU32::new(0),
-            callbacks: Arc::new(Mutex::new(HashMap::new())),
-            transport: Arc::new(Mutex::new(transport)),
-            message_rx: Arc::new(Mutex::new(Some(message_rx))),
-            objects: Arc::new(Mutex::new(HashMap::new())),
+            callbacks: Arc::new(TokioMutex::new(HashMap::new())),
+            stdin: Arc::new(TokioMutex::new(stdin)),
+            message_rx: Arc::new(TokioMutex::new(Some(message_rx))),
+            transport_receiver: Arc::new(TokioMutex::new(Some(transport_receiver))),
+            objects: Arc::new(ParkingLotMutex::new(HashMap::new())),
         }
     }
 
@@ -333,28 +404,168 @@ where
         // Generate unique ID (atomic increment for thread safety)
         let id = self.last_id.fetch_add(1, Ordering::SeqCst);
 
+        tracing::debug!(
+            "Sending message: id={}, guid='{}', method='{}'",
+            id,
+            guid,
+            method
+        );
+
         // Create oneshot channel for response
         let (tx, rx) = oneshot::channel();
 
         // Store callback
         self.callbacks.lock().await.insert(id, tx);
 
-        // Build request
+        // Build request with metadata
         let request = Request {
             id,
             guid: guid.to_string(),
             method: method.to_string(),
             params,
+            metadata: Metadata::now(),
         };
 
-        // Send via transport
+        // Send via stdin using the helper function
         let request_value = serde_json::to_value(&request)?;
-        self.transport.lock().await.send(request_value).await?;
+        tracing::debug!("Request JSON: {}", request_value);
+
+        match crate::transport::send_message(&mut *self.stdin.lock().await, request_value).await {
+            Ok(()) => tracing::debug!("Message sent successfully, awaiting response"),
+            Err(e) => {
+                tracing::error!("Failed to send message: {:?}", e);
+                return Err(e);
+            }
+        }
 
         // Await response
+        tracing::debug!("Waiting for response to ID {}", id);
         rx.await
             .map_err(|_| Error::ChannelClosed)
             .and_then(|result| result)
+    }
+
+    /// Initialize the Playwright connection and return the root Playwright object
+    ///
+    /// This method implements the initialization handshake with the Playwright server:
+    /// 1. Creates a temporary Root object
+    /// 2. Sends "initialize" message with sdkLanguage="rust"
+    /// 3. Server creates BrowserType objects (sends `__create__` messages)
+    /// 4. Server responds with Playwright GUID
+    /// 5. Looks up Playwright object from registry (guaranteed to exist)
+    ///
+    /// The `initialize` message is synchronous - by the time the response arrives,
+    /// all protocol objects have been created and registered.
+    ///
+    /// # Returns
+    ///
+    /// An `Arc<dyn ChannelOwner>` that is the Playwright object. Callers should downcast
+    /// to `Playwright` type.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Initialize message fails to send
+    /// - Server returns protocol error
+    /// - Response is missing Playwright GUID
+    /// - Playwright object not found in registry
+    /// - Timeout after 30 seconds
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::{Connection, PipeTransport, PlaywrightServer};
+    /// # use std::sync::Arc;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// // Launch server and create connection
+    /// let mut server = PlaywrightServer::launch().await?;
+    /// let stdin = server.process.stdin.take().unwrap();
+    /// let stdout = server.process.stdout.take().unwrap();
+    ///
+    /// let (transport, message_rx) = PipeTransport::new(stdin, stdout);
+    /// let connection = Arc::new(Connection::new(transport, message_rx));
+    ///
+    /// // Spawn message loop
+    /// let conn = Arc::clone(&connection);
+    /// tokio::spawn(async move { conn.run().await });
+    ///
+    /// // Initialize Playwright
+    /// let playwright_obj = connection.initialize_playwright().await?;
+    ///
+    /// // Downcast to Playwright type
+    /// use playwright_core::protocol::Playwright;
+    /// let playwright = playwright_obj.as_any().downcast_ref::<Playwright>().unwrap();
+    /// println!("Chromium: {}", playwright.chromium().name());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See:
+    /// - [ADR 0002: Initialization Flow](../../docs/adr/0002-initialization-flow.md)
+    /// - Python: <https://github.com/microsoft/playwright-python/blob/main/playwright/_impl/_connection.py>
+    pub async fn initialize_playwright(self: &Arc<Self>) -> Result<Arc<dyn ChannelOwner>> {
+        use crate::protocol::Root;
+        use std::time::Duration;
+
+        // Create temporary Root object for initialization
+        // Root has empty GUID ("") and acts as parent for top-level objects
+        let root = Arc::new(Root::new(Arc::clone(self) as Arc<dyn ConnectionLike>))
+            as Arc<dyn ChannelOwner>;
+
+        // CRITICAL: Register Root in objects map with empty GUID
+        // This allows __create__ messages to find Root as their parent
+        // Matches Python's behavior where RootChannelOwner auto-registers
+        self.objects.lock().insert("".to_string(), root.clone());
+
+        tracing::debug!("Root object registered, sending initialize message");
+
+        // Downcast to Root type to call initialize()
+        let root_typed = root
+            .as_any()
+            .downcast_ref::<Root>()
+            .expect("Root object should be Root type");
+
+        // Send initialize message (blocks until server responds)
+        // Add timeout to prevent hanging forever
+        let response = tokio::time::timeout(Duration::from_secs(30), root_typed.initialize())
+            .await
+            .map_err(|_| {
+                Error::Timeout("Playwright initialization timeout after 30 seconds".to_string())
+            })??;
+
+        // Extract Playwright GUID from response
+        // Response format: { "playwright": { "guid": "playwright" } }
+        let playwright_guid = response["playwright"]["guid"].as_str().ok_or_else(|| {
+            Error::ProtocolError("Initialize response missing 'playwright.guid' field".to_string())
+        })?;
+
+        tracing::debug!("Initialized Playwright with GUID: {}", playwright_guid);
+
+        // Get Playwright object from registry
+        // By this point, the server has sent all __create__ messages
+        // and the Playwright object is already registered
+        let playwright_obj = self.get_object(playwright_guid).await?;
+
+        // Verify it's actually a Playwright object
+        playwright_obj
+            .as_any()
+            .downcast_ref::<crate::protocol::Playwright>()
+            .ok_or_else(|| {
+                Error::ProtocolError(format!(
+                    "Object with GUID '{}' is not a Playwright instance",
+                    playwright_guid
+                ))
+            })?;
+
+        // Cleanup: Unregister Root after initialization
+        // Root is only needed during the initialization handshake
+        self.objects.lock().remove("");
+        tracing::debug!("Root object unregistered after successful initialization");
+
+        // Return the Arc<dyn ChannelOwner>
+        // The high-level API will handle downcasting
+        Ok(playwright_obj)
     }
 
     /// Run the message dispatch loop
@@ -387,29 +598,36 @@ where
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn run(&self) {
-        // Spawn transport read loop
-        let transport = Arc::clone(&self.transport);
+    pub async fn run(self: &Arc<Self>) {
+        // Take the transport receiver (can only be called once)
+        let transport_receiver = self
+            .transport_receiver
+            .lock()
+            .await
+            .take()
+            .expect("run() can only be called once - transport receiver already taken");
+
+        // Spawn transport read loop WITHOUT any locks
+        // This prevents deadlock: the receiver owns stdout and runs independently
         let transport_handle = tokio::spawn(async move {
-            let mut transport = transport.lock().await;
-            if let Err(e) = transport.run().await {
+            if let Err(e) = transport_receiver.run().await {
                 tracing::error!("Transport error: {}", e);
             }
         });
 
-        // Take the receiver out of the Option (can only be called once)
+        // Take the message receiver out of the Option (can only be called once)
         let mut message_rx = self
             .message_rx
             .lock()
             .await
             .take()
-            .expect("run() can only be called once");
+            .expect("run() can only be called once - message receiver already taken");
 
         while let Some(message_value) = message_rx.recv().await {
             // Parse message as Response or Event
             match serde_json::from_value::<Message>(message_value) {
                 Ok(message) => {
-                    if let Err(e) = self.dispatch(message).await {
+                    if let Err(e) = self.dispatch_internal(message).await {
                         tracing::error!("Error dispatching message: {}", e);
                     }
                 }
@@ -441,9 +659,16 @@ where
     /// Returns error if:
     /// - Response ID doesn't match any pending request
     /// - Event GUID doesn't match any registered object
-    async fn dispatch(&self, message: Message) -> Result<()> {
+    #[cfg(test)]
+    pub async fn dispatch(self: &Arc<Self>, message: Message) -> Result<()> {
+        self.dispatch_internal(message).await
+    }
+
+    async fn dispatch_internal(self: &Arc<Self>, message: Message) -> Result<()> {
+        tracing::debug!("Dispatching message: {:?}", message);
         match message {
             Message::Response(response) => {
+                tracing::debug!("Processing response for ID: {}", response.id);
                 // Correlate response with pending request
                 let callback = self
                     .callbacks
@@ -476,7 +701,7 @@ where
                     "__adopt__" => self.handle_adopt(&event).await,
                     _ => {
                         // Regular event - dispatch to object
-                        match self.objects.lock().await.get(&event.guid) {
+                        match self.objects.lock().get(&event.guid).cloned() {
                             Some(object) => {
                                 object.on_event(&event.method, event.params);
                                 Ok(())
@@ -499,7 +724,7 @@ where
     /// Handle `__create__` protocol message
     ///
     /// Creates a new protocol object and registers it in the connection.
-    async fn handle_create(&self, event: &Event) -> Result<()> {
+    async fn handle_create(self: &Arc<Self>, event: &Event) -> Result<()> {
         use crate::channel_owner::ParentOrConnection;
         use crate::object_factory::create_object;
 
@@ -517,12 +742,9 @@ where
         let initializer = event.params["initializer"].clone();
 
         // Determine parent
-        // Note: Root Playwright object creation will be handled separately in Slice 5
-        // via explicit initialization, not via __create__ message
         let parent_obj = self
             .objects
             .lock()
-            .await
             .get(&event.guid)
             .cloned()
             .ok_or_else(|| {
@@ -530,23 +752,26 @@ where
             })?;
 
         // Create object using factory
-        // TODO: optimize - avoid cloning type_name and object_guid by changing create_object to accept &str
+        // Special case: Playwright object needs Connection, not Parent
+        let parent_or_conn = if type_name == "Playwright" && event.guid.is_empty() {
+            ParentOrConnection::Connection(Arc::clone(self) as Arc<dyn ConnectionLike>)
+        } else {
+            ParentOrConnection::Parent(parent_obj.clone())
+        };
+
         let object = create_object(
-            ParentOrConnection::Parent(parent_obj.clone()),
+            parent_or_conn,
             type_name.clone(),
             object_guid.clone(),
             initializer,
-        )?;
+        )
+        .await?;
 
         // Register in connection
-        // TODO: optimize - avoid cloning object_guid by using entry API or accepting owned String
-        self.objects
-            .lock()
-            .await
-            .insert(object_guid.clone(), object.clone());
+        self.register_object(object_guid.clone(), object.clone())
+            .await;
 
         // Register in parent
-        // TODO: optimize - avoid cloning object_guid by using entry API or accepting owned String
         parent_obj.add_child(object_guid.clone(), object);
 
         tracing::debug!("Created object: type={}, guid={}", type_name, object_guid);
@@ -566,7 +791,7 @@ where
         };
 
         // Get object from registry
-        let object = self.objects.lock().await.get(&event.guid).cloned();
+        let object = self.objects.lock().get(&event.guid).cloned();
 
         if let Some(obj) = object {
             // Dispose the object (this will remove from parent and unregister)
@@ -589,8 +814,8 @@ where
             .ok_or_else(|| Error::ProtocolError("__adopt__ missing 'guid'".to_string()))?;
 
         // Get new parent and child from registry
-        let new_parent = self.objects.lock().await.get(&event.guid).cloned();
-        let child = self.objects.lock().await.get(child_guid).cloned();
+        let new_parent = self.objects.lock().get(&event.guid).cloned();
+        let child = self.objects.lock().get(child_guid).cloned();
 
         match (new_parent, child) {
             (Some(parent), Some(child_obj)) => {
@@ -643,21 +868,32 @@ where
         Box::pin(async move { Connection::send_message(self, &guid, &method, params).await })
     }
 
-    fn register_object(&self, guid: String, object: Arc<dyn ChannelOwner>) {
-        // Use blocking_lock since this may be called from sync context
-        self.objects.blocking_lock().insert(guid, object);
+    fn register_object(
+        &self,
+        guid: String,
+        object: Arc<dyn ChannelOwner>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
+        Box::pin(async move {
+            self.objects.lock().insert(guid, object);
+        })
     }
 
-    fn unregister_object(&self, guid: &str) {
-        self.objects.blocking_lock().remove(guid);
+    fn unregister_object(&self, guid: &str) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
+        let guid = guid.to_string();
+        Box::pin(async move {
+            self.objects.lock().remove(&guid);
+        })
     }
 
-    fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>> {
-        self.objects
-            .blocking_lock()
-            .get(guid)
-            .cloned()
-            .ok_or_else(|| Error::ProtocolError(format!("Object not found: {}", guid)))
+    fn get_object(&self, guid: &str) -> AsyncChannelOwnerResult<'_> {
+        let guid = guid.to_string();
+        Box::pin(async move {
+            self.objects
+                .lock()
+                .get(&guid)
+                .cloned()
+                .ok_or_else(|| Error::ProtocolError(format!("Object not found: {}", guid)))
+        })
     }
 }
 
@@ -702,6 +938,7 @@ mod tests {
             guid: "page@abc123".to_string(),
             method: "goto".to_string(),
             params: serde_json::json!({"url": "https://example.com"}),
+            metadata: Metadata::now(),
         };
 
         assert_eq!(request.id, 0);
@@ -729,7 +966,7 @@ mod tests {
         });
 
         // Dispatch response
-        connection.dispatch(response).await.unwrap();
+        Arc::new(connection).dispatch(response).await.unwrap();
 
         // Verify result
         let result = rx.await.unwrap().unwrap();
@@ -761,7 +998,7 @@ mod tests {
         });
 
         // Dispatch response
-        connection.dispatch(response).await.unwrap();
+        Arc::new(connection).dispatch(response).await.unwrap();
 
         // Verify error
         let result = rx.await.unwrap();
@@ -784,7 +1021,7 @@ mod tests {
         });
 
         // Dispatch should return error
-        let result = connection.dispatch(response).await;
+        let result = Arc::new(connection).dispatch(response).await;
         assert!(result.is_err());
         match result.unwrap_err() {
             Error::ProtocolError(msg) => assert!(msg.contains("Cannot find request")),

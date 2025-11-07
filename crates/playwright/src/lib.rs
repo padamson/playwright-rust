@@ -16,7 +16,7 @@
 // ```
 
 // Re-export core types
-pub use playwright_core::{Error, Result};
+pub use playwright_core::error::{Error, Result};
 
-// Public API (to be implemented in Phase 1, Slice 5)
-// pub struct Playwright { ... }
+// Re-export Playwright main entry point
+pub use playwright_core::protocol::Playwright;

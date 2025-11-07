@@ -17,3 +17,4 @@ tokio = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["fmt"] }

@@ -16,12 +16,12 @@
 
 use crate::channel::Channel;
 use crate::connection::ConnectionLike;
+use parking_lot::Mutex;
 use serde_json::Value;
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
-use tokio::sync::Mutex;
 
 /// Reason why an object was disposed
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -212,6 +212,23 @@ pub struct ChannelOwnerImpl {
     was_collected: AtomicBool,
 }
 
+impl Clone for ChannelOwnerImpl {
+    fn clone(&self) -> Self {
+        Self {
+            guid: self.guid.clone(),
+            type_name: self.type_name.clone(),
+            parent: self.parent.clone(),
+            connection: Arc::clone(&self.connection),
+            children: Arc::clone(&self.children),
+            channel: self.channel.clone(),
+            initializer: self.initializer.clone(),
+            was_collected: AtomicBool::new(
+                self.was_collected.load(std::sync::atomic::Ordering::SeqCst),
+            ),
+        }
+    }
+}
+
 impl ChannelOwnerImpl {
     /// Creates a new ChannelOwner base implementation.
     ///
@@ -302,12 +319,16 @@ impl ChannelOwnerImpl {
             parent.remove_child(&self.guid);
         }
 
-        // Remove from connection
-        self.connection.unregister_object(&self.guid);
+        // Remove from connection (spawn to avoid blocking in sync context)
+        let connection = self.connection.clone();
+        let guid = self.guid.clone();
+        tokio::spawn(async move {
+            connection.unregister_object(&guid).await;
+        });
 
         // Dispose all children (snapshot to avoid holding lock)
         let children: Vec<_> = {
-            let guard = self.children.blocking_lock();
+            let guard = self.children.lock();
             guard.values().cloned().collect()
         };
 
@@ -316,7 +337,7 @@ impl ChannelOwnerImpl {
         }
 
         // Clear children
-        self.children.blocking_lock().clear();
+        self.children.lock().clear();
     }
 
     /// Adopts a child object (moves from old parent to this parent).
@@ -332,12 +353,12 @@ impl ChannelOwnerImpl {
 
     /// Adds a child to this parent's registry.
     pub fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
-        self.children.blocking_lock().insert(guid, child);
+        self.children.lock().insert(guid, child);
     }
 
     /// Removes a child from this parent's registry.
     pub fn remove_child(&self, guid: &str) {
-        self.children.blocking_lock().remove(guid);
+        self.children.lock().remove(guid);
     }
 
     /// Handles a protocol event (default implementation logs it).

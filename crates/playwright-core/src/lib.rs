@@ -19,4 +19,4 @@ pub use connection::{Connection, ConnectionLike};
 pub use error::{Error, Result};
 pub use protocol::{BrowserType, Playwright};
 pub use server::PlaywrightServer;
-pub use transport::{PipeTransport, Transport};
+pub use transport::{PipeTransport, PipeTransportReceiver, Transport};

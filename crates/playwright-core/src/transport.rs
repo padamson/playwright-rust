@@ -8,6 +8,45 @@ use serde_json::Value as JsonValue;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::sync::mpsc;
 
+/// Send a JSON message using length-prefixed framing
+///
+/// Helper function for sending messages when you only have stdin access.
+/// This is used by Connection to send messages without needing the full transport.
+///
+/// # Arguments
+/// * `stdin` - The writer to send to (usually child process stdin)
+/// * `message` - JSON message to send
+pub async fn send_message<W>(stdin: &mut W, message: JsonValue) -> Result<()>
+where
+    W: AsyncWriteExt + Unpin,
+{
+    // Serialize to JSON
+    let json_bytes = serde_json::to_vec(&message)
+        .map_err(|e| Error::TransportError(format!("Failed to serialize JSON: {}", e)))?;
+
+    let length = json_bytes.len() as u32;
+
+    // Write 4-byte little-endian length prefix
+    stdin
+        .write_all(&length.to_le_bytes())
+        .await
+        .map_err(|e| Error::TransportError(format!("Failed to write length: {}", e)))?;
+
+    // Write JSON payload
+    stdin
+        .write_all(&json_bytes)
+        .await
+        .map_err(|e| Error::TransportError(format!("Failed to write message: {}", e)))?;
+
+    // Flush to ensure message is sent
+    stdin
+        .flush()
+        .await
+        .map_err(|e| Error::TransportError(format!("Failed to flush: {}", e)))?;
+
+    Ok(())
+}
+
 /// Transport trait for abstracting communication mechanisms
 ///
 /// Playwright server communication happens over stdio pipes using
@@ -55,6 +94,59 @@ where
     stdin: W,
     stdout: R,
     message_tx: mpsc::UnboundedSender<JsonValue>,
+}
+
+/// Receive-only part of PipeTransport
+///
+/// This struct only contains stdout and the message channel,
+/// allowing it to run the receive loop without needing stdin.
+/// This solves the deadlock issue by separating send and receive.
+pub struct PipeTransportReceiver<R>
+where
+    R: AsyncRead + Unpin + Send,
+{
+    stdout: R,
+    message_tx: mpsc::UnboundedSender<JsonValue>,
+}
+
+impl<R> PipeTransportReceiver<R>
+where
+    R: AsyncRead + Unpin + Send,
+{
+    /// Run the message read loop
+    ///
+    /// This continuously reads messages from stdout and sends them
+    /// to the message channel.
+    pub async fn run(mut self) -> Result<()> {
+        loop {
+            // Read 4-byte little-endian length prefix
+            let mut len_buf = [0u8; 4];
+            self.stdout.read_exact(&mut len_buf).await.map_err(|e| {
+                Error::TransportError(format!("Failed to read length prefix: {}", e))
+            })?;
+
+            let length = u32::from_le_bytes(len_buf) as usize;
+
+            // Read message payload
+            let mut message_buf = vec![0u8; length];
+            self.stdout
+                .read_exact(&mut message_buf)
+                .await
+                .map_err(|e| Error::TransportError(format!("Failed to read message: {}", e)))?;
+
+            // Parse JSON
+            let message: JsonValue = serde_json::from_slice(&message_buf)
+                .map_err(|e| Error::ProtocolError(format!("Failed to parse JSON: {}", e)))?;
+
+            // Dispatch message
+            if self.message_tx.send(message).is_err() {
+                // Channel closed, stop reading
+                break;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl<W, R> PipeTransport<W, R>
@@ -111,6 +203,25 @@ where
         };
 
         (transport, message_rx)
+    }
+
+    /// Split the transport into stdin and the rest
+    ///
+    /// This allows Connection to hold stdin separately (for sending)
+    /// while run() owns stdout (for receiving).
+    ///
+    /// # Returns
+    ///
+    /// Returns (stdin, self_without_stdin) where self_without_stdin
+    /// can still run the receive loop but cannot send.
+    pub fn into_parts(self) -> (W, PipeTransportReceiver<R>) {
+        (
+            self.stdin,
+            PipeTransportReceiver {
+                stdout: self.stdout,
+                message_tx: self.message_tx,
+            },
+        )
     }
 
     /// Run the message read loop

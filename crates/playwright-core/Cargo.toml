@@ -15,9 +15,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = "0.1"
+parking_lot = "0.12"
 
 [dev-dependencies]
 anyhow = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
 
 [build-dependencies]
 reqwest = { version = "0.12", features = ["blocking"] }

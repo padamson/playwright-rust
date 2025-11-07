@@ -57,11 +57,11 @@ use std::sync::Arc;
 ///         "firefox": { "guid": "browserType@firefox" },
 ///         "webkit": { "guid": "browserType@webkit" }
 ///     })
-/// )?;
+/// ).await?;
 /// # Ok(())
 /// # }
 /// ```
-pub fn create_object(
+pub async fn create_object(
     parent: ParentOrConnection,
     type_name: String,
     guid: String,
@@ -80,7 +80,7 @@ pub fn create_object(
                 }
             };
 
-            Arc::new(Playwright::new(connection, type_name, guid, initializer)?)
+            Arc::new(Playwright::new(connection, type_name, guid, initializer).await?)
         }
 
         "BrowserType" => {

@@ -47,27 +47,18 @@ async fn test_connection_lifecycle_with_real_server() {
         conn.run().await;
     });
 
-    // Give the server time to start and send initialization messages
-    // The server will send the root Playwright object initialization
+    // Give the server time to start
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // TODO (Slice 5 - Initialization Flow): Here we'll:
-    // 1. Receive and process the root Playwright object initialization
-    // 2. Extract the GUID from the initialization message
-    // 3. Send a test request to verify request/response correlation
-    // 4. Verify we get the expected response back
-    //
-    // Slice 4 (complete) provides the infrastructure:
-    // - Object factory creates protocol objects from type names
-    // - ChannelOwner base implementation for all protocol objects
-    // - Connection handles __create__, __dispose__, __adopt__ messages
-    // - Object registry stores and retrieves objects by GUID
-    //
-    // This test verifies the infrastructure works:
-    // - Server launches
-    // - Connection and transport loops start
+    // This test verifies the connection infrastructure works:
+    // - Server launches successfully
+    // - Connection and transport loops start without errors
     // - Everything compiles and runs together
-    // - No panics or immediate errors
+    // - No panics or immediate crashes
+    //
+    // Full protocol initialization testing is done in:
+    // - tests/initialization_integration.rs (complete initialization flow)
+    // - tests/playwright_launch.rs (high-level Playwright::launch() API)
 
     // Clean up
     // Abort the connection loop (which will also stop reading from transport)
@@ -146,32 +137,30 @@ async fn test_connection_detects_server_crash_on_send() {
     // closes the stdout pipe. This is tested separately in the transport layer.
 }
 
-/// Test concurrent requests (deferred to Slice 5)
+/// Test concurrent requests (deferred to Phase 2)
 ///
 /// This test will verify that multiple concurrent requests can be sent
 /// and responses are correctly correlated, even when they arrive out of order.
 ///
-/// Requires Slice 5 (Initialization Flow) because we need to:
-/// - Receive and process the root Playwright object from server
-/// - Extract object GUIDs to send requests to
-/// - Send actual protocol requests (not just arbitrary test messages)
+/// Deferred to Phase 2 because it requires:
+/// - Multiple protocol objects to send requests to (Browser, Page, etc.)
+/// - Complex message sequences beyond initialization
 #[tokio::test]
-#[ignore] // Requires full protocol initialization (Slice 5)
+#[ignore] // Deferred to Phase 2 - requires browser launching
 async fn test_concurrent_requests_with_server() {
-    // TODO (Slice 5): Implement after initialization flow is complete
+    // Will implement in Phase 2 when we have browser launching and multiple objects
 }
 
-/// Test error handling with invalid requests (deferred to Slice 5)
+/// Test error handling with invalid requests (deferred to Phase 2)
 ///
 /// This test will verify that protocol errors from the server are properly
 /// converted to Rust errors and propagated correctly.
 ///
-/// Requires Slice 5 (Initialization Flow) because we need to:
-/// - Complete the initialization handshake with the server
-/// - Have valid object GUIDs to send requests to
-/// - Send intentionally invalid requests to trigger protocol errors
+/// Deferred to Phase 2 because it requires:
+/// - Valid object GUIDs from browser/page objects
+/// - Intentionally invalid requests to trigger protocol errors
 #[tokio::test]
-#[ignore] // Requires full protocol initialization (Slice 5)
+#[ignore] // Deferred to Phase 2 - requires browser objects
 async fn test_error_response_from_server() {
-    // TODO (Slice 5): Implement after initialization flow is complete
+    // Will implement in Phase 2 when we have browser launching
 }

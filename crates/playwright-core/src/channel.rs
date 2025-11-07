@@ -63,6 +63,7 @@ use std::sync::Arc;
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Clone)]
 pub struct Channel {
     guid: String,
     connection: Arc<dyn ConnectionLike>,

@@ -15,19 +15,19 @@ Provide official-quality Rust bindings for Microsoft Playwright, following the s
 `playwright-rust` follows Microsoft's proven architecture for language bindings:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ playwright-rust (Rust API)                          │
-│ - High-level, idiomatic Rust API                    │
-│ - Async/await with tokio                           │
-│ - Type-safe bindings                               │
-└─────────────────────┬───────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ playwright-rust (Rust API)                   │
+│ - High-level, idiomatic Rust API             │
+│ - Async/await with tokio                     │
+│ - Type-safe bindings                         │
+└─────────────────────┬────────────────────────┘
                       │ JSON-RPC over stdio
-┌─────────────────────▼───────────────────────────────┐
-│ Playwright Server (Node.js/TypeScript)             │
-│ - Browser automation logic                          │
-│ - Cross-browser protocol abstraction                │
-│ - Maintained by Microsoft Playwright team           │
-└─────────────────────┬───────────────────────────────┘
+┌─────────────────────▼────────────────────────┐
+│ Playwright Server (Node.js/TypeScript)       │
+│ - Browser automation logic                   │
+│ - Cross-browser protocol abstraction         │
+│ - Maintained by Microsoft Playwright team    │
+└─────────────────────┬────────────────────────┘
                       │ Native protocols
         ┌─────────────┼─────────────┐
         ▼             ▼             ▼
@@ -43,14 +43,33 @@ This means:
 
 ## Quick Example
 
-> **Note:** This example shows the target API. Phase 1 (protocol foundation) is nearly complete, with browser launching (`BrowserType::launch()`) coming in Phase 2.
+### Phase 1: Protocol Foundation (✅ Complete!)
 
 ```rust
 use playwright::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Launch Playwright (Phase 1 - in progress)
+    // Launch Playwright and access browser types
+    let playwright = Playwright::launch().await?;
+
+    println!("Chromium: {}", playwright.chromium().executable_path());
+    println!("Firefox: {}", playwright.firefox().executable_path());
+    println!("WebKit: {}", playwright.webkit().executable_path());
+
+    Ok(())
+}
+```
+
+### Target API (Phase 2+)
+
+> **Note:** Browser launching, page interactions, and assertions will be implemented in future phases.
+
+```rust
+use playwright::Playwright;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let playwright = Playwright::launch().await?;
 
     // Launch browser (Phase 2 - coming soon)
@@ -89,14 +108,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Project Status
 
-**Current Phase:** Phase 1 - Protocol Foundation (90% complete, Slice 5 in progress)
+**Current Phase:** ✅ Phase 1 Complete! → Phase 2 Starting Soon
 
-### Phase 1 Progress (4 of 5 slices complete)
+### Phase 1: Protocol Foundation (✅ Complete!)
 - [x] **Slice 1:** Server management (download, launch, lifecycle)
 - [x] **Slice 2:** Transport layer (stdio, length-prefixed messages)
 - [x] **Slice 3:** Connection layer (JSON-RPC request/response correlation)
 - [x] **Slice 4:** Object factory and channel owners
-- [ ] **Slice 5:** Entry point (`Playwright::launch()` and initialization flow)
+- [x] **Slice 5:** Entry point (`Playwright::launch()` and initialization flow)
 
 ### Upcoming Phases
 - [ ] **Phase 2:** Browser API (Browser, Context, Page lifecycle, `BrowserType::launch()`)
@@ -142,8 +161,9 @@ cargo build
 # Run tests
 cargo test
 
-# Run examples
-cargo run --example basic
+# Run examples (requires PLAYWRIGHT_DRIVER_PATH)
+PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.49.0-mac-arm64 \
+    cargo run --package playwright --example basic
 ```
 
 ### Testing
