@@ -69,3 +69,12 @@ repos:
         language: system
         types: [rust]
         pass_filenames: false
+
+      # 5. Run examples (same as CI)
+      - id: cargo-run-example
+        name: cargo run --example basic
+        description: Verify examples work
+        entry: cargo run --package playwright --example basic
+        language: system
+        types: [rust]
+        pass_filenames: false

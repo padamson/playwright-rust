@@ -66,10 +66,10 @@ pub fn get_driver_executable() -> Result<(PathBuf, PathBuf)> {
 /// This is the PRIMARY path and matches how playwright-python, playwright-java,
 /// and playwright-dotnet distribute their drivers.
 fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
-    // Check if build.rs set the environment variables
-    if let (Ok(node_exe), Ok(cli_js)) = (
-        std::env::var("PLAYWRIGHT_NODE_EXE"),
-        std::env::var("PLAYWRIGHT_CLI_JS"),
+    // Check if build.rs set the environment variables (compile-time)
+    if let (Some(node_exe), Some(cli_js)) = (
+        option_env!("PLAYWRIGHT_NODE_EXE"),
+        option_env!("PLAYWRIGHT_CLI_JS"),
     ) {
         let node_path = PathBuf::from(node_exe);
         let cli_path = PathBuf::from(cli_js);
@@ -79,8 +79,8 @@ fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
         }
     }
 
-    // Fallback: Check PLAYWRIGHT_DRIVER_DIR and construct paths
-    if let Ok(driver_dir) = std::env::var("PLAYWRIGHT_DRIVER_DIR") {
+    // Fallback: Check PLAYWRIGHT_DRIVER_DIR and construct paths (compile-time)
+    if let Some(driver_dir) = option_env!("PLAYWRIGHT_DRIVER_DIR") {
         let driver_path = PathBuf::from(driver_dir);
         let node_exe = if cfg!(windows) {
             driver_path.join("node.exe")
