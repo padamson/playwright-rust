@@ -152,15 +152,15 @@ impl Locator {
     /// Clicks the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-click>
-    pub async fn click(&self, _options: Option<()>) -> Result<()> {
-        self.frame.locator_click(&self.selector).await
+    pub async fn click(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
+        self.frame.locator_click(&self.selector, options).await
     }
 
     /// Double clicks the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-dblclick>
-    pub async fn dblclick(&self, _options: Option<()>) -> Result<()> {
-        self.frame.locator_dblclick(&self.selector).await
+    pub async fn dblclick(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
+        self.frame.locator_dblclick(&self.selector, options).await
     }
 
     /// Fills the element with text.

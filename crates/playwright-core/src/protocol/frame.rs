@@ -514,29 +514,49 @@ impl Frame {
     // Action delegate methods
 
     /// Clicks the element matching the selector.
-    pub(crate) async fn locator_click(&self, selector: &str) -> Result<()> {
-        self.channel()
-            .send_no_result(
-                "click",
-                serde_json::json!({
-                    "selector": selector,
-                    "strict": true
-                }),
-            )
-            .await
+    pub(crate) async fn locator_click(
+        &self,
+        selector: &str,
+        options: Option<crate::protocol::ClickOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "strict": true
+        });
+
+        if let Some(opts) = options {
+            let opts_json = opts.to_json();
+            if let Some(obj) = params.as_object_mut() {
+                if let Some(opts_obj) = opts_json.as_object() {
+                    obj.extend(opts_obj.clone());
+                }
+            }
+        }
+
+        self.channel().send_no_result("click", params).await
     }
 
     /// Double clicks the element matching the selector.
-    pub(crate) async fn locator_dblclick(&self, selector: &str) -> Result<()> {
-        self.channel()
-            .send_no_result(
-                "dblclick",
-                serde_json::json!({
-                    "selector": selector,
-                    "strict": true
-                }),
-            )
-            .await
+    pub(crate) async fn locator_dblclick(
+        &self,
+        selector: &str,
+        options: Option<crate::protocol::ClickOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "strict": true
+        });
+
+        if let Some(opts) = options {
+            let opts_json = opts.to_json();
+            if let Some(obj) = params.as_object_mut() {
+                if let Some(opts_obj) = opts_json.as_object() {
+                    obj.extend(opts_obj.clone());
+                }
+            }
+        }
+
+        self.channel().send_no_result("dblclick", params).await
     }
 
     /// Fills the element with text.

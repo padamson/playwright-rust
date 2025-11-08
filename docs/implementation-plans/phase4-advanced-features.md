@@ -233,8 +233,8 @@ Phase 4 will be considered complete when:
 - [x] locator.screenshot() works with ElementHandles ✅ (Slice 1)
 - [x] Screenshot options fully implemented (type, quality, full_page, clip, etc.) ✅ (Slice 2)
 - [x] Navigation timeout error handling tested ✅ (Slice 3)
-- [ ] ClickOptions with builder pattern implemented
-- [ ] Action position and modifiers work correctly
+- [x] ClickOptions with builder pattern implemented ✅ (Slice 4)
+- [x] Action position and modifiers work correctly ✅ (Slice 4)
 - [ ] SelectOption supports value, label, and index
 - [ ] All deferred Phase 3 items addressed (implemented or explicitly re-deferred)
 - [ ] All tests passing cross-browser
@@ -244,7 +244,7 @@ Phase 4 will be considered complete when:
 
 ## Implementation Plan
 
-**Status:** In Progress - Slices 1-3 Complete ✅, Ready for Slice 4
+**Status:** In Progress - Slices 1-4 Complete ✅, Ready for Slice 5
 
 Phase 4 follows the same TDD and vertical slicing approach as Phase 3.
 
@@ -390,21 +390,44 @@ Phase 4 follows the same TDD and vertical slicing approach as Phase 3.
 
 ---
 
-### Slice 4: ClickOptions with Builder Pattern
+### Slice 4: ClickOptions with Builder Pattern ✅
+
+**Status:** Complete (2025-11-08)
 
 **Goal:** Implement ClickOptions with position, modifiers, button, force, trial options.
 
 **Why Fourth:** Most commonly used action option. Foundation for other action options.
 
 **Tasks:**
-- [ ] Create ClickOptions struct with builder
-- [ ] Create MouseButton enum
-- [ ] Create KeyboardModifier enum
-- [ ] Create Position struct
-- [ ] Update click() and dblclick() signatures
-- [ ] Serialize options to protocol format
-- [ ] Tests with position, modifiers, button options
-- [ ] Test trial option (dry-run)
+- [x] Create ClickOptions struct with builder
+- [x] Create MouseButton enum (Left, Right, Middle)
+- [x] Create KeyboardModifier enum (Alt, Control, Meta, Shift, ControlOrMeta)
+- [x] Create Position struct
+- [x] Update click() and dblclick() signatures to accept ClickOptions
+- [x] Serialize options to protocol format
+- [x] Tests with position, modifiers, button options
+- [x] Test trial option (dry-run)
+- [x] Test force option
+- [x] Cross-browser tests (Chromium, Firefox, WebKit)
+
+**Files Created:**
+- `crates/playwright-core/src/protocol/click.rs`
+- `crates/playwright-core/tests/click_options_test.rs`
+
+**Files Modified:**
+- `crates/playwright-core/src/protocol/mod.rs`
+- `crates/playwright-core/src/protocol/locator.rs`
+- `crates/playwright-core/src/protocol/frame.rs`
+- `crates/playwright-core/tests/test_server.rs` (added `/click_options.html` route)
+
+**Acceptance Criteria:** ✅ All Met
+- ✅ MouseButton enum (Left, Right, Middle) with proper serialization
+- ✅ KeyboardModifier enum (Alt, Control, Meta, Shift, ControlOrMeta)
+- ✅ Position struct for click coordinates
+- ✅ ClickOptions with builder pattern
+- ✅ Support for button, click_count, delay, force, modifiers, no_wait_after, position, timeout, trial options
+- ✅ click() and dblclick() methods accept ClickOptions
+- ✅ Cross-browser compatibility verified (Chromium, Firefox, WebKit)
 
 ---
 

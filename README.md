@@ -4,6 +4,14 @@
 
 **Status:** 🚧 Active Development - Not yet ready for production use
 
+## 🎯 Why playwright-rust?
+
+Rust is emerging as a serious web development language, with frameworks like Axum and Actix gaining traction. AI coding assistants are making Rust accessible to more developers. Test-Driven Development is experiencing a renaissance as the optimal way to work with AI agents.
+
+**These trends are converging now, and they need production-quality E2E testing.**
+
+`playwright-rust` fills that gap by bringing Playwright's industry-leading browser automation to the Rust ecosystem. Read our [WHY.md](WHY.md) to understand the vision, timing, and philosophy behind this project.
+
 ## Vision and Roadmap
 
 Provide official-quality Rust bindings for Microsoft Playwright, following the same architecture as [playwright-python](https://github.com/microsoft/playwright-python), [playwright-java](https://github.com/microsoft/playwright-java), and [playwright-dotnet](https://github.com/microsoft/playwright-dotnet).
@@ -78,6 +86,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     heading.click(None).await?;
     heading.dblclick(None).await?;
 
+    // Click with options (button, modifiers, position, etc.)
+    use playwright_core::protocol::{ClickOptions, MouseButton, KeyboardModifier, Position};
+    let options = ClickOptions::builder()
+        .button(MouseButton::Right)
+        .modifiers(vec![KeyboardModifier::Shift])
+        .position(Position { x: 10.0, y: 10.0 })
+        .build();
+    heading.click(Some(options)).await?;
+
     // Form interactions
     let checkbox = page.locator("input[type=checkbox]").await;
     checkbox.check(None).await?;
@@ -148,6 +165,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - ✅ State queries (`is_visible()`, `is_enabled()`, `is_checked()`, etc.)
 - ✅ Locator chaining (`first()`, `last()`, `nth()`, nested locators)
 - ✅ Element actions (`click()`, `dblclick()`, `fill()`, `clear()`, `press()`)
+- ✅ Click options (button, modifiers, position, force, trial, timeout, delay)
 - ✅ Checkbox actions (`check()`, `uncheck()`)
 - ✅ Mouse interactions (`hover()`)
 - ✅ Input value reading (`input_value()`)
@@ -160,7 +178,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - ✅ Element queries (`page.query_selector()`, `query_selector_all()`)
 - ✅ Proper lifecycle management and cleanup
 
-**Coming next:** Action options (click position, modifiers, etc.), assertions, network interception
+**Coming next:** More action options (fill, press, check, hover, select), assertions, network interception
 
 ## Installation
 

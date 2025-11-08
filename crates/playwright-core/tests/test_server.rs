@@ -34,7 +34,8 @@ impl TestServer {
             .route("/hover.html", get(hover_page))
             .route("/select.html", get(select_page))
             .route("/upload.html", get(upload_page))
-            .route("/keyboard_mouse.html", get(keyboard_mouse_page));
+            .route("/keyboard_mouse.html", get(keyboard_mouse_page))
+            .route("/click_options.html", get(click_options_page));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -379,6 +380,58 @@ async fn keyboard_mouse_page() -> Response<Body> {
 
     document.addEventListener('mousemove', (e) => {
       document.getElementById('mouse-coords').textContent = `Mouse: (${e.clientX}, ${e.clientY})`;
+    });
+  </script>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+async fn click_options_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>Click Options Test</title></head>
+<body>
+  <button id="button">Click Me</button>
+  <button id="hidden-button" style="display: none;">Hidden Button</button>
+  <div id="result"></div>
+  <script>
+    const button = document.getElementById('button');
+    const hiddenButton = document.getElementById('hidden-button');
+    const result = document.getElementById('result');
+
+    // Track all mouse events
+    button.addEventListener('mousedown', (e) => {
+      const buttonName = e.button === 0 ? 'left' : e.button === 1 ? 'middle' : 'right';
+      result.textContent = `mousedown button:${buttonName} shiftKey:${e.shiftKey} ctrlKey:${e.ctrlKey}`;
+    });
+
+    button.addEventListener('click', (e) => {
+      const buttonName = e.button === 0 ? 'left' : e.button === 1 ? 'middle' : 'right';
+      result.textContent = `click button:${buttonName} shiftKey:${e.shiftKey} ctrlKey:${e.ctrlKey}`;
+    });
+
+    button.addEventListener('contextmenu', (e) => {
+      e.preventDefault(); // Prevent context menu
+      result.textContent = `contextmenu (right) shiftKey:${e.shiftKey} ctrlKey:${e.ctrlKey}`;
+    });
+
+    button.addEventListener('auxclick', (e) => {
+      const buttonName = e.button === 1 ? 'middle' : e.button === 2 ? 'right' : 'other';
+      result.textContent = `auxclick button:${buttonName} shiftKey:${e.shiftKey} ctrlKey:${e.ctrlKey}`;
+    });
+
+    button.addEventListener('dblclick', (e) => {
+      result.textContent = 'dblclick';
+    });
+
+    hiddenButton.addEventListener('click', (e) => {
+      result.textContent = 'hidden-button-clicked';
     });
   </script>
 </body>
