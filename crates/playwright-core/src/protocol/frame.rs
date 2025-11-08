@@ -639,6 +639,14 @@ impl Frame {
             )
             .await
     }
+
+    // TODO: Element screenshots require ElementHandle protocol support
+    // Deferred to Phase 4 - Frame.screenshot with selector isn't supported by protocol
+    //
+    // /// Takes a screenshot of an element matching the selector.
+    // pub(crate) async fn locator_screenshot(&self, selector: &str) -> Result<Vec<u8>> {
+    //     ...
+    // }
 }
 
 impl ChannelOwner for Frame {

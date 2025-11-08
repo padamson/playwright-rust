@@ -4,9 +4,11 @@
 
 **Status:** 🚧 Active Development - Not yet ready for production use
 
-## Vision
+## Vision and Roadmap
 
 Provide official-quality Rust bindings for Microsoft Playwright, following the same architecture as [playwright-python](https://github.com/microsoft/playwright-python), [playwright-java](https://github.com/microsoft/playwright-java), and [playwright-dotnet](https://github.com/microsoft/playwright-dotnet).
+
+See [Development Roadmap](docs/roadmap.md) for the complete vision and timeline.
 
 **Goal:** Build this library to a production-quality state for broad adoption as `@playwright/rust` or `playwright-rust`.
 
@@ -108,6 +110,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     mouse.move_to(100, 200, None).await?;
     mouse.click(100, 200, None).await?;
 
+    // Take screenshot
+    let screenshot_bytes = page.screenshot(None).await?;
+    // Or save to file:
+    // page.screenshot_to_file(&PathBuf::from("screenshot.png"), None).await?;
+
     // Cleanup
     page.close().await?;
     browser.close().await?;
@@ -138,11 +145,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - ✅ File uploads (`set_input_files()`, multiple files)
 - ✅ Low-level keyboard control (`keyboard.down()`, `up()`, `press()`, `type_text()`, `insert_text()`)
 - ✅ Low-level mouse control (`mouse.move_to()`, `click()`, `dblclick()`, `down()`, `up()`, `wheel()`)
+- ✅ Screenshots (`page.screenshot()`, save to file)
 - ✅ Proper lifecycle management and cleanup
 
-**Coming next:** Screenshots, waiting methods, assertions
-
-See [Development Roadmap](docs/roadmap.md) for the complete vision and timeline.
+**Coming next:** Waiting methods, assertions, network interception
 
 ## Installation
 
@@ -267,10 +273,6 @@ This project aims for **production-quality** Rust bindings matching Playwright's
 - Maintain type safety
 - Document public APIs with examples
 - Pass CI checks (fmt, clippy, tests)
-
-## Roadmap
-
-See [Development Roadmap](docs/roadmap.md) for the complete vision and timeline.
 
 ## License
 

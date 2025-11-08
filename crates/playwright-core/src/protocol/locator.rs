@@ -267,6 +267,16 @@ impl Locator {
             .locator_set_input_files_multiple(&self.selector, files)
             .await
     }
+
+    // TODO: Element screenshots require ElementHandle protocol support
+    // Deferred to Phase 4 - need to implement ElementHandles
+    //
+    // /// Takes a screenshot of the element and returns the image bytes.
+    // ///
+    // /// See: <https://playwright.dev/docs/api/class-locator#locator-screenshot>
+    // pub async fn screenshot(&self, _options: Option<()>) -> Result<Vec<u8>> {
+    //     self.frame.locator_screenshot(&self.selector).await
+    // }
 }
 
 impl std::fmt::Debug for Locator {

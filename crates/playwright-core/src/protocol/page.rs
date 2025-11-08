@@ -6,6 +6,7 @@
 use crate::channel::Channel;
 use crate::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::error::Result;
+use base64::Engine;
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
@@ -549,6 +550,95 @@ impl Page {
                 "Reload did not return a response".to_string(),
             ))
         }
+    }
+
+    /// Takes a screenshot of the page and returns the image bytes.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// page.goto("https://example.com", None).await?;
+    ///
+    /// // Capture screenshot as bytes
+    /// let bytes = page.screenshot(None).await?;
+    /// assert!(!bytes.is_empty());
+    ///
+    /// browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-screenshot>
+    pub async fn screenshot(&self, _options: Option<()>) -> Result<Vec<u8>> {
+        // For now, use default options - PNG format
+        let params = serde_json::json!({
+            "type": "png"
+        });
+
+        #[derive(Deserialize)]
+        struct ScreenshotResponse {
+            binary: String,
+        }
+
+        let response: ScreenshotResponse = self.channel().send("screenshot", params).await?;
+
+        // Decode base64 to bytes
+        let bytes = base64::prelude::BASE64_STANDARD
+            .decode(&response.binary)
+            .map_err(|e| {
+                crate::error::Error::ProtocolError(format!("Failed to decode screenshot: {}", e))
+            })?;
+
+        Ok(bytes)
+    }
+
+    /// Takes a screenshot and saves it to a file, also returning the bytes.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # use std::path::PathBuf;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// page.goto("https://example.com", None).await?;
+    ///
+    /// // Save screenshot to file
+    /// let path = PathBuf::from("screenshot.png");
+    /// let bytes = page.screenshot_to_file(&path, None).await?;
+    /// assert!(path.exists());
+    ///
+    /// browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-screenshot>
+    pub async fn screenshot_to_file(
+        &self,
+        path: &std::path::Path,
+        options: Option<()>,
+    ) -> Result<Vec<u8>> {
+        // Get the screenshot bytes
+        let bytes = self.screenshot(options).await?;
+
+        // Write to file
+        tokio::fs::write(path, &bytes).await.map_err(|e| {
+            crate::error::Error::ProtocolError(format!("Failed to write screenshot file: {}", e))
+        })?;
+
+        Ok(bytes)
     }
 }
 
