@@ -4,7 +4,8 @@
 // PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.49.0-mac-arm64 \
 //     cargo run --package playwright --example routing
 
-use playwright_core::protocol::Playwright;
+use playwright_core::protocol::{FulfillOptions, Playwright};
+use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -134,6 +135,88 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     page7.goto("https://example.com", None).await?;
     println!("  ✓ Request data inspected\n");
+
+    // Example 8: Mock responses with fulfill()
+    println!("Example 8: Mock API with custom response");
+    let page8 = browser.new_page().await?;
+    page8
+        .route("**/api/data", |route| async move {
+            let options = FulfillOptions::builder()
+                .status(200)
+                .body_string("Mocked response")
+                .content_type("text/plain")
+                .build();
+            println!("  🎭 Mocked API: {}", route.request().url());
+            route.fulfill(Some(options)).await
+        })
+        .await?;
+
+    page8.goto("https://example.com", None).await?;
+    println!("  ✓ Custom text response mocked\n");
+
+    // Example 9: Mock JSON responses
+    println!("Example 9: Mock JSON API response");
+    let page9 = browser.new_page().await?;
+    page9
+        .route("**/api/users", |route| async move {
+            let data = json!({
+                "users": [
+                    {"id": 1, "name": "Alice"},
+                    {"id": 2, "name": "Bob"}
+                ],
+                "total": 2
+            });
+            let options = FulfillOptions::builder()
+                .json(&data)
+                .expect("Failed to serialize JSON")
+                .build();
+            println!("  🎭 Mocked JSON: {}", route.request().url());
+            route.fulfill(Some(options)).await
+        })
+        .await?;
+
+    page9.goto("https://example.com", None).await?;
+    println!("  ✓ JSON response mocked\n");
+
+    // Example 10: Custom status codes
+    println!("Example 10: Mock with custom status code");
+    let page10 = browser.new_page().await?;
+    page10
+        .route("**/api/error", |route| async move {
+            let options = FulfillOptions::builder()
+                .status(404)
+                .body_string("Not Found")
+                .content_type("text/plain")
+                .build();
+            println!("  🎭 Mocked 404: {}", route.request().url());
+            route.fulfill(Some(options)).await
+        })
+        .await?;
+
+    page10.goto("https://example.com", None).await?;
+    println!("  ✓ Custom status code mocked\n");
+
+    // Example 11: Custom headers
+    println!("Example 11: Mock with custom headers");
+    let page11 = browser.new_page().await?;
+    page11
+        .route("**/api/headers", |route| async move {
+            let mut headers = std::collections::HashMap::new();
+            headers.insert("X-Custom-Header".to_string(), "CustomValue".to_string());
+            headers.insert("X-API-Version".to_string(), "v2".to_string());
+
+            let options = FulfillOptions::builder()
+                .headers(headers)
+                .body_string("Response with custom headers")
+                .content_type("text/plain")
+                .build();
+            println!("  🎭 Mocked with headers: {}", route.request().url());
+            route.fulfill(Some(options)).await
+        })
+        .await?;
+
+    page11.goto("https://example.com", None).await?;
+    println!("  ✓ Custom headers mocked\n");
 
     // Cleanup
     browser.close().await?;

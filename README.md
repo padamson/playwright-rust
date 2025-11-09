@@ -232,6 +232,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }).await?;
 
+    // Mock API responses with route.fulfill()
+    use playwright_core::protocol::FulfillOptions;
+
+    // Mock text response
+    page.route("**/api/data", |route| async move {
+        let options = FulfillOptions::builder()
+            .body_string("Mocked response")
+            .content_type("text/plain")
+            .build();
+        route.fulfill(Some(options)).await
+    }).await?;
+
+    // Mock JSON response
+    page.route("**/api/users", |route| async move {
+        let data = serde_json::json!({
+            "users": [{"id": 1, "name": "Alice"}],
+            "total": 1
+        });
+        let options = FulfillOptions::builder()
+            .json(&data)
+            .expect("JSON serialization")
+            .build();
+        route.fulfill(Some(options)).await
+    }).await?;
+
+    // Mock with custom status and headers
+    page.route("**/api/error", |route| async move {
+        let mut headers = std::collections::HashMap::new();
+        headers.insert("X-Error-Code".to_string(), "AUTH_FAILED".to_string());
+
+        let options = FulfillOptions::builder()
+            .status(401)
+            .headers(headers)
+            .body_string("Unauthorized")
+            .content_type("text/plain")
+            .build();
+        route.fulfill(Some(options)).await
+    }).await?;
+
     // Cleanup
     page.close().await?;
     browser.close().await?;
@@ -289,8 +328,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - ✅ Multiple route handlers with priority (last registered wins)
 - ✅ Cross-browser routing (Chromium, Firefox, WebKit)
 - ✅ JavaScript evaluation with return values (`page.evaluate_value()`)
+- ⚠️ Response mocking (`route.fulfill()` with status, headers, body) - Works for API/fetch, main document navigation needs investigation
+- ✅ JSON response helpers (`.json()` with automatic serialization)
+- ✅ Custom status codes and headers in mocked responses
 
-**Coming next:** route.fulfill(), downloads/dialogs
+**Coming next:** fulfill() main document support, downloads/dialogs
 
 ## Installation
 

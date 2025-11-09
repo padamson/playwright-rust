@@ -48,6 +48,6 @@ pub use playwright::Playwright;
 pub use request::Request;
 pub use response::ResponseObject;
 pub use root::Root;
-pub use route::{ContinueOptions, Route};
+pub use route::{ContinueOptions, FulfillOptions, FulfillOptionsBuilder, Route};
 pub use screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 pub use select_option::SelectOption;

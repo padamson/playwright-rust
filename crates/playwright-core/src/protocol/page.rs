@@ -956,7 +956,7 @@ impl Page {
     /// Handles a route event from the protocol
     ///
     /// Called by on_event when a "route" event is received
-    fn on_route_event(&self, route: Route) {
+    async fn on_route_event(&self, route: Route) {
         let handlers = self.route_handlers.lock().unwrap().clone();
         let url = route.request().url().to_string();
 
@@ -965,11 +965,11 @@ impl Page {
             // Use glob pattern matching
             if Self::matches_pattern(&entry.pattern, &url) {
                 let handler = entry.handler.clone();
-                tokio::spawn(async move {
-                    if let Err(e) = handler(route).await {
-                        eprintln!("Route handler error: {}", e);
-                    }
-                });
+                // Execute handler and wait for completion
+                // This ensures fulfill/continue/abort completes before browser continues
+                if let Err(e) = handler(route).await {
+                    eprintln!("Route handler error: {}", e);
+                }
                 break;
             }
         }
@@ -1079,8 +1079,8 @@ impl ChannelOwner for Page {
                             }
                         };
 
-                        // Call the route handler
-                        self_clone.on_route_event(route);
+                        // Call the route handler and wait for completion
+                        self_clone.on_route_event(route).await;
                     });
                 }
             }
