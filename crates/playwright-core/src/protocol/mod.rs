@@ -12,10 +12,13 @@
 // - Objects communicate with the server via their Channel
 
 pub mod action_options;
+pub mod artifact;
 pub mod browser;
 pub mod browser_context;
 pub mod browser_type;
 pub mod click;
+pub mod dialog;
+pub mod download;
 pub mod element_handle;
 pub mod frame;
 pub mod keyboard;
@@ -38,6 +41,8 @@ pub use browser::Browser;
 pub use browser_context::BrowserContext;
 pub use browser_type::BrowserType;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};
+pub use dialog::Dialog;
+pub use download::Download;
 pub use element_handle::ElementHandle;
 pub use frame::Frame;
 pub use keyboard::Keyboard;

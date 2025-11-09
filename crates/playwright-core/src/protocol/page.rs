@@ -6,7 +6,7 @@
 use crate::channel::Channel;
 use crate::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::error::Result;
-use crate::protocol::Route;
+use crate::protocol::{Dialog, Download, Route};
 use base64::Engine;
 use serde::Deserialize;
 use serde_json::Value;
@@ -58,10 +58,20 @@ pub struct Page {
     main_frame_guid: String,
     /// Route handlers for network interception
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
+    /// Download event handlers
+    download_handlers: Arc<Mutex<Vec<DownloadHandler>>>,
+    /// Dialog event handlers
+    dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
 }
 
 /// Type alias for boxed route handler future
 type RouteHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed download handler future
+type DownloadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed dialog handler future
+type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// Storage for a single route handler
 #[derive(Clone)]
@@ -69,6 +79,12 @@ struct RouteHandlerEntry {
     pattern: String,
     handler: Arc<dyn Fn(Route) -> RouteHandlerFuture + Send + Sync>,
 }
+
+/// Download event handler
+type DownloadHandler = Arc<dyn Fn(Download) -> DownloadHandlerFuture + Send + Sync>;
+
+/// Dialog event handler
+type DialogHandler = Arc<dyn Fn(Dialog) -> DialogHandlerFuture + Send + Sync>;
 
 impl Page {
     /// Creates a new Page from protocol initialization
@@ -115,11 +131,17 @@ impl Page {
         // Initialize empty route handlers
         let route_handlers = Arc::new(Mutex::new(Vec::new()));
 
+        // Initialize empty event handlers
+        let download_handlers = Arc::new(Mutex::new(Vec::new()));
+        let dialog_handlers = Arc::new(Mutex::new(Vec::new()));
+
         Ok(Self {
             base,
             url,
             main_frame_guid,
             route_handlers,
+            download_handlers,
+            dialog_handlers,
         })
     }
 
@@ -993,6 +1015,137 @@ impl Page {
             }
         }
     }
+
+    /// Registers a download event handler.
+    ///
+    /// The handler will be called when a download is triggered by the page.
+    /// Downloads occur when the page initiates a file download (e.g., clicking a link
+    /// with the download attribute, or a server response with Content-Disposition: attachment).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the Download object
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// // Register download handler
+    /// page.on_download(|download| async move {
+    ///     println!("Download started: {}", download.url());
+    ///     download.save_as("/path/to/save/file").await
+    /// }).await?;
+    ///
+    /// page.goto("https://example.com", None).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-download>
+    pub async fn on_download<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Download) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        // Wrap handler with type erasure
+        let handler = Arc::new(move |download: Download| -> DownloadHandlerFuture {
+            Box::pin(handler(download))
+        });
+
+        // Store handler
+        self.download_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
+    /// Registers a dialog event handler.
+    ///
+    /// The handler will be called when a JavaScript dialog is triggered (alert, confirm, prompt, or beforeunload).
+    /// The dialog must be explicitly accepted or dismissed, otherwise the page will freeze.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the Dialog object
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_core::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// // Register dialog handler
+    /// page.on_dialog(|dialog| async move {
+    ///     println!("Dialog: {} - {}", dialog.type_(), dialog.message());
+    ///     match dialog.type_() {
+    ///         "alert" => dialog.accept(None).await,
+    ///         "confirm" => dialog.accept(None).await,
+    ///         "prompt" => dialog.accept(Some("user input")).await,
+    ///         _ => dialog.dismiss().await,
+    ///     }
+    /// }).await?;
+    ///
+    /// page.goto("https://example.com", None).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-dialog>
+    pub async fn on_dialog<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Dialog) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        // Wrap handler with type erasure
+        let handler =
+            Arc::new(move |dialog: Dialog| -> DialogHandlerFuture { Box::pin(handler(dialog)) });
+
+        // Store handler
+        self.dialog_handlers.lock().unwrap().push(handler);
+
+        // Dialog events are auto-emitted (no subscription needed)
+
+        Ok(())
+    }
+
+    /// Handles a download event from the protocol
+    async fn on_download_event(&self, download: Download) {
+        let handlers = self.download_handlers.lock().unwrap().clone();
+
+        for handler in handlers {
+            if let Err(e) = handler(download.clone()).await {
+                eprintln!("Download handler error: {}", e);
+            }
+        }
+    }
+
+    /// Handles a dialog event from the protocol
+    async fn on_dialog_event(&self, dialog: Dialog) {
+        let handlers = self.dialog_handlers.lock().unwrap().clone();
+
+        for handler in handlers {
+            if let Err(e) = handler(dialog.clone()).await {
+                eprintln!("Dialog handler error: {}", e);
+            }
+        }
+    }
+
+    /// Triggers dialog event (called by BrowserContext when dialog events arrive)
+    ///
+    /// Dialog events are sent to BrowserContext and forwarded to the associated Page.
+    /// This method is public so BrowserContext can forward dialog events.
+    pub async fn trigger_dialog_event(&self, dialog: Dialog) {
+        self.on_dialog_event(dialog).await;
+    }
 }
 
 impl ChannelOwner for Page {
@@ -1083,6 +1236,53 @@ impl ChannelOwner for Page {
                         self_clone.on_route_event(route).await;
                     });
                 }
+            }
+            "download" => {
+                // Handle download event
+                // Event params: {url, suggestedFilename, artifact: {guid: "..."}}
+                let url = params
+                    .get("url")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                let suggested_filename = params
+                    .get("suggestedFilename")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                if let Some(artifact_guid) = params
+                    .get("artifact")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let artifact_guid_owned = artifact_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        // Wait for Artifact object to be created
+                        let artifact_arc = match connection.get_object(&artifact_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(e) => {
+                                eprintln!("Failed to get artifact object: {}", e);
+                                return;
+                            }
+                        };
+
+                        // Create Download wrapper from Artifact + event params
+                        let download =
+                            Download::from_artifact(artifact_arc, url, suggested_filename);
+
+                        // Call the download handlers
+                        self_clone.on_download_event(download).await;
+                    });
+                }
+            }
+            "dialog" => {
+                // Dialog events are handled by BrowserContext and forwarded to Page
+                // This case should not be reached, but keeping for completeness
             }
             _ => {
                 // Other events will be handled in future phases

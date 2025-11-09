@@ -15,7 +15,8 @@
 use crate::channel_owner::{ChannelOwner, ParentOrConnection};
 use crate::error::{Error, Result};
 use crate::protocol::{
-    Browser, BrowserContext, BrowserType, Frame, Page, Playwright, Request, ResponseObject, Route,
+    artifact::Artifact, Browser, BrowserContext, BrowserType, Dialog, Frame, Page, Playwright,
+    Request, ResponseObject, Route,
 };
 use serde_json::Value;
 use std::sync::Arc;
@@ -229,6 +230,34 @@ pub async fn create_object(
                 guid,
                 initializer,
             )?)
+        }
+
+        "Artifact" => {
+            // Artifact has BrowserContext as parent
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "Artifact must have BrowserContext as parent".to_string(),
+                    ))
+                }
+            };
+
+            Arc::new(Artifact::new(parent_owner, type_name, guid, initializer)?)
+        }
+
+        "Dialog" => {
+            // Dialog has Page as parent
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "Dialog must have Page as parent".to_string(),
+                    ))
+                }
+            };
+
+            Arc::new(Dialog::new(parent_owner, type_name, guid, initializer)?)
         }
 
         _ => {

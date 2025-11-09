@@ -76,7 +76,24 @@ impl BrowserContext {
             initializer,
         );
 
-        Ok(Self { base })
+        let context = Self { base };
+
+        // Enable dialog event subscription
+        // Dialog events need to be explicitly subscribed to via updateSubscription command
+        let channel = context.channel().clone();
+        tokio::spawn(async move {
+            let _ = channel
+                .send_no_result(
+                    "updateSubscription",
+                    serde_json::json!({
+                        "event": "dialog",
+                        "enabled": true
+                    }),
+                )
+                .await;
+        });
+
+        Ok(context)
     }
 
     /// Returns the channel for sending protocol messages
@@ -235,8 +252,57 @@ impl ChannelOwner for BrowserContext {
         self.base.remove_child(guid)
     }
 
-    fn on_event(&self, _method: &str, _params: Value) {
-        // TODO: Handle context events in future phases
+    fn on_event(&self, method: &str, params: Value) {
+        match method {
+            "dialog" => {
+                // Dialog events come to BrowserContext, need to forward to the associated Page
+                // Event format: {dialog: {guid: "..."}}
+                // The Dialog protocol object has the Page as its parent
+                if let Some(dialog_guid) = params
+                    .get("dialog")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let dialog_guid_owned = dialog_guid.to_string();
+
+                    tokio::spawn(async move {
+                        // Get the Dialog object
+                        let dialog_arc = match connection.get_object(&dialog_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(_) => return,
+                        };
+
+                        // Downcast to Dialog
+                        let dialog = match dialog_arc
+                            .as_any()
+                            .downcast_ref::<crate::protocol::Dialog>()
+                        {
+                            Some(d) => d.clone(),
+                            None => return,
+                        };
+
+                        // Get the Page from the Dialog's parent
+                        let page_arc = match dialog_arc.parent() {
+                            Some(parent) => parent,
+                            None => return,
+                        };
+
+                        // Downcast to Page
+                        let page = match page_arc.as_any().downcast_ref::<Page>() {
+                            Some(p) => p.clone(),
+                            None => return,
+                        };
+
+                        // Forward to Page's dialog handlers
+                        page.trigger_dialog_event(dialog).await;
+                    });
+                }
+            }
+            _ => {
+                // Other events will be handled in future phases
+            }
+        }
     }
 
     fn was_collected(&self) -> bool {

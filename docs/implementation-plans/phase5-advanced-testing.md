@@ -434,16 +434,38 @@ page.locator("input").expect().to_have_value("hello").await?;
 
 ### Slice 6: Downloads and Dialogs
 
+**Status:** ✅ COMPLETE
+
 **Goal:** Implement download and dialog event handling.
 
 **Tasks:**
-- [ ] Implement download event handling
-- [ ] Download save functionality
-- [ ] Dialog event handling (alert, confirm, prompt)
-- [ ] Accept/dismiss dialogs
-- [ ] Tests for downloads
-- [ ] Tests for dialogs
-- [ ] Cross-browser testing
+- [x] Implement download event handling
+- [x] Download save functionality
+- [x] Dialog event handling (alert, confirm, prompt)
+- [x] Accept/dismiss dialogs
+- [x] Tests for downloads
+- [x] Tests for dialogs
+- [x] Cross-browser testing
+
+**Key Architectural Insights:**
+
+1. **Download Architecture**:
+   - Download is NOT a protocol object - it's a wrapper around Artifact
+   - URL and suggested_filename come from download event params (not Artifact initializer)
+   - Construction: `Download::from_artifact(artifact, url, filename)`
+   - File operations (save_as, path, cancel, delete, failure) delegate to Artifact's channel
+
+2. **Dialog Event Flow**:
+   - Dialog events dispatched to BrowserContext (NOT Page directly!)
+   - BrowserContext.new() automatically subscribes to dialog events via `updateSubscription` protocol command
+   - Dialog events forwarded from BrowserContext to Page via Dialog's parent relationship
+   - Page.trigger_dialog_event() is public to allow BrowserContext to forward events
+
+3. **Event Subscription Discovery**:
+   - Playwright auto-dismisses dialogs unless explicitly subscribed
+   - Protocol command: `updateSubscription` with `{"event": "dialog", "enabled": true}`
+   - Download events don't require subscription (auto-emitted)
+   - This was the key blocker - without subscription, dialog events never fire
 
 ---
 
@@ -471,6 +493,6 @@ This order prioritizes:
 ---
 
 **Created:** 2025-11-08
-**Last Updated:** 2025-11-09 (Slice 5 complete - route.fulfill() implementation)
+**Last Updated:** 2025-11-09 (Slice 6 complete - downloads and dialogs)
 
 ---
