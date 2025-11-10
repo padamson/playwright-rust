@@ -86,7 +86,7 @@ impl Root {
             base: ChannelOwnerImpl::new(
                 ParentOrConnection::Connection(connection),
                 "Root".to_string(),
-                "".to_string(), // Empty GUID - Root is not registered in object map
+                Arc::from(""), // Empty GUID - Root is not registered in object map
                 Value::Null,
             ),
         }
@@ -186,7 +186,7 @@ impl ChannelOwner for Root {
         self.base.adopt(child)
     }
 
-    fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+    fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
         self.base.add_child(guid, child)
     }
 

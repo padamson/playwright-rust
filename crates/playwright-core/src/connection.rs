@@ -84,7 +84,7 @@ pub trait ConnectionLike: Send + Sync {
     /// Register an object in the connection's registry
     fn register_object(
         &self,
-        guid: String,
+        guid: Arc<str>,
         object: Arc<dyn ChannelOwner>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>;
 
@@ -171,13 +171,36 @@ pub struct Request {
     /// Unique request ID for correlating responses
     pub id: u32,
     /// GUID of the target object (format: "type@hash")
-    pub guid: String,
+    #[serde(
+        serialize_with = "serialize_arc_str",
+        deserialize_with = "deserialize_arc_str"
+    )]
+    pub guid: Arc<str>,
     /// Method name to invoke
     pub method: String,
     /// Method parameters as JSON object
     pub params: Value,
     /// Metadata with timing and location information
     pub metadata: Metadata,
+}
+
+/// Serde helpers for Arc<str> serialization
+///
+/// These helpers allow Arc<str> to be serialized/deserialized as a regular string in JSON.
+/// This is used for GUID fields throughout the protocol layer for performance optimization.
+pub fn serialize_arc_str<S>(arc: &Arc<str>, serializer: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(arc)
+}
+
+pub fn deserialize_arc_str<'de, D>(deserializer: D) -> std::result::Result<Arc<str>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: String = serde::Deserialize::deserialize(deserializer)?;
+    Ok(Arc::from(s.as_str()))
 }
 
 /// Protocol response message from Playwright server
@@ -249,7 +272,11 @@ pub struct ErrorPayload {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
     /// GUID of the object that emitted the event
-    pub guid: String,
+    #[serde(
+        serialize_with = "serialize_arc_str",
+        deserialize_with = "deserialize_arc_str"
+    )]
+    pub guid: Arc<str>,
     /// Event method name
     pub method: String,
     /// Event parameters as JSON object
@@ -269,6 +296,9 @@ pub enum Message {
     /// Event message (no `id` field)
     Event(Event),
 }
+
+/// Type alias for the object registry mapping GUIDs to ChannelOwner objects
+type ObjectRegistry = HashMap<Arc<str>, Arc<dyn ChannelOwner>>;
 
 /// JSON-RPC connection to Playwright server
 ///
@@ -307,7 +337,7 @@ where
     /// Receiver half of transport (owned by run loop, only needed once)
     transport_receiver: Arc<TokioMutex<Option<crate::transport::PipeTransportReceiver<R>>>>,
     /// Registry of all protocol objects by GUID (parking_lot for sync+async access)
-    objects: Arc<ParkingLotMutex<HashMap<String, Arc<dyn ChannelOwner>>>>,
+    objects: Arc<ParkingLotMutex<ObjectRegistry>>,
 }
 
 // Type alias for Connection using concrete transport (most common case)
@@ -420,7 +450,7 @@ where
         // Build request with metadata
         let request = Request {
             id,
-            guid: guid.to_string(),
+            guid: Arc::from(guid),
             method: method.to_string(),
             params,
             metadata: Metadata::now(),
@@ -516,7 +546,7 @@ where
         // CRITICAL: Register Root in objects map with empty GUID
         // This allows __create__ messages to find Root as their parent
         // Matches Python's behavior where RootChannelOwner auto-registers
-        self.objects.lock().insert("".to_string(), root.clone());
+        self.objects.lock().insert(Arc::from(""), root.clone());
 
         tracing::debug!("Root object registered, sending initialize message");
 
@@ -560,7 +590,8 @@ where
 
         // Cleanup: Unregister Root after initialization
         // Root is only needed during the initialization handshake
-        self.objects.lock().remove("");
+        let empty_guid: Arc<str> = Arc::from("");
+        self.objects.lock().remove(&empty_guid);
         tracing::debug!("Root object unregistered after successful initialization");
 
         // Return the Arc<dyn ChannelOwner>
@@ -734,10 +765,11 @@ where
             .ok_or_else(|| Error::ProtocolError("__create__ missing 'type'".to_string()))?
             .to_string();
 
-        let object_guid = event.params["guid"]
-            .as_str()
-            .ok_or_else(|| Error::ProtocolError("__create__ missing 'guid'".to_string()))?
-            .to_string();
+        let object_guid: Arc<str> = Arc::from(
+            event.params["guid"]
+                .as_str()
+                .ok_or_else(|| Error::ProtocolError("__create__ missing 'guid'".to_string()))?,
+        );
 
         eprintln!(
             "DEBUG __create__: type={}, guid={}, parent_guid={}",
@@ -787,11 +819,11 @@ where
         };
 
         // Register in connection
-        self.register_object(object_guid.clone(), object.clone())
+        self.register_object(Arc::clone(&object_guid), object.clone())
             .await;
 
         // Register in parent
-        parent_obj.add_child(object_guid.clone(), object);
+        parent_obj.add_child(Arc::clone(&object_guid), object);
 
         eprintln!(
             "DEBUG: Successfully created and registered object: type={}, guid={}",
@@ -832,13 +864,15 @@ where
     ///
     /// Moves a child object from one parent to another.
     async fn handle_adopt(&self, event: &Event) -> Result<()> {
-        let child_guid = event.params["guid"]
-            .as_str()
-            .ok_or_else(|| Error::ProtocolError("__adopt__ missing 'guid'".to_string()))?;
+        let child_guid: Arc<str> = Arc::from(
+            event.params["guid"]
+                .as_str()
+                .ok_or_else(|| Error::ProtocolError("__adopt__ missing 'guid'".to_string()))?,
+        );
 
         // Get new parent and child from registry
         let new_parent = self.objects.lock().get(&event.guid).cloned();
-        let child = self.objects.lock().get(child_guid).cloned();
+        let child = self.objects.lock().get(&child_guid).cloned();
 
         match (new_parent, child) {
             (Some(parent), Some(child_obj)) => {
@@ -893,7 +927,7 @@ where
 
     fn register_object(
         &self,
-        guid: String,
+        guid: Arc<str>,
         object: Arc<dyn ChannelOwner>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
         Box::pin(async move {
@@ -902,20 +936,20 @@ where
     }
 
     fn unregister_object(&self, guid: &str) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
-        let guid = guid.to_string();
+        let guid_arc: Arc<str> = Arc::from(guid);
         Box::pin(async move {
-            self.objects.lock().remove(&guid);
+            self.objects.lock().remove(&guid_arc);
         })
     }
 
     fn get_object(&self, guid: &str) -> AsyncChannelOwnerResult<'_> {
-        let guid = guid.to_string();
+        let guid_arc: Arc<str> = Arc::from(guid);
         Box::pin(async move {
             self.objects
                 .lock()
-                .get(&guid)
+                .get(&guid_arc)
                 .cloned()
-                .ok_or_else(|| Error::ProtocolError(format!("Object not found: {}", guid)))
+                .ok_or_else(|| Error::ProtocolError(format!("Object not found: {}", guid_arc)))
         })
     }
 }
@@ -958,14 +992,14 @@ mod tests {
     fn test_request_format() {
         let request = Request {
             id: 0,
-            guid: "page@abc123".to_string(),
+            guid: Arc::from("page@abc123"),
             method: "goto".to_string(),
             params: serde_json::json!({"url": "https://example.com"}),
             metadata: Metadata::now(),
         };
 
         assert_eq!(request.id, 0);
-        assert_eq!(request.guid, "page@abc123");
+        assert_eq!(request.guid.as_ref(), "page@abc123");
         assert_eq!(request.method, "goto");
         assert_eq!(request.params["url"], "https://example.com");
     }
@@ -1150,7 +1184,7 @@ mod tests {
 
         match message {
             Message::Event(event) => {
-                assert_eq!(event.guid, "page@abc");
+                assert_eq!(event.guid.as_ref(), "page@abc");
                 assert_eq!(event.method, "console");
                 assert_eq!(event.params["text"], "hello");
             }

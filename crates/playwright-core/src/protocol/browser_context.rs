@@ -66,7 +66,7 @@ impl BrowserContext {
     pub fn new(
         parent: Arc<dyn ChannelOwner>,
         type_name: String,
-        guid: String,
+        guid: Arc<str>,
         initializer: Value,
     ) -> Result<Self> {
         let base = ChannelOwnerImpl::new(
@@ -150,7 +150,8 @@ impl BrowserContext {
 
         #[derive(Deserialize)]
         struct GuidRef {
-            guid: String,
+            #[serde(deserialize_with = "crate::connection::deserialize_arc_str")]
+            guid: Arc<str>,
         }
 
         // Send newPage RPC to server
@@ -244,7 +245,7 @@ impl ChannelOwner for BrowserContext {
         self.base.adopt(child)
     }
 
-    fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+    fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
         self.base.add_child(guid, child)
     }
 

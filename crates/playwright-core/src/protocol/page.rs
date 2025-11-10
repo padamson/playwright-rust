@@ -55,7 +55,7 @@ pub struct Page {
     /// Wrapped in RwLock to allow updates from events
     url: Arc<RwLock<String>>,
     /// GUID of the main frame
-    main_frame_guid: String,
+    main_frame_guid: Arc<str>,
     /// Route handlers for network interception
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
     /// Download event handlers
@@ -105,18 +105,16 @@ impl Page {
     pub fn new(
         parent: Arc<dyn ChannelOwner>,
         type_name: String,
-        guid: String,
+        guid: Arc<str>,
         initializer: Value,
     ) -> Result<Self> {
         // Extract mainFrame GUID from initializer
-        let main_frame_guid = initializer["mainFrame"]["guid"]
-            .as_str()
-            .ok_or_else(|| {
+        let main_frame_guid: Arc<str> =
+            Arc::from(initializer["mainFrame"]["guid"].as_str().ok_or_else(|| {
                 crate::error::Error::ProtocolError(
                     "Page initializer missing 'mainFrame.guid' field".to_string(),
                 )
-            })?
-            .to_string();
+            })?);
 
         let base = ChannelOwnerImpl::new(
             ParentOrConnection::Parent(parent),
@@ -601,7 +599,8 @@ impl Page {
 
         #[derive(Deserialize)]
         struct ResponseReference {
-            guid: String,
+            #[serde(deserialize_with = "crate::connection::deserialize_arc_str")]
+            guid: Arc<str>,
         }
 
         let reload_result: ReloadResponse = self.channel().send("reload", params).await?;
@@ -1181,7 +1180,7 @@ impl ChannelOwner for Page {
         self.base.adopt(child)
     }
 
-    fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+    fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
         self.base.add_child(guid, child)
     }
 

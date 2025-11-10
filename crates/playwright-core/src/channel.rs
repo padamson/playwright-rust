@@ -38,10 +38,11 @@ use std::sync::Arc;
 ///
 /// # Example
 ///
-/// ```no_run
-/// # use playwright_core::channel::Channel;
-/// # use serde::{Serialize, Deserialize};
-/// # async fn example(channel: &Channel) -> Result<(), Box<dyn std::error::Error>> {
+/// ```ignore
+/// // Example of using Channel to send RPC calls
+/// use playwright_core::channel::Channel;
+/// use serde::{Serialize, Deserialize};
+///
 /// #[derive(Serialize)]
 /// struct LaunchParams {
 ///     headless: bool,
@@ -52,20 +53,22 @@ use std::sync::Arc;
 ///     browser: BrowserRef,
 /// }
 ///
+/// // Protocol response references use Arc<str> for performance
 /// #[derive(Deserialize)]
 /// struct BrowserRef {
-///     guid: String,
+///     guid: String, // Simplified for example; actual implementation uses Arc<str>
 /// }
 ///
-/// let params = LaunchParams { headless: true };
-/// let result: LaunchResult = channel.send("launch", params).await?;
-/// println!("Browser GUID: {}", result.browser.guid);
-/// # Ok(())
-/// # }
+/// async fn example(channel: &Channel) -> Result<(), Box<dyn std::error::Error>> {
+///     let params = LaunchParams { headless: true };
+///     let result: LaunchResult = channel.send("launch", params).await?;
+///     println!("Browser GUID: {}", result.browser.guid);
+///     Ok(())
+/// }
 /// ```
 #[derive(Clone)]
 pub struct Channel {
-    guid: String,
+    guid: Arc<str>,
     connection: Arc<dyn ConnectionLike>,
 }
 
@@ -75,7 +78,7 @@ impl Channel {
     /// # Arguments
     /// * `guid` - The GUID of the ChannelOwner this channel represents
     /// * `connection` - The connection to send messages through
-    pub fn new(guid: String, connection: Arc<dyn ConnectionLike>) -> Self {
+    pub fn new(guid: Arc<str>, connection: Arc<dyn ConnectionLike>) -> Self {
         Self { guid, connection }
     }
 

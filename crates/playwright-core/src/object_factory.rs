@@ -54,7 +54,7 @@ use std::sync::Arc;
 /// let playwright_obj = create_object(
 ///     ParentOrConnection::Connection(connection),
 ///     "Playwright".to_string(),
-///     "playwright@1".to_string(),
+///     Arc::from("playwright@1"),
 ///     json!({
 ///         "chromium": { "guid": "browserType@chromium" },
 ///         "firefox": { "guid": "browserType@firefox" },
@@ -67,7 +67,7 @@ use std::sync::Arc;
 pub async fn create_object(
     parent: ParentOrConnection,
     type_name: String,
-    guid: String,
+    guid: Arc<str>,
     initializer: Value,
 ) -> Result<Arc<dyn ChannelOwner>> {
     // Match on type name and call appropriate constructor

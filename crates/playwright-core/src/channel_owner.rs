@@ -23,6 +23,9 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
+/// Type alias for the children registry mapping GUIDs to ChannelOwner objects
+type ChildrenRegistry = HashMap<Arc<str>, Arc<dyn ChannelOwner>>;
+
 /// Reason why an object was disposed
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DisposeReason {
@@ -121,7 +124,7 @@ pub trait ChannelOwner: Send + Sync {
     /// Adds a child object to this parent's registry.
     ///
     /// Called during object creation and adoption.
-    fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>);
+    fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>);
 
     /// Removes a child object from this parent's registry.
     ///
@@ -170,7 +173,7 @@ pub trait ChannelOwner: Send + Sync {
 ///     pub fn new(
 ///         parent: Arc<dyn ChannelOwner>,
 ///         type_name: String,
-///         guid: String,
+///         guid: Arc<str>,
 ///         initializer: Value,
 ///     ) -> Self {
 ///         let base = ChannelOwnerImpl::new(
@@ -192,7 +195,7 @@ pub trait ChannelOwner: Send + Sync {
 ///     fn channel(&self) -> &Channel { self.base.channel() }
 ///     fn dispose(&self, reason: DisposeReason) { self.base.dispose(reason) }
 ///     fn adopt(&self, child: Arc<dyn ChannelOwner>) { self.base.adopt(child) }
-///     fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+///     fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
 ///         self.base.add_child(guid, child)
 ///     }
 ///     fn remove_child(&self, guid: &str) { self.base.remove_child(guid) }
@@ -202,11 +205,11 @@ pub trait ChannelOwner: Send + Sync {
 /// }
 /// ```
 pub struct ChannelOwnerImpl {
-    guid: String,
+    guid: Arc<str>,
     type_name: String,
     parent: Option<Weak<dyn ChannelOwner>>,
     connection: Arc<dyn ConnectionLike>,
-    children: Arc<Mutex<HashMap<String, Arc<dyn ChannelOwner>>>>,
+    children: Arc<Mutex<ChildrenRegistry>>,
     channel: Channel,
     initializer: Value,
     was_collected: AtomicBool,
@@ -247,7 +250,7 @@ impl ChannelOwnerImpl {
     pub fn new(
         parent: ParentOrConnection,
         type_name: String,
-        guid: String,
+        guid: Arc<str>,
         initializer: Value,
     ) -> Self {
         let (connection, parent_opt) = match parent {
@@ -258,9 +261,8 @@ impl ChannelOwnerImpl {
             ParentOrConnection::Connection(c) => (c, None),
         };
 
-        // TODO: optimize - avoid cloning guid by restructuring Channel::new to accept &str
-        // and store Arc<str> in Channel, or by reordering field initialization
-        let channel = Channel::new(guid.clone(), connection.clone());
+        // Arc<str> allows efficient sharing of GUID without cloning
+        let channel = Channel::new(Arc::clone(&guid), connection.clone());
 
         Self {
             guid,
@@ -321,7 +323,7 @@ impl ChannelOwnerImpl {
 
         // Remove from connection (spawn to avoid blocking in sync context)
         let connection = self.connection.clone();
-        let guid = self.guid.clone();
+        let guid = Arc::clone(&self.guid);
         tokio::spawn(async move {
             connection.unregister_object(&guid).await;
         });
@@ -348,17 +350,20 @@ impl ChannelOwnerImpl {
         }
 
         // Add to this parent
-        self.add_child(child.guid().to_string(), child);
+        // Convert &str to Arc<str> for the hashmap key
+        self.add_child(Arc::from(child.guid()), child);
     }
 
     /// Adds a child to this parent's registry.
-    pub fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+    pub fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
         self.children.lock().insert(guid, child);
     }
 
     /// Removes a child from this parent's registry.
     pub fn remove_child(&self, guid: &str) {
-        self.children.lock().remove(guid);
+        // Create Arc<str> for lookup
+        let guid_arc: Arc<str> = Arc::from(guid);
+        self.children.lock().remove(&guid_arc);
     }
 
     /// Handles a protocol event (default implementation logs it).

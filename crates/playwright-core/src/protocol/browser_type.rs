@@ -60,7 +60,7 @@ impl BrowserType {
     pub fn new(
         parent: Arc<dyn ChannelOwner>,
         type_name: String,
-        guid: String,
+        guid: Arc<str>,
         initializer: Value,
     ) -> Result<Self> {
         let base = ChannelOwnerImpl::new(
@@ -259,7 +259,11 @@ struct LaunchResponse {
 /// Reference to a Browser object in the protocol
 #[derive(Debug, Deserialize, Serialize)]
 struct BrowserRef {
-    guid: String,
+    #[serde(
+        serialize_with = "crate::connection::serialize_arc_str",
+        deserialize_with = "crate::connection::deserialize_arc_str"
+    )]
+    guid: Arc<str>,
 }
 
 impl ChannelOwner for BrowserType {
@@ -295,7 +299,7 @@ impl ChannelOwner for BrowserType {
         self.base.adopt(child)
     }
 
-    fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+    fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
         self.base.add_child(guid, child)
     }
 

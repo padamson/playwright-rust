@@ -28,7 +28,7 @@ impl Request {
     pub fn new(
         parent: Arc<dyn ChannelOwner>,
         type_name: String,
-        guid: String,
+        guid: Arc<str>,
         initializer: Value,
     ) -> Result<Self> {
         let base = ChannelOwnerImpl::new(
@@ -113,7 +113,7 @@ impl ChannelOwner for Request {
         self.base.adopt(child)
     }
 
-    fn add_child(&self, guid: String, child: Arc<dyn ChannelOwner>) {
+    fn add_child(&self, guid: Arc<str>, child: Arc<dyn ChannelOwner>) {
         self.base.add_child(guid, child)
     }
 

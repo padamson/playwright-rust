@@ -170,15 +170,25 @@ Baseline saved at commit `c3c16f6` for future comparisons.
 
 ---
 
-### Slice 6b: GUID String Optimization 🔄 PENDING
+### Slice 6b: GUID String Optimization ✅ COMPLETE
 
 **Goal:** Convert GUID storage from String to Arc<str> for improved performance.
 
+**Completion Date:** 2025-11-10
+
 **Why:** GUIDs are cloned frequently but never modified - Arc<str> reduces allocation overhead.
 
-**Target:** Achieve 5x+ improvement in clone performance, 2x+ in HashMap lookups (already proven in benchmarks).
+**What We Built:**
+- Made serde helpers public in connection.rs for Arc<str> serialization
+- Converted all protocol GUID reference fields from String to Arc<str>
+- Updated 6 protocol files with custom deserialization
 
-**Approach:** Update protocol structures (Request, Event, ChannelOwner) and all protocol objects to use Arc<str>.
+**Benchmark Results (vs. before-guid-optimization baseline):**
+- **GUID Clone**: 19.498ns (String) vs 3.5114ns (Arc<str>) = **5.5x faster** ✅
+- **HashMap Lookup**: 21.373ns (String) vs 10.612ns (Arc<str>) = **2.0x faster** ✅
+- **HashMap Insert**: 40% improvement across both String and Arc<str> (compiler optimizations)
+
+**Key Insight:** The optimization meets performance targets and all tests pass with no regressions. Protocol layer now benefits from reduced allocation overhead on every GUID operation.
 
 ---
 
