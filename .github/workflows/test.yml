@@ -56,18 +56,18 @@ jobs:
         path: |
           ~/.cache/ms-playwright
           ~/Library/Caches/ms-playwright
-        key: ${{ runner.os }}-playwright-browsers-1.56.1
+        key: ${{ runner.os }}-playwright-browsers-1.56.1-v2
         restore-keys: |
-          ${{ runner.os }}-playwright-browsers-
+          ${{ runner.os }}-playwright-browsers-1.56.1-
 
     - name: Cache Playwright Browsers (Windows)
       if: runner.os == 'Windows'
       uses: actions/cache@v3
       with:
         path: ~\AppData\Local\ms-playwright
-        key: ${{ runner.os }}-playwright-browsers-1.56.1
+        key: ${{ runner.os }}-playwright-browsers-1.56.1-v2
         restore-keys: |
-          ${{ runner.os }}-playwright-browsers-
+          ${{ runner.os }}-playwright-browsers-1.56.1-
 
     - name: Install Node.js
       uses: actions/setup-node@v4
