@@ -6,7 +6,7 @@
 // - Browser close time
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use playwright::Playwright;
+use playwright_rs::Playwright;
 use std::hint::black_box;
 use std::time::Duration;
 

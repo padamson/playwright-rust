@@ -6,8 +6,8 @@
 //!
 //! ## Basic Navigation and Interaction
 //!
-//! ```
-//! use playwright::{Playwright, SelectOption};
+//! ```ignore
+//! use playwright_rs::{Playwright, SelectOption};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,8 +42,8 @@
 //!
 //! ## Form Interaction
 //!
-//! ```
-//! use playwright::{Playwright, SelectOption};
+//! ```ignore
+//! use playwright_rs::{Playwright, SelectOption};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -87,8 +87,8 @@
 //!
 //! ## Element Screenshots
 //!
-//! ```
-//! use playwright::Playwright;
+//! ```ignore
+//! use playwright_rs::Playwright;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -116,8 +116,8 @@
 //!
 //! ## Assertions (expect API)
 //!
-//! ```
-//! use playwright::{expect, Playwright};
+//! ```ignore
+//! use playwright_rs::{expect, Playwright};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {

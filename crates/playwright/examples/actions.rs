@@ -3,7 +3,7 @@
 // Shows: click, fill, check, select, file upload
 // Note: Uses Google search to demonstrate real interactions
 
-use playwright::Playwright;
+use playwright_rs::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

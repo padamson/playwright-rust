@@ -103,6 +103,11 @@ For complex workflows, use these specialized agents (located in `.claude/agents/
    - Automates: Cross-language API comparison, parameter validation, type checking
    - Ensures: API exactly matches playwright-python/JS/Java, no drift
 
+4. **Release Preparation Agent** (`release-preparation.md`)
+   - Use when: Preparing a version release (version bump, CHANGELOG, verification)
+   - Automates: Pre-release checks, test verification, version management, validation
+   - Ensures: All quality gates pass, CHANGELOG is complete, release process is smooth
+
 #### Automatic Agent Invocation
 
 **IMPORTANT**: Proactively use agents when user requests match these patterns:
@@ -126,6 +131,13 @@ For complex workflows, use these specialized agents (located in `.claude/agents/
 - Asks to "review API implementation"
 - Mentions "API compatibility" or "cross-language consistency"
 - Example triggers: "validate Page API", "check if Locator matches Playwright"
+
+**Release Preparation Agent** - Use automatically when user:
+- Says "prepare release" or "release v{X.Y.Z}"
+- Asks to "publish to crates.io" or "publish version {X.Y.Z}"
+- Says "ready to release" or "let's release"
+- Mentions "version bump" in context of releasing
+- Example triggers: "prepare release for v0.6.0", "publish v0.6.0 to crates.io", "ready to release"
 
 **Don't use agents for**:
 - Simple single-file edits
@@ -219,7 +231,7 @@ Example (for module-level doctests, not individual functions):
 //! # Example
 //!
 //! ```ignore
-//! use playwright::Playwright;
+//! use playwright_rs::Playwright;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {

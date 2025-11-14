@@ -6,7 +6,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 rust-version = "1.70"
 license = "Apache-2.0"
@@ -26,4 +26,4 @@ thiserror = "1"
 anyhow = "1"
 
 # Internal dependencies
-playwright-core = { path = "crates/playwright-core" }
+playwright-core = { version = "0.6.0", path = "crates/playwright-core" }

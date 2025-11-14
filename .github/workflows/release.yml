@@ -8,6 +8,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: write
+
 jobs:
   create-release:
     name: Create Release
@@ -94,10 +97,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Playwright
+      - name: Install Playwright browsers (Linux)
+        if: runner.os == 'Linux'
         run: |
           npm install -g @playwright/test
-          npx playwright install chromium
+          npx playwright install chromium firefox webkit --with-deps
+
+      - name: Install Playwright browsers (macOS/Windows)
+        if: runner.os != 'Linux'
+        run: |
+          npm install -g @playwright/test
+          npx playwright install chromium firefox webkit
 
       - name: Install cargo-nextest
         uses: taiki-e/install-action@v2
@@ -194,20 +204,20 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish playwright-core
+      - name: Publish playwright-core (dependency of playwright-rs)
         if: steps.check_token.outputs.skip == 'false'
         run: cargo publish -p playwright-core
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        continue-on-error: true  # May already be published
+        continue-on-error: true  # May already be published or fail if no changes
 
       - name: Wait for crates.io to update
         if: steps.check_token.outputs.skip == 'false'
         run: sleep 30
 
-      - name: Publish playwright
+      - name: Publish playwright-rs
         if: steps.check_token.outputs.skip == 'false'
-        run: cargo publish -p playwright
+        run: cargo publish -p playwright-rs
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         continue-on-error: true

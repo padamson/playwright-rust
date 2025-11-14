@@ -111,7 +111,7 @@ jobs:
       run: cargo test --doc --workspace -- --ignored
 
     - name: Build all examples
-      run: cargo build --package playwright --examples
+      run: cargo build --package playwright-rs --examples
 
     - name: Generate documentation
       run: cargo doc --no-deps --workspace

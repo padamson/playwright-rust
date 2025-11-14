@@ -2,7 +2,7 @@
 //
 // Shows: Playwright initialization, browser launch, navigation, cleanup
 
-use playwright::Playwright;
+use playwright_rs::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

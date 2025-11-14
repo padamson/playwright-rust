@@ -2,7 +2,7 @@
 //
 // Shows: Locator API, chaining, nested locators, element queries
 
-use playwright::Playwright;
+use playwright_rs::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

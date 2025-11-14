@@ -5,7 +5,6 @@
 //     cargo run --package playwright --example screenshots
 
 use playwright_core::protocol::{Playwright, ScreenshotClip, ScreenshotOptions, ScreenshotType};
-use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,7 +54,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Element screenshot: {} bytes", element_bytes.len());
 
     // Example 6: Save screenshot to file
-    let file_path = PathBuf::from("example-screenshot.png");
+    let temp_dir = std::env::temp_dir();
+    let file_path = temp_dir.join("playwright_example_screenshot.png");
     page.screenshot_to_file(&file_path, None).await?;
     println!("✓ Screenshot saved to: {}", file_path.display());
 

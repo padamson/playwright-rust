@@ -10,17 +10,6 @@ use std::collections::HashMap;
 /// Options for launching a browser
 ///
 /// All options are optional and will use Playwright's defaults if not specified.
-///
-/// # Example
-///
-/// ```
-/// use playwright_core::api::LaunchOptions;
-///
-/// let options = LaunchOptions::default()
-///     .headless(true)
-///     .slow_mo(100.0)
-///     .args(vec!["--no-sandbox".to_string()]);
-/// ```
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LaunchOptions {

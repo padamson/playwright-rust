@@ -7,7 +7,7 @@
 // - Screenshots
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use playwright::{Page, Playwright};
+use playwright_rs::{Page, Playwright};
 use std::hint::black_box;
 use std::time::Duration;
 

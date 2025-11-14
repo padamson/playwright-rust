@@ -163,7 +163,7 @@ Add comprehensive rustdoc documentation:
 /// # Example
 ///
 /// ```no_run
-/// # use playwright::Playwright;
+/// # use playwright_rs::Playwright;
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let playwright = Playwright::launch().await?;

@@ -2,7 +2,7 @@
 //
 // Shows: keyboard (type, press, down/up, insert), mouse (move, click, wheel, drag)
 
-use playwright::Playwright;
+use playwright_rs::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

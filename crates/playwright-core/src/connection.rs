@@ -481,37 +481,9 @@ where
     /// - Playwright object not found in registry
     /// - Timeout after 30 seconds
     ///
-    /// # Example
+    /// See module-level documentation for usage examples.
     ///
-    /// ```ignore
-    /// # use playwright_core::{Connection, PipeTransport, PlaywrightServer};
-    /// # use std::sync::Arc;
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// // Launch server and create connection
-    /// let mut server = PlaywrightServer::launch().await?;
-    /// let stdin = server.process.stdin.take().unwrap();
-    /// let stdout = server.process.stdout.take().unwrap();
-    ///
-    /// let (transport, message_rx) = PipeTransport::new(stdin, stdout);
-    /// let connection = Arc::new(Connection::new(transport, message_rx));
-    ///
-    /// // Spawn message loop
-    /// let conn = Arc::clone(&connection);
-    /// tokio::spawn(async move { conn.run().await });
-    ///
-    /// // Initialize Playwright
-    /// let playwright_obj = connection.initialize_playwright().await?;
-    ///
-    /// // Downcast to Playwright type
-    /// use playwright_core::protocol::Playwright;
-    /// let playwright = playwright_obj.as_any().downcast_ref::<Playwright>().unwrap();
-    /// println!("Chromium: {}", playwright.chromium().name());
-    /// # Ok(())
-    /// # }
-    /// ```
-    ///
-    /// See:
+    /// See also:
     /// - [ADR 0002: Initialization Flow](../../docs/adr/0002-initialization-flow.md)
     /// - Python: <https://github.com/microsoft/playwright-python/blob/main/playwright/_impl/_connection.py>
     pub async fn initialize_playwright(self: &Arc<Self>) -> Result<Arc<dyn ChannelOwner>> {

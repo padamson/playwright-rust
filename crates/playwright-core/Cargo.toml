@@ -7,7 +7,6 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Internal implementation of Playwright protocol for Rust"
-publish = false  # Internal crate, not published
 
 [lib]
 doctest = false  # Disable doc-tests by default (run with: cargo test --doc)

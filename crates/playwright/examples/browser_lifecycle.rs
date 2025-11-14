@@ -2,7 +2,7 @@
 //
 // Shows: Multiple browser types, contexts, pages, proper cleanup order
 
-use playwright::Playwright;
+use playwright_rs::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
