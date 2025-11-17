@@ -4,7 +4,7 @@
 // PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.56.1-mac-arm64 \
 //     cargo run --package playwright --example routing
 
-use playwright_core::protocol::{FulfillOptions, Playwright};
+use playwright_rs::protocol::{FulfillOptions, Playwright};
 use serde_json::json;
 
 #[tokio::main]

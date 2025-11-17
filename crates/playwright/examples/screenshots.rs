@@ -4,7 +4,7 @@
 // PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.56.1-mac-arm64 \
 //     cargo run --package playwright --example screenshots
 
-use playwright_core::protocol::{Playwright, ScreenshotClip, ScreenshotOptions, ScreenshotType};
+use playwright_rs::protocol::{Playwright, ScreenshotClip, ScreenshotOptions, ScreenshotType};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

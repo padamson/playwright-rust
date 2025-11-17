@@ -89,14 +89,17 @@ This feedback-driven approach ensures we're solving real problems, not theoretic
    - [ ] Yank v0.6.0 and v0.6.1 from crates.io
    - [ ] Leave v0.6.2 as deprecation marker
 
-2. **Code Consolidation** (Estimated: 2 days) - **Trunk-based development**
-   - [ ] Move `playwright-core/src/` code to `playwright/src/protocol/` and `src/server/`
-   - [ ] Update visibility: `pub` → `pub(crate)` for internal modules
-   - [ ] Merge Cargo.toml dependencies
-   - [ ] Merge build.rs (already has robust workspace detection from v0.6.1)
-   - [ ] Update lib.rs to export only public API
-   - [ ] Fix all import paths
-   - [ ] Remove `crates/playwright-core/` directory
+2. **Code Consolidation** (Estimated: 2 days) - **Trunk-based development** ✅ **COMPLETED**
+   - [x] Move `playwright-core/src/` code to `playwright/src/protocol/` and `src/server/`
+   - [x] Update visibility: `pub` → `pub(crate)` for internal modules (server marked `#[doc(hidden)]`)
+   - [x] Merge Cargo.toml dependencies
+   - [x] Merge build.rs (already has robust workspace detection from v0.6.1)
+   - [x] Update lib.rs to export only public API
+   - [x] Fix all import paths (code, tests, doctests, examples)
+   - [x] Remove `crates/playwright-core/` directory
+   - [x] All tests passing (61 library + 180+ integration + 34 doctests)
+   - [x] Version bumped to 0.7.0
+   - [x] CHANGELOG updated
 
 3. **Testing & Validation** (Estimated: 1 day)
    - [ ] All 248+ tests pass

@@ -7,7 +7,7 @@
 // - Handling JavaScript dialogs (alert, confirm, prompt)
 // - Dialog types and response methods
 
-use playwright_core::protocol::Playwright;
+use playwright_rs::protocol::Playwright;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 

@@ -204,31 +204,9 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish playwright-core (dependency of playwright-rs)
-        if: steps.check_token.outputs.skip == 'false'
-        run: cargo publish -p playwright-core
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        continue-on-error: true  # May already be published or fail if no changes
-
-      - name: Wait for crates.io to update
-        if: steps.check_token.outputs.skip == 'false'
-        run: sleep 30
-
       - name: Publish playwright-rs
         if: steps.check_token.outputs.skip == 'false'
         run: cargo publish -p playwright-rs
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        continue-on-error: true
-
-      - name: Wait for crates.io to update
-        if: steps.check_token.outputs.skip == 'false'
-        run: sleep 15
-
-      - name: Publish playwright-codegen (if exists)
-        if: steps.check_token.outputs.skip == 'false'
-        run: cargo publish -p playwright-codegen
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         continue-on-error: true

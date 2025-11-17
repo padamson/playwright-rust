@@ -150,39 +150,54 @@
 //! }
 //! ```
 
-// Re-export core types
-pub use playwright_core::error::{Error, Result};
+// Internal modules (exposed for integration tests)
+#[doc(hidden)]
+pub mod server;
+
+pub mod api;
+mod assertions;
+mod error;
+pub mod protocol;
+
+/// Default timeout in milliseconds for Playwright operations.
+///
+/// This matches Playwright's standard default across all language implementations (Python, Java, .NET, JS).
+/// Required in Playwright 1.56.1+ when timeout parameter is not explicitly provided.
+///
+/// See: <https://playwright.dev/docs/test-timeouts>
+pub const DEFAULT_TIMEOUT_MS: f64 = 30000.0;
+
+// Re-export error types
+pub use error::{Error, Result};
 
 // Re-export assertions API
-pub use playwright_core::expect;
+pub use assertions::expect;
 
 // Re-export Playwright main entry point and browser API
-pub use playwright_core::protocol::{
-    Browser, BrowserContext, BrowserType, Page, Playwright, Response,
-};
+pub use protocol::{Browser, BrowserContext, BrowserType, Page, Playwright, Response};
 
 // Re-export Locator and element APIs
-pub use playwright_core::protocol::{ElementHandle, Locator};
+pub use protocol::{ElementHandle, Locator};
 
 // Re-export navigation and page options
-pub use playwright_core::protocol::{GotoOptions, WaitUntil};
+pub use protocol::{GotoOptions, WaitUntil};
 
 // Re-export action options
-pub use playwright_core::protocol::{
+pub use protocol::{
     CheckOptions, ClickOptions, FillOptions, HoverOptions, PressOptions, SelectOptions,
 };
 
 // Re-export form and input types
-pub use playwright_core::protocol::{FilePayload, SelectOption};
+pub use protocol::{FilePayload, SelectOption};
 
 // Re-export screenshot types
-pub use playwright_core::protocol::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
+pub use protocol::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 
 // Re-export browser context options
-pub use playwright_core::protocol::{BrowserContextOptions, Geolocation, Viewport};
+pub use protocol::{BrowserContextOptions, Geolocation, Viewport};
 
 // Re-export routing types
-pub use playwright_core::protocol::{FulfillOptions, Route};
+pub use protocol::{FulfillOptions, Route};
 
 // Re-export launch options
-pub use playwright_core::api::LaunchOptions;
+pub use api::LaunchOptions;
