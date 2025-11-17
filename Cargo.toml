@@ -1,12 +1,11 @@
 [workspace]
 members = [
-    "crates/playwright-core",
     "crates/playwright",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "0.6.1"
+version = "0.7.0"
 edition = "2021"
 rust-version = "1.70"
 license = "Apache-2.0"
@@ -24,6 +23,3 @@ serde_json = "1"
 # Error handling
 thiserror = "1"
 anyhow = "1"
-
-# Internal dependencies
-playwright-core = { version = "0.6.0", path = "crates/playwright-core" }

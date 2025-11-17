@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-11-16
+
+### Changed
+
+- **[BREAKING] Single-crate architecture** - Consolidated `playwright-core` into `playwright-rs` to match all official Playwright implementations (Python, Java, .NET, Node.js)
+  - Merged all code from `playwright-core` into `playwright-rs` under `src/protocol/` and `src/server/`
+  - Removed `playwright-core` crate from workspace
+  - Updated all internal imports from `playwright_core::` to `playwright_rs::`
+  - Server module now marked `#[doc(hidden)]` - exposed only for integration testing
+  - **Migration**: Users of `playwright-rs` v0.6.x should see no API changes. Users of `playwright-core` should switch to `playwright-rs` (see deprecation notice in playwright-core v0.6.2)
+
+### Fixed
+
+- Resolved root cause of Issue #3 by eliminating two-crate complexity that caused workspace detection issues
+- Updated all doctests to use consolidated crate structure
+- Fixed integration test imports to use new module paths
+
+### Internal
+
+- All 248+ tests passing (library + integration + doctests)
+- Maintained backward compatibility for public API
+- Release workflow updated to publish single crate
+
+**Related**: Issue #3, ADR 0003 (Single-Crate Architecture Decision)
+
 ## [0.6.1] - 2025-11-15
 
 ### Fixed

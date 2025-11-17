@@ -4,7 +4,7 @@
 
 **Architecture:** JSON-RPC communication with Playwright Node.js server (same as all official bindings)
 
-**Status:** Phase 5 complete (2025-11-09)
+**Status:** Phase 6 complete (2025-11-12), Phase 7 Slice 0 complete (2025-11-17)
 
 ---
 
@@ -18,8 +18,9 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.3.0** - Phase 3 complete (Page Interactions)
 - ✅ **v0.4.0** - Phase 4 complete (Options & ElementHandles)
 - ✅ **v0.5.0** - Phase 5 complete (Advanced Testing Features) - 2025-11-09
-- 🚀 **v0.6.0** - Phase 6 in progress (Production Hardening) - Slices 1-6 complete
-- 📋 **v1.0.0** - Phase 7 (Real-World Validation & Final Polish)
+- ✅ **v0.6.0** - Phase 6 complete (Production Hardening) - 2025-11-12
+- 🚀 **v0.7.0** - Phase 7 Slice 0 complete (Single-Crate Architecture) - 2025-11-16
+- 📋 **v1.0.0** - Phase 7 complete (Real-World Validation & Final Polish)
 
 ---
 
@@ -123,25 +124,22 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 ---
 
-## Phase 6: Production Hardening
+## Phase 6: Production Hardening ✅ Complete
 
 **Goal:** Polish for v0.6.0 release, address deferred items, comprehensive documentation.
 
-**Status:** 🚀 In Progress - See [phase6-production-hardening.md](./implementation-plans/phase6-production-hardening.md)
+**Status:** ✅ Complete (2025-11-12) - See [phase6-production-hardening.md](./implementation-plans/phase6-production-hardening.md)
 
-**Key Deliverables:**
-- ✅ Windows support (stdio cleanup fix, CI stability flags) - Complete
-- ✅ Complete assertion API (to_be_focused) - Complete
-- ✅ Main document fulfillment investigation - Complete (Playwright server limitation documented)
-- ✅ Documentation completeness (rustdoc for all public APIs) - Complete (100% coverage)
-- ✅ Performance optimization (benchmark suite, GUID Arc<str> optimization, chunked reading) - Complete
-- ✅ Test suite optimization (cargo-nextest integration, test combining) - Complete
-- ✅ Stability testing (memory leaks, resource cleanup, error handling) - Complete
-- ✅ Low-priority enhancements (FilePayload, BrowserContext options, route continue overrides) - Complete
-- 🔄 Examples and migration guide - Deferred to Phase 7 for real-world feedback
-- 🔄 Memory profiling documentation - Deferred to Phase 7
-- 🔄 Doctest infrastructure - Pending
-- 🔄 v0.6.0 published to crates.io - Pending
+**Delivered:**
+- Windows support (stdio cleanup fix, CI stability flags)
+- Complete assertion API (to_be_focused)
+- Main document fulfillment investigation (Playwright server limitation documented)
+- Documentation completeness (rustdoc 100% coverage for all public APIs)
+- Performance optimization (benchmark suite, GUID Arc<str> optimization, chunked reading)
+- Test suite optimization (cargo-nextest integration, test combining)
+- Stability testing (memory leaks, resource cleanup, error handling)
+- Low-priority enhancements (FilePayload, BrowserContext options, route continue overrides)
+- v0.6.0 published to crates.io
 
 ---
 
@@ -149,26 +147,16 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 **Goal:** Real-world testing in folio, incorporate user feedback, final polish before v1.0.0.
 
-**Status:** Not Started (begins after v0.6.0 release)
+**Status:** 🚀 In Progress - See [phase7-real-world-validation.md](./implementation-plans/phase7-real-world-validation.md)
 
-**Approach:**
-- Use playwright-rust in folio project for real-world validation
-- Gather feedback from early adopters (v0.6.0 users)
-- Address pain points discovered in production use
-- Final API refinements based on actual usage
-- Documentation improvements based on user questions
-- Performance tuning for real-world workloads
-
-**Key Deliverables:**
-- Folio integration complete and stable
-- User feedback incorporated
-- API refinements (if needed based on real-world use)
-- Final documentation polish
-- Production-ready examples from folio use cases
-- CI/CD pipeline hardening
-- Contributor guide
-- v1.0.0 published to crates.io
-- Ready for broad community adoption
+**Milestones by Slice:**
+✅ Slice 0: Single-crate architecture consolidation, version bumped to 0.7.0 (playwright-core merged into playwright-rs)
+- Slice 1: Folio integration & dogfooding
+- Slice 2: Community feedback analysis
+- Slice 3: Examples and documentation (informed by feedback)
+- Slice 4: Performance optimization (data-driven)
+- Slice 5: API polish and enhancements
+- Slice 6: v1.0.0 release preparation
 
 ---
 
@@ -255,4 +243,4 @@ Implementation plans are created when the previous phase is ~80% complete, allow
 
 ---
 
-**Last Updated:** 2025-11-12
+**Last Updated:** 2025-11-17

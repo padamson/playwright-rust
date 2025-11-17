@@ -63,7 +63,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.6.1"
+playwright-rs = "0.7.0"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -96,7 +96,7 @@ cargo build
 
 **⚠️ IMPORTANT:** Browsers are installed **automatically** after building the project!
 
-When you run `cargo build`, the build script ([build.rs](crates/playwright-core/build.rs)) automatically:
+When you run `cargo build`, the build script ([build.rs](crates/playwright/build.rs)) automatically:
 1. Downloads the Playwright driver (version **1.56.1**) from Azure CDN
 2. Extracts it to the appropriate location based on your setup:
    - **Workspace projects**: `drivers/playwright-1.56.1-<platform>/` in your workspace root

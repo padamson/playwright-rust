@@ -4,8 +4,8 @@
 // PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.56.1-mac-arm64 \
 //     cargo run --package playwright --example state_assertions
 
-use playwright_core::expect;
-use playwright_core::protocol::Playwright;
+use playwright_rs::expect;
+use playwright_rs::protocol::Playwright;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

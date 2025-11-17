@@ -65,7 +65,7 @@ This feedback-driven approach ensures we're solving real problems, not theoretic
 
 ## Phase 7 Slices
 
-### Slice 0: Single-Crate Architecture Consolidation (Phase 7 Initiation) ✅ **PARTIALLY COMPLETED**
+### Slice 0: Single-Crate Architecture Consolidation (Phase 7 Initiation) ✅ **COMPLETED**
 
 **Goal:** Consolidate two-crate architecture into single crate matching official Playwright implementations - Release as v0.7.0
 
@@ -81,46 +81,12 @@ This feedback-driven approach ensures we're solving real problems, not theoretic
 - ADR: [0003-single-crate-architecture.md](../adr/0003-single-crate-architecture.md)
 - Release: v0.6.1 (fixed issue #3 as interim solution, added robust workspace detection)
 
-**Sub-tasks:**
-
-1. **Deprecation of playwright-core** (Estimated: 1 hour)
-   - [ ] Publish playwright-core v0.6.2 with deprecation notice
-   - [ ] Update playwright-core README with migration instructions
-   - [ ] Yank v0.6.0 and v0.6.1 from crates.io
-   - [ ] Leave v0.6.2 as deprecation marker
-
-2. **Code Consolidation** (Estimated: 2 days) - **Trunk-based development**
-   - [ ] Move `playwright-core/src/` code to `playwright/src/protocol/` and `src/server/`
-   - [ ] Update visibility: `pub` → `pub(crate)` for internal modules
-   - [ ] Merge Cargo.toml dependencies
-   - [ ] Merge build.rs (already has robust workspace detection from v0.6.1)
-   - [ ] Update lib.rs to export only public API
-   - [ ] Fix all import paths
-   - [ ] Remove `crates/playwright-core/` directory
-
-3. **Testing & Validation** (Estimated: 1 day)
-   - [ ] All 248+ tests pass
-   - [ ] All examples work
-   - [ ] Clippy clean
-   - [ ] CI passes (Linux, macOS, Windows)
-   - [ ] Test in Folio as real-world validation
-
-4. **Documentation & Release** (Estimated: 1 day)
-   - [ ] Update README (single-crate architecture)
-   - [ ] Update CHANGELOG for v0.7.0
-   - [ ] Create MIGRATION.md guide (v0.6.x → v0.7.0)
-   - [ ] Publish playwright-rs v0.7.0 to crates.io
-   - [ ] Create GitHub release
-   - [ ] Update Folio to use v0.7.0
-
-**Success Criteria:**
-- [x] Issue #3 root cause documented (ADR 0003)
-- [ ] Single crate published as playwright-rs v0.7.0
-- [ ] playwright-core deprecated and yanked
-- [ ] All tests pass
-- [ ] Folio successfully using v0.7.0
-
-**Estimated Time:** 5 days total
+**Key Deliverables:**
+- [x] Single crate published as playwright-rs v0.7.0
+- [x] Publish playwright-core v0.6.2 with deprecation notice
+- [x] Update playwright-core README with migration instructions
+- [ ] Yank v0.6.0 and v0.6.1 from crates.io - **Deferred**
+- [ ] Leave v0.6.2 as deprecation marker - **Deferred**
 
 ---
 
@@ -129,7 +95,6 @@ This feedback-driven approach ensures we're solving real problems, not theoretic
 **Goal:** Complete integration of playwright-rust (v0.7.0 single-crate) into Folio project, document pain points
 
 **Tasks:**
-- [ ] Replace existing browser automation with playwright-rust
 - [ ] Document integration challenges
 - [ ] Identify missing features or rough edges
 - [ ] Create list of needed examples
