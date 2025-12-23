@@ -945,6 +945,55 @@ impl Page {
     pub async fn trigger_dialog_event(&self, dialog: Dialog) {
         self.on_dialog_event(dialog).await;
     }
+
+    /// Adds a `<style>` tag into the page with the desired text content.
+    ///
+    /// # Arguments
+    ///
+    /// * `content` - Raw CSS content to be injected into the page
+    ///
+    /// # Returns
+    ///
+    /// Returns an ElementHandle pointing to the injected `<style>` tag
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// page.add_style_tag("body { background-color: red; }").await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-add-style-tag>
+    pub async fn add_style_tag(
+        &self,
+        content: &str,
+        url: Option<&str>,
+    ) -> Result<Arc<crate::protocol::ElementHandle>> {
+        let frame = self.main_frame().await?;
+        frame.add_style_tag(content, url).await
+    }
+
+    /// Adds a script which would be evaluated in one of the following scenarios:
+    /// - Whenever the page is navigated
+    /// - Whenever a child frame is attached or navigated
+    ///
+    /// The script is evaluated after the document was created but before any of its scripts were run.
+    ///
+    /// # Arguments
+    ///
+    /// * `script` - JavaScript code to be injected into the page
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// page.add_init_script("window.injected = 123;").await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-add-init-script>
+    pub async fn add_init_script(&self, script: &str) -> Result<()> {
+        self.channel()
+            .send_no_result("addInitScript", serde_json::json!({ "source": script }))
+            .await
+    }
 }
 
 impl ChannelOwner for Page {

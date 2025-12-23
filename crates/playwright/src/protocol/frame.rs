@@ -1083,6 +1083,58 @@ impl Frame {
             }
         }
     }
+
+    /// Adds a `<style>` tag into the page with the desired content.
+    ///
+    /// # Arguments
+    ///
+    /// * `content` - Optional CSS content to be injected into the frame
+    /// * `url` - Optional URL of the `<style>` tag to be added
+    ///
+    /// At least one of `content` or `url` must be specified.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-add-style-tag>
+    pub async fn add_style_tag(
+        &self,
+        content: &str,
+        url: Option<&str>,
+    ) -> Result<Arc<crate::protocol::ElementHandle>> {
+        if content.is_empty() && url.is_none() {
+            return Err(Error::InvalidArgument(
+                "Either content or url must be specified".to_string(),
+            ));
+        }
+
+        let mut params = serde_json::json!({"content": content});
+
+        if let Some(u) = url {
+            params["url"] = serde_json::json!(u);
+        }
+
+        #[derive(Deserialize)]
+        struct AddStyleTagResponse {
+            element: serde_json::Value,
+        }
+
+        let response: AddStyleTagResponse = self.channel().send("addStyleTag", params).await?;
+
+        let guid = response.element["guid"].as_str().ok_or_else(|| {
+            Error::ProtocolError("Element GUID missing in addStyleTag response".to_string())
+        })?;
+
+        let connection = self.base.connection();
+        let element = connection.get_object(guid).await?;
+
+        let handle = element
+            .as_any()
+            .downcast_ref::<crate::protocol::ElementHandle>()
+            .map(|e| Arc::new(e.clone()))
+            .ok_or_else(|| {
+                Error::ProtocolError(format!("Object {} is not an ElementHandle", guid))
+            })?;
+
+        Ok(handle)
+    }
 }
 
 impl ChannelOwner for Frame {

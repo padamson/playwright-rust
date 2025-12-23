@@ -108,6 +108,31 @@ impl BrowserContext {
         self.base.channel()
     }
 
+    /// Adds a script which would be evaluated in one of the following scenarios:
+    ///
+    /// - Whenever a page is created in the browser context or is navigated.
+    /// - Whenever a child frame is attached or navigated in any page in the browser context.
+    ///
+    /// The script is evaluated after the document was created but before any of its scripts
+    /// were run. This is useful to amend the JavaScript environment, e.g. to seed Math.random.
+    ///
+    /// # Arguments
+    ///
+    /// * `script` - Script to be evaluated in all pages in the browser context.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-add-init-script>
+    pub async fn add_init_script(&self, script: &str) -> Result<()> {
+        self.channel()
+            .send_no_result("addInitScript", serde_json::json!({ "source": script }))
+            .await
+    }
+
     /// Creates a new page in this browser context.
     ///
     /// Pages are isolated tabs/windows within a context. Each page starts
