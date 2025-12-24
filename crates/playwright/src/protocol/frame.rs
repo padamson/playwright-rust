@@ -1088,27 +1088,55 @@ impl Frame {
     ///
     /// # Arguments
     ///
-    /// * `content` - Optional CSS content to be injected into the frame
-    /// * `url` - Optional URL of the `<style>` tag to be added
+    /// * `options` - Style tag options (content, url, or path)
     ///
-    /// At least one of `content` or `url` must be specified.
+    /// At least one of `content`, `url`, or `path` must be specified.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::protocol::AddStyleTagOptions;
+    ///
+    /// // With inline CSS
+    /// frame.add_style_tag(
+    ///     AddStyleTagOptions::builder()
+    ///         .content("body { background-color: red; }")
+    ///         .build()
+    /// ).await?;
+    ///
+    /// // With URL
+    /// frame.add_style_tag(
+    ///     AddStyleTagOptions::builder()
+    ///         .url("https://example.com/style.css")
+    ///         .build()
+    /// ).await?;
+    /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-add-style-tag>
     pub async fn add_style_tag(
         &self,
-        content: &str,
-        url: Option<&str>,
+        options: crate::protocol::page::AddStyleTagOptions,
     ) -> Result<Arc<crate::protocol::ElementHandle>> {
-        if content.is_empty() && url.is_none() {
-            return Err(Error::InvalidArgument(
-                "Either content or url must be specified".to_string(),
-            ));
+        // Validate that at least one option is provided
+        options.validate()?;
+
+        // Build protocol parameters
+        let mut params = serde_json::json!({});
+
+        if let Some(content) = &options.content {
+            params["content"] = serde_json::json!(content);
         }
 
-        let mut params = serde_json::json!({"content": content});
+        if let Some(url) = &options.url {
+            params["url"] = serde_json::json!(url);
+        }
 
-        if let Some(u) = url {
-            params["url"] = serde_json::json!(u);
+        if let Some(path) = &options.path {
+            // Read file content and send as content
+            let css_content = tokio::fs::read_to_string(path).await.map_err(|e| {
+                Error::InvalidArgument(format!("Failed to read CSS file '{}': {}", path, e))
+            })?;
+            params["content"] = serde_json::json!(css_content);
         }
 
         #[derive(Deserialize)]

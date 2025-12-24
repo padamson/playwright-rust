@@ -5,6 +5,7 @@
 // - Page.add_init_script() - scripts applied to specific page
 // - Multiple pages inheriting context scripts
 // - Script execution before page scripts
+// - Cross-browser compatibility
 
 mod test_server;
 
@@ -12,7 +13,7 @@ use playwright_rs::protocol::Playwright;
 use test_server::TestServer;
 
 #[tokio::test]
-async fn test_add_init_script_no_context() {
+async fn test_add_init_script_on_context() {
     let server = TestServer::start().await;
     let playwright = Playwright::launch()
         .await
@@ -29,12 +30,13 @@ async fn test_add_init_script_no_context() {
         .await
         .expect("Failed to create context");
 
+    // Add init script to context - will apply to all pages
     context
         .add_init_script(
             r#"
             window.playwrightInitialized = true;
             window.customTimestamp = Date.now();
-            console.log('Init script do contexto executado!');
+            console.log('Init script from context executed!');
             "#,
         )
         .await
@@ -47,6 +49,7 @@ async fn test_add_init_script_no_context() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
+    // Wait for page to be fully loaded and script to execute
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
     let initialized = page
@@ -75,7 +78,7 @@ async fn test_add_init_script_no_context() {
 }
 
 #[tokio::test]
-async fn test_add_init_script_multiplas_paginas() {
+async fn test_add_init_script_multiple_pages() {
     let server = TestServer::start().await;
     let playwright = Playwright::launch()
         .await
@@ -92,6 +95,7 @@ async fn test_add_init_script_multiplas_paginas() {
         .await
         .expect("Failed to create context");
 
+    // Add init script at context level
     context
         .add_init_script(
             r#"
@@ -102,6 +106,7 @@ async fn test_add_init_script_multiplas_paginas() {
         .await
         .expect("Failed to add init script");
 
+    // Create first page
     let page1 = context.new_page().await.expect("Failed to create page 1");
     page1
         .goto(&format!("{}/input.html", server.url()), None)
@@ -109,8 +114,10 @@ async fn test_add_init_script_multiplas_paginas() {
         .expect("Failed to navigate page 1")
         .expect("Expected a response");
 
+    // Wait for script to execute
     tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
 
+    // Create second page
     let page2 = context.new_page().await.expect("Failed to create page 2");
     page2
         .goto(&format!("{}/form.html", server.url()), None)
@@ -118,8 +125,10 @@ async fn test_add_init_script_multiplas_paginas() {
         .expect("Failed to navigate page 2")
         .expect("Expected a response");
 
+    // Wait for script to execute
     tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
 
+    // Both pages should have the same init script values
     let counter1 = page1
         .evaluate_value("window.sharedCounter")
         .await
@@ -158,7 +167,7 @@ async fn test_add_init_script_multiplas_paginas() {
 }
 
 #[tokio::test]
-async fn test_add_init_script_na_page() {
+async fn test_add_init_script_on_page() {
     let server = TestServer::start().await;
     let playwright = Playwright::launch()
         .await
@@ -172,11 +181,12 @@ async fn test_add_init_script_na_page() {
 
     let page = browser.new_page().await.expect("Failed to create page");
 
+    // Add init script directly to page
     page.add_init_script(
         r#"
         window.pageInitialized = true;
         window.pageCounter = 999;
-        console.log('Init script da página executado!');
+        console.log('Init script from page executed!');
         "#,
     )
     .await
@@ -187,6 +197,7 @@ async fn test_add_init_script_na_page() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
+    // Wait for page to be fully loaded and script to execute
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
     let initialized = page
@@ -205,6 +216,126 @@ async fn test_add_init_script_na_page() {
         "Property pageInitialized should be true"
     );
     assert_eq!(counter.trim(), "999", "Counter should be 999");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_add_init_script_chromium() {
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.add_init_script("window.browserType = 'chromium';")
+        .await
+        .expect("Failed to add init script");
+
+    page.goto(&format!("{}/input.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+
+    let browser_type = page
+        .evaluate_value("window.browserType")
+        .await
+        .expect("Failed to evaluate browserType");
+
+    assert_eq!(
+        browser_type.trim().trim_matches('"'),
+        "chromium",
+        "Browser type should be chromium"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_add_init_script_firefox() {
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let browser = playwright
+        .firefox()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.add_init_script("window.browserType = 'firefox';")
+        .await
+        .expect("Failed to add init script");
+
+    page.goto(&format!("{}/input.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+
+    let browser_type = page
+        .evaluate_value("window.browserType")
+        .await
+        .expect("Failed to evaluate browserType");
+
+    assert_eq!(
+        browser_type.trim().trim_matches('"'),
+        "firefox",
+        "Browser type should be firefox"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_add_init_script_webkit() {
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let browser = playwright
+        .webkit()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.add_init_script("window.browserType = 'webkit';")
+        .await
+        .expect("Failed to add init script");
+
+    page.goto(&format!("{}/input.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+
+    let browser_type = page
+        .evaluate_value("window.browserType")
+        .await
+        .expect("Failed to evaluate browserType");
+
+    assert_eq!(
+        browser_type.trim().trim_matches('"'),
+        "webkit",
+        "Browser type should be webkit"
+    );
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();

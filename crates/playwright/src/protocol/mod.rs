@@ -52,7 +52,7 @@ pub use frame::Frame;
 pub use keyboard::Keyboard;
 pub use locator::Locator;
 pub use mouse::Mouse;
-pub use page::{GotoOptions, Page, Response, WaitUntil};
+pub use page::{AddStyleTagOptions, GotoOptions, Page, Response, WaitUntil};
 pub use playwright::Playwright;
 pub use request::Request;
 pub use response::ResponseObject;
