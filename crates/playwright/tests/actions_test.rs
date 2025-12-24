@@ -15,7 +15,7 @@
 
 mod test_server;
 
-use playwright_rs::protocol::Playwright;
+use playwright_rs::protocol::{GotoOptions, Playwright};
 use test_server::TestServer;
 
 // ============================================================================
@@ -203,7 +203,10 @@ async fn test_cross_browser_smoke() {
     let firefox_page = firefox.new_page().await.expect("Failed to create page");
 
     firefox_page
-        .goto(&format!("{}/button.html", server.url()), None)
+        .goto(
+            &format!("{}/button.html", server.url()),
+            Some(GotoOptions::new().timeout(std::time::Duration::from_secs(60))),
+        )
         .await
         .expect("Failed to navigate");
 
@@ -230,7 +233,10 @@ async fn test_cross_browser_smoke() {
     let webkit_page = webkit.new_page().await.expect("Failed to create page");
 
     webkit_page
-        .goto(&format!("{}/form.html", server.url()), None)
+        .goto(
+            &format!("{}/form.html", server.url()),
+            Some(GotoOptions::new().timeout(std::time::Duration::from_secs(60))),
+        )
         .await
         .expect("Failed to navigate");
 

@@ -234,7 +234,7 @@ impl Page {
     /// Returns the main frame of the page.
     ///
     /// The main frame is where navigation and DOM operations actually happen.
-    pub(crate) async fn main_frame(&self) -> Result<crate::protocol::Frame> {
+    pub async fn main_frame(&self) -> Result<crate::protocol::Frame> {
         // Get the Frame object from the connection's object registry
         let frame_arc = self.connection().get_object(&self.main_frame_guid).await?;
 
@@ -965,7 +965,14 @@ impl Page {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```no_run
+    /// # use playwright_rs::protocol::{Playwright, AddStyleTagOptions};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let context = browser.new_context().await?;
+    /// # let page = context.new_page().await?;
     /// use playwright_rs::protocol::AddStyleTagOptions;
     ///
     /// // With inline CSS
@@ -988,6 +995,8 @@ impl Page {
     ///         .path("./styles/custom.css")
     ///         .build()
     /// ).await?;
+    /// # Ok(())
+    /// # }
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-add-style-tag>
@@ -1011,8 +1020,17 @@ impl Page {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```no_run
+    /// # use playwright_rs::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let context = browser.new_context().await?;
+    /// # let page = context.new_page().await?;
     /// page.add_init_script("window.injected = 123;").await?;
+    /// # Ok(())
+    /// # }
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-add-init-script>

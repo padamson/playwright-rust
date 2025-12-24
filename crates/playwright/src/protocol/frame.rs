@@ -1094,7 +1094,15 @@ impl Frame {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```no_run
+    /// # use playwright_rs::protocol::{Playwright, AddStyleTagOptions};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let context = browser.new_context().await?;
+    /// # let page = context.new_page().await?;
+    /// # let frame = page.main_frame().await?;
     /// use playwright_rs::protocol::AddStyleTagOptions;
     ///
     /// // With inline CSS
@@ -1110,6 +1118,8 @@ impl Frame {
     ///         .url("https://example.com/style.css")
     ///         .build()
     /// ).await?;
+    /// # Ok(())
+    /// # }
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-add-style-tag>

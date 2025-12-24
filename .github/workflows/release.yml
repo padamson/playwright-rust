@@ -12,52 +12,8 @@ permissions:
   contents: write
 
 jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      version: ${{ steps.get_version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get version from tag
-        id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Extract changelog for this version
-        id: changelog
-        run: |
-          VERSION=${{ steps.get_version.outputs.version }}
-          # Extract changelog section for this version (if CHANGELOG.md exists)
-          if [ -f CHANGELOG.md ]; then
-            # Get content between this version and next version heading
-            CHANGELOG=$(sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
-            # If empty, use a default message
-            if [ -z "$CHANGELOG" ]; then
-              CHANGELOG="See commit history for changes in this release."
-            fi
-          else
-            CHANGELOG="See commit history for changes in this release."
-          fi
-          # Save to file for multi-line output
-          echo "$CHANGELOG" > changelog.txt
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: playwright-rust v${{ steps.get_version.outputs.version }}
-          body_path: changelog.txt
-          draft: false
-          prerelease: false
-
   build-release:
     name: Build ${{ matrix.target }}
-    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -86,6 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
@@ -100,13 +60,13 @@ jobs:
       - name: Install Playwright browsers (Linux)
         if: runner.os == 'Linux'
         run: |
-          npm install -g @playwright/test
+          npm install -g @playwright/test@1.56.1
           npx playwright install chromium firefox webkit --with-deps
 
       - name: Install Playwright browsers (macOS/Windows)
         if: runner.os != 'Linux'
         run: |
-          npm install -g @playwright/test
+          npm install -g @playwright/test@1.56.1
           npx playwright install chromium firefox webkit
 
       - name: Install cargo-nextest
@@ -142,8 +102,8 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           if [ -f playwright ]; then
-            tar czf playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz playwright
-            mv playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz ../../..
+            tar czf playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz playwright
+            mv playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz ../../..
           fi
         continue-on-error: true
 
@@ -153,38 +113,22 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           if [ -f playwright.exe ]; then
-            7z a playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip playwright.exe
-            mv playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip ../../..
+            7z a playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip playwright.exe
+            mv playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip ../../..
           fi
         continue-on-error: true
 
-      - name: Upload release archive (Unix)
-        if: runner.os != 'Windows'
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz
-          asset_name: playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz
-          asset_content_type: application/gzip
-        continue-on-error: true
-
-      - name: Upload release archive (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip
-          asset_name: playwright-rust-v${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip
-          asset_content_type: application/zip
-        continue-on-error: true
 
   publish-crates:
     name: Publish to crates.io
-    needs: [create-release, build-release]
+    needs: [build-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
