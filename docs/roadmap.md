@@ -154,7 +154,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 **Milestones:**
 - ✅ v0.7.0: Single Crate Architecture (2025-11-16)
 - 🚧 v0.7.1: Remote Connection (BrowserType::connect)
-- 📋 v0.7.x: API Polish
+- 🟡 v0.7.x: API Polish (partial - `add_init_script`, `add_style_tag` via community PR #7)
 
 ---
 
