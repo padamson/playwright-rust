@@ -40,7 +40,8 @@ pub use action_options::{
 };
 pub use browser::Browser;
 pub use browser_context::{
-    BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, Geolocation, Viewport,
+    BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, Cookie, Geolocation,
+    LocalStorageItem, Origin, StorageState, Viewport,
 };
 pub use browser_type::BrowserType;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};

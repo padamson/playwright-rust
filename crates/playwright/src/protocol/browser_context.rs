@@ -343,6 +343,68 @@ pub struct Geolocation {
     pub accuracy: Option<f64>,
 }
 
+/// Cookie information for storage state.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Cookie {
+    /// Cookie name
+    pub name: String,
+    /// Cookie value
+    pub value: String,
+    /// Cookie domain (use dot prefix for subdomain matching, e.g., ".example.com")
+    pub domain: String,
+    /// Cookie path
+    pub path: String,
+    /// Unix timestamp in seconds; -1 for session cookies
+    pub expires: f64,
+    /// HTTP-only flag
+    pub http_only: bool,
+    /// Secure flag
+    pub secure: bool,
+    /// SameSite attribute ("Strict", "Lax", "None")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub same_site: Option<String>,
+}
+
+/// Local storage item for storage state.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalStorageItem {
+    /// Storage key
+    pub name: String,
+    /// Storage value
+    pub value: String,
+}
+
+/// Origin with local storage items for storage state.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Origin {
+    /// Origin URL (e.g., "https://example.com")
+    pub origin: String,
+    /// Local storage items for this origin
+    pub local_storage: Vec<LocalStorageItem>,
+}
+
+/// Storage state containing cookies and local storage.
+///
+/// Used to populate a browser context with saved authentication state,
+/// enabling session persistence across context instances.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StorageState {
+    /// List of cookies
+    pub cookies: Vec<Cookie>,
+    /// List of origins with local storage
+    pub origins: Vec<Origin>,
+}
+
 /// Options for creating a new browser context.
 ///
 /// Allows customizing viewport, user agent, locale, timezone, geolocation,
@@ -424,6 +486,17 @@ pub struct BrowserContextOptions {
     /// Base URL for relative navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub base_url: Option<String>,
+
+    /// Storage state to populate the context (cookies, localStorage, sessionStorage).
+    /// Can be an inline StorageState object or a file path string.
+    /// Use builder methods `storage_state()` for inline or `storage_state_path()` for file path.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub storage_state: Option<StorageState>,
+
+    /// Storage state file path (alternative to inline storage_state).
+    /// This is handled by the builder and converted to storage_state during serialization.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub storage_state_path: Option<String>,
 }
 
 impl BrowserContextOptions {
@@ -454,6 +527,8 @@ pub struct BrowserContextOptionsBuilder {
     device_scale_factor: Option<f64>,
     extra_http_headers: Option<HashMap<String, String>>,
     base_url: Option<String>,
+    storage_state: Option<StorageState>,
+    storage_state_path: Option<String>,
 }
 
 impl BrowserContextOptionsBuilder {
@@ -569,6 +644,99 @@ impl BrowserContextOptionsBuilder {
         self
     }
 
+    /// Sets the storage state inline (cookies, localStorage).
+    ///
+    /// Populates the browser context with the provided storage state, including
+    /// cookies and local storage. This is useful for initializing a context with
+    /// a saved authentication state.
+    ///
+    /// Mutually exclusive with `storage_state_path()`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use playwright_rs::protocol::{BrowserContextOptions, Cookie, StorageState, Origin, LocalStorageItem};
+    ///
+    /// let storage_state = StorageState {
+    ///     cookies: vec![Cookie {
+    ///         name: "session_id".to_string(),
+    ///         value: "abc123".to_string(),
+    ///         domain: ".example.com".to_string(),
+    ///         path: "/".to_string(),
+    ///         expires: -1.0,
+    ///         http_only: true,
+    ///         secure: true,
+    ///         same_site: Some("Lax".to_string()),
+    ///     }],
+    ///     origins: vec![Origin {
+    ///         origin: "https://example.com".to_string(),
+    ///         local_storage: vec![LocalStorageItem {
+    ///             name: "user_prefs".to_string(),
+    ///             value: "{\"theme\":\"dark\"}".to_string(),
+    ///         }],
+    ///     }],
+    /// };
+    ///
+    /// let options = BrowserContextOptions::builder()
+    ///     .storage_state(storage_state)
+    ///     .build();
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
+    pub fn storage_state(mut self, storage_state: StorageState) -> Self {
+        self.storage_state = Some(storage_state);
+        self.storage_state_path = None; // Clear path if setting inline
+        self
+    }
+
+    /// Sets the storage state from a file path.
+    ///
+    /// The file should contain a JSON representation of StorageState with cookies
+    /// and origins. This is useful for loading authentication state saved from a
+    /// previous session.
+    ///
+    /// Mutually exclusive with `storage_state()`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use playwright_rs::protocol::BrowserContextOptions;
+    ///
+    /// let options = BrowserContextOptions::builder()
+    ///     .storage_state_path("auth.json".to_string())
+    ///     .build();
+    /// ```
+    ///
+    /// The file should have this format:
+    /// ```json
+    /// {
+    ///   "cookies": [{
+    ///     "name": "session_id",
+    ///     "value": "abc123",
+    ///     "domain": ".example.com",
+    ///     "path": "/",
+    ///     "expires": -1,
+    ///     "httpOnly": true,
+    ///     "secure": true,
+    ///     "sameSite": "Lax"
+    ///   }],
+    ///   "origins": [{
+    ///     "origin": "https://example.com",
+    ///     "localStorage": [{
+    ///       "name": "user_prefs",
+    ///       "value": "{\"theme\":\"dark\"}"
+    ///     }]
+    ///   }]
+    /// }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
+    pub fn storage_state_path(mut self, path: String) -> Self {
+        self.storage_state_path = Some(path);
+        self.storage_state = None; // Clear inline if setting path
+        self
+    }
+
     /// Builds the BrowserContextOptions
     pub fn build(self) -> BrowserContextOptions {
         BrowserContextOptions {
@@ -590,6 +758,8 @@ impl BrowserContextOptionsBuilder {
             device_scale_factor: self.device_scale_factor,
             extra_http_headers: self.extra_http_headers,
             base_url: self.base_url,
+            storage_state: self.storage_state,
+            storage_state_path: self.storage_state_path,
         }
     }
 }

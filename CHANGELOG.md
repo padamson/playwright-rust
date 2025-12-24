@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2025-12-24
+
 ### Added
 
+- **Storage State Support** - `BrowserContextOptions` now supports `storageState` for session persistence (Issue #6)
+  - `storage_state(StorageState)` - Load cookies and localStorage from inline object
+  - `storage_state_path(String)` - Load storage state from JSON file
+  - New types: `Cookie`, `LocalStorageItem`, `Origin`, `StorageState`
+  - Enables authentication state persistence without re-login
+  - Async file reading with proper error handling
 - `Page::pause()` method for manual debugging (Issue #5)
   - Opens Playwright Inspector and pauses script execution
   - Delegates to new `BrowserContext::pause()` method
@@ -182,6 +190,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/padamson/playwright-rust/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/padamson/playwright-rust/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/padamson/playwright-rust/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/padamson/playwright-rust/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/padamson/playwright-rust/releases/tag/v0.6.0

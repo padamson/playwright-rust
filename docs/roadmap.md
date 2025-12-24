@@ -4,7 +4,7 @@
 
 **Architecture:** JSON-RPC communication with Playwright Node.js server (same as all official bindings)
 
-**Status:** Version 0.6 complete (2025-11-12), Version 1.0 Slice 0 complete (2025-11-17)
+**Status:** Version 0.7.2 complete (2025-12-24)
 
 ---
 
@@ -21,7 +21,8 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.6.0** - Production Hardening complete - 2025-11-12
 - ✅ **v0.7.0** - Single-Crate Architecture complete - 2025-11-16
 - ✅ **v0.7.1** - Script & Style Injection APIs complete - 2025-12-24
-- 🚧 **v0.7.2** - Remote Connection
+- ✅ **v0.7.2** - Community Features & Fixes complete - 2025-12-24
+- 🚧 **v0.7.3** - Remote Connection
 - 📋 **v1.0.0** - Real-World Validation & Final Polish
 - 🔮 **v1.1.0** - WebSocket Support
 
@@ -155,8 +156,17 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 **Milestones:**
 - ✅ v0.7.0: Single Crate Architecture (2025-11-16)
 - ✅ v0.7.1: Script & Style Injection APIs (2025-12-24) - Community contribution
-- 🚧 v0.7.2: Remote Connection (BrowserType::connect)
+- ✅ v0.7.2: Community Features & Fixes (2025-12-24) - Issues #4, #5, #6
+- 🚧 v0.7.3: Remote Connection (BrowserType::connect)
 - 📋 v0.7.x: Critical Feature Gaps & API Polish
+
+**Delivered in v0.7.2:**
+- **Storage State Support** (Issue #6) - `BrowserContextOptions` now supports session persistence
+  - `storage_state(StorageState)` - Load cookies and localStorage from inline object
+  - `storage_state_path(String)` - Load storage state from JSON file
+  - New types: `Cookie`, `LocalStorageItem`, `Origin`, `StorageState`
+- **Debugging Tools** (Issue #5) - `Page::pause()` for manual debugging with Playwright Inspector
+- **Logging Improvements** (Issue #4) - Consistent tracing initialization across integration tests
 
 **Delivered in v0.7.1:**
 - `BrowserContext.add_init_script()` - Context-level script injection
@@ -281,4 +291,4 @@ Implementation plans are created when the previous version is ~80% complete, all
 
 ---
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-12-24

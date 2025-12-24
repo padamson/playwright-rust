@@ -193,8 +193,10 @@ pub use protocol::{FilePayload, SelectOption};
 // Re-export screenshot types
 pub use protocol::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 
-// Re-export browser context options
-pub use protocol::{BrowserContextOptions, Geolocation, Viewport};
+// Re-export browser context options and storage state types
+pub use protocol::{
+    BrowserContextOptions, Cookie, Geolocation, LocalStorageItem, Origin, StorageState, Viewport,
+};
 
 // Re-export routing types
 pub use protocol::{FulfillOptions, Route};

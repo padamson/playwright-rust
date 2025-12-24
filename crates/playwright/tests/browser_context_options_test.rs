@@ -463,3 +463,309 @@ async fn test_context_cross_browser_options() {
         browser.close().await.unwrap();
     }
 }
+
+// ============================================================================
+// StorageState Tests (Issue #6)
+// ============================================================================
+
+#[tokio::test]
+async fn test_context_with_storage_state_inline() {
+    use playwright_rs::protocol::{Cookie, LocalStorageItem, Origin, StorageState};
+    common::init_tracing();
+
+    // Test creating context with inline storage state
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    // Create storage state with cookies and localStorage
+    let storage_state = StorageState {
+        cookies: vec![Cookie {
+            name: "test_cookie".to_string(),
+            value: "test_value".to_string(),
+            domain: ".example.com".to_string(),
+            path: "/".to_string(),
+            expires: -1.0,
+            http_only: false,
+            secure: false,
+            same_site: Some("Lax".to_string()),
+        }],
+        origins: vec![Origin {
+            origin: "https://example.com".to_string(),
+            local_storage: vec![LocalStorageItem {
+                name: "test_key".to_string(),
+                value: "test_storage_value".to_string(),
+            }],
+        }],
+    };
+
+    let options = BrowserContextOptions::builder()
+        .storage_state(storage_state)
+        .build();
+
+    let context = browser
+        .new_context_with_options(options)
+        .await
+        .expect("Failed to create context with storage state");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    // Navigate to example.com to verify storage state was loaded
+    page.goto("https://example.com", None)
+        .await
+        .expect("Failed to navigate");
+
+    // Verify cookie was set
+    let cookie_value = page
+        .evaluate_value("document.cookie")
+        .await
+        .expect("Failed to evaluate cookie");
+    assert!(
+        cookie_value.contains("test_cookie=test_value"),
+        "Cookie should be set"
+    );
+
+    // Verify localStorage was set
+    let storage_value = page
+        .evaluate_value("localStorage.getItem('test_key')")
+        .await
+        .expect("Failed to evaluate localStorage");
+    assert_eq!(storage_value, "test_storage_value");
+
+    context.close().await.expect("Failed to close context");
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_context_with_storage_state_from_file() {
+    common::init_tracing();
+
+    // Test creating context with storage state from file
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    // Create a temporary storage state file
+    let temp_dir = std::env::temp_dir();
+    let storage_file = temp_dir.join("test_storage_state.json");
+
+    // Write storage state to file
+    let storage_json = r#"{
+        "cookies": [{
+            "name": "file_cookie",
+            "value": "file_value",
+            "domain": ".example.com",
+            "path": "/",
+            "expires": -1,
+            "httpOnly": false,
+            "secure": false,
+            "sameSite": "Lax"
+        }],
+        "origins": [{
+            "origin": "https://example.com",
+            "localStorage": [{
+                "name": "file_key",
+                "value": "file_storage_value"
+            }]
+        }]
+    }"#;
+
+    std::fs::write(&storage_file, storage_json).expect("Failed to write storage file");
+
+    let options = BrowserContextOptions::builder()
+        .storage_state_path(storage_file.to_str().unwrap().to_string())
+        .build();
+
+    let context = browser
+        .new_context_with_options(options)
+        .await
+        .expect("Failed to create context with storage state from file");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    // Navigate to example.com to verify storage state was loaded
+    page.goto("https://example.com", None)
+        .await
+        .expect("Failed to navigate");
+
+    // Verify cookie was set
+    let cookie_value = page
+        .evaluate_value("document.cookie")
+        .await
+        .expect("Failed to evaluate cookie");
+    assert!(
+        cookie_value.contains("file_cookie=file_value"),
+        "Cookie from file should be set"
+    );
+
+    // Verify localStorage was set
+    let storage_value = page
+        .evaluate_value("localStorage.getItem('file_key')")
+        .await
+        .expect("Failed to evaluate localStorage");
+    assert_eq!(storage_value, "file_storage_value");
+
+    context.close().await.expect("Failed to close context");
+    browser.close().await.expect("Failed to close browser");
+
+    // Cleanup
+    std::fs::remove_file(&storage_file).ok();
+}
+
+#[tokio::test]
+async fn test_context_storage_state_invalid_file() {
+    common::init_tracing();
+
+    // Test that invalid storage state file path returns error
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let options = BrowserContextOptions::builder()
+        .storage_state_path("/nonexistent/path/to/storage.json".to_string())
+        .build();
+
+    let result = browser.new_context_with_options(options).await;
+
+    // Should fail with error about missing file
+    assert!(
+        result.is_err(),
+        "Creating context with non-existent storage file should fail"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_context_storage_state_cross_browser() {
+    use playwright_rs::protocol::{Cookie, LocalStorageItem, Origin, StorageState};
+    common::init_tracing();
+
+    // Verify storage state works across Chromium, Firefox, and WebKit
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    for browser_name in &["chromium", "firefox", "webkit"] {
+        let browser = match *browser_name {
+            "chromium" => playwright.chromium().launch().await.unwrap(),
+            "firefox" => playwright.firefox().launch().await.unwrap(),
+            "webkit" => playwright.webkit().launch().await.unwrap(),
+            _ => unreachable!(),
+        };
+
+        // Create storage state with cookies
+        let storage_state = StorageState {
+            cookies: vec![Cookie {
+                name: "browser_test_cookie".to_string(),
+                value: format!("{}_value", browser_name),
+                domain: ".example.com".to_string(),
+                path: "/".to_string(),
+                expires: -1.0,
+                http_only: false,
+                secure: false,
+                same_site: Some("Lax".to_string()),
+            }],
+            origins: vec![Origin {
+                origin: "https://example.com".to_string(),
+                local_storage: vec![LocalStorageItem {
+                    name: "browser_key".to_string(),
+                    value: format!("{}_storage", browser_name),
+                }],
+            }],
+        };
+
+        let options = BrowserContextOptions::builder()
+            .storage_state(storage_state)
+            .build();
+
+        let context = browser
+            .new_context_with_options(options)
+            .await
+            .unwrap_or_else(|e| {
+                panic!(
+                    "Failed to create context with storage state in {}: {}",
+                    browser_name, e
+                )
+            });
+
+        let page = context
+            .new_page()
+            .await
+            .unwrap_or_else(|e| panic!("Failed to create page in {}: {}", browser_name, e));
+
+        // Navigate to example.com
+        page.goto("https://example.com", None)
+            .await
+            .unwrap_or_else(|e| panic!("Failed to navigate in {}: {}", browser_name, e));
+
+        // Verify cookie was set
+        let cookie_value = page
+            .evaluate_value("document.cookie")
+            .await
+            .unwrap_or_else(|e| panic!("Failed to evaluate cookie in {}: {}", browser_name, e));
+        assert!(
+            cookie_value.contains(&format!("browser_test_cookie={}_value", browser_name)),
+            "Cookie should be set in {}",
+            browser_name
+        );
+
+        context.close().await.unwrap();
+        browser.close().await.unwrap();
+    }
+}
+
+#[tokio::test]
+async fn test_context_storage_state_empty() {
+    use playwright_rs::protocol::StorageState;
+    common::init_tracing();
+
+    // Test creating context with empty storage state (should work fine)
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let storage_state = StorageState {
+        cookies: vec![],
+        origins: vec![],
+    };
+
+    let options = BrowserContextOptions::builder()
+        .storage_state(storage_state)
+        .build();
+
+    let context = browser
+        .new_context_with_options(options)
+        .await
+        .expect("Failed to create context with empty storage state");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    // Should work fine with no cookies/storage
+    page.goto("https://example.com", None)
+        .await
+        .expect("Failed to navigate");
+
+    context.close().await.expect("Failed to close context");
+    browser.close().await.expect("Failed to close browser");
+}
