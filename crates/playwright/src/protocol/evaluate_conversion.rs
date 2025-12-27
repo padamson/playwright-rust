@@ -76,7 +76,7 @@ use std::collections::HashMap;
 /// - Special floats: `{"v": "Infinity"}`, `{"v": "-Infinity"}`, `{"v": "-0"}`, `{"v": "NaN"}`
 ///
 /// The `id` field is used for circular reference tracking.
-fn serialize_value(value: &Value, handles: &mut Vec<String>, visitor: &mut Visitor) -> Value {
+fn serialize_value(value: &Value, visitor: &mut Visitor) -> Value {
     // Handle null
     if value.is_null() {
         return json!({"v": "null"});
@@ -127,7 +127,7 @@ fn serialize_value(value: &Value, handles: &mut Vec<String>, visitor: &mut Visit
         // Serialize array elements
         let serialized: Vec<Value> = arr
             .iter()
-            .map(|item| serialize_value(item, handles, visitor))
+            .map(|item| serialize_value(item, visitor))
             .collect();
 
         return json!({"a": serialized, "id": id});
@@ -151,7 +151,7 @@ fn serialize_value(value: &Value, handles: &mut Vec<String>, visitor: &mut Visit
             .map(|(key, val)| {
                 json!({
                     "k": key,
-                    "v": serialize_value(val, handles, visitor)
+                    "v": serialize_value(val, visitor)
                 })
             })
             .collect();
@@ -223,13 +223,12 @@ impl Visitor {
 /// ```
 pub fn serialize_argument<T: serde::Serialize>(arg: &T) -> Value {
     let json_value = serde_json::to_value(arg).unwrap_or(Value::Null);
-    let mut handles = Vec::new();
     let mut visitor = Visitor::new();
-    let value = serialize_value(&json_value, &mut handles, &mut visitor);
+    let value = serialize_value(&json_value, &mut visitor);
 
     json!({
         "value": value,
-        "handles": handles
+        "handles": []
     })
 }
 
@@ -556,6 +555,8 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    const PI: f64 = std::f64::consts::PI;
+
     #[test]
     fn test_serialize_null() {
         let result = serialize_argument(&json!(null));
@@ -596,9 +597,9 @@ mod tests {
         assert_eq!(value["n"].as_f64().unwrap(), 42.0);
         assert_eq!(result["handles"], json!([]));
 
-        let result = serialize_argument(&json!(3.14));
+        let result = serialize_argument(&json!(PI));
         let value = &result["value"];
-        assert_eq!(value["n"].as_f64().unwrap(), 3.14);
+        assert_eq!(value["n"].as_f64().unwrap(), PI);
         assert_eq!(result["handles"], json!([]));
     }
 
@@ -784,8 +785,8 @@ mod tests {
         let result = parse_value(&json!({"n": 42}), None);
         assert_eq!(result.as_f64().unwrap(), 42.0);
 
-        let result = parse_value(&json!({"n": 3.14}), None);
-        assert_eq!(result.as_f64().unwrap(), 3.14);
+        let result = parse_value(&json!({"n": PI}), None);
+        assert_eq!(result.as_f64().unwrap(), PI);
     }
 
     #[test]
@@ -988,7 +989,7 @@ mod tests {
     #[test]
     fn test_parse_typed_array_f32() {
         // Float32Array [1.0, -1.0, 3.14]
-        let values: Vec<f32> = vec![1.0, -1.0, 3.14];
+        let values: Vec<f32> = vec![1.0, -1.0, PI as f32];
         let mut bytes = Vec::new();
         for &v in &values {
             bytes.extend_from_slice(&v.to_le_bytes());
@@ -1006,7 +1007,7 @@ mod tests {
     #[test]
     fn test_parse_typed_array_f64() {
         // Float64Array [1.0, -1.0, 3.141592653589793]
-        let values: Vec<f64> = vec![1.0, -1.0, 3.141592653589793];
+        let values: Vec<f64> = vec![1.0, -1.0, PI];
         let mut bytes = Vec::new();
         for &v in &values {
             bytes.extend_from_slice(&v.to_le_bytes());
@@ -1131,7 +1132,7 @@ mod tests {
 
         assert_eq!(arr[0].as_f64().unwrap(), 1.0);
         assert_eq!(arr[1].as_str().unwrap(), "test");
-        assert_eq!(arr[2].as_bool().unwrap(), true);
+        assert!(arr[2].as_bool().unwrap());
 
         let nested = arr[3].as_array().unwrap();
         assert_eq!(nested.len(), 2);

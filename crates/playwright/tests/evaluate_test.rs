@@ -5,7 +5,6 @@
 mod test_server;
 
 use playwright_rs::protocol::Playwright;
-use playwright_rs::LaunchOptions;
 use serde::{Deserialize, Serialize};
 use test_server::TestServer;
 
@@ -15,38 +14,11 @@ mod common;
 // Helper structs for typed evaluate() results
 // ============================================================================
 
-/// Simple struct for integer results
-#[derive(Debug, Deserialize, PartialEq)]
-struct IntResult {
-    #[serde(default)]
-    value: i64,
-}
-
-/// Struct for string results
-#[derive(Debug, Deserialize, PartialEq)]
-struct StringResult {
-    text: String,
-}
-
 /// Struct for object results with properties
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct ObjectResult {
     x: i32,
     y: i32,
-}
-
-/// Struct for position information returned from DOM
-#[derive(Debug, Deserialize, PartialEq)]
-struct PositionResult {
-    text: String,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    top: f64,
-    left: f64,
-    right: f64,
-    bottom: f64,
 }
 
 #[tokio::test]
@@ -384,7 +356,7 @@ async fn test_evaluate_with_boolean_argument() {
         .await
         .expect("Failed to evaluate");
 
-    assert_eq!(result, false, "Expected inverted boolean result");
+    assert_eq!(result, !arg, "Expected inverted boolean result");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
