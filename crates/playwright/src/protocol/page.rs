@@ -72,7 +72,7 @@ use std::sync::{Arc, Mutex, RwLock};
 ///     assert_eq!(paragraphs.len(), 2);
 ///
 ///     // Demonstrate evaluate()
-///     page.evaluate("console.log('Hello from Playwright!')").await?;
+///     page.evaluate::<(), ()>("console.log('Hello from Playwright!')", None).await?;
 ///
 ///     // Demonstrate evaluate_value()
 ///     let result = page.evaluate_value("1 + 1").await?;

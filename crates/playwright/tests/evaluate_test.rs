@@ -264,7 +264,7 @@ async fn test_evaluate_without_argument() {
 
     // Test evaluate without argument (passing None) - returns i64
     let result: i64 = page
-        .evaluate("() => 42", None::<&i32>)
+        .evaluate("() => 42", None::<&()>)
         .await
         .expect("Failed to evaluate");
 

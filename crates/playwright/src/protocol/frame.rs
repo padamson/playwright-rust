@@ -1103,14 +1103,24 @@ impl Frame {
     ///
     /// ```ignore
     /// use serde_json::json;
+    /// use playwright_rs::protocol::Playwright;
     ///
-    /// // Evaluate without arguments
-    /// let result = frame.evaluate("1 + 1", None).await?;
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let playwright = Playwright::launch().await?;
+    ///     let browser = playwright.chromium().launch().await?;
+    ///     let page = browser.new_page().await?;
+    ///     let frame = page.main_frame().await?;
     ///
-    /// // Evaluate with argument
-    /// let arg = json!({"x": 5, "y": 3});
-    /// let result = frame.evaluate("(arg) => arg.x + arg.y", Some(&arg)).await?;
-    /// assert_eq!(result, json!(8));
+    ///     // Evaluate without arguments
+    ///     let result = frame.evaluate::<()>("1 + 1", None).await?;
+    ///
+    ///     // Evaluate with argument
+    ///     let arg = json!({"x": 5, "y": 3});
+    ///     let result = frame.evaluate::<serde_json::Value>("(arg) => arg.x + arg.y", Some(&arg)).await?;
+    ///     assert_eq!(result, json!(8));
+    ///     Ok(())
+    /// }
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate>
