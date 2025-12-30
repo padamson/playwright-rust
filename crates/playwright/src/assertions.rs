@@ -62,7 +62,7 @@ const DEFAULT_POLL_INTERVAL: Duration = Duration::from_millis(100);
 ///
 ///     // Test to_be_focused
 ///     page.goto("data:text/html,<input type='text' id='input'>", None).await?;
-///     page.evaluate("document.getElementById('input').focus()").await?;
+///     page.evaluate::<(), ()>("document.getElementById('input').focus()", None).await?;
 ///     expect(page.locator("#input").await).to_be_focused().await?;
 ///
 ///     // Test to_contain_text

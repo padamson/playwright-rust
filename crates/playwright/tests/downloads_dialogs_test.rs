@@ -49,7 +49,7 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
 
     let _ = page.goto("about:blank", None).await;
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const a = document.createElement('a');
         a.href = 'data:text/plain;charset=utf-8,Hello%20World';
@@ -94,7 +94,7 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
     })
     .await?;
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const a = document.createElement('a');
         a.href = 'data:text/plain;charset=utf-8,TestContent';
@@ -166,7 +166,7 @@ async fn test_dialog_alert_methods() -> Result<(), Box<dyn std::error::Error>> {
 
     let _ = page.goto("about:blank", None).await;
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const button = document.createElement('button');
         button.onclick = () => alert('Hello from alert!');
@@ -231,7 +231,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
     let _ = page1.goto("about:blank", None).await;
 
     page1
-        .evaluate(
+        .evaluate_expression(
             r#"
         const button = document.createElement('button');
         button.onclick = () => { window.confirmResult = confirm('Continue?'); };
@@ -269,7 +269,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
     let _ = page2.goto("about:blank", None).await;
 
     page2
-        .evaluate(
+        .evaluate_expression(
             r#"
         const button = document.createElement('button');
         button.onclick = () => { window.confirmResult = confirm('Really?'); };
@@ -334,7 +334,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
     let _ = page1.goto("about:blank", None).await;
 
     page1
-        .evaluate(
+        .evaluate_expression(
             r#"
         const button = document.createElement('button');
         button.onclick = () => { window.promptResult = prompt('Enter text:', 'DefaultValue'); };
@@ -379,7 +379,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
     let _ = page2.goto("about:blank", None).await;
 
     page2
-        .evaluate(
+        .evaluate_expression(
             r#"
         const button = document.createElement('button');
         button.onclick = () => { window.promptResult = prompt('More text:'); };
@@ -435,7 +435,7 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
     let _ = firefox_page.goto("about:blank", None).await;
 
     firefox_page
-        .evaluate(
+        .evaluate_expression(
             r#"
         const button = document.createElement('button');
         button.onclick = () => alert('Test');
@@ -477,7 +477,7 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
     let _ = webkit_page.goto("about:blank", None).await;
 
     webkit_page
-        .evaluate(
+        .evaluate_expression(
             r#"
         const a = document.createElement('a');
         a.href = 'data:text/plain,Test';

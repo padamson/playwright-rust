@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 5: Auto-retry demonstration
     // Inject a delayed element using evaluate()
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const delayed = document.createElement('div');
         delayed.id = 'delayed-element';
@@ -81,7 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 8: Input value assertions
     // Inject an input with a value
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.id = 'email-input';
@@ -104,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 9: Timeout error handling
     // Create element that stays hidden
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const hidden = document.createElement('div');
         hidden.id = 'hidden-element';

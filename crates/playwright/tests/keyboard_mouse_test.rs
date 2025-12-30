@@ -75,7 +75,7 @@ async fn test_keyboard_methods() {
 
     // Test 3: Hold Shift and type letter for uppercase
     // Clear input first
-    page.evaluate("document.getElementById('keyboard-input').value = ''")
+    page.evaluate_expression("document.getElementById('keyboard-input').value = ''")
         .await
         .expect("Failed to clear input");
 
@@ -94,7 +94,7 @@ async fn test_keyboard_methods() {
     assert!(value.contains("A"));
 
     // Test 4: Insert text without key events
-    page.evaluate("document.getElementById('keyboard-input').value = ''")
+    page.evaluate_expression("document.getElementById('keyboard-input').value = ''")
         .await
         .expect("Failed to clear input");
 
@@ -111,7 +111,7 @@ async fn test_keyboard_methods() {
     assert_eq!(value, "Pasted text");
 
     // Test 5: Press compound key (Control+a or Meta+a)
-    page.evaluate("document.getElementById('keyboard-input').value = ''")
+    page.evaluate_expression("document.getElementById('keyboard-input').value = ''")
         .await
         .expect("Failed to clear input");
 

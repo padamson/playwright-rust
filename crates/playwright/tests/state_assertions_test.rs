@@ -55,7 +55,7 @@ async fn test_button_state_assertions() {
         .await
         .expect("Failed to navigate");
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const btn = document.createElement('button');
         btn.id = 'disabled-btn';
@@ -74,7 +74,7 @@ async fn test_button_state_assertions() {
         .expect("Button should be disabled");
 
     // Test 3: to_be_enabled() with auto-retry (delayed enable)
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const btn = document.createElement('button');
         btn.id = 'delayed-btn';
@@ -130,7 +130,7 @@ async fn test_checkbox_state_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: to_be_checked() with checked checkbox
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -149,7 +149,7 @@ async fn test_checkbox_state_assertions() {
         .expect("Checkbox should be checked");
 
     // Test 2: to_be_unchecked() with unchecked checkbox
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -168,7 +168,7 @@ async fn test_checkbox_state_assertions() {
         .expect("Checkbox should be unchecked");
 
     // Test 3: to_be_checked() with auto-retry (delayed check)
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -217,7 +217,7 @@ async fn test_editable_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: to_be_editable() with normal input
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.type = 'text';
@@ -235,7 +235,7 @@ async fn test_editable_assertions() {
         .expect("Input should be editable");
 
     // Test 2: .not().to_be_editable() with readonly input
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.type = 'text';
@@ -281,7 +281,7 @@ async fn test_focus_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: to_be_focused() with focused input
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.type = 'text';
@@ -300,7 +300,7 @@ async fn test_focus_assertions() {
         .expect("Input should be focused");
 
     // Test 2: .not().to_be_focused() with unfocused input
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.type = 'text';
@@ -319,7 +319,7 @@ async fn test_focus_assertions() {
         .expect("Input should NOT be focused");
 
     // Test 3: to_be_focused() with auto-retry (delayed focus)
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.type = 'text';

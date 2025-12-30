@@ -28,7 +28,7 @@ async fn test_file_payload_basic() {
     let page = browser.new_page().await.expect("Failed to create page");
 
     // Use evaluate to set HTML
-    page.evaluate("document.body.innerHTML = '<input type=\\'file\\' id=\\'upload\\'><div id=\\'result\\'></div>'")
+    page.evaluate_expression("document.body.innerHTML = '<input type=\\'file\\' id=\\'upload\\'><div id=\\'result\\'></div>'")
         .await
         .expect("Failed to set content");
 
@@ -71,7 +71,7 @@ async fn test_file_payload_multiple() {
     let page = browser.new_page().await.expect("Failed to create page");
 
     // Create test HTML with multiple file input
-    page.evaluate("document.body.innerHTML = '<input type=\\'file\\' multiple id=\\'upload\\'><div id=\\'result\\'></div>'")
+    page.evaluate_expression("document.body.innerHTML = '<input type=\\'file\\' multiple id=\\'upload\\'><div id=\\'result\\'></div>'")
         .await
         .expect("Failed to set content");
 
@@ -119,7 +119,7 @@ async fn test_file_payload_custom_mime_type() {
         .expect("Failed to launch browser");
     let page = browser.new_page().await.expect("Failed to create page");
 
-    page.evaluate("document.body.innerHTML = '<input type=\\'file\\' id=\\'upload\\'>'")
+    page.evaluate_expression("document.body.innerHTML = '<input type=\\'file\\' id=\\'upload\\'>'")
         .await
         .expect("Failed to set content");
 

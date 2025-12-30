@@ -286,7 +286,7 @@ async fn test_context_javascript_disabled() {
     let page = context.new_page().await.expect("Failed to create page");
 
     // Try to evaluate JavaScript - should fail
-    let result = page.evaluate("1 + 1").await;
+    let result = page.evaluate_expression("1 + 1").await;
 
     // With JS disabled, evaluate should fail
     assert!(result.is_err(), "JavaScript should be disabled");

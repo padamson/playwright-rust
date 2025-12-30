@@ -77,7 +77,7 @@ async fn test_to_be_visible_assertions() {
         .await
         .expect("Failed to navigate");
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const div = document.createElement('div');
         div.id = 'delayed-element';
@@ -109,7 +109,7 @@ async fn test_to_be_visible_assertions() {
     );
 
     // Test 5: Custom timeout - element that appears after 200ms
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const div = document.createElement('div');
         div.id = 'slow-element';
@@ -165,7 +165,7 @@ async fn test_to_be_hidden_assertions() {
         .expect("Nonexistent element should be hidden");
 
     // Test 2: Auto-retry - assertion should wait until element becomes hidden
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const btn = document.getElementById('btn');
         setTimeout(() => {
@@ -258,7 +258,7 @@ async fn test_cross_browser_smoke() {
         .expect("Failed to navigate");
 
     webkit_page
-        .evaluate(
+        .evaluate_expression(
             r#"
         const div = document.createElement('div');
         div.id = 'delayed-webkit';

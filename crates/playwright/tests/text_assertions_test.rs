@@ -75,7 +75,7 @@ async fn test_to_have_text_assertions() {
         .await
         .expect("Failed to navigate");
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const div = document.createElement('div');
         div.id = 'changing-text';
@@ -201,7 +201,7 @@ async fn test_to_have_value_assertions() {
         .await
         .expect("Failed to navigate");
 
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const input = document.createElement('input');
         input.id = 'changing-input';

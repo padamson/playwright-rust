@@ -72,7 +72,7 @@ use std::sync::{Arc, Mutex, RwLock};
 ///     assert_eq!(paragraphs.len(), 2);
 ///
 ///     // Demonstrate evaluate()
-///     page.evaluate("console.log('Hello from Playwright!')").await?;
+///     page.evaluate::<(), ()>("console.log('Hello from Playwright!')", None).await?;
 ///
 ///     // Demonstrate evaluate_value()
 ///     let result = page.evaluate_value("1 + 1").await?;
@@ -771,16 +771,42 @@ impl Page {
         Ok(bytes)
     }
 
-    /// Evaluates JavaScript in the page context.
+    /// Evaluates JavaScript in the page context (without return value).
+    ///
+    /// Executes the provided JavaScript expression or function within the page's
+    /// context without returning a value.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-evaluate>
+    pub async fn evaluate_expression(&self, expression: &str) -> Result<()> {
+        // Delegate to the main frame
+        let frame = self.main_frame().await?;
+        frame.frame_evaluate_expression(expression).await
+    }
+
+    /// Evaluates JavaScript in the page context with optional arguments.
     ///
     /// Executes the provided JavaScript expression or function within the page's
     /// context and returns the result. The return value must be JSON-serializable.
     ///
+    /// # Arguments
+    ///
+    /// * `expression` - JavaScript code to evaluate
+    /// * `arg` - Optional argument to pass to the expression (must implement Serialize)
+    ///
+    /// # Returns
+    ///
+    /// The result as a `serde_json::Value`
+    ///
     /// See: <https://playwright.dev/docs/api/class-page#page-evaluate>
-    pub async fn evaluate(&self, expression: &str) -> Result<()> {
-        // Delegate to the main frame, matching playwright-python's behavior
+    pub async fn evaluate<T: serde::Serialize, U: serde::de::DeserializeOwned>(
+        &self,
+        expression: &str,
+        arg: Option<&T>,
+    ) -> Result<U> {
+        // Delegate to the main frame
         let frame = self.main_frame().await?;
-        frame.frame_evaluate_expression(expression).await
+        let result = frame.evaluate(expression, arg).await?;
+        serde_json::from_value(result).map_err(Error::from)
     }
 
     /// Evaluates a JavaScript expression and returns the result as a String.

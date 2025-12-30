@@ -5,6 +5,7 @@
 
 use crate::error::{Error, Result};
 use crate::protocol::page::{GotoOptions, Response};
+use crate::protocol::{parse_result, serialize_argument, serialize_null};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use serde::Deserialize;
@@ -1082,6 +1083,74 @@ impl Frame {
                 Ok(result.value.to_string())
             }
         }
+    }
+
+    /// Evaluates a JavaScript expression in the frame context with optional arguments.
+    ///
+    /// Executes the provided JavaScript expression within the frame's context and returns
+    /// the result. The return value must be JSON-serializable.
+    ///
+    /// # Arguments
+    ///
+    /// * `expression` - JavaScript code to evaluate
+    /// * `arg` - Optional argument to pass to the expression (must implement Serialize)
+    ///
+    /// # Returns
+    ///
+    /// The result as a `serde_json::Value`
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use serde_json::json;
+    /// use playwright_rs::protocol::Playwright;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let playwright = Playwright::launch().await?;
+    ///     let browser = playwright.chromium().launch().await?;
+    ///     let page = browser.new_page().await?;
+    ///     let frame = page.main_frame().await?;
+    ///
+    ///     // Evaluate without arguments
+    ///     let result = frame.evaluate::<()>("1 + 1", None).await?;
+    ///
+    ///     // Evaluate with argument
+    ///     let arg = json!({"x": 5, "y": 3});
+    ///     let result = frame.evaluate::<serde_json::Value>("(arg) => arg.x + arg.y", Some(&arg)).await?;
+    ///     assert_eq!(result, json!(8));
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate>
+    pub async fn evaluate<T: serde::Serialize>(
+        &self,
+        expression: &str,
+        arg: Option<&T>,
+    ) -> Result<Value> {
+        // Serialize the argument
+        let serialized_arg = match arg {
+            Some(a) => serialize_argument(a),
+            None => serialize_null(),
+        };
+
+        // Build the parameters
+        let params = serde_json::json!({
+            "expression": expression,
+            "arg": serialized_arg
+        });
+
+        // Send the evaluateExpression command
+        #[derive(Deserialize)]
+        struct EvaluateResult {
+            value: serde_json::Value,
+        }
+
+        let result: EvaluateResult = self.channel().send("evaluateExpression", params).await?;
+
+        // Deserialize the result using parse_result
+        Ok(parse_result(&result.value))
     }
 
     /// Adds a `<style>` tag into the page with the desired content.

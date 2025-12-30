@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Navigated to example.com");
 
     // Create test elements with different states
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         // Create enabled button
         const enabledBtn = document.createElement('button');
@@ -107,7 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Readonly input is NOT editable (negation)");
 
     // Example 9: Auto-retry demonstration - button becomes enabled after delay
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const delayedBtn = document.createElement('button');
         delayedBtn.id = 'delayed-btn';
@@ -128,7 +128,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Delayed button became enabled (auto-retry)");
 
     // Example 10: Auto-retry - checkbox becomes checked after delay
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const delayedBox = document.createElement('input');
         delayedBox.type = 'checkbox';
@@ -147,7 +147,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Delayed checkbox became checked (auto-retry)");
 
     // Example 11: Custom timeout
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const slowBtn = document.createElement('button');
         slowBtn.id = 'slow-btn';
@@ -169,7 +169,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Slow button became enabled (with 10s timeout)");
 
     // Example 12: Timeout error handling
-    page.evaluate(
+    page.evaluate_expression(
         r#"
         const foreverDisabled = document.createElement('button');
         foreverDisabled.id = 'forever-disabled';

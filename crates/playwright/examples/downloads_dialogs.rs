@@ -123,7 +123,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     page.goto("https://example.com", None).await?;
 
     // Inject a checkbox for demonstration
-    page.evaluate(
+    page.evaluate_expression(
         "() => {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
