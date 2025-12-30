@@ -1,9 +1,12 @@
 // Launch options example - Browser launch configurations
 //
-// Shows: App mode, headless mode, custom args, slow motion, DevTools
+// Shows: Headless mode, custom args, slow motion, DevTools
 //
 // This example demonstrates various browser launch configurations using LaunchOptions.
 // All options are passed to the underlying Playwright server and forwarded to the browser.
+//
+// Note: App mode (--app flag) is not included here because it requires
+// launchPersistentContext() which is not yet implemented. See issue #9.
 
 use playwright_rs::api::LaunchOptions;
 use playwright_rs::Playwright;
@@ -14,28 +17,8 @@ use tokio::time::sleep;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let playwright = Playwright::launch().await?;
 
-    // Example 1: App mode - Browser without UI chrome (no address bar, tabs, etc.)
-    // This is useful for creating app-like experiences or kiosk modes
-    println!("Example 1: App mode");
-    println!("Launching Chromium in app mode (minimal UI)...");
-    let browser = playwright
-        .chromium()
-        .launch_with_options(
-            LaunchOptions::new()
-                .args(vec!["--app=https://example.com".to_string()])
-                .headless(false),
-        )
-        .await?;
-
-    let page = browser.new_page().await?;
-    println!("  App mode active - browser has minimal UI");
-    println!("  URL: {}", page.url());
-    sleep(Duration::from_secs(2)).await;
-    browser.close().await?;
-    println!();
-
-    // Example 2: Headless mode with custom args
-    println!("Example 2: Headless with custom args");
+    // Example 1: Headless mode with custom args
+    println!("Example 1: Headless with custom args");
     println!("Launching headless browser with no-sandbox...");
     let browser = playwright
         .chromium()
@@ -52,8 +35,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     browser.close().await?;
     println!();
 
-    // Example 3: Slow motion - Useful for debugging and demonstrations
-    println!("Example 3: Slow motion");
+    // Example 2: Slow motion - Useful for debugging and demonstrations
+    println!("Example 2: Slow motion");
     println!("Launching with 500ms delay between operations...");
     let browser = playwright
         .chromium()
@@ -70,8 +53,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     browser.close().await?;
     println!();
 
-    // Example 4: DevTools auto-open
-    println!("Example 4: DevTools");
+    // Example 3: DevTools auto-open
+    println!("Example 3: DevTools");
     println!("Launching with DevTools panel open...");
     let browser = playwright
         .chromium()
@@ -85,8 +68,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     browser.close().await?;
     println!();
 
-    // Example 5: Window size (via args)
-    println!("Example 5: Custom window size");
+    // Example 4: Window size (via args)
+    println!("Example 4: Custom window size");
     println!("Launching with custom window dimensions...");
     let browser = playwright
         .chromium()
@@ -104,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     println!("All examples complete!");
-    println!("\nTip: You can combine options - e.g., app mode + slow motion");
+    println!("\nTip: You can combine options - e.g., slow motion + custom args");
     println!("See LaunchOptions struct for all available options.");
 
     Ok(())
