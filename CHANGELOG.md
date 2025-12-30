@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-12-30
+
+### Added
+
+- **Typed Evaluate API** - Generic `Page::evaluate()` method with argument serialization and typed results (PR #8)
+  - `Page::evaluate<T: Serialize, U: DeserializeOwned>(expression, arg)` - Fully typed JavaScript evaluation
+  - `Frame::evaluate<T: Serialize>(expression, arg)` - Frame-level evaluation returning `serde_json::Value`
+  - Argument serialization: Pass any `Serialize` type to JavaScript (primitives, structs, arrays, objects)
+  - Result deserialization: Receive typed results with compile-time validation
+  - Backward compatible: Original `evaluate_expression()` and `evaluate_value()` methods preserved
+  - Comprehensive serialization module with Playwright protocol support
+  - Special value handling: Infinity, NaN, -0, circular references, TypedArrays, Dates, BigInt
+  - Example: `evaluate_typed.rs` demonstrating usage patterns
+
+### Community Credit
+
+- Implementation by @douglasob (Douglas Braga)
+
 ## [0.7.2] - 2025-12-24
 
 ### Added
@@ -190,7 +208,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/padamson/playwright-rust/compare/v0.7.2...v0.8.0
 [0.7.2]: https://github.com/padamson/playwright-rust/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/padamson/playwright-rust/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/padamson/playwright-rust/compare/v0.6.1...v0.7.0

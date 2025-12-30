@@ -4,7 +4,7 @@
 
 **Architecture:** JSON-RPC communication with Playwright Node.js server (same as all official bindings)
 
-**Status:** Version 0.7.2 complete (2025-12-24)
+**Status:** Version 0.8.0 complete (2025-12-30)
 
 ---
 
@@ -22,7 +22,8 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.7.0** - Single-Crate Architecture complete - 2025-11-16
 - ✅ **v0.7.1** - Script & Style Injection APIs complete - 2025-12-24
 - ✅ **v0.7.2** - Community Features & Fixes complete - 2025-12-24
-- 🚧 **v0.7.3** - Remote Connection
+- ✅ **v0.8.0** - Typed Evaluate API complete - 2025-12-30
+- 🚧 **v0.8.x** - Remote Connection & API Polish
 - 📋 **v1.0.0** - Real-World Validation & Final Polish
 - 🔮 **v1.1.0** - WebSocket Support
 
@@ -147,33 +148,43 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 ---
 
-## Version 0.7: Real-World Integration & Single Crate
+## Version 0.7: Real-World Integration & Single Crate ✅ Complete
 
-**Goal:** Consolidate architecture and implement critical features for real-world integration (Remote Connection, API Polish).
+**Goal:** Consolidate architecture and implement critical features for real-world integration.
 
-**Status:** 🚧 In Progress - See [v0.7-single-crate.md](./implementation-plans/v0.7-single-crate.md)
+**Status:** ✅ Complete (Final release: v0.7.2) - See [v0.7-single-crate.md](./implementation-plans/v0.7-single-crate.md)
+
+**Delivered:**
+- **v0.7.0:** Single Crate Architecture - Consolidated playwright-core into playwright-rs
+- **v0.7.1:** Script & Style Injection APIs - Community contribution by @douglasob
+  - `BrowserContext.add_init_script()`, `Page.add_init_script()`, `Page.add_style_tag()`
+- **v0.7.2:** Community Features & Fixes - Storage state, debugging, logging improvements
+  - Storage state support (cookies, localStorage persistence)
+  - `Page::pause()` for debugging with Playwright Inspector
+  - Consistent tracing initialization
+
+**Note:** Version closed early due to significant community contribution warranting v0.8.0. Planned items (Remote Connection, Critical Gaps, API Polish) moved to v0.8.
+
+---
+
+## Version 0.8: Typed Evaluate & Continued Integration
+
+**Goal:** Implement typed evaluate API and continue real-world integration features.
+
+**Status:** 🚧 In Progress - See [v0.8-real-world-integration.md](./implementation-plans/v0.8-real-world-integration.md)
 
 **Milestones:**
-- ✅ v0.7.0: Single Crate Architecture (2025-11-16)
-- ✅ v0.7.1: Script & Style Injection APIs (2025-12-24) - Community contribution
-- ✅ v0.7.2: Community Features & Fixes (2025-12-24) - Issues #4, #5, #6
-- 🚧 v0.7.3: Remote Connection (BrowserType::connect)
-- 📋 v0.7.x: Critical Feature Gaps & API Polish
+- ✅ v0.8.0: Typed Evaluate API (2025-12-30) - Community contribution by @douglasob
+- 📋 v0.8.x: Remote Connection (BrowserType::connect)
+- 📋 v0.8.x: Critical Feature Gaps & API Polish
 
-**Delivered in v0.7.2:**
-- **Storage State Support** (Issue #6) - `BrowserContextOptions` now supports session persistence
-  - `storage_state(StorageState)` - Load cookies and localStorage from inline object
-  - `storage_state_path(String)` - Load storage state from JSON file
-  - New types: `Cookie`, `LocalStorageItem`, `Origin`, `StorageState`
-- **Debugging Tools** (Issue #5) - `Page::pause()` for manual debugging with Playwright Inspector
-- **Logging Improvements** (Issue #4) - Consistent tracing initialization across integration tests
-
-**Delivered in v0.7.1:**
-- `BrowserContext.add_init_script()` - Context-level script injection
-- `Page.add_init_script()` - Page-level script injection
-- `Page.add_style_tag()` - CSS injection with AddStyleTagOptions (content, url, path support)
-- Cross-browser test coverage (Chromium, Firefox, WebKit)
-- Community contribution by @douglasob (PR #7)
+**Delivered in v0.8.0:**
+- **Typed Evaluate API** - Generic `Page::evaluate()` with argument serialization and typed results
+  - `Page::evaluate<T: Serialize, U: DeserializeOwned>(expression, arg)` - Fully typed JavaScript evaluation
+  - Argument serialization: Pass any Serialize type to JavaScript
+  - Result deserialization: Receive typed results with compile-time validation
+  - Comprehensive serialization module with Playwright protocol support
+  - Backward compatible with original methods
 
 ---
 
@@ -291,4 +302,4 @@ Implementation plans are created when the previous version is ~80% complete, all
 
 ---
 
-**Last Updated:** 2025-12-24
+**Last Updated:** 2025-12-30

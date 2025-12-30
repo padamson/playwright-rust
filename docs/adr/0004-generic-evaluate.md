@@ -7,7 +7,6 @@
 - Module: `crates/playwright/src/protocol/serialize_argument.rs`
 - Example: `crates/playwright/examples/evaluate_typed.rs`
 - Tests: `crates/playwright/tests/evaluate_test.rs`
-- Guide: `docs/EVALUATE_TYPED.md`
 
 ---
 
@@ -158,15 +157,15 @@ pub async fn evaluate<T: serde::Serialize>(
         Some(a) => serialize_argument(a),
         None => serialize_null(),
     };
-    
+
     let params = serde_json::json!({
         "expression": expression,
         "arg": serialized_arg
     });
-    
-    let result: EvaluateResult = 
+
+    let result: EvaluateResult =
         self.channel().send("evaluateExpression", params).await?;
-    
+
     Ok(parse_result(&result.value))
 }
 ```
@@ -550,12 +549,12 @@ pub async fn evaluate<T: serde::Serialize>(
         Some(a) => serialize_argument(a),  // ← SERIALIZE USER DATA!
         None => serialize_null(),
     };
-    
+
     let params = serde_json::json!({
         "expression": expression,
         "arg": serialized_arg  // ← NOW DYNAMIC!
     });
-    
+
     let result: EvaluateResult = self.channel().send("evaluateExpression", params).await?;
     Ok(parse_result(&result.value))  // ← PARSE RESULT!
 }
@@ -626,7 +625,7 @@ let sum: i32 = page.evaluate(
        &self,
        expression: &str,
    ) -> Result<U>
-   
+
    // With error recovery
    pub async fn evaluate_or<U: DeserializeOwned>(
        &self,
@@ -745,4 +744,3 @@ This implementation closes a critical capability gap in playwright-rust and brin
 - Frame method: [frame.rs lines 1090-1145](../crates/playwright/src/protocol/frame.rs)
 - Page method: [page.rs lines 785-810](../crates/playwright/src/protocol/page.rs)
 - Tests: [evaluate_test.rs](../crates/playwright/tests/evaluate_test.rs)
-- Guide: [EVALUATE_TYPED.md](../docs/EVALUATE_TYPED.md)

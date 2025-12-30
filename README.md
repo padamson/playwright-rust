@@ -63,7 +63,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.7.0"
+playwright-rs = "0.8"  # Auto-updates to latest 0.7.x
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -178,11 +178,16 @@ cargo nextest run test_launch_chromium
 RUST_LOG=debug cargo nextest run
 
 # Doc-tests (nextest doesn't run these)
-# Compile-only check (fast, used in pre-commit)
-cargo test --doc --no-fail-fast
+# See CLAUDE.md "Documentation Testing Strategy" for details
 
-# Run ignored doctests (requires browsers, what CI does)
-cargo test --doc -- --ignored
+# Compile-only check (fast, used in pre-commit)
+cargo test --doc --workspace
+
+# Execute all ignored doctests (requires browsers, what CI does)
+cargo test --doc --workspace -- --ignored
+
+# Execute specific crate's doctests
+cargo test --doc -p playwright-rs -- --ignored
 ```
 
 ### Running Examples
