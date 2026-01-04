@@ -23,6 +23,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.7.1** - Script & Style Injection APIs complete - 2025-12-24
 - ✅ **v0.7.2** - Community Features & Fixes complete - 2025-12-24
 - ✅ **v0.8.0** - Typed Evaluate API complete - 2025-12-30
+- ✅ **v0.8.1** - Persistent Contexts & App Mode complete - 2026-01-04
 - 🚧 **v0.8.x** - Remote Connection & API Polish
 - 📋 **v1.0.0** - Real-World Validation & Final Polish
 - 🔮 **v1.1.0** - WebSocket Support
@@ -175,6 +176,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 **Milestones:**
 - ✅ v0.8.0: Typed Evaluate API (2025-12-30) - Community contribution by @douglasob
+- ✅ v0.8.1: Persistent Contexts & App Mode (2026-01-04) - Addressed Issue #9 (App Mode)
 - 📋 v0.8.x: Remote Connection (BrowserType::connect)
 - 📋 v0.8.x: Critical Feature Gaps & API Polish
 
@@ -302,4 +304,4 @@ Implementation plans are created when the previous version is ~80% complete, all
 
 ---
 
-**Last Updated:** 2025-12-30
+**Last Updated:** 2026-01-04

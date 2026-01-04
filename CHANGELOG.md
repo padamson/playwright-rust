@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-01-04
+
+### Added
+
+- **Persistent Contexts & App Mode** - Support for `launchPersistentContext` (Issue #9)
+  - `BrowserType::launch_persistent_context(user_data_dir)`
+  - `BrowserType::launch_persistent_context_with_options(user_data_dir, options)`
+  - Full support for `--app=url` argument for standalone application windows
+  - Persistent user data directories for saving session state (cookies, local storage) across runs
+  - Initial page handling for app mode (automatically tracked in `context.pages()`)
+
 ## [0.8.0] - 2025-12-30
 
 ### Added
@@ -208,7 +219,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/padamson/playwright-rust/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/padamson/playwright-rust/compare/v0.7.2...v0.8.0
 [0.7.2]: https://github.com/padamson/playwright-rust/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/padamson/playwright-rust/compare/v0.7.0...v0.7.1

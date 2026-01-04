@@ -9,7 +9,7 @@
 
 use crate::api::LaunchOptions;
 use crate::error::Result;
-use crate::protocol::Browser;
+use crate::protocol::{Browser, BrowserContext, BrowserContextOptions};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::server::connection::ConnectionLike;
@@ -25,11 +25,16 @@ use std::sync::Arc;
 /// - `playwright.firefox()`
 /// - `playwright.webkit()`
 ///
+/// BrowserType provides two main launching modes:
+/// 1. **Standard launch**: Creates a browser, then contexts and pages separately
+/// 2. **Persistent context launch**: Creates browser + context together with persistent storage
+///
 /// # Example
 ///
 /// ```ignore
 /// # use playwright_rs::protocol::Playwright;
 /// # use playwright_rs::api::LaunchOptions;
+/// # use playwright_rs::protocol::BrowserContextOptions;
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let playwright = Playwright::launch().await?;
@@ -39,6 +44,7 @@ use std::sync::Arc;
 /// assert_eq!(chromium.name(), "chromium");
 /// assert!(!chromium.executable_path().is_empty());
 ///
+/// // === Standard Launch ===
 /// // Launch with default options
 /// let browser1 = chromium.launch().await?;
 /// assert_eq!(browser1.name(), "chromium");
@@ -55,6 +61,28 @@ use std::sync::Arc;
 /// assert_eq!(browser2.name(), "chromium");
 /// assert!(!browser2.version().is_empty());
 /// browser2.close().await?;
+///
+/// // === Persistent Context Launch ===
+/// // Launch with persistent storage (cookies, local storage, etc.)
+/// let context = chromium
+///     .launch_persistent_context("/tmp/user-data")
+///     .await?;
+/// let page = context.new_page().await?;
+/// page.goto("https://example.com", None).await?;
+/// context.close().await?; // Closes browser too
+///
+/// // === App Mode (Standalone Window) ===
+/// // Launch as a standalone application window
+/// let app_options = BrowserContextOptions::builder()
+///     .args(vec!["--app=https://example.com".to_string()])
+///     .headless(true) // Set to true for CI, but app mode is typically headed
+///     .build();
+///
+/// let app_context = chromium
+///     .launch_persistent_context_with_options("/tmp/app-data", app_options)
+///     .await?;
+/// // Browser opens directly to URL without address bar
+/// app_context.close().await?;
 /// # Ok(())
 /// # }
 /// ```
@@ -230,6 +258,165 @@ impl BrowserType {
 
         Ok(browser.clone())
     }
+
+    /// Launches a browser with persistent storage using default options.
+    ///
+    /// Returns a persistent browser context. Closing this context will automatically
+    /// close the browser.
+    ///
+    /// This method is useful for:
+    /// - Preserving authentication state across sessions
+    /// - Testing with real user profiles
+    /// - Creating standalone applications with app mode
+    /// - Simulating real user behavior with cookies and storage
+    ///
+    /// # Arguments
+    ///
+    /// * `user_data_dir` - Path to a user data directory (stores cookies, local storage)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Browser executable not found
+    /// - Launch timeout (default 30s)
+    /// - Browser process fails to start
+    /// - User data directory cannot be created
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context>
+    pub async fn launch_persistent_context(
+        &self,
+        user_data_dir: impl Into<String>,
+    ) -> Result<BrowserContext> {
+        self.launch_persistent_context_with_options(user_data_dir, BrowserContextOptions::default())
+            .await
+    }
+
+    /// Launches a browser with persistent storage and custom options.
+    ///
+    /// Returns a persistent browser context with the specified configuration.
+    /// Closing this context will automatically close the browser.
+    ///
+    /// This method accepts both launch options (headless, args, etc.) and context
+    /// options (viewport, locale, etc.) in a single BrowserContextOptions struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `user_data_dir` - Path to a user data directory (stores cookies, local storage)
+    /// * `options` - Combined launch and context options
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Browser executable not found
+    /// - Launch timeout
+    /// - Invalid options
+    /// - Browser process fails to start
+    /// - User data directory cannot be created
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context>
+    pub async fn launch_persistent_context_with_options(
+        &self,
+        user_data_dir: impl Into<String>,
+        mut options: BrowserContextOptions,
+    ) -> Result<BrowserContext> {
+        // Add Windows CI-specific browser args to prevent hanging
+        #[cfg(windows)]
+        {
+            let is_ci = std::env::var("CI").is_ok() || std::env::var("GITHUB_ACTIONS").is_ok();
+
+            if is_ci {
+                tracing::debug!(
+                    "[playwright-rust] Detected Windows CI environment, adding stability flags"
+                );
+
+                // Get existing args or create empty vec
+                let mut args = options.args.unwrap_or_default();
+
+                // Add Windows CI stability flags if not already present
+                let ci_flags = vec![
+                    "--no-sandbox",            // Disable sandboxing (often problematic in CI)
+                    "--disable-dev-shm-usage", // Overcome limited /dev/shm resources
+                    "--disable-gpu",           // Disable GPU hardware acceleration
+                    "--disable-web-security",  // Avoid CORS issues in CI
+                    "--disable-features=IsolateOrigins,site-per-process", // Reduce process overhead
+                ];
+
+                for flag in ci_flags {
+                    if !args.iter().any(|a| a == flag) {
+                        args.push(flag.to_string());
+                    }
+                }
+
+                // Update options with enhanced args
+                options.args = Some(args);
+
+                // Increase timeout for Windows CI (slower startup)
+                if options.timeout.is_none() {
+                    options.timeout = Some(60000.0); // 60 seconds for Windows CI
+                }
+            }
+        }
+
+        // Handle storage_state_path: read file and convert to inline storage_state
+        if let Some(path) = &options.storage_state_path {
+            let file_content = tokio::fs::read_to_string(path).await.map_err(|e| {
+                crate::error::Error::ProtocolError(format!(
+                    "Failed to read storage state file '{}': {}",
+                    path, e
+                ))
+            })?;
+
+            let storage_state: crate::protocol::StorageState = serde_json::from_str(&file_content)
+                .map_err(|e| {
+                    crate::error::Error::ProtocolError(format!(
+                        "Failed to parse storage state file '{}': {}",
+                        path, e
+                    ))
+                })?;
+
+            options.storage_state = Some(storage_state);
+            options.storage_state_path = None; // Clear path since we've converted to inline
+        }
+
+        // Convert options to JSON with userDataDir
+        let mut params = serde_json::to_value(&options).map_err(|e| {
+            crate::error::Error::ProtocolError(format!(
+                "Failed to serialize context options: {}",
+                e
+            ))
+        })?;
+
+        // Add userDataDir to params
+        params["userDataDir"] = serde_json::json!(user_data_dir.into());
+
+        // Set default timeout if not specified (required in Playwright 1.56.1+)
+        if params.get("timeout").is_none() {
+            params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+        }
+
+        // Send launchPersistentContext RPC to server
+        let response: LaunchPersistentContextResponse = self
+            .base
+            .channel()
+            .send("launchPersistentContext", params)
+            .await?;
+
+        // Get context object from registry
+        let context_arc = self.connection().get_object(&response.context.guid).await?;
+
+        // Downcast to BrowserContext
+        let context = context_arc
+            .as_any()
+            .downcast_ref::<BrowserContext>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(format!(
+                    "Expected BrowserContext object, got {}",
+                    context_arc.type_name()
+                ))
+            })?;
+
+        Ok(context.clone())
+    }
 }
 
 /// Response from BrowserType.launch() protocol call
@@ -238,9 +425,25 @@ struct LaunchResponse {
     browser: BrowserRef,
 }
 
+/// Response from BrowserType.launchPersistentContext() protocol call
+#[derive(Debug, Deserialize, Serialize)]
+struct LaunchPersistentContextResponse {
+    context: ContextRef,
+}
+
 /// Reference to a Browser object in the protocol
 #[derive(Debug, Deserialize, Serialize)]
 struct BrowserRef {
+    #[serde(
+        serialize_with = "crate::server::connection::serialize_arc_str",
+        deserialize_with = "crate::server::connection::deserialize_arc_str"
+    )]
+    guid: Arc<str>,
+}
+
+/// Reference to a BrowserContext object in the protocol
+#[derive(Debug, Deserialize, Serialize)]
+struct ContextRef {
     #[serde(
         serialize_with = "crate::server::connection::serialize_arc_str",
         deserialize_with = "crate::server::connection::deserialize_arc_str"

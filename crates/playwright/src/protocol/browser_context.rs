@@ -5,14 +5,14 @@
 // cache, and local storage.
 
 use crate::error::Result;
-use crate::protocol::Page;
+use crate::protocol::{Browser, Page};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::any::Any;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// BrowserContext represents an isolated browser session.
 ///
@@ -38,9 +38,37 @@ use std::sync::Arc;
 ///     let page1 = context1.new_page().await?;
 ///     let page2 = context2.new_page().await?;
 ///
+///     // Access all pages in a context
+///     let pages = context1.pages();
+///     assert_eq!(pages.len(), 1);
+///
+///     // Access the browser from a context
+///     let ctx_browser = context1.browser().unwrap();
+///     assert_eq!(ctx_browser.name(), browser.name());
+///
+///     // App mode: access initial page created automatically
+///     let chromium = playwright.chromium();
+///     let app_context = chromium
+///         .launch_persistent_context_with_options(
+///             "/tmp/app-data",
+///             playwright_rs::protocol::BrowserContextOptions::builder()
+///                 .args(vec!["--app=https://example.com".to_string()])
+///                 .headless(true)
+///                 .build()
+///         )
+///         .await?;
+///
+///     // Get the initial page (don't create a new one!)
+///     let app_pages = app_context.pages();
+///     if !app_pages.is_empty() {
+///         let initial_page = &app_pages[0];
+///         // Use the initial page...
+///     }
+///
 ///     // Cleanup
 ///     context1.close().await?;
 ///     context2.close().await?;
+///     app_context.close().await?;
 ///     browser.close().await?;
 ///     Ok(())
 /// }
@@ -50,6 +78,10 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct BrowserContext {
     base: ChannelOwnerImpl,
+    /// Browser instance that owns this context (None for persistent contexts)
+    browser: Option<Browser>,
+    /// All open pages in this context
+    pages: Arc<Mutex<Vec<Page>>>,
 }
 
 impl BrowserContext {
@@ -75,13 +107,22 @@ impl BrowserContext {
         initializer: Value,
     ) -> Result<Self> {
         let base = ChannelOwnerImpl::new(
-            ParentOrConnection::Parent(parent),
+            ParentOrConnection::Parent(parent.clone()),
             type_name,
             guid,
             initializer,
         );
 
-        let context = Self { base };
+        // Store browser reference if parent is a Browser
+        // Returns None only for special contexts (Android, Electron) where parent is not a Browser
+        // For both regular contexts and persistent contexts, parent is a Browser instance
+        let browser = parent.as_any().downcast_ref::<Browser>().cloned();
+
+        let context = Self {
+            base,
+            browser,
+            pages: Arc::new(Mutex::new(Vec::new())),
+        };
 
         // Enable dialog event subscription
         // Dialog events need to be explicitly subscribed to via updateSubscription command
@@ -175,7 +216,45 @@ impl BrowserContext {
             ))
         })?;
 
+        // Note: Don't track the page here - it will be tracked via the "page" event
+        // that Playwright server sends automatically when a page is created.
+        // Tracking it here would create duplicates.
+
         Ok(page.clone())
+    }
+
+    /// Returns all open pages in the context.
+    ///
+    /// This method provides a snapshot of all currently active pages that belong
+    /// to this browser context instance. Pages created via `new_page()` and popup
+    /// pages opened through user interactions are included.
+    ///
+    /// In persistent contexts launched with `--app=url`, this will include the
+    /// initial page created automatically by Playwright.
+    ///
+    /// # Errors
+    ///
+    /// This method does not return errors. It provides a snapshot of pages at
+    /// the time of invocation.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-pages>
+    pub fn pages(&self) -> Vec<Page> {
+        self.pages.lock().unwrap().clone()
+    }
+
+    /// Returns the browser instance that owns this context.
+    ///
+    /// Returns `None` only for contexts created outside of normal browser
+    /// (e.g., Android or Electron contexts). For both regular contexts and
+    /// persistent contexts, this returns the owning Browser instance.
+    ///
+    /// # Errors
+    ///
+    /// This method does not return errors.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-browser>
+    pub fn browser(&self) -> Option<Browser> {
+        self.browser.clone()
     }
 
     /// Closes the browser context and all its pages.
@@ -250,6 +329,38 @@ impl ChannelOwner for BrowserContext {
 
     fn on_event(&self, method: &str, params: Value) {
         match method {
+            "page" => {
+                // Page events are triggered when pages are created, including:
+                // - Initial page in persistent context with --app mode
+                // - Popup pages opened through user interactions
+                // Event format: {page: {guid: "..."}}
+                if let Some(page_guid) = params
+                    .get("page")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let page_guid_owned = page_guid.to_string();
+                    let pages = self.pages.clone();
+
+                    tokio::spawn(async move {
+                        // Get the Page object
+                        let page_arc = match connection.get_object(&page_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(_) => return,
+                        };
+
+                        // Downcast to Page
+                        let page = match page_arc.as_any().downcast_ref::<Page>() {
+                            Some(p) => p.clone(),
+                            None => return,
+                        };
+
+                        // Track the page
+                        pages.lock().unwrap().push(page);
+                    });
+                }
+            }
             "dialog" => {
                 // Dialog events come to BrowserContext, need to forward to the associated Page
                 // Event format: {dialog: {guid: "..."}}
@@ -497,6 +608,51 @@ pub struct BrowserContextOptions {
     /// This is handled by the builder and converted to storage_state during serialization.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub storage_state_path: Option<String>,
+
+    // Launch options (for launch_persistent_context)
+    /// Additional arguments to pass to browser instance
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub args: Option<Vec<String>>,
+
+    /// Browser distribution channel (e.g., "chrome", "msedge")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub channel: Option<String>,
+
+    /// Enable Chromium sandboxing (default: false on Linux)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chromium_sandbox: Option<bool>,
+
+    /// Auto-open DevTools (deprecated, default: false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub devtools: Option<bool>,
+
+    /// Directory to save downloads
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub downloads_path: Option<String>,
+
+    /// Path to custom browser executable
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub executable_path: Option<String>,
+
+    /// Firefox user preferences (Firefox only)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub firefox_user_prefs: Option<HashMap<String, serde_json::Value>>,
+
+    /// Run in headless mode (default: true unless devtools=true)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub headless: Option<bool>,
+
+    /// Slow down operations by N milliseconds
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slow_mo: Option<f64>,
+
+    /// Timeout for browser launch in milliseconds
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<f64>,
+
+    /// Directory to save traces
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub traces_dir: Option<String>,
 }
 
 impl BrowserContextOptions {
@@ -529,6 +685,18 @@ pub struct BrowserContextOptionsBuilder {
     base_url: Option<String>,
     storage_state: Option<StorageState>,
     storage_state_path: Option<String>,
+    // Launch options
+    args: Option<Vec<String>>,
+    channel: Option<String>,
+    chromium_sandbox: Option<bool>,
+    devtools: Option<bool>,
+    downloads_path: Option<String>,
+    executable_path: Option<String>,
+    firefox_user_prefs: Option<HashMap<String, serde_json::Value>>,
+    headless: Option<bool>,
+    slow_mo: Option<f64>,
+    timeout: Option<f64>,
+    traces_dir: Option<String>,
 }
 
 impl BrowserContextOptionsBuilder {
@@ -737,6 +905,72 @@ impl BrowserContextOptionsBuilder {
         self
     }
 
+    /// Sets additional arguments to pass to browser instance (for launch_persistent_context)
+    pub fn args(mut self, args: Vec<String>) -> Self {
+        self.args = Some(args);
+        self
+    }
+
+    /// Sets browser distribution channel (for launch_persistent_context)
+    pub fn channel(mut self, channel: String) -> Self {
+        self.channel = Some(channel);
+        self
+    }
+
+    /// Enables or disables Chromium sandboxing (for launch_persistent_context)
+    pub fn chromium_sandbox(mut self, enabled: bool) -> Self {
+        self.chromium_sandbox = Some(enabled);
+        self
+    }
+
+    /// Auto-open DevTools (for launch_persistent_context)
+    pub fn devtools(mut self, enabled: bool) -> Self {
+        self.devtools = Some(enabled);
+        self
+    }
+
+    /// Sets directory to save downloads (for launch_persistent_context)
+    pub fn downloads_path(mut self, path: String) -> Self {
+        self.downloads_path = Some(path);
+        self
+    }
+
+    /// Sets path to custom browser executable (for launch_persistent_context)
+    pub fn executable_path(mut self, path: String) -> Self {
+        self.executable_path = Some(path);
+        self
+    }
+
+    /// Sets Firefox user preferences (for launch_persistent_context, Firefox only)
+    pub fn firefox_user_prefs(mut self, prefs: HashMap<String, serde_json::Value>) -> Self {
+        self.firefox_user_prefs = Some(prefs);
+        self
+    }
+
+    /// Run in headless mode (for launch_persistent_context)
+    pub fn headless(mut self, enabled: bool) -> Self {
+        self.headless = Some(enabled);
+        self
+    }
+
+    /// Slow down operations by N milliseconds (for launch_persistent_context)
+    pub fn slow_mo(mut self, ms: f64) -> Self {
+        self.slow_mo = Some(ms);
+        self
+    }
+
+    /// Set timeout for browser launch in milliseconds (for launch_persistent_context)
+    pub fn timeout(mut self, ms: f64) -> Self {
+        self.timeout = Some(ms);
+        self
+    }
+
+    /// Set directory to save traces (for launch_persistent_context)
+    pub fn traces_dir(mut self, path: String) -> Self {
+        self.traces_dir = Some(path);
+        self
+    }
+
     /// Builds the BrowserContextOptions
     pub fn build(self) -> BrowserContextOptions {
         BrowserContextOptions {
@@ -760,6 +994,18 @@ impl BrowserContextOptionsBuilder {
             base_url: self.base_url,
             storage_state: self.storage_state,
             storage_state_path: self.storage_state_path,
+            // Launch options
+            args: self.args,
+            channel: self.channel,
+            chromium_sandbox: self.chromium_sandbox,
+            devtools: self.devtools,
+            downloads_path: self.downloads_path,
+            executable_path: self.executable_path,
+            firefox_user_prefs: self.firefox_user_prefs,
+            headless: self.headless,
+            slow_mo: self.slow_mo,
+            timeout: self.timeout,
+            traces_dir: self.traces_dir,
         }
     }
 }
