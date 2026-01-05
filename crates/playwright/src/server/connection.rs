@@ -285,6 +285,7 @@ pub struct Event {
     /// Event method name
     pub method: String,
     /// Event parameters as JSON object
+    #[serde(default)]
     pub params: Value,
 }
 

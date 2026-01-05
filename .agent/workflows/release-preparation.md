@@ -127,27 +127,20 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
-#### GitHub Release
+#### crates.io Publishing (Automated)
 
-1. Go to https://github.com/padamson/playwright-rust/releases/new
-2. Select tag: `vX.Y.Z`
-3. Release title: `vX.Y.Z - [Release Name from CHANGELOG]`
-4. Description: Copy the version section from CHANGELOG.md
-5. **Pre-release**: Check box if this is a pre-1.0 release
-6. Click "Publish release"
+**Publishing is handled automatically via CI/CD**:
+- The `.github/workflows/release.yml` workflow triggers on the tag push.
+- It will build artifacts and publish the `playwright-rs` crate to crates.io.
+- **Do NOT** run `cargo publish` manually.
 
-#### crates.io Publishing (if applicable)
+#### GitHub Release (Automated + Manual Edit)
 
-**If user wants to publish to crates.io**:
-```bash
-# Dry run first
-cargo publish --dry-run -p playwright-core
+1. The CI workflow will automatically create/update the GitHub Release and upload assets.
+2. After CI completes, **Edit** the release on GitHub: https://github.com/padamson/playwright-rust/releases
+3. Paste the relevant section from `CHANGELOG.md` into the release description.
 
-# If dry run succeeds, publish
-cargo publish -p playwright-core
-```
-
-**If NOT publishing to crates.io**: Skip this step and note in release notes.
+---
 
 ---
 
@@ -213,8 +206,9 @@ Generate a final checklist showing:
 - [x] Version bumped and verified
 - [ ] Git commit created
 - [ ] Git tag created
-- [ ] Pushed to GitHub
-- [ ] GitHub Release created
-- [ ] Published to crates.io (if applicable)
+- [ ] Pushed to GitHub (triggers CI)
+- [ ] CI/CD verification (GitHub Actions)
+- [ ] GitHub Release notes updated
+- [ ] Published to crates.io (verified on crates.io)
 - [ ] Post-release docs updated
 - [ ] Release announced (optional)

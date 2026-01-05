@@ -136,9 +136,29 @@ where
         loop {
             // Read 4-byte little-endian length prefix
             let mut len_buf = [0u8; 4];
-            self.stdout.read_exact(&mut len_buf).await.map_err(|e| {
+
+            // Use read() first to detect clean EOF (0 bytes read)
+            let n = self.stdout.read(&mut len_buf).await.map_err(|e| {
                 Error::TransportError(format!("Failed to read length prefix: {}", e))
             })?;
+
+            if n == 0 {
+                // Clean EOF - stream closed between messages
+                break;
+            }
+
+            // If we read partial length prefix (e.g. 1-3 bytes), expect the rest
+            if n < 4 {
+                self.stdout
+                    .read_exact(&mut len_buf[n..])
+                    .await
+                    .map_err(|e| {
+                        Error::TransportError(format!(
+                            "Failed to finish reading length prefix: {}",
+                            e
+                        ))
+                    })?;
+            }
 
             let length = u32::from_le_bytes(len_buf) as usize;
 

@@ -284,6 +284,36 @@ impl BrowserContext {
             .send_no_result("pause", serde_json::Value::Null)
             .await
     }
+
+    /// Returns storage state for this browser context.
+    ///
+    /// Contains current cookies and local storage snapshots.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-storage-state>
+    pub async fn storage_state(&self) -> Result<StorageState> {
+        let response: StorageState = self
+            .channel()
+            .send("storageState", serde_json::json!({}))
+            .await?;
+        Ok(response)
+    }
+
+    /// Adds cookies into this browser context.
+    ///
+    /// All pages within this context will have these cookies installed. Cookies can be granularly specified
+    /// with `name`, `value`, `url`, `domain`, `path`, `expires`, `httpOnly`, `secure`, `sameSite`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-add-cookies>
+    pub async fn add_cookies(&self, cookies: &[Cookie]) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "addCookies",
+                serde_json::json!({
+                    "cookies": cookies
+                }),
+            )
+            .await
+    }
 }
 
 impl ChannelOwner for BrowserContext {

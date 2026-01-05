@@ -14,8 +14,8 @@
 
 use crate::error::{Error, Result};
 use crate::protocol::{
-    artifact::Artifact, Browser, BrowserContext, BrowserType, Dialog, Frame, Page, Playwright,
-    Request, ResponseObject, Route,
+    artifact::Artifact, APIRequestContext, Android, Browser, BrowserContext, BrowserType, Dialog,
+    Electron, Frame, LocalUtils, Page, Playwright, Request, ResponseObject, Route, Tracing,
 };
 use crate::server::channel_owner::{ChannelOwner, ParentOrConnection};
 use serde_json::Value;
@@ -258,6 +258,36 @@ pub async fn create_object(
             };
 
             Arc::new(Dialog::new(parent_owner, type_name, guid, initializer)?)
+        }
+
+        "Android" => {
+            // Android stub
+            Arc::new(Android::new(parent, type_name, guid, initializer)?)
+        }
+
+        "Electron" => {
+            // Electron stub
+            Arc::new(Electron::new(parent, type_name, guid, initializer)?)
+        }
+
+        "Tracing" => {
+            // Tracing stub
+            Arc::new(Tracing::new(parent, type_name, guid, initializer)?)
+        }
+
+        "APIRequestContext" => {
+            // APIRequestContext stub
+            Arc::new(APIRequestContext::new(
+                parent,
+                type_name,
+                guid,
+                initializer,
+            )?)
+        }
+
+        "LocalUtils" => {
+            // LocalUtils stub
+            Arc::new(LocalUtils::new(parent, type_name, guid, initializer)?)
         }
 
         _ => {
