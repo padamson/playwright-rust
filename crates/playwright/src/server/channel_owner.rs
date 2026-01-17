@@ -1,4 +1,4 @@
-// Copyright 2024 Paul Adamson
+// Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
 // Channel Owner - Base trait for all Playwright protocol objects
@@ -33,9 +33,12 @@ pub enum DisposeReason {
     Closed,
     /// Object was garbage collected by the server
     GarbageCollected,
+    /// Object was disposed by the protocol
+    Protocol,
 }
 
 /// Parent can be either another ChannelOwner or the root Connection
+#[derive(Clone)]
 pub enum ParentOrConnection {
     Parent(Arc<dyn ChannelOwner>),
     Connection(Arc<dyn ConnectionLike>),

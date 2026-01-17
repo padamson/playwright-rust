@@ -229,7 +229,24 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-click>
     pub async fn click(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
-        self.frame.locator_click(&self.selector, options).await
+        self.frame
+            .locator_click(&self.selector, options)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Wraps an error with selector context for better error messages.
+    fn wrap_error_with_selector(&self, error: crate::error::Error) -> crate::error::Error {
+        match &error {
+            crate::error::Error::ProtocolError(msg) => {
+                // Add selector context to protocol errors (timeouts, etc.)
+                crate::error::Error::ProtocolError(format!("{} [selector: {}]", msg, self.selector))
+            }
+            crate::error::Error::Timeout(msg) => {
+                crate::error::Error::Timeout(format!("{} [selector: {}]", msg, self.selector))
+            }
+            _ => error, // Other errors pass through unchanged
+        }
     }
 
     /// Double clicks the element.

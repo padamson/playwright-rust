@@ -1,4 +1,4 @@
-// Copyright 2024 Paul Adamson
+// Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
 // Object Factory - Creates protocol objects from type names
@@ -87,22 +87,9 @@ pub async fn create_object(
         }
 
         "BrowserType" => {
-            // BrowserType has Playwright as parent
-            let parent_owner = match parent {
-                ParentOrConnection::Parent(p) => p,
-                ParentOrConnection::Connection(_) => {
-                    return Err(Error::ProtocolError(
-                        "BrowserType must have Playwright as parent".to_string(),
-                    ))
-                }
-            };
-
-            Arc::new(BrowserType::new(
-                parent_owner,
-                type_name,
-                guid,
-                initializer,
-            )?)
+            // BrowserType is a root child (created with parent="")
+            // The Playwright object references them via its initializer
+            Arc::new(BrowserType::new(parent, type_name, guid, initializer)?)
         }
 
         "Browser" => {

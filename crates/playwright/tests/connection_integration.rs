@@ -39,12 +39,13 @@ async fn test_connection_lifecycle_with_real_server() {
     let stdin = server.process.stdin.take().expect("Failed to get stdin");
     let stdout = server.process.stdout.take().expect("Failed to get stdout");
 
-    // Create transport
+    // Create transport and split into sender/receiver
     let (transport, message_rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin, stdout);
+    let (sender, receiver) = transport.into_parts();
 
     // Create connection
-    let connection = Arc::new(Connection::new(transport, message_rx));
+    let connection = Arc::new(Connection::new(sender, receiver, message_rx));
 
     // Spawn connection message loop
     let conn = Arc::clone(&connection);
@@ -98,8 +99,9 @@ async fn test_connection_detects_server_crash_on_send() {
 
     let (transport, message_rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin, stdout);
+    let (sender, receiver) = transport.into_parts();
 
-    let connection = Arc::new(Connection::new(transport, message_rx));
+    let connection = Arc::new(Connection::new(sender, receiver, message_rx));
 
     // Spawn connection loop
     let conn = Arc::clone(&connection);
@@ -118,7 +120,11 @@ async fn test_connection_detects_server_crash_on_send() {
 
     // Try to send a message - this will detect the broken pipe immediately
     let send_result = connection
-        .send_message("test@guid", "testMethod", serde_json::json!({}))
+        .send_message(
+            "test@guid".to_string(),
+            "testMethod".to_string(),
+            serde_json::json!({}),
+        )
         .await;
 
     // Should fail with broken pipe error

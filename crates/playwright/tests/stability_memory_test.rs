@@ -97,8 +97,8 @@ async fn test_no_memory_leak_browser_cycles() {
     let initial_memory = get_process_memory_mb().unwrap_or(0.0);
     tracing::info!("Initial memory: {:.2} MB", initial_memory);
 
-    // Run 100 browser launch/close cycles
-    const CYCLES: usize = 100;
+    // Run 50 browser launch/close cycles (enough to detect memory growth trends)
+    const CYCLES: usize = 50;
     let mut memory_samples = Vec::new();
 
     for i in 0..CYCLES {

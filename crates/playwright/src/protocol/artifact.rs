@@ -1,4 +1,4 @@
-// Copyright 2024 Paul Adamson
+// Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
 // Artifact protocol object

@@ -51,9 +51,10 @@ async fn test_initialize_playwright_with_real_server() {
     let stdout = server.process.stdout.take().expect("Failed to take stdout");
 
     let (transport, message_rx) = PipeTransport::new(stdin, stdout);
+    let (sender, receiver) = transport.into_parts();
 
     // 3. Create connection
-    let connection: Arc<Connection<_, _>> = Arc::new(Connection::new(transport, message_rx));
+    let connection: Arc<Connection> = Arc::new(Connection::new(sender, receiver, message_rx));
 
     // 4. Spawn connection message loop
     let conn_for_loop = Arc::clone(&connection);

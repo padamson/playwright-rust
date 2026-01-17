@@ -20,11 +20,12 @@ async fn test_small_message_reading() {
     let (_stdin_read, stdin_write) = tokio::io::duplex(64 * 1024);
     let (stdout_read, mut stdout_write) = tokio::io::duplex(64 * 1024);
 
-    let (mut transport, mut rx) =
+    let (transport, mut rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin_write, stdout_read);
+    let (_sender, mut receiver) = transport.into_parts();
 
     // Spawn reader
-    let read_task = tokio::spawn(async move { transport.run().await });
+    let read_task = tokio::spawn(async move { receiver.run_loop().await });
 
     // Create a small message (< 32KB)
     let small_message = json!({
@@ -61,11 +62,12 @@ async fn test_exactly_buffer_size_message() {
     let (_stdin_read, stdin_write) = tokio::io::duplex(128 * 1024);
     let (stdout_read, mut stdout_write) = tokio::io::duplex(128 * 1024);
 
-    let (mut transport, mut rx) =
+    let (transport, mut rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin_write, stdout_read);
+    let (_sender, mut receiver) = transport.into_parts();
 
     // Spawn reader
-    let read_task = tokio::spawn(async move { transport.run().await });
+    let read_task = tokio::spawn(async move { receiver.run_loop().await });
 
     // Create a message that's exactly 32KB
     // JSON overhead: {"id":1,"data":"..."} = about 19 bytes
@@ -108,11 +110,12 @@ async fn test_just_over_buffer_size_message() {
     let (_stdin_read, stdin_write) = tokio::io::duplex(128 * 1024);
     let (stdout_read, mut stdout_write) = tokio::io::duplex(128 * 1024);
 
-    let (mut transport, mut rx) =
+    let (transport, mut rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin_write, stdout_read);
+    let (_sender, mut receiver) = transport.into_parts();
 
     // Spawn reader
-    let read_task = tokio::spawn(async move { transport.run().await });
+    let read_task = tokio::spawn(async move { receiver.run_loop().await });
 
     // Create a message that's just over 32KB (33KB)
     let over_message = json!({
@@ -148,11 +151,12 @@ async fn test_very_large_message_chunked_reading() {
     let (_stdin_read, stdin_write) = tokio::io::duplex(1024 * 1024); // 1MB buffer
     let (stdout_read, mut stdout_write) = tokio::io::duplex(1024 * 1024);
 
-    let (mut transport, mut rx) =
+    let (transport, mut rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin_write, stdout_read);
+    let (_sender, mut receiver) = transport.into_parts();
 
     // Spawn reader
-    let read_task = tokio::spawn(async move { transport.run().await });
+    let read_task = tokio::spawn(async move { receiver.run_loop().await });
 
     // Create a very large message (200KB) - requires multiple chunks
     let large_string = "x".repeat(200_000);
@@ -189,11 +193,12 @@ async fn test_multiple_large_messages_in_sequence() {
     let (_stdin_read, stdin_write) = tokio::io::duplex(2 * 1024 * 1024); // 2MB buffer
     let (stdout_read, mut stdout_write) = tokio::io::duplex(2 * 1024 * 1024);
 
-    let (mut transport, mut rx) =
+    let (transport, mut rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin_write, stdout_read);
+    let (_sender, mut receiver) = transport.into_parts();
 
     // Spawn reader
-    let read_task = tokio::spawn(async move { transport.run().await });
+    let read_task = tokio::spawn(async move { receiver.run_loop().await });
 
     // Create multiple large messages
     let messages = vec![
@@ -240,11 +245,12 @@ async fn test_odd_sized_messages() {
     let (_stdin_read, stdin_write) = tokio::io::duplex(512 * 1024);
     let (stdout_read, mut stdout_write) = tokio::io::duplex(512 * 1024);
 
-    let (mut transport, mut rx) =
+    let (transport, mut rx) =
         playwright_rs::server::transport::PipeTransport::new(stdin_write, stdout_read);
+    let (_sender, mut receiver) = transport.into_parts();
 
     // Spawn reader
-    let read_task = tokio::spawn(async move { transport.run().await });
+    let read_task = tokio::spawn(async move { receiver.run_loop().await });
 
     // Test various odd sizes around the 32KB boundary
     let test_sizes = vec![

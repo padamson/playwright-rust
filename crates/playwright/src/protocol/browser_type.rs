@@ -1,4 +1,4 @@
-// Copyright 2024 Paul Adamson
+// Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
 // BrowserType - Represents a browser type (Chromium, Firefox, WebKit)
@@ -7,7 +7,7 @@
 // - Python: playwright-python/playwright/_impl/_browser_type.py
 // - Protocol: protocol.yml (BrowserType interface)
 
-use crate::api::LaunchOptions;
+use crate::api::{ConnectOptions, LaunchOptions};
 use crate::error::Result;
 use crate::protocol::{Browser, BrowserContext, BrowserContextOptions};
 use crate::server::channel::Channel;
@@ -25,9 +25,10 @@ use std::sync::Arc;
 /// - `playwright.firefox()`
 /// - `playwright.webkit()`
 ///
-/// BrowserType provides two main launching modes:
-/// 1. **Standard launch**: Creates a browser, then contexts and pages separately
-/// 2. **Persistent context launch**: Creates browser + context together with persistent storage
+/// BrowserType provides three main modes:
+/// 1. **Launch**: Creates a new browser instance
+/// 2. **Launch Persistent Context**: Creates browser + context with persistent storage
+/// 3. **Connect**: Connects to an existing remote browser instance
 ///
 /// # Example
 ///
@@ -51,16 +52,10 @@ use std::sync::Arc;
 /// assert!(!browser1.version().is_empty());
 /// browser1.close().await?;
 ///
-/// // Launch with custom options
-/// let options = LaunchOptions::default()
-///     .headless(true)
-///     .slow_mo(100.0)
-///     .args(vec!["--no-sandbox".to_string()]);
-///
-/// let browser2 = chromium.launch_with_options(options).await?;
-/// assert_eq!(browser2.name(), "chromium");
-/// assert!(!browser2.version().is_empty());
-/// browser2.close().await?;
+/// // === Remote Connection ===
+/// // Connect to a remote browser (e.g., started with `npx playwright launch-server`)
+/// // let browser3 = chromium.connect("ws://localhost:3000", None).await?;
+/// // browser3.close().await?;
 ///
 /// // === Persistent Context Launch ===
 /// // Launch with persistent storage (cookies, local storage, etc.)
@@ -103,22 +98,17 @@ impl BrowserType {
     /// Called by the object factory when server sends __create__ message.
     ///
     /// # Arguments
-    /// * `parent` - Parent Playwright object
+    /// * `parent` - Parent (Connection for root objects, or another ChannelOwner)
     /// * `type_name` - Protocol type name ("BrowserType")
     /// * `guid` - Unique GUID from server (e.g., "browserType@chromium")
     /// * `initializer` - Initial state with name and executablePath
     pub fn new(
-        parent: Arc<dyn ChannelOwner>,
+        parent: ParentOrConnection,
         type_name: String,
         guid: Arc<str>,
         initializer: Value,
     ) -> Result<Self> {
-        let base = ChannelOwnerImpl::new(
-            ParentOrConnection::Parent(parent),
-            type_name,
-            guid,
-            initializer.clone(),
-        );
+        let base = ChannelOwnerImpl::new(parent, type_name, guid, initializer.clone());
 
         // Extract fields from initializer
         let name = initializer["name"]
@@ -132,11 +122,7 @@ impl BrowserType {
 
         let executable_path = initializer["executablePath"]
             .as_str()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(
-                    "BrowserType initializer missing 'executablePath'".to_string(),
-                )
-            })?
+            .unwrap_or_default() // executablePath might be optional/empty for remote connection objects
             .to_string();
 
         Ok(Self {
@@ -416,6 +402,83 @@ impl BrowserType {
             })?;
 
         Ok(context.clone())
+    }
+    /// Connects to an existing browser instance.
+    ///
+    /// # Arguments
+    /// * `ws_endpoint` - A WebSocket endpoint to connect to.
+    /// * `options` - Connection options.
+    ///
+    /// # Errors
+    /// Returns error if connection fails or handshake fails.
+    pub async fn connect(
+        &self,
+        ws_endpoint: &str,
+        options: Option<ConnectOptions>,
+    ) -> Result<Browser> {
+        use crate::server::connection::Connection;
+        use crate::server::transport::WebSocketTransport;
+
+        let options = options.unwrap_or_default();
+
+        // Get timeout (default 30 seconds, 0 = no timeout)
+        let timeout_ms = options.timeout.unwrap_or(30000.0);
+
+        // 1. Connect to WebSocket
+        tracing::debug!("Connecting to remote browser at {}", ws_endpoint);
+
+        let connect_future = WebSocketTransport::connect(ws_endpoint, options.headers);
+        let (transport, message_rx) = if timeout_ms > 0.0 {
+            let timeout = std::time::Duration::from_millis(timeout_ms as u64);
+            tokio::time::timeout(timeout, connect_future)
+                .await
+                .map_err(|_| {
+                    crate::error::Error::Timeout(format!(
+                        "Connection to {} timed out after {} ms",
+                        ws_endpoint, timeout_ms
+                    ))
+                })??
+        } else {
+            connect_future.await?
+        };
+        let (sender, receiver) = transport.into_parts();
+
+        // 2. Create Connection
+        let connection = Arc::new(Connection::new(sender, receiver, message_rx));
+
+        // 3. Start message loop
+        let conn_for_loop = Arc::clone(&connection);
+        tokio::spawn(async move {
+            conn_for_loop.run().await;
+        });
+
+        // 4. Initialize Playwright
+        // This exchanges the "initialize" message and returns the root Playwright object
+        let playwright_obj = connection.initialize_playwright().await?;
+
+        // 5. Get pre-launched browser from initializer
+        // The server sends a "preLaunchedBrowser" field in the Playwright object's initializer
+        let initializer = playwright_obj.initializer();
+
+        let browser_guid = initializer["preLaunchedBrowser"]["guid"]
+            .as_str()
+            .ok_or_else(|| {
+                 crate::error::Error::ProtocolError(
+                     "Remote server did not return a pre-launched browser. Ensure server was launched in server mode.".to_string()
+                 )
+            })?;
+
+        // 6. Get the existing Browser object
+        let browser_arc = connection.get_object(browser_guid).await?;
+
+        let browser = browser_arc
+            .as_any()
+            .downcast_ref::<Browser>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError("Object is not a Browser".to_string())
+            })?;
+
+        Ok(browser.clone())
     }
 }
 

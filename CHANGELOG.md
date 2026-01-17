@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Protocol Stubs** - Explicit protocol types for `Android`, `Electron`, `Tracing`, `APIRequestContext`, and `LocalUtils` to support valid registration and prevent "Unknown protocol type" warnings. (Implemented as stubs for future expansion)
 - **Cookie & Storage Management** - Implemented `BrowserContext::storage_state()` and `BrowserContext::add_cookies()` (Issue #10)
+- **Remote Connection** - Support for connecting to remote browsers via WebSocket
+  - `BrowserType::connect(url, options)` implementation
+  - `ConnectOptions` builder for connection configuration (headers, slow_mo, timeout)
+  - WebSocket transport using `tokio-tungstenite`
+  - Internal transport abstraction supporting both options (Pipe and WebSocket)
 
 ### Fixed
 

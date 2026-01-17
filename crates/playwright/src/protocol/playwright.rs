@@ -1,4 +1,4 @@
-// Copyright 2024 Paul Adamson
+// Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
 // Playwright - Root protocol object
@@ -110,10 +110,11 @@ impl Playwright {
         // 3. Create transport and connection
         tracing::debug!("Creating transport and connection");
         let (transport, message_rx) = PipeTransport::new(stdin, stdout);
-        let connection: Arc<Connection<_, _>> = Arc::new(Connection::new(transport, message_rx));
+        let (sender, receiver) = transport.into_parts();
+        let connection: Arc<Connection> = Arc::new(Connection::new(sender, receiver, message_rx));
 
         // 4. Spawn connection message loop in background
-        let conn_for_loop: Arc<Connection<_, _>> = Arc::clone(&connection);
+        let conn_for_loop: Arc<Connection> = Arc::clone(&connection);
         tokio::spawn(async move {
             conn_for_loop.run().await;
         });
