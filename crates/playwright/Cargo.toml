@@ -34,7 +34,7 @@ axum = "0.8.8"
 tower = "0.5.2"
 tower-http = "0.6.6"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
-criterion = { version = "0.7", features = ["html_reports", "async_tokio"] }
+criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 urlencoding = "2.1"
 tempfile = "3.8"
 
