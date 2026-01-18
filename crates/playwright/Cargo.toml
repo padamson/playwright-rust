@@ -30,7 +30,7 @@ url = "2.5"
 
 [dev-dependencies]
 anyhow = { workspace = true }
-axum = "0.7.9"
+axum = "0.8.8"
 tower = "0.5.2"
 tower-http = "0.6.6"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
