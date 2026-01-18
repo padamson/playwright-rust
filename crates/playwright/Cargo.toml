@@ -44,7 +44,7 @@ winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef
 [build-dependencies]
 reqwest = { version = "0.13", features = ["blocking"] }
 zip = "2.1"
-dirs = "5.0"
+dirs = "6.0"
 
 [[bench]]
 name = "browser_operations"
