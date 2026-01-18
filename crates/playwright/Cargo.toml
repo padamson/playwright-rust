@@ -24,17 +24,17 @@ parking_lot = "0.12"
 base64 = "0.22"
 regex = "1.10"
 glob = "0.3"
-tokio-tungstenite = { version = "0.26", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.28", features = ["native-tls"] }
 futures-util = "0.3"
 url = "2.5"
 
 [dev-dependencies]
 anyhow = { workspace = true }
-axum = "0.7.9"
+axum = "0.8.8"
 tower = "0.5.2"
 tower-http = "0.6.6"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
-criterion = { version = "0.7", features = ["html_reports", "async_tokio"] }
+criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 urlencoding = "2.1"
 tempfile = "3.8"
 
@@ -42,9 +42,9 @@ tempfile = "3.8"
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef"] }
 
 [build-dependencies]
-reqwest = { version = "0.12", features = ["blocking"] }
-zip = "2.1"
-dirs = "5.0"
+reqwest = { version = "0.13", features = ["blocking"] }
+zip = "7.1"
+dirs = "6.0"
 
 [[bench]]
 name = "browser_operations"
