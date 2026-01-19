@@ -9,6 +9,7 @@
 
 use axum::{
     body::Body,
+    extract::ws::{Message, WebSocket, WebSocketUpgrade},
     http::{Response, StatusCode},
     routing::get,
     Router,
@@ -40,7 +41,9 @@ impl TestServer {
             .route("/upload.html", get(upload_page))
             .route("/keyboard_mouse.html", get(keyboard_mouse_page))
             .route("/click_options.html", get(click_options_page))
-            .route("/text.html", get(text_page));
+            .route("/text.html", get(text_page))
+            .route("/websocket.html", get(websocket_page))
+            .route("/ws", get(ws_handler));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -465,4 +468,56 @@ async fn text_page() -> Response<Body> {
 </html>"#,
         ))
         .unwrap()
+}
+
+async fn websocket_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>WebSocket Test</title></head>
+<body>
+  <h1>WebSocket Test</h1>
+  <div id="log"></div>
+  <script>
+    const log = document.getElementById('log');
+    const ws = new WebSocket('ws://' + location.host + '/ws');
+
+    ws.onopen = () => {
+        log.textContent += 'open\n';
+        ws.send('Hello Server');
+    };
+
+    ws.onmessage = (event) => {
+        log.textContent += 'received: ' + event.data + '\n';
+    };
+
+    ws.onclose = () => {
+        log.textContent += 'closed\n';
+    };
+  </script>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+async fn ws_handler(ws: WebSocketUpgrade) -> impl axum::response::IntoResponse {
+    ws.on_upgrade(handle_socket)
+}
+
+async fn handle_socket(mut socket: WebSocket) {
+    while let Some(msg) = socket.recv().await {
+        if let Ok(msg) = msg {
+            if let Message::Text(text) = msg {
+                // Echo back
+                let _ = socket.send(Message::Text(text)).await;
+            }
+        } else {
+            // Client likely disconnected
+            return;
+        }
+    }
 }

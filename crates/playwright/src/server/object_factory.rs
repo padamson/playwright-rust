@@ -16,6 +16,7 @@ use crate::error::{Error, Result};
 use crate::protocol::{
     artifact::Artifact, APIRequestContext, Android, Browser, BrowserContext, BrowserType, Dialog,
     Electron, Frame, LocalUtils, Page, Playwright, Request, ResponseObject, Route, Tracing,
+    WebSocket,
 };
 use crate::server::channel_owner::{ChannelOwner, ParentOrConnection};
 use serde_json::Value;
@@ -275,6 +276,20 @@ pub async fn create_object(
         "LocalUtils" => {
             // LocalUtils stub
             Arc::new(LocalUtils::new(parent, type_name, guid, initializer)?)
+        }
+
+        "WebSocket" => {
+            // WebSocket has Page as parent
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "WebSocket must have Page as parent".to_string(),
+                    ))
+                }
+            };
+
+            Arc::new(WebSocket::new(parent_owner, type_name, guid, initializer)?)
         }
 
         _ => {

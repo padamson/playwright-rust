@@ -1,57 +1,73 @@
-use futures_util::{SinkExt, StreamExt};
-use playwright_rs::server::transport::WebSocketTransport;
-use playwright_rs::server::transport::{TransportReceiver, TransportSender};
-use serde_json::json;
-use tokio::net::TcpListener;
-use tokio_tungstenite::accept_async;
+// Integration tests for WebSocket event handling
+//
+// Following TDD: Write tests first (Red), then implement (Green)
+
+mod test_server; // Assuming we can link to the shared module or need to copy it?
+                 // Ideally we reuse the existing test_server.rs in tests/
+
+use playwright_rs::protocol::Playwright;
+use test_server::TestServer;
+
+mod common;
 
 #[tokio::test]
-async fn test_websocket_transport_communication() {
-    // 1. Start a mock WebSocket server
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
+async fn test_websocket_interception() {
+    common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
 
-    let server_task = tokio::spawn(async move {
-        let (stream, _) = listener.accept().await.unwrap();
-        let mut ws_stream = accept_async(stream).await.unwrap();
+    // Setup WebSocket event handler
+    // This API does not exist yet -> RED
+    let ws_event_fired = std::sync::Arc::new(tokio::sync::Mutex::new(false));
+    let ws_event_fired_clone = ws_event_fired.clone();
 
-        // Echo server: receive message, send it back
-        while let Some(msg) = ws_stream.next().await {
-            let msg = msg.unwrap();
-            if msg.is_text() || msg.is_binary() {
-                ws_stream.send(msg).await.unwrap();
-            }
-        }
-    });
+    page.on_websocket(move |ws| {
+        let fired = ws_event_fired_clone.clone();
+        Box::pin(async move {
+            *fired.lock().await = true;
+            println!("WebSocket opened: {}", ws.url());
 
-    // 2. Connect using WebSocketTransport
-    let url = format!("ws://{}", addr);
-    let (transport, mut message_rx) = WebSocketTransport::connect(&url, None).await.unwrap();
+            // Verify URL
+            assert!(ws.url().contains("ws://"));
 
-    // 3. Split transport (simulating Connection usage)
-    let (mut sender, mut receiver) = transport.into_parts();
+            // Listen for frames
+            ws.on_frame_sent(|data| {
+                Box::pin(async move {
+                    println!("Frame sent: {:?}", data);
+                    Ok(())
+                })
+            })
+            .await
+            .unwrap();
 
-    // 4. Spawn receiver loop
-    let receiver_task = tokio::spawn(async move {
-        receiver.run().await.unwrap();
-    });
+            Ok(())
+        })
+    })
+    .await
+    .expect("Failed to register websocket handler");
 
-    // 5. Send a message
-    let test_message = json!({
-        "id": 1,
-        "method": "echo",
-        "params": {
-            "hello": "world"
-        }
-    });
+    // Navigate to a page that opens a WebSocket
+    // We need to add a websocket test page to test_server
+    page.goto(&format!("{}/websocket.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
 
-    sender.send(test_message.clone()).await.unwrap();
+    // Wait a bit for the connection
+    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
-    // 6. Verify we receive it back (echo)
-    let received = message_rx.recv().await.unwrap();
-    assert_eq!(received, test_message);
+    assert!(
+        *ws_event_fired.lock().await,
+        "on_websocket handler should have been called"
+    );
 
-    // Cleanup
-    server_task.abort();
-    receiver_task.abort();
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
 }

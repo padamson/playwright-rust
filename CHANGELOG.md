@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ConnectOptions` builder for connection configuration (headers, slow_mo, timeout)
   - WebSocket transport using `tokio-tungstenite`
   - Internal transport abstraction supporting both options (Pipe and WebSocket)
+- **WebSocket Event Handling** - `Page::on_websocket()` for intercepting WebSocket connections (Slice 2)
+  - `WebSocket` protocol object with events: `on_frame_sent`, `on_frame_received`, `on_close`, `on_error`
+  - Access to WebSocket URL and state
 
 ### Fixed
 

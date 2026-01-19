@@ -4,7 +4,7 @@
 // Pages are isolated tabs or windows within a context.
 
 use crate::error::{Error, Result};
-use crate::protocol::{Dialog, Download, Route};
+use crate::protocol::{Dialog, Download, Route, WebSocket};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use base64::Engine;
@@ -21,7 +21,7 @@ use std::sync::{Arc, Mutex, RwLock};
 /// Each page is an isolated tab/window within its parent context.
 ///
 /// Initially, pages are navigated to "about:blank". Use navigation methods
-/// (implemented in Phase 3) to navigate to URLs.
+/// Use navigation methods to navigate to URLs.
 ///
 /// # Example
 ///
@@ -143,6 +143,8 @@ pub struct Page {
     download_handlers: Arc<Mutex<Vec<DownloadHandler>>>,
     /// Dialog event handlers
     dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
+    /// WebSocket event handlers
+    websocket_handlers: Arc<Mutex<Vec<WebSocketHandler>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -153,6 +155,9 @@ type DownloadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// Type alias for boxed dialog handler future
 type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed websocket handler future
+type WebSocketHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// Storage for a single route handler
 #[derive(Clone)]
@@ -166,6 +171,9 @@ type DownloadHandler = Arc<dyn Fn(Download) -> DownloadHandlerFuture + Send + Sy
 
 /// Dialog event handler
 type DialogHandler = Arc<dyn Fn(Dialog) -> DialogHandlerFuture + Send + Sync>;
+
+/// WebSocket event handler
+type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
 
 impl Page {
     /// Creates a new Page from protocol initialization
@@ -213,6 +221,7 @@ impl Page {
         // Initialize empty event handlers
         let download_handlers = Arc::new(Mutex::new(Vec::new()));
         let dialog_handlers = Arc::new(Mutex::new(Vec::new()));
+        let websocket_handlers = Arc::new(Mutex::new(Vec::new()));
 
         Ok(Self {
             base,
@@ -221,6 +230,7 @@ impl Page {
             route_handlers,
             download_handlers,
             dialog_handlers,
+            websocket_handlers,
         })
     }
 
@@ -976,6 +986,26 @@ impl Page {
         Ok(())
     }
 
+    /// Adds a listener for the `websocket` event.
+    ///
+    /// The handler will be called when a WebSocket request is dispatched.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - The function to call when the event occurs
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-on-websocket>
+    pub async fn on_websocket<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(WebSocket) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler =
+            Arc::new(move |ws: WebSocket| -> WebSocketHandlerFuture { Box::pin(handler(ws)) });
+        self.websocket_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
     /// Handles a download event from the protocol
     async fn on_download_event(&self, download: Download) {
         let handlers = self.download_handlers.lock().unwrap().clone();
@@ -1229,6 +1259,47 @@ impl ChannelOwner for Page {
             "dialog" => {
                 // Dialog events are handled by BrowserContext and forwarded to Page
                 // This case should not be reached, but keeping for completeness
+            }
+            "webSocket" => {
+                if let Some(ws_guid) = params
+                    .get("webSocket")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let ws_guid_owned = ws_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        // Wait for WebSocket object to be created
+                        let ws_arc = match connection.get_object(&ws_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(e) => {
+                                tracing::warn!("Failed to get WebSocket object: {}", e);
+                                return;
+                            }
+                        };
+
+                        // Downcast to WebSocket
+                        let ws = if let Some(ws) = ws_arc.as_any().downcast_ref::<WebSocket>() {
+                            ws.clone()
+                        } else {
+                            tracing::warn!("Expected WebSocket object, got {}", ws_arc.type_name());
+                            return;
+                        };
+
+                        // Call handlers
+                        let handlers = self_clone.websocket_handlers.lock().unwrap().clone();
+                        for handler in handlers {
+                            let ws_clone = ws.clone();
+                            tokio::spawn(async move {
+                                if let Err(e) = handler(ws_clone).await {
+                                    tracing::error!("Error in websocket handler: {}", e);
+                                }
+                            });
+                        }
+                    });
+                }
             }
             _ => {
                 // Other events will be handled in future phases

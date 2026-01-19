@@ -39,6 +39,7 @@ pub mod route;
 pub mod screenshot;
 pub mod select_option;
 pub mod tracing;
+pub mod web_socket;
 
 pub use action_options::{
     CheckOptions, FillOptions, HoverOptions, KeyboardOptions, MouseOptions, PressOptions,
@@ -75,3 +76,4 @@ pub use route::{
 pub use screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 pub use select_option::SelectOption;
 pub use tracing::Tracing;
+pub use web_socket::WebSocket;
