@@ -63,7 +63,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.8"  # Auto-updates to latest 0.7.x
+playwright-rs = "0.8"  # Auto-updates to latest 0.8.x
 tokio = { version = "1", features = ["full"] }
 ```
 

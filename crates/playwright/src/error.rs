@@ -98,4 +98,19 @@ pub enum Error {
     /// Object not found in registry (may have been closed/disposed)
     #[error("Object not found (may have been closed): {0}")]
     ObjectNotFound(String),
+
+    /// Invalid path provided
+    #[error("Invalid path: {0}")]
+    InvalidPath(String),
+
+    /// Error with additional context
+    #[error("{0}: {1}")]
+    Context(String, #[source] Box<Error>),
+}
+
+impl Error {
+    /// Adds context to the error
+    pub fn context(self, msg: impl Into<String>) -> Self {
+        Error::Context(msg.into(), Box::new(self))
+    }
 }

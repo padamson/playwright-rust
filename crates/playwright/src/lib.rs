@@ -195,7 +195,8 @@ pub use protocol::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 
 // Re-export browser context options and storage state types
 pub use protocol::{
-    BrowserContextOptions, Cookie, Geolocation, LocalStorageItem, Origin, StorageState, Viewport,
+    BrowserContextOptions, Cookie, Geolocation, LocalStorageItem, Origin, RecordHar, RecordVideo,
+    StorageState, Viewport,
 };
 
 // Re-export routing types

@@ -177,10 +177,10 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 **Milestones:**
 - ✅ v0.8.0: Typed Evaluate API (2025-12-30) - Community contribution by @douglasob
 - ✅ v0.8.1: Persistent Contexts & App Mode (2026-01-04) - Addressed Issue #9 (App Mode)
-- ✅ v0.8.x: Remote Connection (BrowserType::connect)
+- ✅ v0.8.2: Remote Connection (BrowserType::connect)
 - 📋 v0.8.x: Full implementation of Android, Electron, Tracing, APIRequestContext, LocalUtils (currently stubs)
-- ✅ v0.8.x: Critical Feature Gaps (WebSocket Events, Locator Audit)
-- 📋 v0.8.x: API Polish
+- ✅ v0.8.2: Critical Feature Gaps (WebSocket Events, Locator Audit)
+- ✅ v0.8.2: API Polish
 
 **Delivered in v0.8.0:**
 - **Typed Evaluate API** - Generic `Page::evaluate()` with argument serialization and typed results
@@ -306,4 +306,4 @@ Implementation plans are created when the previous version is ~80% complete, all
 
 ---
 
-**Last Updated:** 2026-01-04
+**Last Updated:** 2026-01-19

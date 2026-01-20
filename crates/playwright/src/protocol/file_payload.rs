@@ -31,10 +31,55 @@ pub struct FilePayload {
     pub buffer: Vec<u8>,
 }
 
+use crate::error::Result;
+use mime_guess::from_path;
+use std::fs;
+use std::path::Path;
+
 impl FilePayload {
     /// Creates a new builder for FilePayload
     pub fn builder() -> FilePayloadBuilder {
         FilePayloadBuilder::default()
+    }
+
+    /// Creates a FilePayload from a file path.
+    ///
+    /// Automatically detects the MIME type based on the file extension.
+    /// Reads the file into memory.
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let path = path.as_ref();
+        let name = path
+            .file_name()
+            .ok_or_else(|| crate::Error::InvalidPath(format!("Path {:?} has no filename", path)))?
+            .to_string_lossy()
+            .into_owned();
+
+        let mime_type = from_path(path).first_or_octet_stream().to_string();
+        let buffer = fs::read(path)?;
+
+        Ok(Self {
+            name,
+            mime_type,
+            buffer,
+        })
+    }
+
+    /// Creates a FilePayload from a file path with an explicit MIME type.
+    pub fn from_file<P: AsRef<Path>>(path: P, mime_type: &str) -> Result<Self> {
+        let path = path.as_ref();
+        let name = path
+            .file_name()
+            .ok_or_else(|| crate::Error::InvalidPath(format!("Path {:?} has no filename", path)))?
+            .to_string_lossy()
+            .into_owned();
+
+        let buffer = fs::read(path)?;
+
+        Ok(Self {
+            name,
+            mime_type: mime_type.to_string(),
+            buffer,
+        })
     }
 }
 

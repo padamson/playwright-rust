@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-01-19
+
 ### Added
 
 - **Protocol Stubs** - Explicit protocol types for `Android`, `Electron`, `Tracing`, `APIRequestContext`, and `LocalUtils` to support valid registration and prevent "Unknown protocol type" warnings. (Implemented as stubs for future expansion)
@@ -19,11 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WebSocket Event Handling** - `Page::on_websocket()` for intercepting WebSocket connections (Slice 2)
   - `WebSocket` protocol object with events: `on_frame_sent`, `on_frame_received`, `on_close`, `on_error`
   - Access to WebSocket URL and state
+- **File Upload Helpers** - `FilePayload::from_path` and `from_file` for automatic MIME type detection and easier file uploads.
+- **Browser Context Options** - Added support for `RecordHar` and `RecordVideo` configuration (paths, dimensions, filters).
+- **Service Worker Control** - Added `service_workers` option to `BrowserContextOptions`.
+- **Error Handling** - Added `Error::context()` for richer error reporting.
+
+### Breaking Changes
+
+- **Error Enum**: Added `Error::Context` variant. Exhaustive matches on `Error` will need to handle this new variant.
+- **BrowserContextOptions**: Added new public fields (`record_har`, `service_workers`, etc.). Code constructing this struct via struct literal syntax (e.g. `BrowserContextOptions { ... }`) will break; use `BrowserContextOptions::builder()` instead.
 
 ### Fixed
 
 - **Event Deserialization** - Fixed `ProtocolError` when parsing `__dispose__` events by correctly handling optional `params` field (Issue #11)
-
 
 ## [0.8.1] - 2026-01-04
 
@@ -237,7 +247,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/padamson/playwright-rust/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/padamson/playwright-rust/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/padamson/playwright-rust/compare/v0.7.2...v0.8.0
 [0.7.2]: https://github.com/padamson/playwright-rust/compare/v0.7.1...v0.7.2

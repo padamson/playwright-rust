@@ -546,6 +546,41 @@ pub struct StorageState {
     pub origins: Vec<Origin>,
 }
 
+/// Options for recording HAR.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-record-har>
+#[derive(Debug, Clone, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordHar {
+    /// Path on the filesystem to write the HAR file to.
+    pub path: String,
+    /// Optional setting to control whether to omit request content from the HAR.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub omit_content: Option<bool>,
+    /// Optional setting to control resource content management.
+    /// "omit" | "embed" | "attach"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    /// "full" | "minimal"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>,
+    /// A glob or regex pattern to filter requests that are stored in the HAR.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url_filter: Option<String>,
+}
+
+/// Options for recording video.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-record-video>
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct RecordVideo {
+    /// Path to the directory to put videos into.
+    pub dir: String,
+    /// Optional dimensions of the recorded videos.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<Viewport>,
+}
+
 /// Options for creating a new browser context.
 ///
 /// Allows customizing viewport, user agent, locale, timezone, geolocation,
@@ -683,6 +718,30 @@ pub struct BrowserContextOptions {
     /// Directory to save traces
     #[serde(skip_serializing_if = "Option::is_none")]
     pub traces_dir: Option<String>,
+
+    /// Check if strict selectors mode is enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strict_selectors: Option<bool>,
+
+    /// Emulates 'prefers-reduced-motion' media feature
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reduced_motion: Option<String>,
+
+    /// Emulates 'forced-colors' media feature
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub forced_colors: Option<String>,
+
+    /// Whether to allow sites to register Service workers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub service_workers: Option<String>,
+
+    /// Options for recording HAR
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub record_har: Option<RecordHar>,
+
+    /// Options for recording video
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub record_video: Option<RecordVideo>,
 }
 
 impl BrowserContextOptions {
@@ -727,6 +786,12 @@ pub struct BrowserContextOptionsBuilder {
     slow_mo: Option<f64>,
     timeout: Option<f64>,
     traces_dir: Option<String>,
+    strict_selectors: Option<bool>,
+    reduced_motion: Option<String>,
+    forced_colors: Option<String>,
+    service_workers: Option<String>,
+    record_har: Option<RecordHar>,
+    record_video: Option<RecordVideo>,
 }
 
 impl BrowserContextOptionsBuilder {
@@ -1001,6 +1066,42 @@ impl BrowserContextOptionsBuilder {
         self
     }
 
+    /// Check if strict selectors mode is enabled
+    pub fn strict_selectors(mut self, enabled: bool) -> Self {
+        self.strict_selectors = Some(enabled);
+        self
+    }
+
+    /// Emulates 'prefers-reduced-motion' media feature
+    pub fn reduced_motion(mut self, value: String) -> Self {
+        self.reduced_motion = Some(value);
+        self
+    }
+
+    /// Emulates 'forced-colors' media feature
+    pub fn forced_colors(mut self, value: String) -> Self {
+        self.forced_colors = Some(value);
+        self
+    }
+
+    /// Whether to allow sites to register Service workers ("allow" | "block")
+    pub fn service_workers(mut self, value: String) -> Self {
+        self.service_workers = Some(value);
+        self
+    }
+
+    /// Sets options for recording HAR
+    pub fn record_har(mut self, record_har: RecordHar) -> Self {
+        self.record_har = Some(record_har);
+        self
+    }
+
+    /// Sets options for recording video
+    pub fn record_video(mut self, record_video: RecordVideo) -> Self {
+        self.record_video = Some(record_video);
+        self
+    }
+
     /// Builds the BrowserContextOptions
     pub fn build(self) -> BrowserContextOptions {
         BrowserContextOptions {
@@ -1036,6 +1137,12 @@ impl BrowserContextOptionsBuilder {
             slow_mo: self.slow_mo,
             timeout: self.timeout,
             traces_dir: self.traces_dir,
+            strict_selectors: self.strict_selectors,
+            reduced_motion: self.reduced_motion,
+            forced_colors: self.forced_colors,
+            service_workers: self.service_workers,
+            record_har: self.record_har,
+            record_video: self.record_video,
         }
     }
 }
