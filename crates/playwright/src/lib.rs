@@ -159,6 +159,18 @@ mod assertions;
 mod error;
 pub mod protocol;
 
+/// Playwright server version bundled with this crate.
+///
+/// This version determines which browser builds are compatible.
+/// When installing browsers, use this version to ensure compatibility:
+///
+/// ```bash
+/// npx playwright@1.56.1 install
+/// ```
+///
+/// See: <https://playwright.dev/docs/browsers>
+pub const PLAYWRIGHT_VERSION: &str = env!("PLAYWRIGHT_DRIVER_VERSION");
+
 /// Default timeout in milliseconds for Playwright operations.
 ///
 /// This matches Playwright's standard default across all language implementations (Python, Java, .NET, JS).

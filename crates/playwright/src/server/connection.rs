@@ -560,8 +560,49 @@ impl ConnectionLike for Connection {
     }
 }
 
+/// Detects if an error message indicates a browser installation issue
+fn is_browser_installation_error(message: &str) -> bool {
+    message.contains("Looks like Playwright")
+        || message.contains("Executable doesn't exist")
+        || message.contains("not installed")
+        || message.contains("Please run")
+}
+
+/// Extracts browser name from error message
+fn extract_browser_name(message: &str) -> &str {
+    // Check in priority order (specific to generic)
+    if message.contains("chromium") {
+        "chromium"
+    } else if message.contains("firefox") {
+        "firefox"
+    } else if message.contains("webkit") {
+        "webkit"
+    } else {
+        // If we can't detect the browser, use a generic message
+        "browsers"
+    }
+}
+
 fn parse_protocol_error(payload: ErrorPayload) -> Error {
-    // Simple mapping for now
+    // Detect browser installation errors
+    // Playwright server sends errors with messages like:
+    // "Looks like Playwright Test or Playwright was just installed or updated."
+    // or "browserType.launch: Executable doesn't exist at /path/to/chromium"
+
+    let message = &payload.message;
+
+    // Check for browser installation errors
+    if is_browser_installation_error(message) {
+        let browser_name = extract_browser_name(message);
+
+        return Error::BrowserNotInstalled {
+            browser_name: browser_name.to_string(),
+            message: message.clone(),
+            playwright_version: crate::PLAYWRIGHT_VERSION.to_string(),
+        };
+    }
+
+    // Default: return as protocol error
     Error::ProtocolError(format!(
         "{} \n {}",
         payload.message,

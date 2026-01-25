@@ -28,6 +28,25 @@ pub enum Error {
     #[error("Server error: {0}")]
     ServerError(String),
 
+    /// Browser is not installed
+    ///
+    /// The specified browser has not been installed using Playwright's installation command.
+    /// To resolve this, install browsers using the versioned install command to ensure compatibility.
+    #[error(
+        "Browser '{browser_name}' is not installed.\n\n\
+        {message}\n\n\
+        To install {browser_name}, run:\n  \
+        npx playwright@{playwright_version} install {browser_name}\n\n\
+        Or install all browsers:\n  \
+        npx playwright@{playwright_version} install\n\n\
+        See: https://playwright.dev/docs/browsers"
+    )]
+    BrowserNotInstalled {
+        browser_name: String,
+        message: String,
+        playwright_version: String,
+    },
+
     /// Failed to establish connection with the server
     #[error("Failed to connect to Playwright server: {0}")]
     ConnectionFailed(String),

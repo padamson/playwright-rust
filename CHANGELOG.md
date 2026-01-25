@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **PLAYWRIGHT_VERSION constant** - Exposes bundled Playwright driver version (`1.56.1`) as a public constant for version-aware browser installation (Issue #27)
+- **Helpful browser installation errors** - Detects missing browser errors and provides actionable guidance (Issue #27)
+
+### Changed
+
+- **README documentation** - Added comprehensive browser installation section (Issue #25)
+
 ## [0.8.2] - 2026-01-19
 
 ### Added
