@@ -58,6 +58,12 @@ use std::sync::{Arc, Mutex, RwLock};
 ///     let title = page.title().await?;
 ///     assert_eq!(title, "Test Page");
 ///
+///     // Demonstrate content() - returns full HTML including DOCTYPE
+///     let content = page.content().await?;
+///     assert!(content.contains("<!DOCTYPE html>") || content.to_lowercase().contains("<!doctype html>"));
+///     assert!(content.contains("<title>Test Page</title>"));
+///     assert!(content.contains("Hello World"));
+///
 ///     // Demonstrate locator()
 ///     let heading = page.locator("#heading").await;
 ///     let text = heading.text_content().await?;
@@ -371,6 +377,18 @@ impl Page {
         // Delegate to main frame
         let frame = self.main_frame().await?;
         frame.title().await
+    }
+
+    /// Returns the full HTML content of the page, including the DOCTYPE.
+    ///
+    /// This method retrieves the complete HTML markup of the page,
+    /// including the doctype declaration and all DOM elements.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-content>
+    pub async fn content(&self) -> Result<String> {
+        // Delegate to main frame
+        let frame = self.main_frame().await?;
+        frame.content().await
     }
 
     /// Creates a locator for finding elements on the page.

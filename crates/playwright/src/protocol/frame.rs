@@ -179,6 +179,22 @@ impl Frame {
         Ok(response.value)
     }
 
+    /// Returns the full HTML content of the frame, including the DOCTYPE.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-content>
+    pub async fn content(&self) -> Result<String> {
+        #[derive(Deserialize)]
+        struct ContentResponse {
+            value: String,
+        }
+
+        let response: ContentResponse = self
+            .channel()
+            .send("content", serde_json::json!({}))
+            .await?;
+        Ok(response.value)
+    }
+
     /// Returns the first element matching the selector, or None if not found.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-query-selector>

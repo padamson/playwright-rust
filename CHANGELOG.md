@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **PLAYWRIGHT_VERSION constant** - Exposes bundled Playwright driver version (`1.56.1`) as a public constant for version-aware browser installation (Issue #27)
 - **Helpful browser installation errors** - Detects missing browser errors and provides actionable guidance (Issue #27)
+- **Page.content()** - Returns full HTML content of the page including DOCTYPE (Issue #23)
+  - `page.content()` - Retrieves complete HTML markup
+  - `frame.content()` - Frame-level implementation for consistency with Playwright API
 
 ### Changed
 
