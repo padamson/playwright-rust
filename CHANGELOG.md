@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-01-25
+
 ### Added
 
 - **PLAYWRIGHT_VERSION constant** - Exposes bundled Playwright driver version (`1.56.1`) as a public constant for version-aware browser installation (Issue #27)
@@ -14,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Page.content()** - Returns full HTML content of the page including DOCTYPE (Issue #23)
   - `page.content()` - Retrieves complete HTML markup
   - `frame.content()` - Frame-level implementation for consistency with Playwright API
+- **Page.set_viewport_size()** - Dynamically resize viewport for responsive testing (Issue #24)
+  - `page.set_viewport_size(viewport)` - Set viewport to specific width/height
+  - Enables testing mobile, tablet, and desktop layouts within a single page session
 
 ### Fixed
 
@@ -23,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Rust Edition 2024** - Upgraded to Rust Edition 2024, requiring Rust 1.85+
 - **README documentation** - Added comprehensive browser installation section (Issue #25)
 
 ## [0.8.2] - 2026-01-19
@@ -265,7 +271,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/padamson/playwright-rust/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/padamson/playwright-rust/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/padamson/playwright-rust/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/padamson/playwright-rust/compare/v0.7.2...v0.8.0

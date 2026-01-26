@@ -6,7 +6,7 @@
 // - JavaScript evaluation
 // - Screenshots
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use playwright_rs::{Page, Playwright};
 use std::hint::black_box;
 use std::time::Duration;

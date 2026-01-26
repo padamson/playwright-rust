@@ -8,7 +8,7 @@
 
 use crate::error::Result;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::any::Any;
 use std::sync::Arc;
 

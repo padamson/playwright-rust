@@ -54,8 +54,8 @@
 //! Based on playwright-python's serialize_value and parse_value implementations:
 //! <https://github.com/microsoft/playwright-python/blob/main/playwright/_impl/_js_handle.py>
 
-use base64::{engine::general_purpose, Engine as _};
-use serde_json::{json, Value};
+use base64::{Engine as _, engine::general_purpose};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Serializes a value following Playwright's protocol specification.

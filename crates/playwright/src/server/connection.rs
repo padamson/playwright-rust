@@ -6,8 +6,8 @@ use parking_lot::Mutex as ParkingLotMutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::sync::Mutex as TokioMutex;
 use tokio::sync::{mpsc, oneshot};
 
@@ -471,7 +471,7 @@ impl Connection {
     }
 
     pub async fn wait_for_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>> {
-        use tokio::time::{sleep, Duration};
+        use tokio::time::{Duration, sleep};
         let start = std::time::Instant::now();
         loop {
             if let Some(obj) = self.objects.lock().get(guid) {

@@ -880,7 +880,7 @@ impl Frame {
         selector: &str,
         file: &std::path::PathBuf,
     ) -> Result<()> {
-        use base64::{engine::general_purpose, Engine as _};
+        use base64::{Engine as _, engine::general_purpose};
         use std::io::Read;
 
         // Read file contents
@@ -918,7 +918,7 @@ impl Frame {
         selector: &str,
         files: &[&std::path::PathBuf],
     ) -> Result<()> {
-        use base64::{engine::general_purpose, Engine as _};
+        use base64::{Engine as _, engine::general_purpose};
         use std::io::Read;
 
         // If empty array, clear the files
@@ -976,7 +976,7 @@ impl Frame {
         selector: &str,
         file: crate::protocol::FilePayload,
     ) -> Result<()> {
-        use base64::{engine::general_purpose, Engine as _};
+        use base64::{Engine as _, engine::general_purpose};
 
         // Base64 encode the file contents
         let base64_content = general_purpose::STANDARD.encode(&file.buffer);
@@ -1003,7 +1003,7 @@ impl Frame {
         selector: &str,
         files: &[crate::protocol::FilePayload],
     ) -> Result<()> {
-        use base64::{engine::general_purpose, Engine as _};
+        use base64::{Engine as _, engine::general_purpose};
 
         // If empty array, clear the files
         if files.is_empty() {

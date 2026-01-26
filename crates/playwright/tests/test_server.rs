@@ -8,11 +8,11 @@
 #![allow(dead_code)]
 
 use axum::{
+    Router,
     body::Body,
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     http::{Response, StatusCode},
     routing::get,
-    Router,
 };
 use std::net::SocketAddr;
 use tokio::task::JoinHandle;

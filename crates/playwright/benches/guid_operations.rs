@@ -3,7 +3,7 @@
 // This benchmark suite measures the performance of GUID-related operations
 // to establish a baseline before optimizations.
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::sync::Arc;
 

@@ -145,7 +145,7 @@ impl TransportReceiver for WebSocketTransportReceiver {
                         return Err(Error::TransportError(format!(
                             "WebSocket read error: {}",
                             e
-                        )))
+                        )));
                     }
                 }
             }

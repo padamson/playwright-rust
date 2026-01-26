@@ -13,8 +13,8 @@
 
 use crate::error::Result;
 use crate::server::connection::ConnectionLike;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::sync::Arc;
 

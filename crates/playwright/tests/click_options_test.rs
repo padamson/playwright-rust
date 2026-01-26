@@ -15,8 +15,8 @@
 
 mod test_server;
 
-use playwright_rs::protocol::click::{ClickOptions, KeyboardModifier, MouseButton, Position};
 use playwright_rs::protocol::Playwright;
+use playwright_rs::protocol::click::{ClickOptions, KeyboardModifier, MouseButton, Position};
 use test_server::TestServer;
 
 mod common;

@@ -26,7 +26,7 @@ use std::sync::{Arc, Mutex, RwLock};
 /// # Example
 ///
 /// ```ignore
-/// use playwright_rs::protocol::{Playwright, ScreenshotOptions, ScreenshotType, AddStyleTagOptions};
+/// use playwright_rs::protocol::{Playwright, ScreenshotOptions, ScreenshotType, AddStyleTagOptions, Viewport};
 /// use std::path::PathBuf;
 ///
 /// #[tokio::main]
@@ -125,6 +125,13 @@ use std::sync::{Arc, Mutex, RwLock};
 ///             .content("body { background-color: blue; }")
 ///             .build()
 ///     ).await?;
+///
+///     // Demonstrate set_viewport_size() - responsive testing
+///     let mobile_viewport = Viewport {
+///         width: 375,
+///         height: 667,
+///     };
+///     page.set_viewport_size(mobile_viewport).await?;
 ///
 ///     // Demonstrate close()
 ///     page.close().await?;
@@ -1160,6 +1167,57 @@ impl Page {
     pub async fn add_init_script(&self, script: &str) -> Result<()> {
         self.channel()
             .send_no_result("addInitScript", serde_json::json!({ "source": script }))
+            .await
+    }
+
+    /// Sets the viewport size for the page.
+    ///
+    /// This method allows dynamic resizing of the viewport after page creation,
+    /// useful for testing responsive layouts at different screen sizes.
+    ///
+    /// # Arguments
+    ///
+    /// * `viewport` - The viewport dimensions (width and height in pixels)
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_rs::protocol::{Playwright, Viewport};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// // Set viewport to mobile size
+    /// let mobile = Viewport {
+    ///     width: 375,
+    ///     height: 667,
+    /// };
+    /// page.set_viewport_size(mobile).await?;
+    ///
+    /// // Later, test desktop layout
+    /// let desktop = Viewport {
+    ///     width: 1920,
+    ///     height: 1080,
+    /// };
+    /// page.set_viewport_size(desktop).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Page has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-set-viewport-size>
+    pub async fn set_viewport_size(&self, viewport: crate::protocol::Viewport) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "setViewportSize",
+                serde_json::json!({ "viewportSize": viewport }),
+            )
             .await
     }
 }

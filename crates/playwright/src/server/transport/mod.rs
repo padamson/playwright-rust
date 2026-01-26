@@ -12,7 +12,7 @@ use std::pin::Pin;
 pub mod pipe;
 pub mod websocket;
 
-pub use pipe::{send_message, PipeTransport, PipeTransportReceiver};
+pub use pipe::{PipeTransport, PipeTransportReceiver, send_message};
 pub use websocket::WebSocketTransport;
 
 /// Transport trait for abstracting communication mechanisms
@@ -24,7 +24,7 @@ pub trait Transport: Send {
 /// Trait for the sending half of a transport
 pub trait TransportSender: Send + Unpin {
     fn send(&mut self, message: JsonValue)
-        -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+    -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 }
 
 /// Trait for the receiving half of a transport

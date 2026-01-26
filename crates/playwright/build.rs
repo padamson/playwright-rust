@@ -112,7 +112,9 @@ fn get_drivers_dir() -> PathBuf {
         "cargo:warning=No workspace found, using cache directory: {}",
         cache_dir.display()
     );
-    println!("cargo:warning=This matches playwright-python's approach for system-wide driver installation");
+    println!(
+        "cargo:warning=This matches playwright-python's approach for system-wide driver installation"
+    );
 
     cache_dir
 }
@@ -150,41 +152,35 @@ fn download_and_extract_driver(drivers_dir: &Path, platform: &str) -> io::Result
 
     // Download the file
     let response = reqwest::blocking::get(&url)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Download failed: {}", e)))?;
+        .map_err(|e| io::Error::other(format!("Download failed: {}", e)))?;
 
     if !response.status().is_success() {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            format!("Download failed with status: {}", response.status()),
-        ));
+        return Err(io::Error::other(format!(
+            "Download failed with status: {}",
+            response.status()
+        )));
     }
 
     // Read response bytes
-    let bytes = response.bytes().map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::Other,
-            format!("Failed to read response: {}", e),
-        )
-    })?;
+    let bytes = response
+        .bytes()
+        .map_err(|e| io::Error::other(format!("Failed to read response: {}", e)))?;
 
     println!("cargo:warning=Downloaded {} bytes", bytes.len());
 
     // Extract ZIP file
     let cursor = io::Cursor::new(bytes);
     let mut archive = zip::ZipArchive::new(cursor)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open ZIP: {}", e)))?;
+        .map_err(|e| io::Error::other(format!("Failed to open ZIP: {}", e)))?;
 
     let extract_dir = drivers_dir.join(format!("playwright-{}-{}", PLAYWRIGHT_VERSION, platform));
 
     println!("cargo:warning=Extracting to: {}", extract_dir.display());
 
     for i in 0..archive.len() {
-        let mut file = archive.by_index(i).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                format!("Failed to read ZIP entry: {}", e),
-            )
-        })?;
+        let mut file = archive
+            .by_index(i)
+            .map_err(|e| io::Error::other(format!("Failed to read ZIP entry: {}", e)))?;
 
         let outpath = extract_dir.join(file.name());
 

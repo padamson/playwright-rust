@@ -3,7 +3,7 @@
 // Following TDD: Write tests first (Red), then implement (Green)
 
 mod test_server; // Assuming we can link to the shared module or need to copy it?
-                 // Ideally we reuse the existing test_server.rs in tests/
+// Ideally we reuse the existing test_server.rs in tests/
 
 use playwright_rs::protocol::Playwright;
 use test_server::TestServer;

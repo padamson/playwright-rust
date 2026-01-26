@@ -5,7 +5,7 @@
 // - Browser context creation
 // - Browser close time
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use playwright_rs::Playwright;
 use std::hint::black_box;
 use std::time::Duration;

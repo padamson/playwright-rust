@@ -13,8 +13,8 @@
 
 mod test_server;
 
-use playwright_rs::protocol::screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 use playwright_rs::protocol::Playwright;
+use playwright_rs::protocol::screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 use test_server::TestServer;
 
 mod common;

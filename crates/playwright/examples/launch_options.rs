@@ -8,8 +8,8 @@
 // Note: App mode (--app flag) is not included here because it requires
 // launchPersistentContext() which is not yet implemented. See issue #9.
 
-use playwright_rs::api::LaunchOptions;
 use playwright_rs::Playwright;
+use playwright_rs::api::LaunchOptions;
 use std::time::Duration;
 use tokio::time::sleep;
 

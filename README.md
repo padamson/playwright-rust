@@ -106,7 +106,7 @@ println!("Install with: npx playwright@{} install", PLAYWRIGHT_VERSION);
 
 ### Prerequisites
 
-- Rust 1.70+
+- Rust 1.85+
 - Node.js 18+ (for Playwright server and browser installation)
 - tokio async runtime
 

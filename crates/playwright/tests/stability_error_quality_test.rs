@@ -364,13 +364,19 @@ async fn test_error_quality_audit() {
     );
     tracing::info!("2. LaunchFailed:");
     tracing::info!("   Current: 'Failed to launch Playwright server: <details>'");
-    tracing::info!("   Improved: 'Failed to launch Playwright server: <details>. Check that Node.js is installed.'");
+    tracing::info!(
+        "   Improved: 'Failed to launch Playwright server: <details>. Check that Node.js is installed.'"
+    );
     tracing::info!("3. ElementNotFound:");
     tracing::info!("   Current: 'Element not found: <selector>'");
-    tracing::info!("   Improved: 'Element not found: <selector>. Waited for <timeout>. Retry with longer timeout or check selector.'");
+    tracing::info!(
+        "   Improved: 'Element not found: <selector>. Waited for <timeout>. Retry with longer timeout or check selector.'"
+    );
     tracing::info!("4. Timeout:");
     tracing::info!("   Current: 'Timeout: <message>'");
-    tracing::info!("   Improved: 'Timeout after <duration>: <operation> (<url>). Increase timeout or check network.'");
+    tracing::info!(
+        "   Improved: 'Timeout after <duration>: <operation> (<url>). Increase timeout or check network.'"
+    );
     tracing::info!("5. TargetClosed:");
     tracing::info!("   Current: 'Target closed: <message>'");
     tracing::info!("   Improved: 'Target closed: Cannot perform <operation> on closed <target>.'");
