@@ -846,7 +846,27 @@ impl BrowserContextOptionsBuilder {
         self
     }
 
-    /// Sets the network proxy settings
+    /// Sets the network proxy settings for this context.
+    ///
+    /// This allows routing all network traffic through a proxy server,
+    /// useful for rotating proxies without creating new browsers.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::protocol::{BrowserContextOptions, ProxySettings};
+    ///
+    /// let options = BrowserContextOptions::builder()
+    ///     .proxy(ProxySettings {
+    ///         server: "http://proxy.example.com:8080".to_string(),
+    ///         bypass: Some(".example.com".to_string()),
+    ///         username: Some("user".to_string()),
+    ///         password: Some("pass".to_string()),
+    ///     })
+    ///     .build();
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context>
     pub fn proxy(mut self, proxy: ProxySettings) -> Self {
         self.proxy = Some(proxy);
         self
