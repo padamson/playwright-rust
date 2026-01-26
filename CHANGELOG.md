@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **BrowserContext proxy support** - Added `proxy` option to `BrowserContextOptions` for per-context proxy configuration (PR #29, Issue #28)
+  - Enables rotating proxies without creating new browser instances
+  - Supports HTTP and SOCKS proxies with optional authentication
+
 ## [0.8.3] - 2026-01-25
 
 ### Added

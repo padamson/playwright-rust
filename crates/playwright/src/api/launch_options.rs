@@ -3,6 +3,7 @@
 // This module provides options for launching browsers, matching the Playwright API exactly.
 // See: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
 
+use crate::protocol::proxy::ProxySettings;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -90,26 +91,6 @@ pub enum IgnoreDefaultArgs {
     Bool(bool),
     /// Filter specific default arguments
     Array(Vec<String>),
-}
-
-/// Network proxy settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProxySettings {
-    /// Proxy server URL (e.g., "http://proxy:8080")
-    pub server: String,
-
-    /// Comma-separated domains to bypass proxy
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bypass: Option<String>,
-
-    /// Proxy username for authentication
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub username: Option<String>,
-
-    /// Proxy password for authentication
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub password: Option<String>,
 }
 
 impl LaunchOptions {
