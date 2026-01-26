@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `page.content()` - Retrieves complete HTML markup
   - `frame.content()` - Frame-level implementation for consistency with Playwright API
 
+### Fixed
+
+- **page.url() hash navigation** - URL now correctly includes hash fragment after anchor clicks (Issue #26)
+  - Frame now handles "navigated" events to track URL changes including hash updates
+  - Page delegates to main frame for URL (matches playwright-python/JS behavior)
+
 ### Changed
 
 - **README documentation** - Added comprehensive browser installation section (Issue #25)

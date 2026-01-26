@@ -11,7 +11,7 @@ use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConne
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 /// Frame represents a frame within a page.
 ///
@@ -24,6 +24,9 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct Frame {
     base: ChannelOwnerImpl,
+    /// Current URL of the frame
+    /// Wrapped in RwLock to allow updates from events
+    url: Arc<RwLock<String>>,
 }
 
 impl Frame {
@@ -41,15 +44,33 @@ impl Frame {
             ParentOrConnection::Parent(parent),
             type_name,
             guid,
-            initializer,
+            initializer.clone(),
         );
 
-        Ok(Self { base })
+        // Extract initial URL from initializer if available
+        let initial_url = initializer
+            .get("url")
+            .and_then(|v| v.as_str())
+            .unwrap_or("about:blank")
+            .to_string();
+
+        let url = Arc::new(RwLock::new(initial_url));
+
+        Ok(Self { base, url })
     }
 
     /// Returns the channel for sending protocol messages
     fn channel(&self) -> &Channel {
         self.base.channel()
+    }
+
+    /// Returns the current URL of the frame.
+    ///
+    /// This returns the last committed URL. Initially, frames are at "about:blank".
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-url>
+    pub fn url(&self) -> String {
+        self.url.read().unwrap().clone()
     }
 
     /// Navigates the frame to the specified URL.
@@ -1301,9 +1322,24 @@ impl ChannelOwner for Frame {
         self.base.remove_child(guid)
     }
 
-    fn on_event(&self, _method: &str, _params: Value) {
-        // TODO: Handle frame events in future phases
-        // Events: loadstate, navigated, etc.
+    fn on_event(&self, method: &str, params: Value) {
+        match method {
+            "navigated" => {
+                // Update frame's URL when navigation occurs (including hash changes)
+                if let Some(url_value) = params.get("url") {
+                    if let Some(url_str) = url_value.as_str() {
+                        // Update frame's URL
+                        if let Ok(mut url) = self.url.write() {
+                            *url = url_str.to_string();
+                        }
+                    }
+                }
+            }
+            _ => {
+                // Other events will be handled in future phases
+                // Events: loadstate, etc.
+            }
+        }
     }
 
     fn was_collected(&self) -> bool {

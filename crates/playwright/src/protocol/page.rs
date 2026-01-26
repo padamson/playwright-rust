@@ -39,7 +39,7 @@ use std::sync::{Arc, Mutex, RwLock};
 ///     assert_eq!(page.url(), "about:blank");
 ///
 ///     // Demonstrate goto() - navigate to a page
-///     let html = r#"
+///     let html = r#"<!DOCTYPE html>
 ///         <html>
 ///             <head><title>Test Page</title></head>
 ///             <body>
@@ -143,6 +143,9 @@ pub struct Page {
     url: Arc<RwLock<String>>,
     /// GUID of the main frame
     main_frame_guid: Arc<str>,
+    /// Cached reference to the main frame for synchronous URL access
+    /// This is populated after the first call to main_frame()
+    cached_main_frame: Arc<Mutex<Option<crate::protocol::Frame>>>,
     /// Route handlers for network interception
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
     /// Download event handlers
@@ -229,10 +232,14 @@ impl Page {
         let dialog_handlers = Arc::new(Mutex::new(Vec::new()));
         let websocket_handlers = Arc::new(Mutex::new(Vec::new()));
 
+        // Initialize cached main frame as empty (will be populated on first access)
+        let cached_main_frame = Arc::new(Mutex::new(None));
+
         Ok(Self {
             base,
             url,
             main_frame_guid,
+            cached_main_frame,
             route_handlers,
             download_handlers,
             dialog_handlers,
@@ -265,16 +272,31 @@ impl Page {
                 ))
             })?;
 
-        Ok(frame.clone())
+        let frame_clone = frame.clone();
+
+        // Cache the frame for synchronous access in url()
+        if let Ok(mut cached) = self.cached_main_frame.lock() {
+            *cached = Some(frame_clone.clone());
+        }
+
+        Ok(frame_clone)
     }
 
     /// Returns the current URL of the page.
     ///
-    /// This returns the last committed URL. Initially, pages are at "about:blank".
+    /// This returns the last committed URL, including hash fragments from anchor navigation.
+    /// Initially, pages are at "about:blank".
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-url>
     pub fn url(&self) -> String {
-        // Return a clone of the current URL
+        // Try to get URL from the cached main frame (source of truth for navigation including hashes)
+        if let Ok(cached) = self.cached_main_frame.lock() {
+            if let Some(frame) = cached.as_ref() {
+                return frame.url();
+            }
+        }
+
+        // Fallback to cached URL if frame not yet loaded
         self.url.read().unwrap().clone()
     }
 

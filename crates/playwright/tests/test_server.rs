@@ -43,6 +43,7 @@ impl TestServer {
             .route("/click_options.html", get(click_options_page))
             .route("/text.html", get(text_page))
             .route("/websocket.html", get(websocket_page))
+            .route("/anchors.html", get(anchors_page))
             .route("/ws", get(ws_handler));
 
         // Bind to port 0 to get any available port
@@ -500,6 +501,43 @@ async fn websocket_page() -> Response<Body> {
   </script>
 </body>
 </html>"#,
+        ))
+        .unwrap()
+}
+
+async fn anchors_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            "<!DOCTYPE html>
+<html>
+<head><title>Anchor Navigation Test</title></head>
+<body>
+  <h1>Anchor Navigation Test Page</h1>
+
+  <nav>
+    <a id=\"link-to-section1\" href=\"#section1\">Go to Section 1</a> |
+    <a id=\"link-to-section2\" href=\"#section2\">Go to Section 2</a> |
+    <a id=\"link-to-section3\" href=\"#section3\">Go to Section 3</a>
+  </nav>
+
+  <section id=\"section1\" style=\"margin-top: 50px; padding: 20px; background: #f0f0f0;\">
+    <h2>Section 1</h2>
+    <p>This is section 1. The URL should include #section1 when you navigate here.</p>
+  </section>
+
+  <section id=\"section2\" style=\"margin-top: 50px; padding: 20px; background: #e0e0e0;\">
+    <h2>Section 2</h2>
+    <p>This is section 2. The URL should include #section2 when you navigate here.</p>
+  </section>
+
+  <section id=\"section3\" style=\"margin-top: 50px; padding: 20px; background: #d0d0d0;\">
+    <h2>Section 3</h2>
+    <p>This is section 3. The URL should include #section3 when you navigate here.</p>
+  </section>
+</body>
+</html>",
         ))
         .unwrap()
 }
