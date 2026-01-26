@@ -5,7 +5,7 @@
 // cache, and local storage.
 
 use crate::error::Result;
-use crate::protocol::{Browser, Page};
+use crate::protocol::{Browser, Page, ProxySettings};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use serde::{Deserialize, Serialize};
@@ -619,6 +619,10 @@ pub struct BrowserContextOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<Vec<String>>,
 
+    /// Network proxy settings
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy: Option<ProxySettings>,
+
     /// Emulates 'prefers-colors-scheme' media feature ("light", "dark", "no-preference")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color_scheme: Option<String>,
@@ -761,6 +765,7 @@ pub struct BrowserContextOptionsBuilder {
     timezone_id: Option<String>,
     geolocation: Option<Geolocation>,
     permissions: Option<Vec<String>>,
+    proxy: Option<ProxySettings>,
     color_scheme: Option<String>,
     has_touch: Option<bool>,
     is_mobile: Option<bool>,
@@ -838,6 +843,12 @@ impl BrowserContextOptionsBuilder {
     /// Sets the permissions to grant
     pub fn permissions(mut self, permissions: Vec<String>) -> Self {
         self.permissions = Some(permissions);
+        self
+    }
+
+    /// Sets the network proxy settings
+    pub fn proxy(mut self, proxy: ProxySettings) -> Self {
+        self.proxy = Some(proxy);
         self
     }
 
@@ -1112,6 +1123,7 @@ impl BrowserContextOptionsBuilder {
             timezone_id: self.timezone_id,
             geolocation: self.geolocation,
             permissions: self.permissions,
+            proxy: self.proxy,
             color_scheme: self.color_scheme,
             has_touch: self.has_touch,
             is_mobile: self.is_mobile,
