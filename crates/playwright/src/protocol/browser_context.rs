@@ -232,6 +232,9 @@ impl BrowserContext {
     /// In persistent contexts launched with `--app=url`, this will include the
     /// initial page created automatically by Playwright.
     ///
+    /// When connecting via CDP to an existing browser, this returns pages that
+    /// were already open in the browser context.
+    ///
     /// # Errors
     ///
     /// This method does not return errors. It provides a snapshot of pages at
@@ -239,6 +242,29 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-pages>
     pub fn pages(&self) -> Vec<Page> {
+        // First check children (for CDP connections where pages already exist)
+        // This mirrors how Browser.contexts() works
+        let children_pages: Vec<Page> = self.base
+            .children()
+            .into_iter()
+            .filter_map(|child| {
+                if child.type_name() == "Page" {
+                    child
+                        .as_any()
+                        .downcast_ref::<Page>()
+                        .cloned()
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        // If we have pages from children (CDP case), return those
+        if !children_pages.is_empty() {
+            return children_pages;
+        }
+        
+        // Otherwise return from the event-tracked pages (normal case)
         self.pages.lock().unwrap().clone()
     }
 

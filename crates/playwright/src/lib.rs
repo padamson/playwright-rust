@@ -216,3 +216,6 @@ pub use protocol::{FulfillOptions, Route};
 
 // Re-export launch options
 pub use api::LaunchOptions;
+
+// Re-export connection options
+pub use api::{ConnectOptions, ConnectOverCdpOptions};

@@ -139,6 +139,45 @@ impl Browser {
         self.is_connected.load(Ordering::SeqCst)
     }
 
+    /// Returns all browser contexts belonging to this browser.
+    ///
+    /// When connecting via CDP, this returns the existing contexts from the
+    /// connected browser. When launching a new browser, this returns contexts
+    /// created via `new_context()`.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Connect to existing browser via CDP
+    /// let browser = chromium.connect_over_cdp(params).await?;
+    ///
+    /// // Get existing contexts
+    /// let contexts = browser.contexts();
+    /// if !contexts.is_empty() {
+    ///     let context = &contexts[0];
+    ///     let pages = context.pages();
+    ///     // Use existing page...
+    /// }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-contexts>
+    pub fn contexts(&self) -> Vec<BrowserContext> {
+        self.base
+            .children()
+            .into_iter()
+            .filter_map(|child| {
+                if child.type_name() == "BrowserContext" {
+                    child
+                        .as_any()
+                        .downcast_ref::<BrowserContext>()
+                        .cloned()
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
     /// Returns the channel for sending protocol messages
     ///
     /// Used internally for sending RPC calls to the browser.

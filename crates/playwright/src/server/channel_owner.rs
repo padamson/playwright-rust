@@ -309,6 +309,19 @@ impl ChannelOwnerImpl {
         &self.channel
     }
 
+    /// Returns all child objects of this ChannelOwner.
+    ///
+    /// This is used by protocol objects like Browser to enumerate their
+    /// children (e.g., BrowserContexts) without exposing the internal
+    /// children registry directly.
+    ///
+    /// # Returns
+    ///
+    /// A vector of all child ChannelOwner objects.
+    pub fn children(&self) -> Vec<Arc<dyn ChannelOwner>> {
+        self.children.lock().values().cloned().collect()
+    }
+
     /// Disposes this object and all children recursively.
     ///
     /// # Arguments

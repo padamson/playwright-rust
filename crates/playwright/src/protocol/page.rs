@@ -326,6 +326,15 @@ impl Page {
             .await
     }
 
+    /// Brings the page to front (activates tab).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-bring-to-front>
+    pub async fn bring_to_front(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("bringToFront", serde_json::json!({}))
+            .await
+    }
+
     /// Navigates to the specified URL.
     ///
     /// Returns `None` when navigating to URLs that don't produce responses (e.g., data URLs,

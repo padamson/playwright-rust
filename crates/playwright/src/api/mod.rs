@@ -6,7 +6,7 @@
 pub mod connect_options;
 pub mod launch_options;
 
-pub use connect_options::ConnectOptions;
+pub use connect_options::{ConnectOptions, ConnectOverCdpOptions};
 pub use launch_options::{IgnoreDefaultArgs, LaunchOptions};
 // Re-export ProxySettings for backward compatibility (moved to protocol::proxy in 0.8.4)
 pub use crate::protocol::ProxySettings;

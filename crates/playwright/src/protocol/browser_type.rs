@@ -7,7 +7,7 @@
 // - Python: playwright-python/playwright/_impl/_browser_type.py
 // - Protocol: protocol.yml (BrowserType interface)
 
-use crate::api::{ConnectOptions, LaunchOptions};
+use crate::api::{ConnectOptions, ConnectOverCdpOptions, LaunchOptions};
 use crate::error::Result;
 use crate::protocol::{Browser, BrowserContext, BrowserContextOptions};
 use crate::server::channel::Channel;
@@ -403,6 +403,94 @@ impl BrowserType {
 
         Ok(context.clone())
     }
+    /// Connects to an existing browser instance via Chrome DevTools Protocol (CDP).
+    ///
+    /// This method attaches Playwright to an existing browser instance that was
+    /// started with remote debugging enabled (e.g., `--remote-debugging-port=9222`).
+    ///
+    /// Unlike `connect()` which connects to a Playwright server, this connects
+    /// directly to a browser's CDP endpoint.
+    ///
+    /// # Arguments
+    ///
+    /// * `endpoint_url` - CDP endpoint URL (ws:// or http://)
+    /// * `options` - Optional connection options (timeout, headers, slow_mo)
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Start Chrome with: chrome --remote-debugging-port=9222
+    /// let browser = chromium.connect_over_cdp(
+    ///     "http://localhost:9222",
+    ///     None
+    /// ).await?;
+    ///
+    /// // Access existing contexts and pages
+    /// let contexts = browser.contexts();
+    /// let context = &contexts[0];
+    /// let pages = context.pages();
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Connection to CDP endpoint fails
+    /// - Timeout waiting for connection
+    /// - Protocol error during handshake
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp>
+    pub async fn connect_over_cdp(
+        &self,
+        endpoint_url: &str,
+        options: Option<ConnectOverCdpOptions>,
+    ) -> Result<Browser> {
+        let options = options.unwrap_or_default();
+
+        // Build params for the connectOverCDP message
+        let mut params = serde_json::json!({
+            "endpointURL": endpoint_url,
+        });
+
+        // Add optional timeout (default 30000ms like Python SDK)
+        let timeout = options.timeout.unwrap_or(30000.0);
+        params["timeout"] = serde_json::json!(timeout);
+
+        // Add optional slow_mo
+        if let Some(slow_mo) = options.slow_mo {
+            params["slowMo"] = serde_json::json!(slow_mo);
+        }
+
+        // Serialize headers to the format expected by Playwright server
+        // Python SDK uses serialize_headers() which converts to list of {name, value} objects
+        if let Some(headers) = options.headers {
+            let serialized: Vec<serde_json::Value> = headers
+                .into_iter()
+                .map(|(name, value)| serde_json::json!({"name": name, "value": value}))
+                .collect();
+            params["headers"] = serde_json::json!(serialized);
+        }
+
+        // Send connectOverCDP RPC to server
+        let response: ConnectOverCdpResponse =
+            self.base.channel().send("connectOverCDP", params).await?;
+
+        // Get browser object from registry
+        let browser_arc = self.connection().get_object(&response.browser.guid).await?;
+
+        // Downcast to Browser
+        let browser = browser_arc
+            .as_any()
+            .downcast_ref::<Browser>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(format!(
+                    "Expected Browser object, got {}",
+                    browser_arc.type_name()
+                ))
+            })?;
+
+        Ok(browser.clone())
+    }
+
     /// Connects to an existing browser instance.
     ///
     /// # Arguments
@@ -486,6 +574,15 @@ impl BrowserType {
 #[derive(Debug, Deserialize, Serialize)]
 struct LaunchResponse {
     browser: BrowserRef,
+}
+
+/// Response from BrowserType.connectOverCDP() protocol call
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ConnectOverCdpResponse {
+    browser: BrowserRef,
+    #[serde(default)]
+    default_context: Option<ContextRef>,
 }
 
 /// Response from BrowserType.launchPersistentContext() protocol call
