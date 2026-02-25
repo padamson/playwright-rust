@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`get_by_text` locator** - Find elements by text content, matching the modern Playwright locator pattern
-  - `page.get_by_text(text, exact)` - Locate elements on the page by text
-  - `locator.get_by_text(text, exact)` - Locate elements within a locator's subtree
-  - Case-insensitive substring matching by default (`exact=false`)
-  - Case-sensitive exact matching with `exact=true`
-  - Chainable with other locators and assertions
+- **`get_by_*` locators** - Modern Playwright locator methods for finding elements by user-facing attributes
+  - `get_by_text(text, exact)` - Find by text content
+  - `get_by_label(text, exact)` - Find form controls by associated label
+  - `get_by_placeholder(text, exact)` - Find inputs by placeholder text
+  - `get_by_alt_text(text, exact)` - Find images by alt text
+  - `get_by_title(text, exact)` - Find elements by title attribute
+  - `get_by_test_id(test_id)` - Find elements by `data-testid` attribute (always exact)
+  - All methods available on both `Page` and `Locator` (chainable)
+  - Case-insensitive substring matching by default (`exact=false`), case-sensitive exact with `exact=true`
 - **BrowserContext proxy support** - Added `proxy` option to `BrowserContextOptions` for per-context proxy configuration (PR #29, Issue #28)
   - Enables rotating proxies without creating new browser instances
   - Supports HTTP and SOCKS proxies with optional authentication

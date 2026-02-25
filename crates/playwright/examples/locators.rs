@@ -1,6 +1,6 @@
 // Locators example - Find and query elements
 //
-// Shows: Locator API, chaining, nested locators, element queries, get_by_text
+// Shows: Locator API, chaining, nested locators, element queries, get_by_* methods
 
 use playwright_rs::Playwright;
 
@@ -60,6 +60,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let link_by_text = body.get_by_text("Learn more", false);
     let link_count = link_by_text.count().await?;
     println!("Found {} elements with 'Learn more' in body", link_count);
+
+    // get_by_title - find elements by title attribute
+    let titled = page.get_by_title("Example Domain", false).await;
+    println!(
+        "Found {} elements with title 'Example Domain'",
+        titled.count().await?
+    );
 
     browser.close().await?;
     Ok(())

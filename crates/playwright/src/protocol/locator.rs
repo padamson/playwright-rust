@@ -19,17 +19,68 @@ use crate::error::Result;
 use crate::protocol::Frame;
 use std::sync::Arc;
 
-/// Builds the internal selector string for `get_by_text`.
+/// Escapes text for use in Playwright's internal selector engine.
 ///
-/// Matches the Playwright TypeScript implementation:
-/// - `exact=false` → `internal:text="text"i` (case-insensitive substring)
-/// - `exact=true` → `internal:text="text"s` (case-sensitive exact)
-///
-/// Text is JSON-stringified for proper escaping of quotes and special characters.
-pub(crate) fn get_by_text_selector(text: &str, exact: bool) -> String {
+/// JSON-stringifies the text and appends `i` (case-insensitive) or `s` (strict/exact).
+/// Matches the `escapeForTextSelector`/`escapeForAttributeSelector` in Playwright TypeScript.
+fn escape_for_selector(text: &str, exact: bool) -> String {
     let suffix = if exact { "s" } else { "i" };
     let escaped = serde_json::to_string(text).unwrap_or_else(|_| format!("\"{}\"", text));
-    format!("internal:text={}{}", escaped, suffix)
+    format!("{}{}", escaped, suffix)
+}
+
+/// Builds the internal selector string for `get_by_text`.
+///
+/// - `exact=false` → `internal:text="text"i` (case-insensitive substring)
+/// - `exact=true` → `internal:text="text"s` (case-sensitive exact)
+pub(crate) fn get_by_text_selector(text: &str, exact: bool) -> String {
+    format!("internal:text={}", escape_for_selector(text, exact))
+}
+
+/// Builds the internal selector string for `get_by_label`.
+///
+/// - `exact=false` → `internal:label="text"i`
+/// - `exact=true` → `internal:label="text"s`
+pub(crate) fn get_by_label_selector(text: &str, exact: bool) -> String {
+    format!("internal:label={}", escape_for_selector(text, exact))
+}
+
+/// Builds the internal selector string for `get_by_placeholder`.
+///
+/// - `exact=false` → `internal:attr=[placeholder="text"i]`
+/// - `exact=true` → `internal:attr=[placeholder="text"s]`
+pub(crate) fn get_by_placeholder_selector(text: &str, exact: bool) -> String {
+    format!(
+        "internal:attr=[placeholder={}]",
+        escape_for_selector(text, exact)
+    )
+}
+
+/// Builds the internal selector string for `get_by_alt_text`.
+///
+/// - `exact=false` → `internal:attr=[alt="text"i]`
+/// - `exact=true` → `internal:attr=[alt="text"s]`
+pub(crate) fn get_by_alt_text_selector(text: &str, exact: bool) -> String {
+    format!("internal:attr=[alt={}]", escape_for_selector(text, exact))
+}
+
+/// Builds the internal selector string for `get_by_title`.
+///
+/// - `exact=false` → `internal:attr=[title="text"i]`
+/// - `exact=true` → `internal:attr=[title="text"s]`
+pub(crate) fn get_by_title_selector(text: &str, exact: bool) -> String {
+    format!("internal:attr=[title={}]", escape_for_selector(text, exact))
+}
+
+/// Builds the internal selector string for `get_by_test_id`.
+///
+/// Uses `data-testid` attribute by default (matching Playwright's default).
+/// Always uses exact matching (`s` suffix).
+pub(crate) fn get_by_test_id_selector(test_id: &str) -> String {
+    format!(
+        "internal:testid=[data-testid={}]",
+        escape_for_selector(test_id, true)
+    )
 }
 
 /// Locator represents a way to find element(s) on the page at any given moment.
@@ -102,6 +153,19 @@ pub(crate) fn get_by_text_selector(text: &str, exact: bool) -> String {
 ///     let exact_submit = page.get_by_text("Submit", true).await;
 ///     assert_eq!(exact_submit.count().await?, 1); // exact match only
 ///
+///     // Demonstrate get_by_label, get_by_placeholder, get_by_test_id
+///     let _ = page.goto(
+///         "data:text/html,<label for='email'>Email</label>\
+///             <input id='email' placeholder='you@example.com' data-testid='email-input' />",
+///         None
+///     ).await;
+///     let by_label = page.get_by_label("Email", false).await;
+///     assert_eq!(by_label.count().await?, 1);
+///     let by_placeholder = page.get_by_placeholder("you@example.com", true).await;
+///     assert_eq!(by_placeholder.count().await?, 1);
+///     let by_test_id = page.get_by_test_id("email-input").await;
+///     assert_eq!(by_test_id.count().await?, 1);
+///
 ///     // Demonstrate screenshot() - element screenshot
 ///     let _ = page.goto(
 ///         "data:text/html,<h1 id='title'>Hello World</h1>",
@@ -173,8 +237,49 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-text>
     pub fn get_by_text(&self, text: &str, exact: bool) -> Locator {
-        let selector = get_by_text_selector(text, exact);
-        self.locator(&selector)
+        self.locator(&get_by_text_selector(text, exact))
+    }
+
+    /// Returns a locator that matches elements by their associated label text.
+    ///
+    /// Targets form controls (`input`, `textarea`, `select`) linked via `<label>`,
+    /// `aria-label`, or `aria-labelledby`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-label>
+    pub fn get_by_label(&self, text: &str, exact: bool) -> Locator {
+        self.locator(&get_by_label_selector(text, exact))
+    }
+
+    /// Returns a locator that matches elements by their placeholder text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-placeholder>
+    pub fn get_by_placeholder(&self, text: &str, exact: bool) -> Locator {
+        self.locator(&get_by_placeholder_selector(text, exact))
+    }
+
+    /// Returns a locator that matches elements by their alt text.
+    ///
+    /// Typically used for `<img>` elements.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-alt-text>
+    pub fn get_by_alt_text(&self, text: &str, exact: bool) -> Locator {
+        self.locator(&get_by_alt_text_selector(text, exact))
+    }
+
+    /// Returns a locator that matches elements by their title attribute.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-title>
+    pub fn get_by_title(&self, text: &str, exact: bool) -> Locator {
+        self.locator(&get_by_title_selector(text, exact))
+    }
+
+    /// Returns a locator that matches elements by their `data-testid` attribute.
+    ///
+    /// Always uses exact matching (case-sensitive).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-test-id>
+    pub fn get_by_test_id(&self, test_id: &str) -> Locator {
+        self.locator(&get_by_test_id_selector(test_id))
     }
 
     /// Creates a sub-locator within this locator's subtree.

@@ -198,13 +198,16 @@ async fn test_get_by_text() {
         .await
         .expect("Failed to navigate");
 
-    // Test 1: Substring match (exact=false) - "Submit" matches both "Submit" and "Submit Order"
+    // Test 1: Substring match (exact=false) - "Submit" matches "Submit", "Submit Order", and "Submit Form"
     let submit_buttons = page.get_by_text("Submit", false).await;
     let count = submit_buttons
         .count()
         .await
         .expect("Failed to count submit buttons");
-    assert_eq!(count, 2, "Substring 'Submit' should match both buttons");
+    assert_eq!(
+        count, 3,
+        "Substring 'Submit' should match all three buttons"
+    );
 
     // Test 2: Exact match - "Submit" matches only the exact "Submit" button
     let exact_submit = page.get_by_text("Submit", true).await;
@@ -244,6 +247,112 @@ async fn test_get_by_text() {
         .await
         .expect("Failed to count submit in body");
     assert_eq!(count, 1, "Chained get_by_text should work from Locator");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+// ============================================================================
+// get_by_label, get_by_placeholder, get_by_alt_text, get_by_title, get_by_test_id
+// ============================================================================
+
+#[tokio::test]
+async fn test_get_by_locator_methods() {
+    common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/locator.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // --- get_by_label ---
+    // Substring match: "Address" matches "Email Address" label
+    let addr_input = page.get_by_label("Address", false).await;
+    let count = addr_input.count().await.expect("Failed to count label");
+    assert_eq!(count, 1, "Substring 'Address' should match email input");
+
+    // Exact match: "Full Name" matches only its associated input
+    let exact_name = page.get_by_label("Full Name", true).await;
+    let count = exact_name
+        .count()
+        .await
+        .expect("Failed to count exact label");
+    assert_eq!(count, 1, "Exact 'Full Name' should match one input");
+
+    // --- get_by_placeholder ---
+    // Substring match
+    let enter_inputs = page.get_by_placeholder("Enter", false).await;
+    let count = enter_inputs
+        .count()
+        .await
+        .expect("Failed to count placeholder");
+    assert_eq!(count, 2, "Substring 'Enter' should match both inputs");
+
+    // Exact match
+    let email_input = page.get_by_placeholder("Enter your email", true).await;
+    let count = email_input
+        .count()
+        .await
+        .expect("Failed to count exact placeholder");
+    assert_eq!(count, 1, "Exact placeholder should match one input");
+
+    // --- get_by_alt_text ---
+    // Substring match: "Logo" matches "Company Logo"
+    let logo = page.get_by_alt_text("Logo", false).await;
+    let count = logo.count().await.expect("Failed to count alt text");
+    assert_eq!(count, 1, "'Logo' should match one image");
+
+    // Exact match
+    let exact_banner = page.get_by_alt_text("Welcome Banner", true).await;
+    let count = exact_banner
+        .count()
+        .await
+        .expect("Failed to count exact alt text");
+    assert_eq!(count, 1, "Exact 'Welcome Banner' should match one image");
+
+    // --- get_by_title ---
+    // Substring match: "More Info" matches both title attributes
+    let info = page.get_by_title("More Info", false).await;
+    let count = info.count().await.expect("Failed to count title");
+    assert_eq!(count, 2, "Substring 'More Info' should match both spans");
+
+    // Exact match
+    let exact_info = page.get_by_title("More Info", true).await;
+    let count = exact_info
+        .count()
+        .await
+        .expect("Failed to count exact title");
+    assert_eq!(count, 1, "Exact 'More Info' should match one span");
+
+    // --- get_by_test_id ---
+    let submit = page.get_by_test_id("submit-btn").await;
+    let count = submit.count().await.expect("Failed to count test id");
+    assert_eq!(count, 1, "test id 'submit-btn' should match one button");
+
+    let cancel = page.get_by_test_id("cancel-btn").await;
+    let text = cancel
+        .text_content()
+        .await
+        .expect("Failed to get text content");
+    assert_eq!(text, Some("Cancel".to_string()));
+
+    // --- Locator chaining ---
+    let body = page.locator("body").await;
+    let chained = body.get_by_test_id("submit-btn");
+    let count = chained
+        .count()
+        .await
+        .expect("Failed to count chained test id");
+    assert_eq!(count, 1, "Chained get_by_test_id should work");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();

@@ -444,8 +444,58 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-text>
     pub async fn get_by_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
-        let selector = crate::protocol::locator::get_by_text_selector(text, exact);
-        self.locator(&selector).await
+        self.locator(&crate::protocol::locator::get_by_text_selector(text, exact))
+            .await
+    }
+
+    /// Returns a locator that matches elements by their associated label text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-get-by-label>
+    pub async fn get_by_label(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_label_selector(
+            text, exact,
+        ))
+        .await
+    }
+
+    /// Returns a locator that matches elements by their placeholder text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-get-by-placeholder>
+    pub async fn get_by_placeholder(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_placeholder_selector(
+            text, exact,
+        ))
+        .await
+    }
+
+    /// Returns a locator that matches elements by their alt text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-get-by-alt-text>
+    pub async fn get_by_alt_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_alt_text_selector(
+            text, exact,
+        ))
+        .await
+    }
+
+    /// Returns a locator that matches elements by their title attribute.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-get-by-title>
+    pub async fn get_by_title(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_title_selector(
+            text, exact,
+        ))
+        .await
+    }
+
+    /// Returns a locator that matches elements by their `data-testid` attribute.
+    ///
+    /// Always uses exact matching (case-sensitive).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-get-by-test-id>
+    pub async fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_test_id_selector(test_id))
+            .await
     }
 
     /// Returns the keyboard instance for low-level keyboard control.

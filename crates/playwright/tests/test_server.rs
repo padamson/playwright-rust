@@ -203,6 +203,16 @@ async fn locator_page() -> Response<Body> {
   <div class="text-container">
     <span>Inner Text</span>
   </div>
+  <label for="email">Email Address</label>
+  <input id="email" type="text" placeholder="Enter your email" />
+  <label for="name">Full Name</label>
+  <input id="name" type="text" placeholder="Enter your name" />
+  <img src="logo.png" alt="Company Logo" />
+  <img src="banner.png" alt="Welcome Banner" />
+  <span title="More Info">Details</span>
+  <span title="More Info Expanded">Extended Details</span>
+  <button data-testid="submit-btn">Submit Form</button>
+  <button data-testid="cancel-btn">Cancel</button>
 </body>
 </html>"#,
         ))
