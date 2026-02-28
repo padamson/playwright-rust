@@ -1,0 +1,26 @@
+# Nextest configuration for playwright-rust
+# See: https://nexte.st/docs/configuration/
+
+[store]
+dir = "target/nextest"
+
+# Default profile
+[profile.default]
+slow-timeout = { period = "30s", terminate-after = 2 }
+fail-fast = false
+
+# CI profile - retries for flaky browser tests
+[profile.ci]
+retries = 1
+slow-timeout = { period = "60s", terminate-after = 2 }
+fail-fast = false
+
+# Longer timeouts for stability stress tests
+[[profile.default.overrides]]
+filter = "test(/test_no_memory_leak/) | test(test_rapid_browser) | test(test_file_descriptor) | test(test_resource_limit_stress) | test(test_concurrent_browser_cleanup) | test(test_multiple_server_cycles) | test(test_error_recovery_stress)"
+slow-timeout = { period = "60s", terminate-after = 2 }
+
+# Longer timeouts for cross-browser tests (Firefox/WebKit are slower)
+[[profile.default.overrides]]
+filter = "test(/cross_browser/) | test(/firefox/) | test(/webkit/)"
+slow-timeout = { period = "45s", terminate-after = 2 }

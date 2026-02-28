@@ -101,12 +101,21 @@ jobs:
 
     - name: Run tests (Linux/macOS)
       if: runner.os != 'Windows'
-      run: cargo nextest run --workspace
+      run: cargo nextest run --workspace --profile ci
+
+    - name: Run stress tests (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: cargo nextest run --workspace --profile ci --run-ignored ignored-only
 
     - name: Run tests (Windows)
       if: runner.os == 'Windows'
       timeout-minutes: 30
-      run: cargo nextest run --workspace --test-threads=1
+      run: cargo nextest run --workspace --profile ci --test-threads=1
+
+    - name: Run stress tests (Windows)
+      if: runner.os == 'Windows'
+      timeout-minutes: 30
+      run: cargo nextest run --workspace --profile ci --run-ignored ignored-only --test-threads=1
 
     - name: Run doc-tests (ignored tests require browsers)
       run: cargo test --doc --workspace -- --ignored

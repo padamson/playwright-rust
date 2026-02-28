@@ -7,6 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 permissions:
   contents: write
@@ -52,30 +53,72 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - name: Install Node.js
-        uses: actions/setup-node@v6
+      - name: Cache Cargo
+        uses: actions/cache@v5
         with:
-          node-version: '20'
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
-      - name: Install Playwright browsers (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          npm install -g @playwright/test@1.56.1
-          npx playwright install chromium firefox webkit --with-deps
+      - name: Cache Playwright Drivers
+        uses: actions/cache@v5
+        with:
+          path: drivers/
+          key: ${{ runner.os }}-playwright-drivers-1.56.1
 
-      - name: Install Playwright browsers (macOS/Windows)
-        if: runner.os != 'Linux'
-        run: |
-          npm install -g @playwright/test@1.56.1
-          npx playwright install chromium firefox webkit
+      - name: Cache Playwright Browsers (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/Library/Caches/ms-playwright
+          key: ${{ runner.os }}-playwright-browsers-1.56.1-v2
+          restore-keys: |
+            ${{ runner.os }}-playwright-browsers-1.56.1-
+
+      - name: Cache Playwright Browsers (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v5
+        with:
+          path: ~\AppData\Local\ms-playwright
+          key: ${{ runner.os }}-playwright-browsers-1.56.1-v2
+          restore-keys: |
+            ${{ runner.os }}-playwright-browsers-1.56.1-
 
       - name: Install cargo-nextest & parse-changelog
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest,parse-changelog
 
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Install Playwright browsers (Linux)
+        if: runner.os == 'Linux'
+        run: drivers/playwright-1.56.1-linux/node drivers/playwright-1.56.1-linux/package/cli.js install chromium firefox webkit --with-deps
+
+      - name: Install Playwright browsers (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          if [ -d "drivers/playwright-1.56.1-mac-arm64" ]; then
+            drivers/playwright-1.56.1-mac-arm64/node drivers/playwright-1.56.1-mac-arm64/package/cli.js install chromium firefox webkit
+          else
+            drivers/playwright-1.56.1-mac/node drivers/playwright-1.56.1-mac/package/cli.js install chromium firefox webkit
+          fi
+
+      - name: Install Playwright browsers (Windows)
+        if: runner.os == 'Windows'
+        run: drivers\playwright-1.56.1-win32_x64\node.exe drivers\playwright-1.56.1-win32_x64\package\cli.js install chromium firefox webkit
+
       - name: Run tests
-        run: cargo nextest run --workspace --target ${{ matrix.target }}
+        run: cargo nextest run --workspace --profile ci --target ${{ matrix.target }}
 
       - name: Build release binary (if CLI exists)
         run: cargo build --release --target ${{ matrix.target }} --verbose
