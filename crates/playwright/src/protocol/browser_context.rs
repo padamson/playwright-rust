@@ -8,7 +8,7 @@ use crate::api::launch_options::IgnoreDefaultArgs;
 use crate::error::Result;
 use crate::protocol::api_request_context::APIRequestContext;
 use crate::protocol::route::UnrouteBehavior;
-use crate::protocol::{Browser, Page, ProxySettings, Route};
+use crate::protocol::{Browser, Page, ProxySettings, Request, Response, ResponseObject, Route};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use serde::{Deserialize, Serialize};
@@ -156,15 +156,11 @@ impl BrowserContext {
         // Dialog events need to be explicitly subscribed to via updateSubscription command
         let channel = context.channel().clone();
         tokio::spawn(async move {
-            let _ = channel
-                .send_no_result(
-                    "updateSubscription",
-                    serde_json::json!({
-                        "event": "dialog",
-                        "enabled": true
-                    }),
-                )
-                .await;
+            _ = channel.update_subscription("dialog", true).await;
+            _ = channel.update_subscription("request", true).await;
+            _ = channel.update_subscription("requestfailed", true).await;
+            _ = channel.update_subscription("requestfinished", true).await;
+            _ = channel.update_subscription("response", true).await;
         });
 
         Ok(context)
@@ -460,6 +456,68 @@ impl BrowserContext {
             }
         }
     }
+
+    fn dispatch_request_event(&self, method: &str, params: Value) {
+        if let Some(request_guid) = params.get("request").and_then(|v| v.get("guid")).and_then(|v| v.as_str()) {
+            let connection = self.connection();
+            let request_guid_owned = request_guid.to_owned();
+            let page_guid_owned = params.get("page").and_then(|v| v.get("guid")).and_then(|v| v.as_str()).and_then(|v| Some(v.to_owned()));
+            let method = method.to_owned();
+            tokio::spawn(async move {
+                        let request_arc = match connection.get_object(&request_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(_err) => return,
+                        };
+
+                        let request = match request_arc.as_any().downcast_ref::<Request>() {
+                            Some(v) => v.clone(),
+                            None => return,
+                        };
+
+                        if let Some(page_guid) = page_guid_owned {
+                            let page_arc = match connection.get_object(&page_guid).await {
+                                Ok(v) => v,
+                                Err(_) => return,
+                            };
+                            let page = page_arc.as_any().downcast_ref::<Page>().unwrap();
+                            match method.as_str() {
+                                "request" => page.trigger_request_event(request).await,
+                                "requestFailed" => page.trigger_request_failed_event(request).await,
+                                "requestFinished" => page.trigger_request_finished_event(request).await,
+                                _ => unreachable!("Unreachable method {}", method),
+                            }
+                        }
+            });
+        }
+    }
+
+    fn dispatch_response_event(&self, _method: &str, params: Value) {
+        if let Some(response_guid) = params.get("response").and_then(|v| v.get("guid")).and_then(|v| v.as_str()) {
+            let connection = self.connection();
+            let response_guid_owned = response_guid.to_owned();
+            let page_guid_owned = params.get("page").and_then(|v| v.get("guid")).and_then(|v| v.as_str()).and_then(|v| Some(v.to_owned()));
+            tokio::spawn(async move {
+                        let response_arc = match connection.get_object(&response_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(_err) => return,
+                        };
+
+                        let response = match response_arc.as_any().downcast_ref::<ResponseObject>() {
+                            Some(v) => v.clone(),
+                            None => return,
+                        };
+
+                        if let Some(page_guid) = page_guid_owned {
+                            let page_arc = match connection.get_object(&page_guid).await {
+                                Ok(v) => v,
+                                Err(_) => return,
+                            };
+                            let page = page_arc.as_any().downcast_ref::<Page>().unwrap();
+                            page.trigger_response_event(response).await;
+                        }
+            });
+        }
+    }
 }
 
 impl ChannelOwner for BrowserContext {
@@ -505,6 +563,8 @@ impl ChannelOwner for BrowserContext {
 
     fn on_event(&self, method: &str, params: Value) {
         match method {
+            "request" | "requestFailed" | "requestFinished" => self.dispatch_request_event(method, params),
+            "response" => self.dispatch_response_event(method, params),
             "page" => {
                 // Page events are triggered when pages are created, including:
                 // - Initial page in persistent context with --app mode
