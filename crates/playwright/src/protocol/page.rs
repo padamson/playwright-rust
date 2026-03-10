@@ -1150,44 +1150,52 @@ impl Page {
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
-    where F: Fn(Request) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<()>> + Send + 'static,
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler =
-            Arc::new(move |request: Request| -> RequestHandlerFuture { Box::pin(handler(request)) });
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
         self.request_handlers.lock().unwrap().push(handler);
         Ok(())
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request-finished>
     pub async fn on_request_finished<F, Fut>(&self, handler: F) -> Result<()>
-    where F: Fn(Request) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<()>> + Send + 'static,
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler =
-            Arc::new(move |request: Request| -> RequestHandlerFuture { Box::pin(handler(request)) });
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
         self.request_finished_handlers.lock().unwrap().push(handler);
         Ok(())
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-response>
     pub async fn on_request_failed<F, Fut>(&self, handler: F) -> Result<()>
-    where F: Fn(Request) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<()>> + Send + 'static,
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler =
-            Arc::new(move |request: Request| -> RequestHandlerFuture { Box::pin(handler(request)) });
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
         self.request_failed_handlers.lock().unwrap().push(handler);
         Ok(())
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
     pub async fn on_response<F, Fut>(&self, handler: F) -> Result<()>
-    where F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<()>> + Send + 'static,
+    where
+        F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler =
-            Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture { Box::pin(handler(response)) });
+        let handler = Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture {
+            Box::pin(handler(response))
+        });
         self.response_handlers.lock().unwrap().push(handler);
         Ok(())
     }

@@ -152,10 +152,14 @@ impl Channel {
     }
 
     pub async fn update_subscription(&self, event: &str, enabled: bool) -> Result<()> {
-        self.send_no_result("updateSubscription", serde_json::json!({
-            "event": event,
-            "enabled": enabled,
-        })).await
+        self.send_no_result(
+            "updateSubscription",
+            serde_json::json!({
+                "event": event,
+                "enabled": enabled,
+            }),
+        )
+        .await
     }
 
     /// Returns the GUID this channel represents.

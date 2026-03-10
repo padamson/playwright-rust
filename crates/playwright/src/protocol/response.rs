@@ -47,8 +47,9 @@ impl ResponseObject {
     /// See: <https://playwright.dev/docs/api/class-response#response-status>
     pub fn status(&self) -> u16 {
         self.initializer()
-        .get("status").and_then(|v| v.as_u64())
-        .unwrap_or(0) as u16
+            .get("status")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u16
     }
 
     /// Returns the status text of the response (e.g. usually an "OK" for a success).
@@ -56,8 +57,9 @@ impl ResponseObject {
     /// See: <https://playwright.dev/docs/api/class-response#response-status-text>
     pub fn status_text(&self) -> &str {
         self.initializer()
-        .get("statusText").and_then(|v| v.as_str())
-        .unwrap_or("")
+            .get("statusText")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
     }
 
     /// Returns the URL of the response.
@@ -65,8 +67,9 @@ impl ResponseObject {
     /// See: <https://playwright.dev/docs/api/class-response#response-url>
     pub fn url(&self) -> &str {
         self.initializer()
-        .get("url").and_then(|v| v.as_str())
-        .unwrap_or("")
+            .get("url")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
     }
 }
 

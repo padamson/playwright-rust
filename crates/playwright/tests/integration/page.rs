@@ -651,9 +651,9 @@ async fn test_set_viewport_size_with_responsive_content() {
 #[tokio::test]
 async fn test_page_support_network_events() {
     crate::common::init_tracing();
-    
+
     let server = TestServer::start().await;
-    
+
     let playwright = Playwright::launch()
         .await
         .expect("Failed to launch Playwright");
@@ -672,19 +672,29 @@ async fn test_page_support_network_events() {
     page.on_request(move |request| {
         let events = events2.clone();
         async move {
-            events.lock().await.push(format!("{} {}", request.method(), request.url()));
+            events
+                .lock()
+                .await
+                .push(format!("{} {}", request.method(), request.url()));
             Ok(())
         }
-    }).await.expect("Failed to set request handler");
+    })
+    .await
+    .expect("Failed to set request handler");
 
     let events2 = events.clone();
     page.on_response(move |response| {
         let events = events2.clone();
         async move {
-            events.lock().await.push(format!("{} {}", response.status(), response.url()));
+            events
+                .lock()
+                .await
+                .push(format!("{} {}", response.status(), response.url()));
             Ok(())
         }
-    }).await.expect("Failed to set resposne handler");
+    })
+    .await
+    .expect("Failed to set resposne handler");
 
     let events2 = events.clone();
     page.on_request_finished(move |response| {
@@ -693,7 +703,9 @@ async fn test_page_support_network_events() {
             events.lock().await.push(format!("DONE {}", response.url()));
             Ok(())
         }
-    }).await.expect("Failed to set request finished handler");
+    })
+    .await
+    .expect("Failed to set request finished handler");
 
     let events2 = events.clone();
     page.on_request_failed(move |response| {
@@ -702,10 +714,14 @@ async fn test_page_support_network_events() {
             events.lock().await.push(format!("FAIL {}", response.url()));
             Ok(())
         }
-    }).await.expect("Failed to set request failed handler");
+    })
+    .await
+    .expect("Failed to set request failed handler");
 
-    page.goto(&server.url(), None).await.expect("Failed to navigate");
-    
+    page.goto(&server.url(), None)
+        .await
+        .expect("Failed to navigate");
+
     let events = events.lock().await;
 
     assert_eq!(Some(&format!("GET {}/", server.url())), events.get(0));
