@@ -2,12 +2,7 @@
 //
 // These tests verify that we can create pages and manage them.
 
-use std::sync::Arc;
-
 use playwright_rs::protocol::{Playwright, Viewport};
-use tokio::sync::Mutex;
-
-use crate::test_server::TestServer;
 
 #[tokio::test]
 async fn test_context_new_page() {
