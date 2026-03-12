@@ -27,6 +27,7 @@ mod locator;
 mod navigation;
 mod network_route;
 mod page;
+mod page_event_network;
 mod pause;
 mod playwright_launch;
 mod route_advanced;

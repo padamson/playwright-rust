@@ -44,7 +44,8 @@ impl TestServer {
             .route("/text.html", get(text_page))
             .route("/websocket.html", get(websocket_page))
             .route("/anchors.html", get(anchors_page))
-            .route("/ws", get(ws_handler));
+            .route("/ws", get(ws_handler))
+            .route("/frame.html", get(frame_handler));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -572,6 +573,14 @@ async fn anchors_page() -> Response<Body> {
 
 async fn ws_handler(ws: WebSocketUpgrade) -> impl axum::response::IntoResponse {
     ws.on_upgrade(handle_socket)
+}
+
+async fn frame_handler() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(r#"<iframe src="/button.html"></iframe>"#))
+        .unwrap()
 }
 
 async fn handle_socket(mut socket: WebSocket) {

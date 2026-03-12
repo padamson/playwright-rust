@@ -1157,7 +1157,15 @@ impl Page {
         let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
             Box::pin(handler(request))
         });
-        self.request_handlers.lock().unwrap().push(handler);
+
+        let mut handlers = self.request_handlers.lock().unwrap();
+
+        if handlers.is_empty() {
+            _ = self.channel().update_subscription("request", true).await;
+        }
+
+        handlers.push(handler);
+
         Ok(())
     }
 
@@ -1170,7 +1178,18 @@ impl Page {
         let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
             Box::pin(handler(request))
         });
-        self.request_finished_handlers.lock().unwrap().push(handler);
+
+        let mut handlers = self.request_finished_handlers.lock().unwrap();
+
+        if handlers.is_empty() {
+            _ = self
+                .channel()
+                .update_subscription("requestFinished", true)
+                .await;
+        }
+
+        handlers.push(handler);
+
         Ok(())
     }
 
@@ -1183,7 +1202,18 @@ impl Page {
         let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
             Box::pin(handler(request))
         });
-        self.request_failed_handlers.lock().unwrap().push(handler);
+
+        let mut handlers = self.request_failed_handlers.lock().unwrap();
+
+        if handlers.is_empty() {
+            _ = self
+                .channel()
+                .update_subscription("requestFailed", true)
+                .await;
+        }
+
+        handlers.push(handler);
+
         Ok(())
     }
 
@@ -1196,7 +1226,15 @@ impl Page {
         let handler = Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture {
             Box::pin(handler(response))
         });
-        self.response_handlers.lock().unwrap().push(handler);
+
+        let mut handlers = self.response_handlers.lock().unwrap();
+
+        if handlers.is_empty() {
+            _ = self.channel().update_subscription("response", true).await;
+        }
+
+        handlers.push(handler);
+
         Ok(())
     }
 

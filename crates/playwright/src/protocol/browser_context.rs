@@ -157,10 +157,6 @@ impl BrowserContext {
         let channel = context.channel().clone();
         tokio::spawn(async move {
             _ = channel.update_subscription("dialog", true).await;
-            _ = channel.update_subscription("request", true).await;
-            _ = channel.update_subscription("requestfailed", true).await;
-            _ = channel.update_subscription("requestfinished", true).await;
-            _ = channel.update_subscription("response", true).await;
         });
 
         Ok(context)
