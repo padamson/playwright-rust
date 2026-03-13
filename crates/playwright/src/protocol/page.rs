@@ -1158,13 +1158,11 @@ impl Page {
             Box::pin(handler(request))
         });
 
-        let mut handlers = self.request_handlers.lock().unwrap();
-
-        if handlers.is_empty() {
+        let needs_subscription = self.request_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
             _ = self.channel().update_subscription("request", true).await;
         }
-
-        handlers.push(handler);
+        self.request_handlers.lock().unwrap().push(handler);
 
         Ok(())
     }
@@ -1179,21 +1177,19 @@ impl Page {
             Box::pin(handler(request))
         });
 
-        let mut handlers = self.request_finished_handlers.lock().unwrap();
-
-        if handlers.is_empty() {
+        let needs_subscription = self.request_finished_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
             _ = self
                 .channel()
                 .update_subscription("requestFinished", true)
                 .await;
         }
-
-        handlers.push(handler);
+        self.request_finished_handlers.lock().unwrap().push(handler);
 
         Ok(())
     }
 
-    /// See: <https://playwright.dev/docs/api/class-page#page-event-response>
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-request-failed>
     pub async fn on_request_failed<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -1203,21 +1199,19 @@ impl Page {
             Box::pin(handler(request))
         });
 
-        let mut handlers = self.request_failed_handlers.lock().unwrap();
-
-        if handlers.is_empty() {
+        let needs_subscription = self.request_failed_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
             _ = self
                 .channel()
                 .update_subscription("requestFailed", true)
                 .await;
         }
-
-        handlers.push(handler);
+        self.request_failed_handlers.lock().unwrap().push(handler);
 
         Ok(())
     }
 
-    /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-response>
     pub async fn on_response<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
@@ -1227,13 +1221,11 @@ impl Page {
             Box::pin(handler(response))
         });
 
-        let mut handlers = self.response_handlers.lock().unwrap();
-
-        if handlers.is_empty() {
+        let needs_subscription = self.response_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
             _ = self.channel().update_subscription("response", true).await;
         }
-
-        handlers.push(handler);
+        self.response_handlers.lock().unwrap().push(handler);
 
         Ok(())
     }

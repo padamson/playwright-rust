@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use playwright_rs::protocol::{Playwright, Viewport};
+use playwright_rs::protocol::Playwright;
 use tokio::sync::Mutex;
 
 use crate::test_server::TestServer;
@@ -28,8 +28,6 @@ async fn test_page_support_network_events() {
     let events = Arc::new(Mutex::new(vec![]));
 
     let page = browser.new_page().await.expect("Failed to create page");
-    let page_without_events = browser.new_page().await.expect("Failed to create page");
-
     let events2 = events.clone();
     page.on_request(move |request| {
         let events = events2.clone();
@@ -56,7 +54,7 @@ async fn test_page_support_network_events() {
         }
     })
     .await
-    .expect("Failed to set resposne handler");
+    .expect("Failed to set response handler");
 
     let events2 = events.clone();
     page.on_request_finished(move |response| {
@@ -84,7 +82,8 @@ async fn test_page_support_network_events() {
         .await
         .expect("Failed to navigate");
 
-    let events: &mut Vec<_> = events.lock().await.as_mut();
+    let mut binding = events.lock().await;
+    let events: &mut Vec<_> = binding.as_mut();
 
     // Since events are dispatched via `tokio::spawn`, we cannot guarantee the order of events.
     // So we sort them before asserting.
@@ -94,9 +93,9 @@ async fn test_page_support_network_events() {
     events.sort();
 
     assert_eq!(events.len(), 3);
-    assert_eq!(Some(&format!("GET {}/", server.url())), events.get(0));
-    assert_eq!(Some(&format!("200 {}/", server.url())), events.get(1));
-    assert_eq!(Some(&format!("DONE {}/", server.url())), events.get(2));
+    assert_eq!(Some(&format!("200 {}/", server.url())), events.first());
+    assert_eq!(Some(&format!("DONE {}/", server.url())), events.get(1));
+    assert_eq!(Some(&format!("GET {}/", server.url())), events.get(2));
 
     browser.close().await.expect("Failed to close browser");
 
@@ -152,7 +151,8 @@ async fn test_for_iframes() {
         .await
         .expect("Failed to navigate");
 
-    let events: &mut Vec<_> = events.lock().await.as_mut();
+    let mut binding = events.lock().await;
+    let events: &mut Vec<_> = binding.as_mut();
 
     // Since events are dispatched via `tokio::spawn`, we cannot guarantee the order of events.
     // So we sort them before asserting.
@@ -175,4 +175,54 @@ async fn test_for_iframes() {
     browser.close().await.expect("Failed to close browser");
 
     server.shutdown();
+}
+
+#[tokio::test]
+async fn test_request_failed_event() {
+    crate::common::init_tracing();
+
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let events = Arc::new(Mutex::new(vec![]));
+
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    let events2 = events.clone();
+    page.on_request_failed(move |request| {
+        let events = events2.clone();
+        async move {
+            events
+                .lock()
+                .await
+                .push(format!("FAIL {} {}", request.method(), request.url()));
+            Ok(())
+        }
+    })
+    .await
+    .expect("Failed to set request failed handler");
+
+    // Navigate to a non-routable address to trigger a request failure
+    let result = page.goto("http://localhost:1", None).await;
+    assert!(result.is_err(), "Navigation to bad port should fail");
+
+    let events = events.lock().await;
+    assert!(
+        !events.is_empty(),
+        "Should have received at least one requestFailed event"
+    );
+    assert!(
+        events[0].starts_with("FAIL GET"),
+        "Failed event should contain method: {}",
+        events[0]
+    );
+
+    browser.close().await.expect("Failed to close browser");
 }

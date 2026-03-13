@@ -465,7 +465,7 @@ impl BrowserContext {
                 .get("page")
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
-                .and_then(|v| Some(v.to_owned()));
+                .map(|v| v.to_owned());
             let method = method.to_owned();
             tokio::spawn(async move {
                 let request_arc = match connection.get_object(&request_guid_owned).await {
@@ -507,7 +507,7 @@ impl BrowserContext {
                 .get("page")
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
-                .and_then(|v| Some(v.to_owned()));
+                .map(|v| v.to_owned());
             tokio::spawn(async move {
                 let response_arc = match connection.get_object(&response_guid_owned).await {
                     Ok(obj) => obj,
