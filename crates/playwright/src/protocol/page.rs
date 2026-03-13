@@ -4,7 +4,7 @@
 // Pages are isolated tabs or windows within a context.
 
 use crate::error::{Error, Result};
-use crate::protocol::{Dialog, Download, Route, WebSocket};
+use crate::protocol::{Dialog, Download, Request, ResponseObject, Route, WebSocket};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use base64::Engine;
@@ -159,6 +159,14 @@ pub struct Page {
     download_handlers: Arc<Mutex<Vec<DownloadHandler>>>,
     /// Dialog event handlers
     dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
+    /// Request event handlers
+    request_handlers: Arc<Mutex<Vec<RequestHandler>>>,
+    /// Request finished event handlers
+    request_finished_handlers: Arc<Mutex<Vec<RequestHandler>>>,
+    /// Request failed event handlers
+    request_failed_handlers: Arc<Mutex<Vec<RequestHandler>>>,
+    /// Response event handlers
+    response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
     /// WebSocket event handlers
     websocket_handlers: Arc<Mutex<Vec<WebSocketHandler>>>,
 }
@@ -171,6 +179,12 @@ type DownloadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// Type alias for boxed dialog handler future
 type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed request handler future
+type RequestHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed response handler future
+type ResponseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// Type alias for boxed websocket handler future
 type WebSocketHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -187,6 +201,12 @@ type DownloadHandler = Arc<dyn Fn(Download) -> DownloadHandlerFuture + Send + Sy
 
 /// Dialog event handler
 type DialogHandler = Arc<dyn Fn(Dialog) -> DialogHandlerFuture + Send + Sync>;
+
+/// Request event handler
+type RequestHandler = Arc<dyn Fn(Request) -> RequestHandlerFuture + Send + Sync>;
+
+/// Response event handler
+type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Send + Sync>;
 
 /// WebSocket event handler
 type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
@@ -250,6 +270,10 @@ impl Page {
             route_handlers,
             download_handlers,
             dialog_handlers,
+            request_handlers: Default::default(),
+            request_finished_handlers: Default::default(),
+            request_failed_handlers: Default::default(),
+            response_handlers: Default::default(),
             websocket_handlers,
         })
     }
@@ -1124,6 +1148,88 @@ impl Page {
         Ok(())
     }
 
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
+    pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
+
+        let needs_subscription = self.request_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("request", true).await;
+        }
+        self.request_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-request-finished>
+    pub async fn on_request_finished<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
+
+        let needs_subscription = self.request_finished_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self
+                .channel()
+                .update_subscription("requestFinished", true)
+                .await;
+        }
+        self.request_finished_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-request-failed>
+    pub async fn on_request_failed<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
+
+        let needs_subscription = self.request_failed_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self
+                .channel()
+                .update_subscription("requestFailed", true)
+                .await;
+        }
+        self.request_failed_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-response>
+    pub async fn on_response<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture {
+            Box::pin(handler(response))
+        });
+
+        let needs_subscription = self.response_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("response", true).await;
+        }
+        self.response_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
     /// Adds a listener for the `websocket` event.
     ///
     /// The handler will be called when a WebSocket request is dispatched.
@@ -1166,12 +1272,70 @@ impl Page {
         }
     }
 
+    async fn on_request_event(&self, request: Request) {
+        let handlers = self.request_handlers.lock().unwrap().clone();
+
+        for handler in handlers {
+            if let Err(e) = handler(request.clone()).await {
+                tracing::warn!("Request handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_request_failed_event(&self, request: Request) {
+        let handlers = self.request_failed_handlers.lock().unwrap().clone();
+
+        for handler in handlers {
+            if let Err(e) = handler(request.clone()).await {
+                tracing::warn!("RequestFailed handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_request_finished_event(&self, request: Request) {
+        let handlers = self.request_finished_handlers.lock().unwrap().clone();
+
+        for handler in handlers {
+            if let Err(e) = handler(request.clone()).await {
+                tracing::warn!("RequestFinished handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_response_event(&self, response: ResponseObject) {
+        let handlers = self.response_handlers.lock().unwrap().clone();
+
+        for handler in handlers {
+            if let Err(e) = handler(response.clone()).await {
+                tracing::warn!("Response handler error: {}", e);
+            }
+        }
+    }
+
     /// Triggers dialog event (called by BrowserContext when dialog events arrive)
     ///
     /// Dialog events are sent to BrowserContext and forwarded to the associated Page.
     /// This method is public so BrowserContext can forward dialog events.
     pub async fn trigger_dialog_event(&self, dialog: Dialog) {
         self.on_dialog_event(dialog).await;
+    }
+
+    /// Triggers request event (called by BrowserContext when request events arrive)
+    pub(crate) async fn trigger_request_event(&self, request: Request) {
+        self.on_request_event(request).await;
+    }
+
+    pub(crate) async fn trigger_request_finished_event(&self, request: Request) {
+        self.on_request_finished_event(request).await;
+    }
+
+    pub(crate) async fn trigger_request_failed_event(&self, request: Request) {
+        self.on_request_failed_event(request).await;
+    }
+
+    /// Triggers response event (called by BrowserContext when response events arrive)
+    pub(crate) async fn trigger_response_event(&self, response: ResponseObject) {
+        self.on_response_event(response).await;
     }
 
     /// Adds a `<style>` tag into the page with the desired content.

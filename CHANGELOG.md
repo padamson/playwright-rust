@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `IgnoreDefaultArgs::Array(vec)` - Filters out specific default arguments
   - Applies same `ignoreDefaultArgs` → `ignoreAllDefaultArgs` protocol normalization as `LaunchOptions`
   - Matches Playwright's official `launchPersistentContext` API
+- **Page network event listeners** - Subscribe to network events on individual pages (PR #37)
+  - `page.on_request(handler)` - Fires when a request is issued
+  - `page.on_response(handler)` - Fires when a response is received
+  - `page.on_request_finished(handler)` - Fires when a request completes successfully
+  - `page.on_request_failed(handler)` - Fires when a request fails
+  - Lazy subscription: events are only subscribed when a handler is registered
+  - Works with iframes and sub-resources
+- **Response accessor methods** - `response.status()`, `response.status_text()`, `response.url()` (PR #37)
 
 ## [0.8.4] - 2026-03-01
 

@@ -41,6 +41,36 @@ impl ResponseObject {
 
         Ok(Self { base })
     }
+
+    /// Returns the status code of the response (e.g., 200 for a success).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-status>
+    pub fn status(&self) -> u16 {
+        self.initializer()
+            .get("status")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u16
+    }
+
+    /// Returns the status text of the response (e.g. usually an "OK" for a success).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-status-text>
+    pub fn status_text(&self) -> &str {
+        self.initializer()
+            .get("statusText")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+    }
+
+    /// Returns the URL of the response.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-url>
+    pub fn url(&self) -> &str {
+        self.initializer()
+            .get("url")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+    }
 }
 
 impl ChannelOwner for ResponseObject {
