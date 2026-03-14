@@ -105,6 +105,31 @@ async fn test_page_navigation_methods() {
     assert_eq!(page.url(), "https://example.com/");
     tracing::info!("✓ Page reload with options successful");
 
+    // Test 7: Navigate to second page, then go_back
+    page.goto("https://www.rust-lang.org", None)
+        .await
+        .expect("Failed to navigate to rust-lang.org");
+    assert_eq!(page.url(), "https://rust-lang.org/");
+
+    let response = page
+        .go_back(None)
+        .await
+        .expect("Failed to go back")
+        .expect("Expected a response when going back");
+    assert_eq!(response.status(), 200);
+    assert_eq!(page.url(), "https://example.com/");
+    tracing::info!("✓ go_back() navigated to previous page");
+
+    // Test 8: go_forward to return
+    let response = page
+        .go_forward(None)
+        .await
+        .expect("Failed to go forward")
+        .expect("Expected a response when going forward");
+    assert_eq!(response.status(), 200);
+    assert_eq!(page.url(), "https://rust-lang.org/");
+    tracing::info!("✓ go_forward() navigated to next page");
+
     // Cleanup
     page.close().await.expect("Failed to close page");
     browser.close().await.expect("Failed to close browser");
@@ -630,6 +655,47 @@ async fn test_url_hash_cross_browser() {
     }
 
     server.shutdown();
+}
+
+// ============================================================================
+// History Navigation Edge Cases
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_go_back_no_history() {
+    crate::common::init_tracing();
+
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    // go_back on fresh page should return None
+    let result = page.go_back(None).await.expect("go_back should not error");
+    assert!(result.is_none(), "Expected None when no history to go back");
+    tracing::info!("✓ go_back() returns None on fresh page");
+
+    // go_forward on fresh page should return None
+    let result = page
+        .go_forward(None)
+        .await
+        .expect("go_forward should not error");
+    assert!(
+        result.is_none(),
+        "Expected None when no history to go forward"
+    );
+    tracing::info!("✓ go_forward() returns None on fresh page");
+
+    // Cleanup
+    page.close().await.expect("Failed to close page");
+    browser.close().await.expect("Failed to close browser");
 }
 
 /// Test that workaround using evaluate_value still works

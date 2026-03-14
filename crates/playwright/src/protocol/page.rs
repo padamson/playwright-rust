@@ -758,7 +758,35 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-reload>
     pub async fn reload(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
-        // Build params
+        self.navigate_history("reload", options).await
+    }
+
+    /// Navigates to the previous page in history.
+    ///
+    /// Returns the main resource response. In case of multiple server redirects, the navigation
+    /// will resolve with the response of the last redirect. If can not go back, returns `None`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-go-back>
+    pub async fn go_back(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
+        self.navigate_history("goBack", options).await
+    }
+
+    /// Navigates to the next page in history.
+    ///
+    /// Returns the main resource response. In case of multiple server redirects, the navigation
+    /// will resolve with the response of the last redirect. If can not go forward, returns `None`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-go-forward>
+    pub async fn go_forward(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
+        self.navigate_history("goForward", options).await
+    }
+
+    /// Shared implementation for go_back and go_forward.
+    async fn navigate_history(
+        &self,
+        method: &str,
+        options: Option<GotoOptions>,
+    ) -> Result<Option<Response>> {
         let mut params = serde_json::json!({});
 
         if let Some(opts) = options {
@@ -774,9 +802,8 @@ impl Page {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
         }
 
-        // Send reload RPC directly to Page (not Frame!)
         #[derive(Deserialize)]
-        struct ReloadResponse {
+        struct NavigationResponse {
             response: Option<ResponseReference>,
         }
 
@@ -786,11 +813,9 @@ impl Page {
             guid: Arc<str>,
         }
 
-        let reload_result: ReloadResponse = self.channel().send("reload", params).await?;
+        let result: NavigationResponse = self.channel().send(method, params).await?;
 
-        // If reload returned a response, get the Response object
-        if let Some(response_ref) = reload_result.response {
-            // Wait for Response object to be created
+        if let Some(response_ref) = result.response {
             let response_arc = {
                 let mut attempts = 0;
                 let max_attempts = 20;
@@ -806,7 +831,6 @@ impl Page {
                 }
             };
 
-            // Extract response data from initializer
             let initializer = response_arc.initializer();
 
             let status = initializer["status"].as_u64().ok_or_else(|| {
@@ -839,15 +863,12 @@ impl Page {
                 headers,
             };
 
-            // Update the page's URL
             if let Ok(mut page_url) = self.url.write() {
                 *page_url = response.url().to_string();
             }
 
             Ok(Some(response))
         } else {
-            // Reload returned null (e.g., data URLs, about:blank)
-            // This is a valid result, not an error
             Ok(None)
         }
     }
