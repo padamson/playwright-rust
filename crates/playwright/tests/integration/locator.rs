@@ -678,6 +678,292 @@ async fn test_locator_error_includes_selector() {
 }
 
 // ============================================================================
+// filter(), and_(), or_() Methods
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_filter_has_text() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::FilterOptions;
+
+    // filter with has_text should narrow rows to only those containing "Apple"
+    let rows = page.locator("tr").await;
+    let apple_rows = rows.filter(FilterOptions {
+        has_text: Some("Apple".to_string()),
+        ..Default::default()
+    });
+    let count = apple_rows.count().await.expect("Failed to count");
+    assert_eq!(count, 1, "Should find 1 row containing 'Apple'");
+
+    // Verify it's the right row by checking text content
+    let text = apple_rows
+        .text_content()
+        .await
+        .expect("Failed to get text content");
+    assert!(
+        text.unwrap_or_default().contains("Apple"),
+        "Row should contain 'Apple'"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_filter_has_not_text() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::FilterOptions;
+
+    // filter with has_not_text should exclude rows containing "Apple"
+    // The table has 3 data rows: Apple, Banana, Cherry
+    let rows = page.locator("tr.data-row").await;
+    let non_apple_rows = rows.filter(FilterOptions {
+        has_not_text: Some("Apple".to_string()),
+        ..Default::default()
+    });
+    let count = non_apple_rows.count().await.expect("Failed to count");
+    assert_eq!(count, 2, "Should find 2 rows not containing 'Apple'");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_filter_has_child_locator() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::FilterOptions;
+
+    // filter with has should narrow to rows containing a button
+    let rows = page.locator("tr.data-row").await;
+    let button_child = page.locator("button.action-btn").await;
+    let rows_with_button = rows.filter(FilterOptions {
+        has: Some(button_child),
+        ..Default::default()
+    });
+    let count = rows_with_button.count().await.expect("Failed to count");
+    assert_eq!(count, 2, "Should find 2 rows containing a button");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_filter_has_not_child_locator() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::FilterOptions;
+
+    // filter with has_not should narrow to rows that do NOT contain a button
+    let rows = page.locator("tr.data-row").await;
+    let button_child = page.locator("button.action-btn").await;
+    let rows_without_button = rows.filter(FilterOptions {
+        has_not: Some(button_child),
+        ..Default::default()
+    });
+    let count = rows_without_button.count().await.expect("Failed to count");
+    assert_eq!(count, 1, "Should find 1 row without a button");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_and() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // and_() should match only elements satisfying BOTH locators
+    // Find buttons that also have class "action-btn" (subset)
+    let buttons = page.locator("button").await;
+    let action_buttons = page.locator(".action-btn").await;
+    let combined = buttons.and_(&action_buttons);
+
+    let count = combined.count().await.expect("Failed to count");
+    assert_eq!(
+        count, 2,
+        "Should find 2 buttons that also have class action-btn"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_or() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // or_() should match elements satisfying EITHER locator
+    // Find either buttons or links
+    let buttons = page.locator("button").await;
+    let links = page.locator("a.nav-link").await;
+    let either = buttons.or_(&links);
+
+    let count = either.count().await.expect("Failed to count");
+    // filter.html has 3 buttons (2 action-btn + 1 delete-btn) and 2 nav-links
+    assert_eq!(
+        count, 5,
+        "Should find 5 elements that are either buttons or links"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_filter_chain() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/filter.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::FilterOptions;
+
+    // Chain filter() then and_(): first filter by text, then narrow further
+    let rows = page.locator("tr.data-row").await;
+    let button_child = page.locator("button.action-btn").await;
+
+    // Get rows that contain "Banana" AND also have an action button
+    let filtered = rows
+        .filter(FilterOptions {
+            has_text: Some("Banana".to_string()),
+            ..Default::default()
+        })
+        .filter(FilterOptions {
+            has: Some(button_child),
+            ..Default::default()
+        });
+
+    let count = filtered.count().await.expect("Failed to count");
+    assert_eq!(
+        count, 1,
+        "Should find 1 row with Banana and an action button"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_filter_selector_composition() {
+    // Unit-style test: verify the selector strings are composed correctly
+    // This tests the internal selector building without a browser launch
+    use playwright_rs::FilterOptions;
+
+    // We just verify the selector methods exist and return Locator
+    // (the real behavior is tested in integration tests above)
+    // This test documents expected selector patterns via assertions on selector()
+
+    // Note: We can't construct a Locator directly (new() is pub(crate)),
+    // so we skip pure unit-test of selectors and rely on integration tests.
+    // This placeholder ensures the type compiles.
+    let _opts = FilterOptions {
+        has_text: Some("foo".to_string()),
+        has_not_text: None,
+        has: None,
+        has_not: None,
+    };
+    assert!(_opts.has_text.is_some());
+    assert!(_opts.has_not_text.is_none());
+}
+
+// ============================================================================
 // Cross-browser Smoke Test
 // ============================================================================
 

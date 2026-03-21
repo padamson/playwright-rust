@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **TLS backend features** — Expose `native-tls`, `rustls-tls-native-roots`, and `rustls-tls-webpki-roots` features for choosing TLS implementation (PR #41). Defaults to `native-tls`.
+- **Locator filtering & composition** — `filter()`, `and_()`, `or_()` methods for narrowing and combining locators
+  - `filter(FilterOptions)` — narrow by `has_text`, `has_not_text`, `has` (child locator), `has_not`
+  - `and_(locator)` — match elements satisfying both locators
+  - `or_(locator)` — match elements satisfying either locator
 
 ### Fixed
 

@@ -44,6 +44,7 @@ impl TestServer {
             .route("/text.html", get(text_page))
             .route("/websocket.html", get(websocket_page))
             .route("/anchors.html", get(anchors_page))
+            .route("/filter.html", get(filter_page))
             .route("/ws", get(ws_handler))
             .route("/frame.html", get(frame_handler));
 
@@ -567,6 +568,51 @@ async fn anchors_page() -> Response<Body> {
   </section>
 </body>
 </html>",
+        ))
+        .unwrap()
+}
+
+async fn filter_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>Filter Test</title></head>
+<body>
+  <nav>
+    <a class="nav-link" href="/home">Home</a>
+    <a class="nav-link" href="/about">About</a>
+  </nav>
+  <table>
+    <thead>
+      <tr><th>Fruit</th><th>Price</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <!-- Row 1: Apple with action button -->
+      <tr class="data-row">
+        <td>Apple</td>
+        <td>$1.00</td>
+        <td><button class="action-btn">Buy</button></td>
+      </tr>
+      <!-- Row 2: Banana with action button -->
+      <tr class="data-row">
+        <td>Banana</td>
+        <td>$0.50</td>
+        <td><button class="action-btn">Buy</button></td>
+      </tr>
+      <!-- Row 3: Cherry without action button (out of stock) -->
+      <tr class="data-row">
+        <td>Cherry</td>
+        <td>$2.00</td>
+        <td><span class="out-of-stock">Out of stock</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <button class="delete-btn">Delete All</button>
+</body>
+</html>"#,
         ))
         .unwrap()
 }

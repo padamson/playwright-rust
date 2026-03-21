@@ -347,6 +347,27 @@ pub struct GetByRoleOptions {
     pub pressed: Option<bool>,
 }
 
+/// Options for [`Locator::filter()`].
+///
+/// Narrows an existing locator according to the specified criteria.
+/// All fields are optional; unset fields are ignored.
+///
+/// See: <https://playwright.dev/docs/api/class-locator#locator-filter>
+#[derive(Debug, Clone, Default)]
+pub struct FilterOptions {
+    /// Matches elements containing the specified text (case-insensitive substring by default).
+    pub has_text: Option<String>,
+    /// Matches elements that do **not** contain the specified text anywhere inside.
+    pub has_not_text: Option<String>,
+    /// Narrows to elements that contain a descendant matching this locator.
+    ///
+    /// The inner locator is queried relative to the outer locator's matched element,
+    /// not the document root.
+    pub has: Option<Locator>,
+    /// Narrows to elements that do **not** contain a descendant matching this locator.
+    pub has_not: Option<Locator>,
+}
+
 /// Locator represents a way to find element(s) on the page at any given moment.
 ///
 /// Locators are lazy - they don't execute queries until an action is performed.
@@ -577,6 +598,129 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> {}", self.selector, selector),
+        )
+    }
+
+    /// Narrows this locator according to the filter options.
+    ///
+    /// Can be chained to apply multiple filters in sequence.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::{Playwright, FilterOptions};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// // Filter rows to those containing "Apple"
+    /// let rows = page.locator("tr").await;
+    /// let apple_row = rows.filter(FilterOptions {
+    ///     has_text: Some("Apple".to_string()),
+    ///     ..Default::default()
+    /// });
+    /// # browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-filter>
+    pub fn filter(&self, options: FilterOptions) -> Locator {
+        let mut selector = self.selector.clone();
+
+        if let Some(text) = &options.has_text {
+            let escaped = escape_for_selector(text, false);
+            selector = format!("{} >> internal:has-text={}", selector, escaped);
+        }
+
+        if let Some(text) = &options.has_not_text {
+            let escaped = escape_for_selector(text, false);
+            selector = format!("{} >> internal:has-not-text={}", selector, escaped);
+        }
+
+        if let Some(locator) = &options.has {
+            let inner = serde_json::to_string(&locator.selector)
+                .unwrap_or_else(|_| format!("\"{}\"", locator.selector));
+            selector = format!("{} >> internal:has={}", selector, inner);
+        }
+
+        if let Some(locator) = &options.has_not {
+            let inner = serde_json::to_string(&locator.selector)
+                .unwrap_or_else(|_| format!("\"{}\"", locator.selector));
+            selector = format!("{} >> internal:has-not={}", selector, inner);
+        }
+
+        Locator::new(Arc::clone(&self.frame), selector)
+    }
+
+    /// Creates a locator matching elements that satisfy **both** this locator and `locator`.
+    ///
+    /// Note: named `and_` because `and` is a Rust keyword.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::Playwright;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// // Find a button that also has a specific title
+    /// let button = page.locator("button").await;
+    /// let titled = page.locator("[title='Subscribe']").await;
+    /// let subscribe_btn = button.and_(&titled);
+    /// # browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-and>
+    pub fn and_(&self, locator: &Locator) -> Locator {
+        let inner = serde_json::to_string(&locator.selector)
+            .unwrap_or_else(|_| format!("\"{}\"", locator.selector));
+        Locator::new(
+            Arc::clone(&self.frame),
+            format!("{} >> internal:and={}", self.selector, inner),
+        )
+    }
+
+    /// Creates a locator matching elements that satisfy **either** this locator or `locator`.
+    ///
+    /// Note: named `or_` because `or` is a Rust keyword.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::Playwright;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// // Find any element that is either a button or a link
+    /// let buttons = page.locator("button").await;
+    /// let links = page.locator("a").await;
+    /// let interactive = buttons.or_(&links);
+    /// # browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-or>
+    pub fn or_(&self, locator: &Locator) -> Locator {
+        let inner = serde_json::to_string(&locator.selector)
+            .unwrap_or_else(|_| format!("\"{}\"", locator.selector));
+        Locator::new(
+            Arc::clone(&self.frame),
+            format!("{} >> internal:or={}", self.selector, inner),
         )
     }
 

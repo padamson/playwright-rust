@@ -192,7 +192,7 @@ pub use assertions::{
 pub use protocol::{Browser, BrowserContext, BrowserType, Page, Playwright, Response};
 
 // Re-export Locator and element APIs
-pub use protocol::{AriaRole, ElementHandle, GetByRoleOptions, Locator};
+pub use protocol::{AriaRole, ElementHandle, FilterOptions, GetByRoleOptions, Locator};
 
 // Re-export navigation and page options
 pub use protocol::{GotoOptions, WaitUntil};
