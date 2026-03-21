@@ -18,6 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `focus()` / `blur()` — set or remove keyboard focus on an element
   - `press_sequentially(text, options)` — type characters one by one with optional delay
   - `all_inner_texts()` / `all_text_contents()` — bulk text retrieval from all matching elements
+- **BrowserContext runtime setters** — configure context after creation
+  - `cookies(urls)` — retrieve cookies, optionally filtered by URL
+  - `clear_cookies(options)` — remove cookies with optional name/domain/path filters
+  - `set_extra_http_headers(headers)` — add HTTP headers to all requests
+  - `grant_permissions(permissions, options)` — grant browser permissions (geolocation, camera, etc.)
+  - `clear_permissions()` — revoke all granted permissions
+  - `set_geolocation(geolocation)` — override device geolocation, or pass None to clear
+  - `set_offline(offline)` — toggle offline mode
+- **Page methods** — `bring_to_front()`, `viewport_size()`
+  - `bring_to_front()` — activate the page tab
+  - `viewport_size()` — get current viewport dimensions (returns None if no_viewport context)
 
 ### Fixed
 

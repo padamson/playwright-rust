@@ -50,8 +50,9 @@ pub use android::Android;
 pub use api_request_context::APIRequestContext;
 pub use browser::Browser;
 pub use browser_context::{
-    BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, Cookie, Geolocation,
-    LocalStorageItem, Origin, RecordHar, RecordVideo, StorageState, Viewport,
+    BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, ClearCookiesOptions,
+    Cookie, Geolocation, GrantPermissionsOptions, LocalStorageItem, Origin, RecordHar, RecordVideo,
+    StorageState, Viewport,
 };
 pub use browser_type::BrowserType;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};

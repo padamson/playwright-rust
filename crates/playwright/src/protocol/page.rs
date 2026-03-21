@@ -4,6 +4,7 @@
 // Pages are isolated tabs or windows within a context.
 
 use crate::error::{Error, Result};
+use crate::protocol::browser_context::Viewport;
 use crate::protocol::{Dialog, Download, Request, ResponseObject, Route, WebSocket};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
@@ -169,6 +170,9 @@ pub struct Page {
     response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
     /// WebSocket event handlers
     websocket_handlers: Arc<Mutex<Vec<WebSocketHandler>>>,
+    /// Current viewport size (None when no_viewport is set).
+    /// Updated by set_viewport_size().
+    viewport: Arc<RwLock<Option<Viewport>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -262,6 +266,17 @@ impl Page {
         // Initialize cached main frame as empty (will be populated on first access)
         let cached_main_frame = Arc::new(Mutex::new(None));
 
+        // Extract viewport from initializer (may be null for no_viewport contexts)
+        let initial_viewport: Option<Viewport> =
+            base.initializer().get("viewportSize").and_then(|v| {
+                if v.is_null() {
+                    None
+                } else {
+                    serde_json::from_value(v.clone()).ok()
+                }
+            });
+        let viewport = Arc::new(RwLock::new(initial_viewport));
+
         Ok(Self {
             base,
             url,
@@ -275,6 +290,7 @@ impl Page {
             request_failed_handlers: Default::default(),
             response_handlers: Default::default(),
             websocket_handlers,
+            viewport,
         })
     }
 
@@ -1517,12 +1533,64 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-viewport-size>
     pub async fn set_viewport_size(&self, viewport: crate::protocol::Viewport) -> Result<()> {
+        // Store the new viewport locally so viewport_size() can reflect the change
+        if let Ok(mut guard) = self.viewport.write() {
+            *guard = Some(viewport.clone());
+        }
         self.channel()
             .send_no_result(
                 "setViewportSize",
                 serde_json::json!({ "viewportSize": viewport }),
             )
             .await
+    }
+
+    /// Brings this page to the front (activates the tab).
+    ///
+    /// Activates the page in the browser, making it the focused tab. This is
+    /// useful in multi-page tests to ensure actions target the correct page.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Page has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-bring-to-front>
+    pub async fn bring_to_front(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("bringToFront", serde_json::json!({}))
+            .await
+    }
+
+    /// Returns the current viewport size of the page, or `None` if no viewport is set.
+    ///
+    /// Returns `None` when the context was created with `no_viewport: true`. Otherwise
+    /// returns the dimensions configured at context creation time or updated via
+    /// `set_viewport_size()`.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::protocol::{Playwright, BrowserContextOptions, Viewport};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// let context = browser.new_context_with_options(
+    ///     BrowserContextOptions::builder().viewport(Viewport { width: 1280, height: 720 }).build()
+    /// ).await?;
+    /// let page = context.new_page().await?;
+    /// let size = page.viewport_size().expect("Viewport should be set");
+    /// assert_eq!(size.width, 1280);
+    /// assert_eq!(size.height, 720);
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-viewport-size>
+    pub fn viewport_size(&self) -> Option<Viewport> {
+        self.viewport.read().ok()?.clone()
     }
 }
 

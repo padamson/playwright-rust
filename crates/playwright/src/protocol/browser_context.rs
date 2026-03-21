@@ -361,6 +361,197 @@ impl BrowserContext {
             .await
     }
 
+    /// Returns cookies for this browser context, optionally filtered by URLs.
+    ///
+    /// If `urls` is `None` or empty, all cookies are returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `urls` - Optional list of URLs to filter cookies by
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-cookies>
+    pub async fn cookies(&self, urls: Option<&[&str]>) -> Result<Vec<Cookie>> {
+        let url_list: Vec<&str> = urls.unwrap_or(&[]).to_vec();
+        #[derive(serde::Deserialize)]
+        struct CookiesResponse {
+            cookies: Vec<Cookie>,
+        }
+        let response: CookiesResponse = self
+            .channel()
+            .send("cookies", serde_json::json!({ "urls": url_list }))
+            .await?;
+        Ok(response.cookies)
+    }
+
+    /// Clears cookies from this browser context, with optional filters.
+    ///
+    /// When called with no options, all cookies are removed. Use `ClearCookiesOptions`
+    /// to filter which cookies to clear by name, domain, or path.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional filters for which cookies to clear
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-cookies>
+    pub async fn clear_cookies(&self, options: Option<ClearCookiesOptions>) -> Result<()> {
+        let params = match options {
+            None => serde_json::json!({}),
+            Some(opts) => serde_json::to_value(opts).unwrap_or(serde_json::json!({})),
+        };
+        self.channel().send_no_result("clearCookies", params).await
+    }
+
+    /// Sets extra HTTP headers that will be sent with every request from this context.
+    ///
+    /// These headers are merged with per-page extra headers set with `page.set_extra_http_headers()`.
+    /// If the page has specific headers that conflict, page-level headers take precedence.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - Map of header names to values. All header names are lowercased.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-extra-http-headers>
+    pub async fn set_extra_http_headers(&self, headers: HashMap<String, String>) -> Result<()> {
+        // Playwright protocol expects an array of {name, value} objects
+        let headers_array: Vec<serde_json::Value> = headers
+            .into_iter()
+            .map(|(name, value)| serde_json::json!({ "name": name, "value": value }))
+            .collect();
+        self.channel()
+            .send_no_result(
+                "setExtraHTTPHeaders",
+                serde_json::json!({ "headers": headers_array }),
+            )
+            .await
+    }
+
+    /// Grants browser permissions to the context.
+    ///
+    /// Permissions are granted for all pages in the context. The optional `origin`
+    /// in `GrantPermissionsOptions` restricts the grant to a specific URL origin.
+    ///
+    /// Common permissions: `"geolocation"`, `"notifications"`, `"camera"`,
+    /// `"microphone"`, `"clipboard-read"`, `"clipboard-write"`.
+    ///
+    /// # Arguments
+    ///
+    /// * `permissions` - List of permission strings to grant
+    /// * `options` - Optional options, including `origin` to restrict the grant
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Permission name is not recognised
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-grant-permissions>
+    pub async fn grant_permissions(
+        &self,
+        permissions: &[&str],
+        options: Option<GrantPermissionsOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({ "permissions": permissions });
+        if let Some(opts) = options {
+            if let Some(origin) = opts.origin {
+                params["origin"] = serde_json::Value::String(origin);
+            }
+        }
+        self.channel()
+            .send_no_result("grantPermissions", params)
+            .await
+    }
+
+    /// Clears all permission overrides for this browser context.
+    ///
+    /// Reverts all permissions previously set with `grant_permissions()` back to
+    /// the browser default state.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-permissions>
+    pub async fn clear_permissions(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("clearPermissions", serde_json::json!({}))
+            .await
+    }
+
+    /// Sets or clears the geolocation for all pages in this context.
+    ///
+    /// Pass `Some(Geolocation { ... })` to set a specific location, or `None` to
+    /// clear the override and let the browser handle location requests naturally.
+    ///
+    /// Note: Geolocation access requires the `"geolocation"` permission to be granted
+    /// via `grant_permissions()` for navigator.geolocation to succeed.
+    ///
+    /// # Arguments
+    ///
+    /// * `geolocation` - Location to set, or `None` to clear
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Latitude or longitude is out of range
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-geolocation>
+    pub async fn set_geolocation(&self, geolocation: Option<Geolocation>) -> Result<()> {
+        // Playwright protocol: omit the "geolocation" key entirely to clear;
+        // passing null causes a validation error on the server side.
+        let params = match geolocation {
+            Some(geo) => serde_json::json!({ "geolocation": geo }),
+            None => serde_json::json!({}),
+        };
+        self.channel()
+            .send_no_result("setGeolocation", params)
+            .await
+    }
+
+    /// Toggles the offline mode for this browser context.
+    ///
+    /// When `true`, all network requests from pages in this context will fail with
+    /// a network error. Set to `false` to restore network connectivity.
+    ///
+    /// # Arguments
+    ///
+    /// * `offline` - `true` to go offline, `false` to go back online
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-offline>
+    pub async fn set_offline(&self, offline: bool) -> Result<()> {
+        self.channel()
+            .send_no_result("setOffline", serde_json::json!({ "offline": offline }))
+            .await
+    }
+
     /// Registers a route handler for context-level network interception.
     ///
     /// Routes registered on a context apply to all pages within the context.
@@ -814,6 +1005,36 @@ pub struct StorageState {
     pub cookies: Vec<Cookie>,
     /// List of origins with local storage
     pub origins: Vec<Origin>,
+}
+
+/// Options for filtering which cookies to clear with `BrowserContext::clear_cookies()`.
+///
+/// All fields are optional; when provided they act as AND-combined filters.
+///
+/// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-cookies>
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClearCookiesOptions {
+    /// Filter by cookie name (exact match).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Filter by cookie domain.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub domain: Option<String>,
+    /// Filter by cookie path.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+}
+
+/// Options for `BrowserContext::grant_permissions()`.
+///
+/// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-grant-permissions>
+#[derive(Debug, Clone, Default)]
+pub struct GrantPermissionsOptions {
+    /// Optional origin to restrict the permission grant to.
+    ///
+    /// For example `"https://example.com"`.
+    pub origin: Option<String>,
 }
 
 /// Options for recording HAR.

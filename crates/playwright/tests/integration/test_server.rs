@@ -11,7 +11,7 @@ use axum::{
     Router,
     body::Body,
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
-    http::{Response, StatusCode},
+    http::{HeaderMap, Response, StatusCode},
     routing::get,
 };
 use std::net::SocketAddr;
@@ -48,7 +48,8 @@ impl TestServer {
             .route("/ws", get(ws_handler))
             .route("/frame.html", get(frame_handler))
             .route("/focus_blur.html", get(focus_blur_page))
-            .route("/all_texts.html", get(all_texts_page));
+            .route("/all_texts.html", get(all_texts_page))
+            .route("/echo-headers", get(echo_headers_page));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -679,4 +680,40 @@ async fn handle_socket(mut socket: WebSocket) {
             return;
         }
     }
+}
+
+/// Returns all request headers as a JSON object so tests can inspect them.
+async fn echo_headers_page(headers: HeaderMap) -> Response<Body> {
+    let mut map = serde_json::Map::new();
+    for (name, value) in &headers {
+        if let Ok(v) = value.to_str() {
+            map.insert(
+                name.as_str().to_lowercase(),
+                serde_json::Value::String(v.to_string()),
+            );
+        }
+    }
+    let json = serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html>
+<head><title>Echo Headers</title></head>
+<body>
+<pre id="headers">{}</pre>
+</body>
+</html>"#,
+        html_escape(&json)
+    );
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(html))
+        .unwrap()
+}
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
