@@ -46,7 +46,9 @@ impl TestServer {
             .route("/anchors.html", get(anchors_page))
             .route("/filter.html", get(filter_page))
             .route("/ws", get(ws_handler))
-            .route("/frame.html", get(frame_handler));
+            .route("/frame.html", get(frame_handler))
+            .route("/focus_blur.html", get(focus_blur_page))
+            .route("/all_texts.html", get(all_texts_page));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -611,6 +613,42 @@ async fn filter_page() -> Response<Body> {
     </tbody>
   </table>
   <button class="delete-btn">Delete All</button>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+async fn focus_blur_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>Focus Blur Test</title></head>
+<body>
+  <input type="text" id="input1" />
+  <input type="text" id="input2" />
+  <button id="btn">Button</button>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+async fn all_texts_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>All Texts Test</title></head>
+<body>
+  <li class="item">Alpha</li>
+  <li class="item">Beta</li>
+  <li class="item">Gamma</li>
 </body>
 </html>"#,
         ))

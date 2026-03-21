@@ -199,7 +199,8 @@ pub use protocol::{GotoOptions, WaitUntil};
 
 // Re-export action options
 pub use protocol::{
-    CheckOptions, ClickOptions, FillOptions, HoverOptions, PressOptions, SelectOptions,
+    CheckOptions, ClickOptions, FillOptions, HoverOptions, PressOptions, PressSequentiallyOptions,
+    SelectOptions,
 };
 
 // Re-export form and input types

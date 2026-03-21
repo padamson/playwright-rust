@@ -899,6 +899,142 @@ impl Frame {
         self.channel().send_no_result("press", params).await
     }
 
+    /// Sets focus on the element matching the selector.
+    pub(crate) async fn locator_focus(&self, selector: &str) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "focus",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true,
+                    "timeout": crate::DEFAULT_TIMEOUT_MS
+                }),
+            )
+            .await
+    }
+
+    /// Removes focus from the element matching the selector.
+    pub(crate) async fn locator_blur(&self, selector: &str) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "blur",
+                serde_json::json!({
+                    "selector": selector,
+                    "strict": true,
+                    "timeout": crate::DEFAULT_TIMEOUT_MS
+                }),
+            )
+            .await
+    }
+
+    /// Types text into the element character by character.
+    ///
+    /// Uses the Playwright protocol `"type"` message (the legacy name for pressSequentially).
+    pub(crate) async fn locator_press_sequentially(
+        &self,
+        selector: &str,
+        text: &str,
+        options: Option<crate::protocol::PressSequentiallyOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "text": text,
+            "strict": true
+        });
+
+        if let Some(opts) = options {
+            let opts_json = opts.to_json();
+            if let Some(obj) = params.as_object_mut() {
+                if let Some(opts_obj) = opts_json.as_object() {
+                    obj.extend(opts_obj.clone());
+                }
+            }
+        } else {
+            params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+        }
+
+        self.channel().send_no_result("type", params).await
+    }
+
+    /// Returns the inner text of all elements matching the selector.
+    pub(crate) async fn locator_all_inner_texts(&self, selector: &str) -> Result<Vec<String>> {
+        #[derive(serde::Deserialize)]
+        struct EvaluateResult {
+            value: serde_json::Value,
+        }
+
+        // The Playwright protocol's evalOnSelectorAll requires an `arg` field.
+        // We pass a null argument since our expression doesn't use one.
+        let params = serde_json::json!({
+            "selector": selector,
+            "expression": "ee => ee.map(e => e.innerText)",
+            "isFunction": true,
+            "arg": {
+                "value": {"v": "null"},
+                "handles": []
+            }
+        });
+
+        let result: EvaluateResult = self.channel().send("evalOnSelectorAll", params).await?;
+
+        Self::parse_string_array(result.value)
+    }
+
+    /// Returns the text content of all elements matching the selector.
+    pub(crate) async fn locator_all_text_contents(&self, selector: &str) -> Result<Vec<String>> {
+        #[derive(serde::Deserialize)]
+        struct EvaluateResult {
+            value: serde_json::Value,
+        }
+
+        // The Playwright protocol's evalOnSelectorAll requires an `arg` field.
+        // We pass a null argument since our expression doesn't use one.
+        let params = serde_json::json!({
+            "selector": selector,
+            "expression": "ee => ee.map(e => e.textContent || '')",
+            "isFunction": true,
+            "arg": {
+                "value": {"v": "null"},
+                "handles": []
+            }
+        });
+
+        let result: EvaluateResult = self.channel().send("evalOnSelectorAll", params).await?;
+
+        Self::parse_string_array(result.value)
+    }
+
+    /// Parses a Playwright protocol array value into a Vec<String>.
+    ///
+    /// The Playwright protocol returns arrays as:
+    /// `{"a": [{"s": "value1"}, {"s": "value2"}, ...]}`
+    fn parse_string_array(value: serde_json::Value) -> Result<Vec<String>> {
+        // Playwright protocol wraps arrays in {"a": [...]}
+        let array = if let Some(arr) = value.get("a").and_then(|v| v.as_array()) {
+            arr.clone()
+        } else if let Some(arr) = value.as_array() {
+            arr.clone()
+        } else {
+            return Ok(Vec::new());
+        };
+
+        let mut result = Vec::with_capacity(array.len());
+        for item in &array {
+            // Each string item is wrapped as {"s": "value"} in Playwright protocol
+            let s = if let Some(s) = item.get("s").and_then(|v| v.as_str()) {
+                s.to_string()
+            } else if let Some(s) = item.as_str() {
+                s.to_string()
+            } else if item.is_null() {
+                String::new()
+            } else {
+                item.to_string()
+            };
+            result.push(s);
+        }
+        Ok(result)
+    }
+
     pub(crate) async fn locator_check(
         &self,
         selector: &str,

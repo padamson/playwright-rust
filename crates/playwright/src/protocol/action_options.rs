@@ -342,6 +342,57 @@ impl HoverOptionsBuilder {
     }
 }
 
+/// Options for [`Locator::press_sequentially()`].
+///
+/// Controls timing between key presses when typing characters one by one.
+///
+/// See: <https://playwright.dev/docs/api/class-locator#locator-press-sequentially>
+#[derive(Debug, Clone, Default)]
+pub struct PressSequentiallyOptions {
+    /// Delay between key presses in milliseconds. Defaults to 0.
+    pub delay: Option<f64>,
+}
+
+impl PressSequentiallyOptions {
+    /// Create a new builder for PressSequentiallyOptions
+    pub fn builder() -> PressSequentiallyOptionsBuilder {
+        PressSequentiallyOptionsBuilder::default()
+    }
+
+    /// Convert options to JSON value for protocol
+    pub(crate) fn to_json(&self) -> serde_json::Value {
+        let mut json = serde_json::json!({});
+
+        if let Some(delay) = self.delay {
+            json["delay"] = serde_json::json!(delay);
+        }
+
+        // Timeout is required in Playwright 1.56.1+
+        json["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+
+        json
+    }
+}
+
+/// Builder for PressSequentiallyOptions
+#[derive(Debug, Clone, Default)]
+pub struct PressSequentiallyOptionsBuilder {
+    delay: Option<f64>,
+}
+
+impl PressSequentiallyOptionsBuilder {
+    /// Set delay between key presses in milliseconds
+    pub fn delay(mut self, delay: f64) -> Self {
+        self.delay = Some(delay);
+        self
+    }
+
+    /// Build the PressSequentiallyOptions
+    pub fn build(self) -> PressSequentiallyOptions {
+        PressSequentiallyOptions { delay: self.delay }
+    }
+}
+
 /// Select options
 ///
 /// Configuration options for select_option() action.

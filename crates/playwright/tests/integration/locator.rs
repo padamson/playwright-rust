@@ -1024,3 +1024,278 @@ async fn test_cross_browser_smoke() {
     webkit.close().await.expect("Failed to close WebKit");
     server.shutdown();
 }
+
+// ============================================================================
+// focus() and blur() Methods
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_focus_and_blur() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/focus_blur.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let input1 = page.locator("#input1").await;
+    let input2 = page.locator("#input2").await;
+
+    // Initially neither should be focused
+    let initially_focused = input1
+        .is_focused()
+        .await
+        .expect("Failed to check initial focus");
+    assert!(!initially_focused, "Input1 should not be focused initially");
+
+    // focus() should set focus on the element
+    input1.focus().await.expect("Failed to focus input1");
+    let after_focus = input1
+        .is_focused()
+        .await
+        .expect("Failed to check focus after focus()");
+    assert!(after_focus, "Input1 should be focused after focus()");
+
+    // blur() should remove focus from the element
+    input1.blur().await.expect("Failed to blur input1");
+    let after_blur = input1
+        .is_focused()
+        .await
+        .expect("Failed to check focus after blur()");
+    assert!(!after_blur, "Input1 should not be focused after blur()");
+
+    // focus() on a different element should also work
+    input2.focus().await.expect("Failed to focus input2");
+    let input2_focused = input2
+        .is_focused()
+        .await
+        .expect("Failed to check input2 focus");
+    assert!(input2_focused, "Input2 should be focused");
+
+    // focus on input2 should mean input1 is no longer focused
+    let input1_not_focused = input1
+        .is_focused()
+        .await
+        .expect("Failed to check input1 focus after focusing input2");
+    assert!(
+        !input1_not_focused,
+        "Input1 should not be focused after focusing input2"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+// ============================================================================
+// press_sequentially() Method
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_press_sequentially() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/focus_blur.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let input = page.locator("#input1").await;
+
+    // press_sequentially() should type each character individually
+    input
+        .press_sequentially("hello", None)
+        .await
+        .expect("Failed to press_sequentially");
+
+    let value = input
+        .input_value(None)
+        .await
+        .expect("Failed to get input value");
+    assert_eq!(value, "hello", "Input should contain typed text");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_press_sequentially_with_delay() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/focus_blur.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let input = page.locator("#input1").await;
+
+    use playwright_rs::PressSequentiallyOptions;
+
+    // press_sequentially() with delay option should also work
+    let options = PressSequentiallyOptions { delay: Some(10.0) };
+    input
+        .press_sequentially("abc", Some(options))
+        .await
+        .expect("Failed to press_sequentially with delay");
+
+    let value = input
+        .input_value(None)
+        .await
+        .expect("Failed to get input value");
+    assert_eq!(value, "abc", "Input should contain typed text with delay");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+// ============================================================================
+// all_inner_texts() and all_text_contents() Methods
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_all_inner_texts() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/all_texts.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let items = page.locator(".item").await;
+
+    let texts = items
+        .all_inner_texts()
+        .await
+        .expect("Failed to get all_inner_texts");
+
+    assert_eq!(texts.len(), 3, "Should return inner text for all 3 items");
+    assert!(
+        texts.contains(&"Alpha".to_string()),
+        "Should contain 'Alpha'"
+    );
+    assert!(texts.contains(&"Beta".to_string()), "Should contain 'Beta'");
+    assert!(
+        texts.contains(&"Gamma".to_string()),
+        "Should contain 'Gamma'"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_all_text_contents() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/all_texts.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let items = page.locator(".item").await;
+
+    let texts = items
+        .all_text_contents()
+        .await
+        .expect("Failed to get all_text_contents");
+
+    assert_eq!(texts.len(), 3, "Should return text content for all 3 items");
+    assert!(
+        texts.contains(&"Alpha".to_string()),
+        "Should contain 'Alpha'"
+    );
+    assert!(texts.contains(&"Beta".to_string()), "Should contain 'Beta'");
+    assert!(
+        texts.contains(&"Gamma".to_string()),
+        "Should contain 'Gamma'"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_all_texts_empty_when_no_match() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/all_texts.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let no_match = page.locator(".nonexistent").await;
+
+    let inner_texts = no_match
+        .all_inner_texts()
+        .await
+        .expect("all_inner_texts should return empty vec, not error, for no matches");
+    assert!(
+        inner_texts.is_empty(),
+        "all_inner_texts should be empty for no matches"
+    );
+
+    let text_contents = no_match
+        .all_text_contents()
+        .await
+        .expect("all_text_contents should return empty vec, not error, for no matches");
+    assert!(
+        text_contents.is_empty(),
+        "all_text_contents should be empty for no matches"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `filter(FilterOptions)` — narrow by `has_text`, `has_not_text`, `has` (child locator), `has_not`
   - `and_(locator)` — match elements satisfying both locators
   - `or_(locator)` — match elements satisfying either locator
+- **Locator interaction methods** — `focus()`, `blur()`, `press_sequentially()`, `all_inner_texts()`, `all_text_contents()`
+  - `focus()` / `blur()` — set or remove keyboard focus on an element
+  - `press_sequentially(text, options)` — type characters one by one with optional delay
+  - `all_inner_texts()` / `all_text_contents()` — bulk text retrieval from all matching elements
 
 ### Fixed
 

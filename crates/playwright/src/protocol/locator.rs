@@ -929,6 +929,81 @@ impl Locator {
             .map_err(|e| self.wrap_error_with_selector(e))
     }
 
+    /// Sets focus on the element.
+    ///
+    /// Calls the element's `focus()` method. Used to move keyboard focus to a
+    /// specific element for subsequent keyboard interactions.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-focus>
+    pub async fn focus(&self) -> Result<()> {
+        self.frame
+            .locator_focus(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Removes focus from the element.
+    ///
+    /// Calls the element's `blur()` method. Moves keyboard focus away from the element.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-blur>
+    pub async fn blur(&self) -> Result<()> {
+        self.frame
+            .locator_blur(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Types `text` into the element character by character, as though it was typed
+    /// on a real keyboard.
+    ///
+    /// Use this method when you need to simulate keystrokes with individual key events
+    /// (e.g., for autocomplete widgets). For simply setting a field value, prefer
+    /// [`Locator::fill()`].
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - Text to type into the element
+    /// * `options` - Optional [`PressSequentiallyOptions`] (e.g., `delay` between key presses)
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-press-sequentially>
+    pub async fn press_sequentially(
+        &self,
+        text: &str,
+        options: Option<crate::protocol::PressSequentiallyOptions>,
+    ) -> Result<()> {
+        self.frame
+            .locator_press_sequentially(&self.selector, text, options)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Returns the `innerText` values of all elements matching this locator.
+    ///
+    /// Unlike [`Locator::inner_text()`] (which uses strict mode and requires exactly one match),
+    /// `all_inner_texts()` returns text from all matching elements.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-all-inner-texts>
+    pub async fn all_inner_texts(&self) -> Result<Vec<String>> {
+        self.frame
+            .locator_all_inner_texts(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Returns the `textContent` values of all elements matching this locator.
+    ///
+    /// Unlike [`Locator::text_content()`] (which uses strict mode and requires exactly one match),
+    /// `all_text_contents()` returns text from all matching elements.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-all-text-contents>
+    pub async fn all_text_contents(&self) -> Result<Vec<String>> {
+        self.frame
+            .locator_all_text_contents(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
     /// Ensures the checkbox or radio button is checked.
     ///
     /// This method is idempotent - if already checked, does nothing.

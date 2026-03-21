@@ -44,7 +44,7 @@ pub mod web_socket;
 
 pub use action_options::{
     CheckOptions, FillOptions, HoverOptions, KeyboardOptions, MouseOptions, PressOptions,
-    SelectOptions,
+    PressSequentiallyOptions, SelectOptions,
 };
 pub use android::Android;
 pub use api_request_context::APIRequestContext;
