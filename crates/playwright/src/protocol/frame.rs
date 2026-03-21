@@ -1602,6 +1602,70 @@ impl Frame {
 
         Ok(handle)
     }
+
+    /// Adds a `<script>` tag into the frame with the desired content.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Script tag options (content, url, or path)
+    ///
+    /// At least one of `content`, `url`, or `path` must be specified.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-add-script-tag>
+    pub async fn add_script_tag(
+        &self,
+        options: crate::protocol::page::AddScriptTagOptions,
+    ) -> Result<Arc<crate::protocol::ElementHandle>> {
+        // Validate that at least one option is provided
+        options.validate()?;
+
+        // Build protocol parameters
+        let mut params = serde_json::json!({});
+
+        if let Some(content) = &options.content {
+            params["content"] = serde_json::json!(content);
+        }
+
+        if let Some(url) = &options.url {
+            params["url"] = serde_json::json!(url);
+        }
+
+        if let Some(path) = &options.path {
+            // Read file content and send as content
+            let js_content = tokio::fs::read_to_string(path).await.map_err(|e| {
+                Error::InvalidArgument(format!("Failed to read JS file '{}': {}", path, e))
+            })?;
+            params["content"] = serde_json::json!(js_content);
+        }
+
+        if let Some(type_) = &options.type_ {
+            params["type"] = serde_json::json!(type_);
+        }
+
+        #[derive(Deserialize)]
+        struct AddScriptTagResponse {
+            element: serde_json::Value,
+        }
+
+        let response: AddScriptTagResponse = self.channel().send("addScriptTag", params).await?;
+
+        let guid = response.element["guid"].as_str().ok_or_else(|| {
+            Error::ProtocolError("Element GUID missing in addScriptTag response".to_string())
+        })?;
+
+        let connection = self.base.connection();
+        let element = connection.get_object(guid).await?;
+
+        let handle = element
+            .as_any()
+            .downcast_ref::<crate::protocol::ElementHandle>()
+            .map(|e| Arc::new(e.clone()))
+            .ok_or_else(|| {
+                Error::ProtocolError(format!("Object {} is not an ElementHandle", guid))
+            })?;
+
+        Ok(handle)
+    }
 }
 
 impl ChannelOwner for Frame {

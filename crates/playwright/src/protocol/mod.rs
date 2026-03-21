@@ -67,7 +67,11 @@ pub use keyboard::Keyboard;
 pub use local_utils::LocalUtils;
 pub use locator::{AriaRole, FilterOptions, GetByRoleOptions, Locator};
 pub use mouse::Mouse;
-pub use page::{AddStyleTagOptions, GotoOptions, Page, Response, WaitUntil};
+pub use page::{
+    AddScriptTagOptions, AddScriptTagOptionsBuilder, AddStyleTagOptions, ColorScheme,
+    EmulateMediaOptions, EmulateMediaOptionsBuilder, ForcedColors, GotoOptions, Media, Page,
+    PdfMargin, PdfOptions, PdfOptionsBuilder, ReducedMotion, Response, WaitUntil,
+};
 pub use playwright::Playwright;
 pub use proxy::ProxySettings;
 pub use request::Request;

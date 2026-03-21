@@ -209,6 +209,12 @@ pub use protocol::{FilePayload, SelectOption};
 // Re-export screenshot types
 pub use protocol::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 
+// Re-export new page method types
+pub use protocol::{
+    AddScriptTagOptions, ColorScheme, EmulateMediaOptions, ForcedColors, Media, PdfMargin,
+    PdfOptions, ReducedMotion,
+};
+
 // Re-export browser context options and storage state types
 pub use protocol::{
     BrowserContextOptions, Cookie, Geolocation, LocalStorageItem, Origin, RecordHar, RecordVideo,

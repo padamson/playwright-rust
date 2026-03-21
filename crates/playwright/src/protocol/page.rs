@@ -9,7 +9,7 @@ use crate::protocol::{Dialog, Download, Request, ResponseObject, Route, WebSocke
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use base64::Engine;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::any::Any;
 use std::future::Future;
@@ -27,7 +27,10 @@ use std::sync::{Arc, Mutex, RwLock};
 /// # Example
 ///
 /// ```ignore
-/// use playwright_rs::protocol::{Playwright, ScreenshotOptions, ScreenshotType, AddStyleTagOptions, Viewport};
+/// use playwright_rs::protocol::{
+///     Playwright, ScreenshotOptions, ScreenshotType, AddStyleTagOptions, AddScriptTagOptions,
+///     EmulateMediaOptions, Media, ColorScheme, Viewport,
+/// };
 /// use std::path::PathBuf;
 ///
 /// #[tokio::main]
@@ -126,6 +129,30 @@ use std::sync::{Arc, Mutex, RwLock};
 ///             .content("body { background-color: blue; }")
 ///             .build()
 ///     ).await?;
+///
+///     // Demonstrate set_extra_http_headers() - set page-level headers
+///     let mut headers = std::collections::HashMap::new();
+///     headers.insert("x-custom-header".to_string(), "value".to_string());
+///     page.set_extra_http_headers(headers).await?;
+///
+///     // Demonstrate emulate_media() - emulate print media type
+///     page.emulate_media(Some(
+///         EmulateMediaOptions::builder()
+///             .media(Media::Print)
+///             .color_scheme(ColorScheme::Dark)
+///             .build()
+///     )).await?;
+///
+///     // Demonstrate add_script_tag() - inject a script
+///     page.add_script_tag(Some(
+///         AddScriptTagOptions::builder()
+///             .content("window.injectedByScriptTag = true;")
+///             .build()
+///     )).await?;
+///
+///     // Demonstrate pdf() - generate PDF (Chromium only)
+///     let pdf_bytes = page.pdf(None).await?;
+///     assert!(!pdf_bytes.is_empty());
 ///
 ///     // Demonstrate set_viewport_size() - responsive testing
 ///     let mobile_viewport = Viewport {
@@ -1563,6 +1590,291 @@ impl Page {
             .await
     }
 
+    /// Sets extra HTTP headers that will be sent with every request from this page.
+    ///
+    /// These headers are sent in addition to headers set on the browser context via
+    /// `BrowserContext::set_extra_http_headers()`. Page-level headers take precedence
+    /// over context-level headers when names conflict.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - Map of header names to values.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Page has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-set-extra-http-headers>
+    pub async fn set_extra_http_headers(
+        &self,
+        headers: std::collections::HashMap<String, String>,
+    ) -> Result<()> {
+        // Playwright protocol expects an array of {name, value} objects
+        // This RPC is sent on the Page channel (not the Frame channel)
+        let headers_array: Vec<serde_json::Value> = headers
+            .into_iter()
+            .map(|(name, value)| serde_json::json!({ "name": name, "value": value }))
+            .collect();
+        self.channel()
+            .send_no_result(
+                "setExtraHTTPHeaders",
+                serde_json::json!({ "headers": headers_array }),
+            )
+            .await
+    }
+
+    /// Emulates media features for the page.
+    ///
+    /// This method allows emulating CSS media features such as `media`, `color-scheme`,
+    /// `reduced-motion`, and `forced-colors`. Pass `None` to call with no changes.
+    ///
+    /// To reset a specific feature to the browser default, use the `NoOverride` variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional emulation options. If `None`, this is a no-op.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_rs::protocol::{Playwright, EmulateMediaOptions, Media, ColorScheme};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// // Emulate print media
+    /// page.emulate_media(Some(
+    ///     EmulateMediaOptions::builder()
+    ///         .media(Media::Print)
+    ///         .build()
+    /// )).await?;
+    ///
+    /// // Emulate dark color scheme
+    /// page.emulate_media(Some(
+    ///     EmulateMediaOptions::builder()
+    ///         .color_scheme(ColorScheme::Dark)
+    ///         .build()
+    /// )).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Page has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+    pub async fn emulate_media(&self, options: Option<EmulateMediaOptions>) -> Result<()> {
+        let mut params = serde_json::json!({});
+
+        if let Some(opts) = options {
+            if let Some(media) = opts.media {
+                params["media"] = serde_json::to_value(media).map_err(|e| {
+                    crate::error::Error::ProtocolError(format!("Failed to serialize media: {}", e))
+                })?;
+            }
+            if let Some(color_scheme) = opts.color_scheme {
+                params["colorScheme"] = serde_json::to_value(color_scheme).map_err(|e| {
+                    crate::error::Error::ProtocolError(format!(
+                        "Failed to serialize colorScheme: {}",
+                        e
+                    ))
+                })?;
+            }
+            if let Some(reduced_motion) = opts.reduced_motion {
+                params["reducedMotion"] = serde_json::to_value(reduced_motion).map_err(|e| {
+                    crate::error::Error::ProtocolError(format!(
+                        "Failed to serialize reducedMotion: {}",
+                        e
+                    ))
+                })?;
+            }
+            if let Some(forced_colors) = opts.forced_colors {
+                params["forcedColors"] = serde_json::to_value(forced_colors).map_err(|e| {
+                    crate::error::Error::ProtocolError(format!(
+                        "Failed to serialize forcedColors: {}",
+                        e
+                    ))
+                })?;
+            }
+        }
+
+        self.channel().send_no_result("emulateMedia", params).await
+    }
+
+    /// Generates a PDF of the page and returns it as bytes.
+    ///
+    /// Note: Generating a PDF is only supported in Chromium headless. PDF generation is
+    /// not supported in Firefox or WebKit.
+    ///
+    /// The PDF bytes are returned. If `options.path` is set, the PDF will also be
+    /// saved to that file.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional PDF generation options
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_rs::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// let pdf_bytes = page.pdf(None).await?;
+    /// assert!(!pdf_bytes.is_empty());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The browser is not Chromium (PDF only supported in Chromium)
+    /// - Page has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-pdf>
+    pub async fn pdf(&self, options: Option<PdfOptions>) -> Result<Vec<u8>> {
+        let mut params = serde_json::json!({});
+        let mut save_path: Option<std::path::PathBuf> = None;
+
+        if let Some(opts) = options {
+            // Capture the file path before consuming opts
+            save_path = opts.path;
+
+            if let Some(scale) = opts.scale {
+                params["scale"] = serde_json::json!(scale);
+            }
+            if let Some(v) = opts.display_header_footer {
+                params["displayHeaderFooter"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.header_template {
+                params["headerTemplate"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.footer_template {
+                params["footerTemplate"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.print_background {
+                params["printBackground"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.landscape {
+                params["landscape"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.page_ranges {
+                params["pageRanges"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.format {
+                params["format"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.width {
+                params["width"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.height {
+                params["height"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.prefer_css_page_size {
+                params["preferCSSPageSize"] = serde_json::json!(v);
+            }
+            if let Some(margin) = opts.margin {
+                params["margin"] = serde_json::to_value(margin).map_err(|e| {
+                    crate::error::Error::ProtocolError(format!("Failed to serialize margin: {}", e))
+                })?;
+            }
+        }
+
+        #[derive(Deserialize)]
+        struct PdfResponse {
+            pdf: String,
+        }
+
+        let response: PdfResponse = self.channel().send("pdf", params).await?;
+
+        // Decode base64 to bytes
+        let pdf_bytes = base64::engine::general_purpose::STANDARD
+            .decode(&response.pdf)
+            .map_err(|e| {
+                crate::error::Error::ProtocolError(format!("Failed to decode PDF base64: {}", e))
+            })?;
+
+        // If a path was specified, save the PDF to disk as well
+        if let Some(path) = save_path {
+            tokio::fs::write(&path, &pdf_bytes).await.map_err(|e| {
+                crate::error::Error::InvalidArgument(format!(
+                    "Failed to write PDF to '{}': {}",
+                    path.display(),
+                    e
+                ))
+            })?;
+        }
+
+        Ok(pdf_bytes)
+    }
+
+    /// Adds a `<script>` tag into the page with the desired URL or content.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional script tag options (content, url, or path).
+    ///   If `None`, returns an error because no source is specified.
+    ///
+    /// At least one of `content`, `url`, or `path` must be provided.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_rs::protocol::{Playwright, AddScriptTagOptions};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let context = browser.new_context().await?;
+    /// # let page = context.new_page().await?;
+    /// // With inline JavaScript
+    /// page.add_script_tag(Some(
+    ///     AddScriptTagOptions::builder()
+    ///         .content("window.myVar = 42;")
+    ///         .build()
+    /// )).await?;
+    ///
+    /// // With external URL
+    /// page.add_script_tag(Some(
+    ///     AddScriptTagOptions::builder()
+    ///         .url("https://example.com/script.js")
+    ///         .build()
+    /// )).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `options` is `None` or no content/url/path is specified
+    /// - Page has been closed
+    /// - Script loading fails (e.g., invalid URL)
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-add-script-tag>
+    pub async fn add_script_tag(
+        &self,
+        options: Option<AddScriptTagOptions>,
+    ) -> Result<Arc<crate::protocol::ElementHandle>> {
+        let opts = options.ok_or_else(|| {
+            Error::InvalidArgument(
+                "At least one of content, url, or path must be specified".to_string(),
+            )
+        })?;
+        let frame = self.main_frame().await?;
+        frame.add_script_tag(opts).await
+    }
+
     /// Returns the current viewport size of the page, or `None` if no viewport is set.
     ///
     /// Returns `None` when the context was created with `no_viewport: true`. Otherwise
@@ -1933,6 +2245,413 @@ impl AddStyleTagOptionsBuilder {
             content: self.content,
             url: self.url,
             path: self.path,
+        }
+    }
+}
+
+// ============================================================================
+// AddScriptTagOptions
+// ============================================================================
+
+/// Options for adding a `<script>` tag to the page.
+///
+/// At least one of `content`, `url`, or `path` must be specified.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-add-script-tag>
+#[derive(Debug, Clone, Default)]
+pub struct AddScriptTagOptions {
+    /// Raw JavaScript content to inject
+    pub content: Option<String>,
+    /// URL of the `<script>` tag to add
+    pub url: Option<String>,
+    /// Path to a JavaScript file to inject (file contents will be read and sent as content)
+    pub path: Option<String>,
+    /// Script type attribute (e.g., `"module"`)
+    pub type_: Option<String>,
+}
+
+impl AddScriptTagOptions {
+    /// Creates a new builder for AddScriptTagOptions
+    pub fn builder() -> AddScriptTagOptionsBuilder {
+        AddScriptTagOptionsBuilder::default()
+    }
+
+    /// Validates that at least one option is specified
+    pub(crate) fn validate(&self) -> Result<()> {
+        if self.content.is_none() && self.url.is_none() && self.path.is_none() {
+            return Err(Error::InvalidArgument(
+                "At least one of content, url, or path must be specified".to_string(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+/// Builder for AddScriptTagOptions
+#[derive(Debug, Clone, Default)]
+pub struct AddScriptTagOptionsBuilder {
+    content: Option<String>,
+    url: Option<String>,
+    path: Option<String>,
+    type_: Option<String>,
+}
+
+impl AddScriptTagOptionsBuilder {
+    /// Sets the JavaScript content to inject
+    pub fn content(mut self, content: impl Into<String>) -> Self {
+        self.content = Some(content.into());
+        self
+    }
+
+    /// Sets the URL of the script to load
+    pub fn url(mut self, url: impl Into<String>) -> Self {
+        self.url = Some(url.into());
+        self
+    }
+
+    /// Sets the path to a JavaScript file to inject
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.path = Some(path.into());
+        self
+    }
+
+    /// Sets the script type attribute (e.g., `"module"`)
+    pub fn type_(mut self, type_: impl Into<String>) -> Self {
+        self.type_ = Some(type_.into());
+        self
+    }
+
+    /// Builds the AddScriptTagOptions
+    pub fn build(self) -> AddScriptTagOptions {
+        AddScriptTagOptions {
+            content: self.content,
+            url: self.url,
+            path: self.path,
+            type_: self.type_,
+        }
+    }
+}
+
+// ============================================================================
+// EmulateMediaOptions and related enums
+// ============================================================================
+
+/// Media type for `page.emulate_media()`.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Media {
+    /// Emulate screen media type
+    Screen,
+    /// Emulate print media type
+    Print,
+    /// Reset media emulation to browser default (sends `"no-override"` to protocol)
+    #[serde(rename = "no-override")]
+    NoOverride,
+}
+
+/// Preferred color scheme for `page.emulate_media()`.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum ColorScheme {
+    /// Emulate light color scheme
+    #[serde(rename = "light")]
+    Light,
+    /// Emulate dark color scheme
+    #[serde(rename = "dark")]
+    Dark,
+    /// Emulate no preference for color scheme
+    #[serde(rename = "no-preference")]
+    NoPreference,
+    /// Reset color scheme to browser default
+    #[serde(rename = "no-override")]
+    NoOverride,
+}
+
+/// Reduced motion preference for `page.emulate_media()`.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum ReducedMotion {
+    /// Emulate reduced motion preference
+    #[serde(rename = "reduce")]
+    Reduce,
+    /// Emulate no preference for reduced motion
+    #[serde(rename = "no-preference")]
+    NoPreference,
+    /// Reset reduced motion to browser default
+    #[serde(rename = "no-override")]
+    NoOverride,
+}
+
+/// Forced colors preference for `page.emulate_media()`.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum ForcedColors {
+    /// Emulate active forced colors
+    #[serde(rename = "active")]
+    Active,
+    /// Emulate no forced colors
+    #[serde(rename = "none")]
+    None_,
+    /// Reset forced colors to browser default
+    #[serde(rename = "no-override")]
+    NoOverride,
+}
+
+/// Options for `page.emulate_media()`.
+///
+/// All fields are optional. Fields that are `None` are omitted from the protocol
+/// message (meaning they are not changed). To reset a field to browser default,
+/// use the `NoOverride` variant.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+#[derive(Debug, Clone, Default)]
+pub struct EmulateMediaOptions {
+    /// Media type to emulate (screen, print, or no-override)
+    pub media: Option<Media>,
+    /// Color scheme preference to emulate
+    pub color_scheme: Option<ColorScheme>,
+    /// Reduced motion preference to emulate
+    pub reduced_motion: Option<ReducedMotion>,
+    /// Forced colors preference to emulate
+    pub forced_colors: Option<ForcedColors>,
+}
+
+impl EmulateMediaOptions {
+    /// Creates a new builder for EmulateMediaOptions
+    pub fn builder() -> EmulateMediaOptionsBuilder {
+        EmulateMediaOptionsBuilder::default()
+    }
+}
+
+/// Builder for EmulateMediaOptions
+#[derive(Debug, Clone, Default)]
+pub struct EmulateMediaOptionsBuilder {
+    media: Option<Media>,
+    color_scheme: Option<ColorScheme>,
+    reduced_motion: Option<ReducedMotion>,
+    forced_colors: Option<ForcedColors>,
+}
+
+impl EmulateMediaOptionsBuilder {
+    /// Sets the media type to emulate
+    pub fn media(mut self, media: Media) -> Self {
+        self.media = Some(media);
+        self
+    }
+
+    /// Sets the color scheme preference
+    pub fn color_scheme(mut self, color_scheme: ColorScheme) -> Self {
+        self.color_scheme = Some(color_scheme);
+        self
+    }
+
+    /// Sets the reduced motion preference
+    pub fn reduced_motion(mut self, reduced_motion: ReducedMotion) -> Self {
+        self.reduced_motion = Some(reduced_motion);
+        self
+    }
+
+    /// Sets the forced colors preference
+    pub fn forced_colors(mut self, forced_colors: ForcedColors) -> Self {
+        self.forced_colors = Some(forced_colors);
+        self
+    }
+
+    /// Builds the EmulateMediaOptions
+    pub fn build(self) -> EmulateMediaOptions {
+        EmulateMediaOptions {
+            media: self.media,
+            color_scheme: self.color_scheme,
+            reduced_motion: self.reduced_motion,
+            forced_colors: self.forced_colors,
+        }
+    }
+}
+
+// ============================================================================
+// PdfOptions
+// ============================================================================
+
+/// Margin options for PDF generation.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-pdf>
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct PdfMargin {
+    /// Top margin (e.g. `"1in"`)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top: Option<String>,
+    /// Right margin
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub right: Option<String>,
+    /// Bottom margin
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bottom: Option<String>,
+    /// Left margin
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub left: Option<String>,
+}
+
+/// Options for generating a PDF from a page.
+///
+/// Note: PDF generation is only supported by Chromium. Calling `page.pdf()` on
+/// Firefox or WebKit will result in an error.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-pdf>
+#[derive(Debug, Clone, Default)]
+pub struct PdfOptions {
+    /// If specified, the PDF will also be saved to this file path.
+    pub path: Option<std::path::PathBuf>,
+    /// Scale of the webpage rendering, between 0.1 and 2 (default 1).
+    pub scale: Option<f64>,
+    /// Whether to display header and footer (default false).
+    pub display_header_footer: Option<bool>,
+    /// HTML template for the print header. Should be valid HTML.
+    pub header_template: Option<String>,
+    /// HTML template for the print footer.
+    pub footer_template: Option<String>,
+    /// Whether to print background graphics (default false).
+    pub print_background: Option<bool>,
+    /// Paper orientation — `true` for landscape (default false).
+    pub landscape: Option<bool>,
+    /// Paper ranges to print, e.g. `"1-5, 8"`. Defaults to empty string (all pages).
+    pub page_ranges: Option<String>,
+    /// Paper format, e.g. `"Letter"` or `"A4"`. Overrides `width`/`height`.
+    pub format: Option<String>,
+    /// Paper width in CSS units, e.g. `"8.5in"`. Overrides `format`.
+    pub width: Option<String>,
+    /// Paper height in CSS units, e.g. `"11in"`. Overrides `format`.
+    pub height: Option<String>,
+    /// Whether or not to prefer page size as defined by CSS.
+    pub prefer_css_page_size: Option<bool>,
+    /// Paper margins, defaulting to none.
+    pub margin: Option<PdfMargin>,
+}
+
+impl PdfOptions {
+    /// Creates a new builder for PdfOptions
+    pub fn builder() -> PdfOptionsBuilder {
+        PdfOptionsBuilder::default()
+    }
+}
+
+/// Builder for PdfOptions
+#[derive(Debug, Clone, Default)]
+pub struct PdfOptionsBuilder {
+    path: Option<std::path::PathBuf>,
+    scale: Option<f64>,
+    display_header_footer: Option<bool>,
+    header_template: Option<String>,
+    footer_template: Option<String>,
+    print_background: Option<bool>,
+    landscape: Option<bool>,
+    page_ranges: Option<String>,
+    format: Option<String>,
+    width: Option<String>,
+    height: Option<String>,
+    prefer_css_page_size: Option<bool>,
+    margin: Option<PdfMargin>,
+}
+
+impl PdfOptionsBuilder {
+    /// Sets the file path for saving the PDF
+    pub fn path(mut self, path: std::path::PathBuf) -> Self {
+        self.path = Some(path);
+        self
+    }
+
+    /// Sets the scale of the webpage rendering
+    pub fn scale(mut self, scale: f64) -> Self {
+        self.scale = Some(scale);
+        self
+    }
+
+    /// Sets whether to display header and footer
+    pub fn display_header_footer(mut self, display: bool) -> Self {
+        self.display_header_footer = Some(display);
+        self
+    }
+
+    /// Sets the HTML template for the print header
+    pub fn header_template(mut self, template: impl Into<String>) -> Self {
+        self.header_template = Some(template.into());
+        self
+    }
+
+    /// Sets the HTML template for the print footer
+    pub fn footer_template(mut self, template: impl Into<String>) -> Self {
+        self.footer_template = Some(template.into());
+        self
+    }
+
+    /// Sets whether to print background graphics
+    pub fn print_background(mut self, print: bool) -> Self {
+        self.print_background = Some(print);
+        self
+    }
+
+    /// Sets whether to use landscape orientation
+    pub fn landscape(mut self, landscape: bool) -> Self {
+        self.landscape = Some(landscape);
+        self
+    }
+
+    /// Sets the page ranges to print
+    pub fn page_ranges(mut self, ranges: impl Into<String>) -> Self {
+        self.page_ranges = Some(ranges.into());
+        self
+    }
+
+    /// Sets the paper format (e.g., `"Letter"`, `"A4"`)
+    pub fn format(mut self, format: impl Into<String>) -> Self {
+        self.format = Some(format.into());
+        self
+    }
+
+    /// Sets the paper width
+    pub fn width(mut self, width: impl Into<String>) -> Self {
+        self.width = Some(width.into());
+        self
+    }
+
+    /// Sets the paper height
+    pub fn height(mut self, height: impl Into<String>) -> Self {
+        self.height = Some(height.into());
+        self
+    }
+
+    /// Sets whether to prefer page size as defined by CSS
+    pub fn prefer_css_page_size(mut self, prefer: bool) -> Self {
+        self.prefer_css_page_size = Some(prefer);
+        self
+    }
+
+    /// Sets the paper margins
+    pub fn margin(mut self, margin: PdfMargin) -> Self {
+        self.margin = Some(margin);
+        self
+    }
+
+    /// Builds the PdfOptions
+    pub fn build(self) -> PdfOptions {
+        PdfOptions {
+            path: self.path,
+            scale: self.scale,
+            display_header_footer: self.display_header_footer,
+            header_template: self.header_template,
+            footer_template: self.footer_template,
+            print_background: self.print_background,
+            landscape: self.landscape,
+            page_ranges: self.page_ranges,
+            format: self.format,
+            width: self.width,
+            height: self.height,
+            prefer_css_page_size: self.prefer_css_page_size,
+            margin: self.margin,
         }
     }
 }

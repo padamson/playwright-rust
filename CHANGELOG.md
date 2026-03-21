@@ -26,9 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `clear_permissions()` — revoke all granted permissions
   - `set_geolocation(geolocation)` — override device geolocation, or pass None to clear
   - `set_offline(offline)` — toggle offline mode
-- **Page methods** — `bring_to_front()`, `viewport_size()`
+- **Page methods** — `bring_to_front()`, `viewport_size()`, `set_extra_http_headers()`, `emulate_media()`, `pdf()`, `add_script_tag()`
   - `bring_to_front()` — activate the page tab
   - `viewport_size()` — get current viewport dimensions (returns None if no_viewport context)
+  - `set_extra_http_headers(headers)` — add HTTP headers to all page requests
+  - `emulate_media(options)` — override CSS media type, color scheme, reduced motion, forced colors
+  - `pdf(options)` — generate PDF (Chromium only), with full options (margins, scale, landscape, etc.)
+  - `add_script_tag(options)` — inject JavaScript via URL, file path, or inline content
 
 ### Fixed
 
