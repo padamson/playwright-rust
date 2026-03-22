@@ -488,19 +488,54 @@ pub struct FilterOptions {
 pub struct Locator {
     frame: Arc<Frame>,
     selector: String,
+    page: crate::protocol::Page,
 }
 
 impl Locator {
     /// Creates a new Locator (internal use only)
     ///
     /// Use `page.locator()` or `frame.locator()` to create locators in application code.
-    pub(crate) fn new(frame: Arc<Frame>, selector: String) -> Self {
-        Self { frame, selector }
+    pub(crate) fn new(frame: Arc<Frame>, selector: String, page: crate::protocol::Page) -> Self {
+        Self {
+            frame,
+            selector,
+            page,
+        }
     }
 
     /// Returns the selector string for this locator
     pub fn selector(&self) -> &str {
         &self.selector
+    }
+
+    /// Returns the Page this locator belongs to.
+    ///
+    /// Each locator is bound to the page that created it. Chained locators (via
+    /// `first()`, `last()`, `nth()`, `locator()`, `filter()`, etc.) all return
+    /// the same owning page. This matches the behavior of `locator.page` in
+    /// other Playwright language bindings.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    /// page.goto("https://example.com", None).await?;
+    ///
+    /// let locator = page.locator("h1").await;
+    /// let locator_page = locator.page()?;
+    /// assert_eq!(locator_page.url(), page.url());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-page>
+    pub fn page(&self) -> Result<crate::protocol::Page> {
+        Ok(self.page.clone())
     }
 
     /// Evaluate a JavaScript expression in the frame context.
@@ -524,6 +559,7 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> nth=0", self.selector),
+            self.page.clone(),
         )
     }
 
@@ -534,6 +570,7 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> nth=-1", self.selector),
+            self.page.clone(),
         )
     }
 
@@ -544,6 +581,7 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> nth={}", self.selector, index),
+            self.page.clone(),
         )
     }
 
@@ -616,6 +654,7 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> {}", self.selector, selector),
+            self.page.clone(),
         )
     }
 
@@ -671,7 +710,7 @@ impl Locator {
             selector = format!("{} >> internal:has-not={}", selector, inner);
         }
 
-        Locator::new(Arc::clone(&self.frame), selector)
+        Locator::new(Arc::clone(&self.frame), selector, self.page.clone())
     }
 
     /// Creates a locator matching elements that satisfy **both** this locator and `locator`.
@@ -705,6 +744,7 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> internal:and={}", self.selector, inner),
+            self.page.clone(),
         )
     }
 
@@ -739,6 +779,7 @@ impl Locator {
         Locator::new(
             Arc::clone(&self.frame),
             format!("{} >> internal:or={}", self.selector, inner),
+            self.page.clone(),
         )
     }
 

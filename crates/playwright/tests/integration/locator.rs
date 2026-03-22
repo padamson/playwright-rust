@@ -2152,3 +2152,53 @@ async fn test_locator_wait_for_default_state() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
+
+// ============================================================================
+// Locator Page Property
+// ============================================================================
+
+/// Tests that locator.page() returns the Page that owns the locator.
+///
+/// Verifies:
+/// - locator.page() returns the correct Page (same URL as the original page)
+/// - The returned Page is usable (can call url() and other methods)
+///
+/// See: <https://playwright.dev/docs/api/class-locator#locator-page>
+#[tokio::test]
+async fn test_locator_page_property() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    let url = format!("{}/locator.html", server.url());
+    page.goto(&url, None).await.expect("Failed to navigate");
+
+    // Create a locator, then get its page and verify it's the same page
+    let locator = page.locator("h1").await;
+    let locator_page = locator.page().expect("locator.page() should succeed");
+
+    // The page returned by locator.page() should have the same URL as the original page
+    assert_eq!(
+        locator_page.url(),
+        page.url(),
+        "locator.page() should return the same page used to create the locator"
+    );
+
+    // The returned Page should be functional: we can call url() on it
+    assert!(
+        locator_page.url().contains("locator.html"),
+        "locator.page() URL should contain 'locator.html', got: {}",
+        locator_page.url()
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}

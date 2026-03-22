@@ -159,6 +159,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or_default();
     println!("Drag result: {}", result);
 
+    // --- page property - navigate from locator back to its page ---
+
+    let locator = page.locator("body").await;
+    let owner = locator.page()?;
+    println!("Locator's page URL: {}", owner.url());
+
     browser.close().await?;
     Ok(())
 }

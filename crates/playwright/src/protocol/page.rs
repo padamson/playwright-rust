@@ -529,7 +529,7 @@ impl Page {
         // Get the main frame
         let frame = self.main_frame().await.expect("Main frame should exist");
 
-        crate::protocol::Locator::new(Arc::new(frame), selector.to_string())
+        crate::protocol::Locator::new(Arc::new(frame), selector.to_string(), self.clone())
     }
 
     /// Returns a locator that matches elements containing the given text.

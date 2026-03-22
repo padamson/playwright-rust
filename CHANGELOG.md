@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `dispatch_event(type, event_init)` — fire DOM events with optional initialization data
   - `bounding_box()` — get element dimensions and position (x, y, width, height)
   - `scroll_into_view_if_needed()` — scroll element into viewport
+  - `page` property — back-reference to the owning Page from any Locator
 - **TLS backend features** — Expose `native-tls`, `rustls-tls-native-roots`, and `rustls-tls-webpki-roots` features for choosing TLS implementation (PR #41). Defaults to `native-tls`.
 - **Locator filtering & composition** — `filter()`, `and_()`, `or_()` methods for narrowing and combining locators
   - `filter(FilterOptions)` — narrow by `has_text`, `has_not_text`, `has` (child locator), `has_not`
