@@ -101,6 +101,10 @@ pub struct BrowserContext {
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
     /// APIRequestContext GUID from initializer (resolved lazily)
     request_context_guid: Option<String>,
+    /// Default action timeout for all pages in this context (milliseconds).
+    default_timeout_ms: Arc<std::sync::RwLock<f64>>,
+    /// Default navigation timeout for all pages in this context (milliseconds).
+    default_navigation_timeout_ms: Arc<std::sync::RwLock<f64>>,
 }
 
 impl BrowserContext {
@@ -150,6 +154,10 @@ impl BrowserContext {
             pages: Arc::new(Mutex::new(Vec::new())),
             route_handlers: Arc::new(Mutex::new(Vec::new())),
             request_context_guid,
+            default_timeout_ms: Arc::new(std::sync::RwLock::new(crate::DEFAULT_TIMEOUT_MS)),
+            default_navigation_timeout_ms: Arc::new(std::sync::RwLock::new(
+                crate::DEFAULT_TIMEOUT_MS,
+            )),
         };
 
         // Enable dialog event subscription
@@ -240,7 +248,19 @@ impl BrowserContext {
         // that Playwright server sends automatically when a page is created.
         // Tracking it here would create duplicates.
 
-        Ok(page.clone())
+        let page = page.clone();
+
+        // Propagate context-level timeout defaults to the new page
+        let ctx_timeout = self.default_timeout_ms();
+        let ctx_nav_timeout = self.default_navigation_timeout_ms();
+        if (ctx_timeout - crate::DEFAULT_TIMEOUT_MS).abs() > f64::EPSILON {
+            page.set_default_timeout(ctx_timeout).await;
+        }
+        if (ctx_nav_timeout - crate::DEFAULT_TIMEOUT_MS).abs() > f64::EPSILON {
+            page.set_default_navigation_timeout(ctx_nav_timeout).await;
+        }
+
+        Ok(page)
     }
 
     /// Returns all open pages in the context.
@@ -320,6 +340,87 @@ impl BrowserContext {
         self.channel()
             .send_no_result("close", serde_json::json!({}))
             .await
+    }
+
+    /// Sets the default timeout for all operations in this browser context.
+    ///
+    /// This applies to all pages already open in this context as well as pages
+    /// created subsequently. Pass `0` to disable timeouts.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout>
+    pub async fn set_default_timeout(&self, timeout: f64) {
+        if let Ok(mut t) = self.default_timeout_ms.write() {
+            *t = timeout;
+        }
+        // Collect page handles while holding the lock, then release it before awaiting
+        let pages: Vec<Page> = self.pages.lock().unwrap().clone();
+        for page in pages {
+            page.set_default_timeout(timeout).await;
+        }
+        if let Err(e) = self
+            .channel()
+            .send_no_result(
+                "setDefaultTimeoutNoReply",
+                serde_json::json!({ "timeout": timeout }),
+            )
+            .await
+        {
+            tracing::warn!("BrowserContext::set_default_timeout send error: {}", e);
+        }
+    }
+
+    /// Sets the default timeout for navigation operations in this browser context.
+    ///
+    /// This applies to all pages already open in this context as well as pages
+    /// created subsequently. Pass `0` to disable timeouts.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-navigation-timeout>
+    pub async fn set_default_navigation_timeout(&self, timeout: f64) {
+        if let Ok(mut t) = self.default_navigation_timeout_ms.write() {
+            *t = timeout;
+        }
+        // Collect page handles while holding the lock, then release it before awaiting
+        let pages: Vec<Page> = self.pages.lock().unwrap().clone();
+        for page in pages {
+            page.set_default_navigation_timeout(timeout).await;
+        }
+        if let Err(e) = self
+            .channel()
+            .send_no_result(
+                "setDefaultNavigationTimeoutNoReply",
+                serde_json::json!({ "timeout": timeout }),
+            )
+            .await
+        {
+            tracing::warn!(
+                "BrowserContext::set_default_navigation_timeout send error: {}",
+                e
+            );
+        }
+    }
+
+    /// Returns the context's current default action timeout in milliseconds.
+    fn default_timeout_ms(&self) -> f64 {
+        self.default_timeout_ms
+            .read()
+            .map(|t| *t)
+            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+    }
+
+    /// Returns the context's current default navigation timeout in milliseconds.
+    fn default_navigation_timeout_ms(&self) -> f64 {
+        self.default_navigation_timeout_ms
+            .read()
+            .map(|t| *t)
+            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
     }
 
     /// Pauses the browser context.

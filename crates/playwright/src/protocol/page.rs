@@ -14,6 +14,7 @@ use serde_json::Value;
 use std::any::Any;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 
 /// Page represents a web page within a browser context.
@@ -200,6 +201,15 @@ pub struct Page {
     /// Current viewport size (None when no_viewport is set).
     /// Updated by set_viewport_size().
     viewport: Arc<RwLock<Option<Viewport>>>,
+    /// Whether this page has been closed.
+    /// Set to true when close() is called or a "close" event is received.
+    is_closed: Arc<AtomicBool>,
+    /// Default timeout for actions (milliseconds).
+    /// Used when no explicit timeout is provided in action calls.
+    default_timeout_ms: Arc<RwLock<f64>>,
+    /// Default timeout for navigation operations (milliseconds).
+    /// Used when no explicit timeout is provided in navigation calls.
+    default_navigation_timeout_ms: Arc<RwLock<f64>>,
 }
 
 /// Type alias for boxed route handler future
@@ -318,6 +328,9 @@ impl Page {
             response_handlers: Default::default(),
             websocket_handlers,
             viewport,
+            is_closed: Arc::new(AtomicBool::new(false)),
+            default_timeout_ms: Arc::new(RwLock::new(crate::DEFAULT_TIMEOUT_MS)),
+            default_navigation_timeout_ms: Arc::new(RwLock::new(crate::DEFAULT_TIMEOUT_MS)),
         })
     }
 
@@ -388,9 +401,143 @@ impl Page {
     /// See: <https://playwright.dev/docs/api/class-page#page-close>
     pub async fn close(&self) -> Result<()> {
         // Send close RPC to server
-        self.channel()
+        let result = self
+            .channel()
             .send_no_result("close", serde_json::json!({}))
+            .await;
+        // Mark as closed regardless of error (best-effort)
+        self.is_closed.store(true, Ordering::Relaxed);
+        result
+    }
+
+    /// Returns whether the page has been closed.
+    ///
+    /// Returns `true` after `close()` has been called on this page, or after the
+    /// page receives a close event from the server (e.g. when the browser context
+    /// is closed).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-is-closed>
+    pub fn is_closed(&self) -> bool {
+        self.is_closed.load(Ordering::Relaxed)
+    }
+
+    /// Sets the default timeout for all operations on this page.
+    ///
+    /// The timeout applies to actions such as `click`, `fill`, `locator.wait_for`, etc.
+    /// Pass `0` to disable timeouts.
+    ///
+    /// This stores the value locally so that subsequent action calls use it when
+    /// no explicit timeout is provided, and also notifies the Playwright server
+    /// so it can apply the same default on its side.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-set-default-timeout>
+    pub async fn set_default_timeout(&self, timeout: f64) {
+        if let Ok(mut t) = self.default_timeout_ms.write() {
+            *t = timeout;
+        }
+        if let Err(e) = self
+            .channel()
+            .send_no_result(
+                "setDefaultTimeoutNoReply",
+                serde_json::json!({ "timeout": timeout }),
+            )
             .await
+        {
+            tracing::warn!("set_default_timeout send error: {}", e);
+        }
+    }
+
+    /// Sets the default timeout for navigation operations on this page.
+    ///
+    /// The timeout applies to navigation actions such as `goto`, `reload`,
+    /// `go_back`, and `go_forward`. Pass `0` to disable timeouts.
+    ///
+    /// This stores the value locally so that subsequent navigation calls use it
+    /// when no explicit timeout is provided, and also notifies the Playwright
+    /// server.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-set-default-navigation-timeout>
+    pub async fn set_default_navigation_timeout(&self, timeout: f64) {
+        if let Ok(mut t) = self.default_navigation_timeout_ms.write() {
+            *t = timeout;
+        }
+        if let Err(e) = self
+            .channel()
+            .send_no_result(
+                "setDefaultNavigationTimeoutNoReply",
+                serde_json::json!({ "timeout": timeout }),
+            )
+            .await
+        {
+            tracing::warn!("set_default_navigation_timeout send error: {}", e);
+        }
+    }
+
+    /// Returns the current default action timeout in milliseconds.
+    ///
+    /// This is the value set by `set_default_timeout`, or `DEFAULT_TIMEOUT_MS`
+    /// if it has not been set.
+    pub fn default_timeout_ms(&self) -> f64 {
+        self.default_timeout_ms
+            .read()
+            .map(|t| *t)
+            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+    }
+
+    /// Returns the current default navigation timeout in milliseconds.
+    ///
+    /// This is the value set by `set_default_navigation_timeout`, or
+    /// `DEFAULT_TIMEOUT_MS` if it has not been set.
+    pub fn default_navigation_timeout_ms(&self) -> f64 {
+        self.default_navigation_timeout_ms
+            .read()
+            .map(|t| *t)
+            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+    }
+
+    /// Returns GotoOptions with the navigation timeout filled in if not already set.
+    ///
+    /// Used internally to ensure the page's configured default navigation timeout
+    /// is used when the caller does not provide an explicit timeout.
+    fn with_navigation_timeout(&self, options: Option<GotoOptions>) -> GotoOptions {
+        let nav_timeout = self.default_navigation_timeout_ms();
+        match options {
+            Some(opts) if opts.timeout.is_some() => opts,
+            Some(mut opts) => {
+                opts.timeout = Some(std::time::Duration::from_millis(nav_timeout as u64));
+                opts
+            }
+            None => GotoOptions {
+                timeout: Some(std::time::Duration::from_millis(nav_timeout as u64)),
+                wait_until: None,
+            },
+        }
+    }
+
+    /// Returns all frames in the page, including the main frame.
+    ///
+    /// Currently returns only the main (top-level) frame. Iframe enumeration
+    /// is not yet implemented and will be added in a future release.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Page has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-frames>
+    pub async fn frames(&self) -> Result<Vec<crate::protocol::Frame>> {
+        // Start with the main frame
+        let main = self.main_frame().await?;
+        Ok(vec![main])
     }
 
     /// Navigates to the specified URL.
@@ -412,6 +559,9 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-goto>
     pub async fn goto(&self, url: &str, options: Option<GotoOptions>) -> Result<Option<Response>> {
+        // Inject the page-level navigation timeout when no explicit timeout is given
+        let options = self.with_navigation_timeout(options);
+
         // Delegate to main frame
         let frame = self.main_frame().await.map_err(|e| match e {
             Error::TargetClosed { context, .. } => Error::TargetClosed {
@@ -421,7 +571,7 @@ impl Page {
             other => other,
         })?;
 
-        let response = frame.goto(url, options).await.map_err(|e| match e {
+        let response = frame.goto(url, Some(options)).await.map_err(|e| match e {
             Error::TargetClosed { context, .. } => Error::TargetClosed {
                 target_type: "Page".to_string(),
                 context,
@@ -852,25 +1002,24 @@ impl Page {
         self.navigate_history("goForward", options).await
     }
 
-    /// Shared implementation for go_back and go_forward.
+    /// Shared implementation for reload, go_back and go_forward.
     async fn navigate_history(
         &self,
         method: &str,
         options: Option<GotoOptions>,
     ) -> Result<Option<Response>> {
+        // Inject the page-level navigation timeout when no explicit timeout is given
+        let opts = self.with_navigation_timeout(options);
         let mut params = serde_json::json!({});
 
-        if let Some(opts) = options {
-            if let Some(timeout) = opts.timeout {
-                params["timeout"] = serde_json::json!(timeout.as_millis() as u64);
-            } else {
-                params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
-            }
-            if let Some(wait_until) = opts.wait_until {
-                params["waitUntil"] = serde_json::json!(wait_until.as_str());
-            }
+        // opts.timeout is always Some(...) because with_navigation_timeout guarantees it
+        if let Some(timeout) = opts.timeout {
+            params["timeout"] = serde_json::json!(timeout.as_millis() as u64);
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+        }
+        if let Some(wait_until) = opts.wait_until {
+            params["waitUntil"] = serde_json::json!(wait_until.as_str());
         }
 
         #[derive(Deserialize)]
@@ -2096,9 +2245,13 @@ impl ChannelOwner for Page {
                     });
                 }
             }
+            "close" => {
+                // Server-initiated close (e.g. context was closed)
+                self.is_closed.store(true, Ordering::Relaxed);
+            }
             _ => {
                 // Other events will be handled in future phases
-                // Events: load, domcontentloaded, close, crash, etc.
+                // Events: load, domcontentloaded, crash, etc.
             }
         }
     }

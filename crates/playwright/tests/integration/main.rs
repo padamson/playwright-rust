@@ -30,6 +30,7 @@ mod network_route;
 mod page;
 mod page_event_network;
 mod page_new_methods;
+mod page_properties;
 mod pause;
 mod playwright_launch;
 mod route_advanced;

@@ -46,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `emulate_media(options)` — override CSS media type, color scheme, reduced motion, forced colors
   - `pdf(options)` — generate PDF (Chromium only), with full options (margins, scale, landscape, etc.)
   - `add_script_tag(options)` — inject JavaScript via URL, file path, or inline content
+- **Page timeout & state** — `set_default_timeout()`, `set_default_navigation_timeout()`, `is_closed()`, `frames()`
+  - `set_default_timeout(ms)` / `set_default_navigation_timeout(ms)` — configure default timeouts for actions and navigation
+  - `is_closed()` — check if page has been closed (tracks close events from server)
+  - `frames()` — list page frames (currently main frame only; iframe enumeration planned)
+- **BrowserContext timeout defaults** — `set_default_timeout()`, `set_default_navigation_timeout()`
+  - Propagates to all existing pages and newly created pages in the context
 
 ### Changed
 

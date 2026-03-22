@@ -920,8 +920,21 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-click>
     pub async fn click(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
+        // When no explicit timeout is provided, inject the page's current default
+        // so that Page::set_default_timeout() takes effect for locator actions.
+        let options = match options {
+            Some(opts) if opts.timeout.is_some() => opts,
+            Some(mut opts) => {
+                opts.timeout = Some(self.page.default_timeout_ms());
+                opts
+            }
+            None => crate::protocol::ClickOptions {
+                timeout: Some(self.page.default_timeout_ms()),
+                ..Default::default()
+            },
+        };
         self.frame
-            .locator_click(&self.selector, options)
+            .locator_click(&self.selector, Some(options))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
