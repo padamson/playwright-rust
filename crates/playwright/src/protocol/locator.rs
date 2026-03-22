@@ -18,6 +18,35 @@
 use crate::error::Result;
 use crate::protocol::Frame;
 use serde::Deserialize;
+
+/// Trait for action option structs that have an optional timeout field.
+/// Used by `Locator::with_timeout` to inject the page's default timeout.
+pub(crate) trait HasTimeout {
+    fn timeout_ref(&self) -> &Option<f64>;
+    fn timeout_ref_mut(&mut self) -> &mut Option<f64>;
+}
+
+macro_rules! impl_has_timeout {
+    ($($ty:ty),+ $(,)?) => {
+        $(impl HasTimeout for $ty {
+            fn timeout_ref(&self) -> &Option<f64> { &self.timeout }
+            fn timeout_ref_mut(&mut self) -> &mut Option<f64> { &mut self.timeout }
+        })+
+    };
+}
+
+impl_has_timeout!(
+    crate::protocol::ClickOptions,
+    crate::protocol::FillOptions,
+    crate::protocol::PressOptions,
+    crate::protocol::CheckOptions,
+    crate::protocol::HoverOptions,
+    crate::protocol::SelectOptions,
+    crate::protocol::ScreenshotOptions,
+    crate::protocol::TapOptions,
+    crate::protocol::DragToOptions,
+    crate::protocol::WaitForOptions,
+);
 use std::sync::Arc;
 
 /// The bounding box of an element in pixels.
@@ -920,23 +949,19 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-click>
     pub async fn click(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
-        // When no explicit timeout is provided, inject the page's current default
-        // so that Page::set_default_timeout() takes effect for locator actions.
-        let options = match options {
-            Some(opts) if opts.timeout.is_some() => opts,
-            Some(mut opts) => {
-                opts.timeout = Some(self.page.default_timeout_ms());
-                opts
-            }
-            None => crate::protocol::ClickOptions {
-                timeout: Some(self.page.default_timeout_ms()),
-                ..Default::default()
-            },
-        };
         self.frame
-            .locator_click(&self.selector, Some(options))
+            .locator_click(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Ensures an options struct has the page's default timeout when none is explicitly set.
+    fn with_timeout<T: HasTimeout + Default>(&self, options: Option<T>) -> T {
+        let mut opts = options.unwrap_or_default();
+        if opts.timeout_ref().is_none() {
+            *opts.timeout_ref_mut() = Some(self.page.default_timeout_ms());
+        }
+        opts
     }
 
     /// Wraps an error with selector context for better error messages.
@@ -958,7 +983,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-dblclick>
     pub async fn dblclick(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
         self.frame
-            .locator_dblclick(&self.selector, options)
+            .locator_dblclick(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -972,7 +997,7 @@ impl Locator {
         options: Option<crate::protocol::FillOptions>,
     ) -> Result<()> {
         self.frame
-            .locator_fill(&self.selector, text, options)
+            .locator_fill(&self.selector, text, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -982,7 +1007,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-clear>
     pub async fn clear(&self, options: Option<crate::protocol::FillOptions>) -> Result<()> {
         self.frame
-            .locator_clear(&self.selector, options)
+            .locator_clear(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -996,7 +1021,7 @@ impl Locator {
         options: Option<crate::protocol::PressOptions>,
     ) -> Result<()> {
         self.frame
-            .locator_press(&self.selector, key, options)
+            .locator_press(&self.selector, key, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1083,7 +1108,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-check>
     pub async fn check(&self, options: Option<crate::protocol::CheckOptions>) -> Result<()> {
         self.frame
-            .locator_check(&self.selector, options)
+            .locator_check(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1095,7 +1120,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-uncheck>
     pub async fn uncheck(&self, options: Option<crate::protocol::CheckOptions>) -> Result<()> {
         self.frame
-            .locator_uncheck(&self.selector, options)
+            .locator_uncheck(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1123,7 +1148,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-hover>
     pub async fn hover(&self, options: Option<crate::protocol::HoverOptions>) -> Result<()> {
         self.frame
-            .locator_hover(&self.selector, options)
+            .locator_hover(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1149,7 +1174,11 @@ impl Locator {
         options: Option<crate::protocol::SelectOptions>,
     ) -> Result<Vec<String>> {
         self.frame
-            .locator_select_option(&self.selector, value.into(), options)
+            .locator_select_option(
+                &self.selector,
+                value.into(),
+                Some(self.with_timeout(options)),
+            )
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1167,7 +1196,11 @@ impl Locator {
         let select_options: Vec<crate::protocol::SelectOption> =
             values.iter().map(|v| v.clone().into()).collect();
         self.frame
-            .locator_select_option_multiple(&self.selector, select_options, options)
+            .locator_select_option_multiple(
+                &self.selector,
+                select_options,
+                Some(self.with_timeout(options)),
+            )
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1346,7 +1379,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-tap>
     pub async fn tap(&self, options: Option<crate::protocol::TapOptions>) -> Result<()> {
         self.frame
-            .locator_tap(&self.selector, options)
+            .locator_tap(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1377,7 +1410,11 @@ impl Locator {
         options: Option<crate::protocol::DragToOptions>,
     ) -> Result<()> {
         self.frame
-            .locator_drag_to(&self.selector, &target.selector, options)
+            .locator_drag_to(
+                &self.selector,
+                &target.selector,
+                Some(self.with_timeout(options)),
+            )
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
@@ -1401,7 +1438,7 @@ impl Locator {
     /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
     pub async fn wait_for(&self, options: Option<crate::protocol::WaitForOptions>) -> Result<()> {
         self.frame
-            .locator_wait_for(&self.selector, options)
+            .locator_wait_for(&self.selector, Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
