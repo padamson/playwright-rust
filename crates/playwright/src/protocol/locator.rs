@@ -1271,6 +1271,154 @@ impl Locator {
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
+
+    /// Performs a touch-tap on the element.
+    ///
+    /// This method dispatches a `touchstart` and `touchend` event on the element.
+    /// For touch support to work, the browser context must be created with
+    /// `has_touch: true`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional [`TapOptions`] (force, modifiers, position, timeout, trial)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The element is not found within the timeout
+    /// - Actionability checks fail (unless `force: true`)
+    /// - The browser context was not created with `has_touch: true`
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-tap>
+    pub async fn tap(&self, options: Option<crate::protocol::TapOptions>) -> Result<()> {
+        self.frame
+            .locator_tap(&self.selector, options)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Evaluates a JavaScript expression in the scope of the matched element.
+    ///
+    /// The element is passed as the first argument to the expression. The expression
+    /// can be any JavaScript function or expression that returns a JSON-serializable value.
+    ///
+    /// # Arguments
+    ///
+    /// * `expression` - JavaScript expression or function, e.g. `"(el) => el.textContent"`
+    /// * `arg` - Optional argument passed as the second argument to the function
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The element is not found within the timeout
+    /// - The JavaScript expression throws an error
+    /// - The return value is not JSON-serializable
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::Playwright;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    /// let _ = page.goto("data:text/html,<h1>Hello</h1>", None).await;
+    ///
+    /// let heading = page.locator("h1").await;
+    /// let text: String = heading.evaluate("(el) => el.textContent", None::<()>).await?;
+    /// assert_eq!(text, "Hello");
+    ///
+    /// // With an argument
+    /// let result: String = heading
+    ///     .evaluate("(el, suffix) => el.textContent + suffix", Some("!"))
+    ///     .await?;
+    /// assert_eq!(result, "Hello!");
+    /// # browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-evaluate>
+    pub async fn evaluate<R, T>(&self, expression: &str, arg: Option<T>) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+        T: serde::Serialize,
+    {
+        let raw = self
+            .frame
+            .locator_evaluate(&self.selector, expression, arg)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))?;
+        serde_json::from_value(raw).map_err(|e| {
+            crate::error::Error::ProtocolError(format!(
+                "evaluate result deserialization failed: {}",
+                e
+            ))
+        })
+    }
+
+    /// Evaluates a JavaScript expression in the scope of all elements matching this locator.
+    ///
+    /// The array of all matched elements is passed as the first argument to the expression.
+    /// Unlike [`evaluate()`](Self::evaluate), this does not use strict mode — all matching
+    /// elements are collected and passed as an array.
+    ///
+    /// # Arguments
+    ///
+    /// * `expression` - JavaScript function that receives an array of elements
+    /// * `arg` - Optional argument passed as the second argument to the function
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The JavaScript expression throws an error
+    /// - The return value is not JSON-serializable
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::Playwright;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    /// let _ = page.goto(
+    ///     "data:text/html,<li class='item'>A</li><li class='item'>B</li>",
+    ///     None
+    /// ).await;
+    ///
+    /// let items = page.locator(".item").await;
+    /// let texts: Vec<String> = items
+    ///     .evaluate_all("(elements) => elements.map(e => e.textContent)", None::<()>)
+    ///     .await?;
+    /// assert_eq!(texts, vec!["A", "B"]);
+    /// # browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-evaluate-all>
+    pub async fn evaluate_all<R, T>(&self, expression: &str, arg: Option<T>) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+        T: serde::Serialize,
+    {
+        let raw = self
+            .frame
+            .locator_evaluate_all(&self.selector, expression, arg)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))?;
+        serde_json::from_value(raw).map_err(|e| {
+            crate::error::Error::ProtocolError(format!(
+                "evaluate_all result deserialization failed: {}",
+                e
+            ))
+        })
+    }
 }
 
 impl std::fmt::Debug for Locator {

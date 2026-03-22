@@ -1541,3 +1541,291 @@ async fn test_locator_scroll_into_view_if_needed() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+// ============================================================================
+// Locator.tap() Method
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_tap() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    // tap() requires a touch-enabled context
+    let context = browser
+        .new_context_with_options(playwright_rs::protocol::BrowserContextOptions {
+            has_touch: Some(true),
+            ..Default::default()
+        })
+        .await
+        .expect("Failed to create context with touch");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    page.goto(
+        "data:text/html,<button id='btn' ontouchstart=\"this.textContent='tapped'\">Tap Me</button>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    let button = page.locator("#btn").await;
+
+    // tap() with no options should succeed on a visible element
+    button.tap(None).await.expect("tap() should succeed");
+
+    // Verify the tap event fired
+    let text = button
+        .text_content()
+        .await
+        .expect("Failed to get text content");
+    assert_eq!(
+        text,
+        Some("tapped".to_string()),
+        "Tap event should have fired"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_locator_tap_with_options() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let context = browser
+        .new_context_with_options(playwright_rs::protocol::BrowserContextOptions {
+            has_touch: Some(true),
+            ..Default::default()
+        })
+        .await
+        .expect("Failed to create context with touch");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    page.goto("data:text/html,<button id='btn'>Force Tap</button>", None)
+        .await
+        .expect("Failed to navigate");
+
+    let button = page.locator("#btn").await;
+
+    // tap() with TapOptions (force=true) should succeed
+    let opts = playwright_rs::TapOptions::builder().force(true).build();
+    button
+        .tap(Some(opts))
+        .await
+        .expect("tap() with options should succeed");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+// ============================================================================
+// Locator.evaluate() Method
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_evaluate() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/locator.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // evaluate a JS function that receives the element and returns its textContent
+    let heading = page.locator("h1").await;
+    let text: String = heading
+        .evaluate("(el) => el.textContent", None::<()>)
+        .await
+        .expect("evaluate should succeed");
+    assert_eq!(text, "Test Page");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_evaluate_with_arg() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/locator.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // evaluate with an argument
+    let heading = page.locator("h1").await;
+    let result: String = heading
+        .evaluate("(el, suffix) => el.textContent + suffix", Some("!"))
+        .await
+        .expect("evaluate with arg should succeed");
+    assert_eq!(result, "Test Page!");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_evaluate_returns_number() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(
+        "data:text/html,<div id='box' style='width:200px;height:100px;'></div>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    let div = page.locator("#box").await;
+
+    // evaluate a JS function that returns a number
+    let width: f64 = div
+        .evaluate("(el) => el.offsetWidth", None::<()>)
+        .await
+        .expect("evaluate should succeed");
+    assert_eq!(width, 200.0);
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+// ============================================================================
+// Locator.evaluate_all() Method
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_evaluate_all() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/all_texts.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // evaluate_all: collect textContent of all matching elements
+    let items = page.locator(".item").await;
+    let texts: Vec<String> = items
+        .evaluate_all("(elements) => elements.map(e => e.textContent)", None::<()>)
+        .await
+        .expect("evaluate_all should succeed");
+
+    assert_eq!(texts, vec!["Alpha", "Beta", "Gamma"]);
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_evaluate_all_with_arg() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(
+        "data:text/html,<li class='item'>One</li><li class='item'>Two</li><li class='item'>Three</li>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    // evaluate_all with an argument (prefix each item)
+    let items = page.locator(".item").await;
+    let texts: Vec<String> = items
+        .evaluate_all(
+            "(elements, prefix) => elements.map(e => prefix + e.textContent)",
+            Some("item: "),
+        )
+        .await
+        .expect("evaluate_all with arg should succeed");
+
+    assert_eq!(texts, vec!["item: One", "item: Two", "item: Three"]);
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_locator_evaluate_all_returns_count() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(
+        "data:text/html,<span class='x'></span><span class='x'></span><span class='x'></span>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    let spans = page.locator(".x").await;
+    let count: f64 = spans
+        .evaluate_all("(elements) => elements.length", None::<()>)
+        .await
+        .expect("evaluate_all should succeed");
+
+    assert_eq!(count, 3.0);
+
+    browser.close().await.expect("Failed to close browser");
+}

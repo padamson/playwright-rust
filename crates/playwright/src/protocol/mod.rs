@@ -39,6 +39,7 @@ pub mod root;
 pub mod route;
 pub mod screenshot;
 pub mod select_option;
+pub mod tap;
 pub mod tracing;
 pub mod web_socket;
 
@@ -83,5 +84,6 @@ pub use route::{
 };
 pub use screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 pub use select_option::SelectOption;
+pub use tap::{TapOptions, TapOptionsBuilder};
 pub use tracing::Tracing;
 pub use web_socket::WebSocket;

@@ -1004,6 +1004,103 @@ impl Frame {
         Self::parse_string_array(result.value)
     }
 
+    /// Performs a touch-tap on the element matching the selector.
+    ///
+    /// Sends touch events rather than mouse events. Requires the browser context to be
+    /// created with `has_touch: true`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-tap>
+    pub(crate) async fn locator_tap(
+        &self,
+        selector: &str,
+        options: Option<crate::protocol::TapOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "strict": true
+        });
+
+        if let Some(opts) = options {
+            let opts_json = opts.to_json();
+            if let Some(obj) = params.as_object_mut() {
+                if let Some(opts_obj) = opts_json.as_object() {
+                    obj.extend(opts_obj.clone());
+                }
+            }
+        } else {
+            params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+        }
+
+        self.channel().send_no_result("tap", params).await
+    }
+
+    /// Evaluates a JavaScript expression in the scope of the element matching the selector.
+    ///
+    /// The element is passed as the first argument to the expression. This is equivalent
+    /// to Playwright's `evalOnSelector` protocol call with `strict: true`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-evaluate>
+    pub(crate) async fn locator_evaluate<T: serde::Serialize>(
+        &self,
+        selector: &str,
+        expression: &str,
+        arg: Option<T>,
+    ) -> Result<serde_json::Value> {
+        let serialized_arg = match arg {
+            Some(a) => serialize_argument(&a),
+            None => serialize_null(),
+        };
+
+        let params = serde_json::json!({
+            "selector": selector,
+            "expression": expression,
+            "isFunction": true,
+            "arg": serialized_arg,
+            "strict": true
+        });
+
+        #[derive(Deserialize)]
+        struct EvaluateResult {
+            value: serde_json::Value,
+        }
+
+        let result: EvaluateResult = self.channel().send("evalOnSelector", params).await?;
+        Ok(parse_result(&result.value))
+    }
+
+    /// Evaluates a JavaScript expression in the scope of all elements matching the selector.
+    ///
+    /// The array of all matching elements is passed as the first argument to the expression.
+    /// This is equivalent to Playwright's `evalOnSelectorAll` protocol call.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-evaluate-all>
+    pub(crate) async fn locator_evaluate_all<T: serde::Serialize>(
+        &self,
+        selector: &str,
+        expression: &str,
+        arg: Option<T>,
+    ) -> Result<serde_json::Value> {
+        let serialized_arg = match arg {
+            Some(a) => serialize_argument(&a),
+            None => serialize_null(),
+        };
+
+        let params = serde_json::json!({
+            "selector": selector,
+            "expression": expression,
+            "isFunction": true,
+            "arg": serialized_arg
+        });
+
+        #[derive(Deserialize)]
+        struct EvaluateResult {
+            value: serde_json::Value,
+        }
+
+        let result: EvaluateResult = self.channel().send("evalOnSelectorAll", params).await?;
+        Ok(parse_result(&result.value))
+    }
+
     /// Parses a Playwright protocol array value into a Vec<String>.
     ///
     /// The Playwright protocol returns arrays as:
