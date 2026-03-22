@@ -145,8 +145,8 @@ impl Frame {
                 }
             };
 
-            // Note: ResponseObject protocol object exists (crates/playwright-core/src/protocol/response.rs)
-            // We extract Response data from its initializer rather than wrapping the protocol object
+            // Extract Response data from the initializer, and store the Arc for RPC calls
+            // (body(), rawHeaders(), headerValue()) that need to contact the server.
             let initializer = response_arc.initializer();
 
             // Extract response data from initializer
@@ -177,8 +177,9 @@ impl Frame {
                     .to_string(),
                 status,
                 status_text: initializer["statusText"].as_str().unwrap_or("").to_string(),
-                ok: (200..300).contains(&status), // Compute ok from status code
+                ok: (200..300).contains(&status),
                 headers,
+                response_channel_owner: Some(response_arc),
             }))
         } else {
             // Navigation returned null (e.g., data URLs, about:blank)

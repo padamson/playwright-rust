@@ -10,6 +10,19 @@ use serde_json::Value;
 use std::any::Any;
 use std::sync::Arc;
 
+/// A single HTTP header entry with a name and value.
+///
+/// Used by `Response::headers_array()` to return all headers preserving duplicates.
+///
+/// See: <https://playwright.dev/docs/api/class-response#response-headers-array>
+#[derive(Debug, Clone)]
+pub struct HeaderEntry {
+    /// Header name (lowercase)
+    pub name: String,
+    /// Header value
+    pub value: String,
+}
+
 /// Response represents an HTTP response from a navigation operation.
 ///
 /// Response objects are not created directly - they are returned from
@@ -70,6 +83,68 @@ impl ResponseObject {
             .get("url")
             .and_then(|v| v.as_str())
             .unwrap_or("")
+    }
+
+    /// Returns the response body as bytes.
+    ///
+    /// Sends a `"body"` RPC call to the Playwright server, which returns the body
+    /// as a base64-encoded binary string.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-body>
+    pub async fn body(&self) -> Result<Vec<u8>> {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        struct BodyResponse {
+            binary: String,
+        }
+
+        let result: BodyResponse = self.channel().send("body", serde_json::json!({})).await?;
+
+        use base64::Engine;
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(&result.binary)
+            .map_err(|e| {
+                crate::error::Error::ProtocolError(format!(
+                    "Failed to decode response body from base64: {}",
+                    e
+                ))
+            })?;
+        Ok(bytes)
+    }
+
+    /// Returns the raw response headers as name-value pairs (preserving duplicates).
+    ///
+    /// Sends a `"rawResponseHeaders"` RPC call to the Playwright server.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-headers-array>
+    pub async fn raw_headers(&self) -> Result<Vec<HeaderEntry>> {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        struct RawHeadersResponse {
+            headers: Vec<HeaderEntryRaw>,
+        }
+
+        #[derive(Deserialize)]
+        struct HeaderEntryRaw {
+            name: String,
+            value: String,
+        }
+
+        let result: RawHeadersResponse = self
+            .channel()
+            .send("rawResponseHeaders", serde_json::json!({}))
+            .await?;
+
+        Ok(result
+            .headers
+            .into_iter()
+            .map(|h| HeaderEntry {
+                name: h.name,
+                value: h.value,
+            })
+            .collect())
     }
 }
 

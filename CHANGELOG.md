@@ -52,6 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `frames()` — list page frames (currently main frame only; iframe enumeration planned)
 - **BrowserContext timeout defaults** — `set_default_timeout()`, `set_default_navigation_timeout()`
   - Propagates to all existing pages and newly created pages in the context
+- **Response body access** — `body()`, `text()`, `json()`, `all_headers()`, `header_value()`, `headers_array()`
+  - `body()` — response body as raw bytes
+  - `text()` — response body as UTF-8 string
+  - `json::<T>()` — parse response body as typed JSON (`T: DeserializeOwned`)
+  - `all_headers()` — all response headers as HashMap (merges duplicates)
+  - `header_value(name)` — get a single header value by name
+  - `headers_array()` — all headers as `Vec<HeaderEntry>` preserving duplicates
 
 ### Changed
 

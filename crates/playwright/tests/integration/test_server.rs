@@ -51,7 +51,8 @@ impl TestServer {
             .route("/all_texts.html", get(all_texts_page))
             .route("/echo-headers", get(echo_headers_page))
             .route("/drag_drop.html", get(drag_drop_page))
-            .route("/wait_for.html", get(wait_for_page));
+            .route("/wait_for.html", get(wait_for_page))
+            .route("/api/data.json", get(json_data_endpoint));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -811,6 +812,17 @@ async fn echo_headers_page(headers: HeaderMap) -> Response<Body> {
         .status(StatusCode::OK)
         .header("Content-Type", "text/html")
         .body(Body::from(html))
+        .unwrap()
+}
+
+/// Returns a simple JSON response for testing response.json()
+async fn json_data_endpoint() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Body::from(
+            r#"{"status":"ok","message":"hello from test server"}"#,
+        ))
         .unwrap()
 }
 

@@ -33,6 +33,7 @@ mod page_new_methods;
 mod page_properties;
 mod pause;
 mod playwright_launch;
+mod response;
 mod route_advanced;
 mod route_fallback_unroute;
 mod route_fetch;

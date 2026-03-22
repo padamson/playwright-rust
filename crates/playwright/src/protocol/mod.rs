@@ -79,7 +79,7 @@ pub use page::{
 pub use playwright::Playwright;
 pub use proxy::ProxySettings;
 pub use request::Request;
-pub use response::ResponseObject;
+pub use response::{HeaderEntry, ResponseObject};
 pub use root::Root;
 pub use route::{
     ContinueOptions, ContinueOptionsBuilder, FetchOptions, FetchOptionsBuilder, FetchResponse,

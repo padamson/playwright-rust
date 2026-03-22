@@ -72,6 +72,7 @@ exclude_re = [
     "Locator::evaluate",
     "Locator::evaluate_all",
     "Locator::drag_to",
+    "Locator::with_timeout",
     "Locator::wait_for",
     "Locator::selector",
     "Locator::wrap_error",

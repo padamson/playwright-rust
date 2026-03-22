@@ -1050,6 +1050,7 @@ impl Page {
                 status_text: initializer["statusText"].as_str().unwrap_or("").to_string(),
                 ok: (200..300).contains(&status),
                 headers,
+                response_channel_owner: Some(response_arc),
             };
 
             if let Ok(mut page_url) = self.url.write() {
@@ -2778,8 +2779,13 @@ impl PdfOptionsBuilder {
     }
 }
 
-/// Response from navigation operations
-#[derive(Debug, Clone)]
+/// Response from navigation operations.
+///
+/// Returned from `page.goto()`, `page.reload()`, `page.go_back()`, and similar
+/// navigation methods. Provides access to the HTTP response status, headers, and body.
+///
+/// See: <https://playwright.dev/docs/api/class-response>
+#[derive(Clone)]
 pub struct Response {
     /// URL of the response
     pub url: String,
@@ -2789,34 +2795,229 @@ pub struct Response {
     pub status_text: String,
     /// Whether the response was successful (status 200-299)
     pub ok: bool,
-    /// Response headers
+    /// Response headers (from initializer, may not include all raw headers)
     pub headers: std::collections::HashMap<String, String>,
+    /// Reference to the backing channel owner for RPC calls (body, rawHeaders, etc.)
+    /// Stored as the generic trait object so it can be downcast to ResponseObject when needed.
+    pub(crate) response_channel_owner:
+        Option<std::sync::Arc<dyn crate::server::channel_owner::ChannelOwner>>,
 }
 
 impl Response {
-    /// Returns the URL of the response
+    /// Returns the URL of the response.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-url>
     pub fn url(&self) -> &str {
         &self.url
     }
 
-    /// Returns the HTTP status code
+    /// Returns the HTTP status code.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-status>
     pub fn status(&self) -> u16 {
         self.status
     }
 
-    /// Returns the HTTP status text
+    /// Returns the HTTP status text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-status-text>
     pub fn status_text(&self) -> &str {
         &self.status_text
     }
 
-    /// Returns whether the response was successful (status 200-299)
+    /// Returns whether the response was successful (status 200-299).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-ok>
     pub fn ok(&self) -> bool {
         self.ok
     }
 
-    /// Returns the response headers
+    /// Returns the response headers as a HashMap.
+    ///
+    /// Note: these are the headers from the protocol initializer. For the full
+    /// raw headers (including duplicates), use `headers_array()` or `all_headers()`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-headers>
     pub fn headers(&self) -> &std::collections::HashMap<String, String> {
         &self.headers
+    }
+
+    /// Returns the response body as raw bytes.
+    ///
+    /// Makes an RPC call to the Playwright server to fetch the response body.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No backing protocol object is available (edge case)
+    /// - The RPC call to the server fails
+    /// - The base64 response cannot be decoded
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-body>
+    pub async fn body(&self) -> crate::error::Result<Vec<u8>> {
+        let arc = self.response_channel_owner.as_ref().ok_or_else(|| {
+            crate::error::Error::ProtocolError(
+                "Response has no backing protocol object for body()".to_string(),
+            )
+        })?;
+        let obj = arc
+            .as_any()
+            .downcast_ref::<crate::protocol::ResponseObject>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Response backing object is not a ResponseObject".to_string(),
+                )
+            })?
+            .clone();
+        obj.body().await
+    }
+
+    /// Returns the response body as a UTF-8 string.
+    ///
+    /// Calls `body()` then converts bytes to a UTF-8 string.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - `body()` fails
+    /// - The body is not valid UTF-8
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-text>
+    pub async fn text(&self) -> crate::error::Result<String> {
+        let bytes = self.body().await?;
+        String::from_utf8(bytes).map_err(|e| {
+            crate::error::Error::ProtocolError(format!("Response body is not valid UTF-8: {}", e))
+        })
+    }
+
+    /// Parses the response body as JSON and deserializes it into type `T`.
+    ///
+    /// Calls `text()` then uses `serde_json` to deserialize the body.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - `text()` fails
+    /// - The body is not valid JSON or doesn't match the expected type
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-json>
+    pub async fn json<T: serde::de::DeserializeOwned>(&self) -> crate::error::Result<T> {
+        let text = self.text().await?;
+        serde_json::from_str(&text).map_err(|e| {
+            crate::error::Error::ProtocolError(format!("Failed to parse response JSON: {}", e))
+        })
+    }
+
+    /// Returns all response headers as name-value pairs, preserving duplicates.
+    ///
+    /// Makes an RPC call for `"rawHeaders"` which returns the complete header list.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No backing protocol object is available (edge case)
+    /// - The RPC call to the server fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-headers-array>
+    pub async fn headers_array(
+        &self,
+    ) -> crate::error::Result<Vec<crate::protocol::response::HeaderEntry>> {
+        let arc = self.response_channel_owner.as_ref().ok_or_else(|| {
+            crate::error::Error::ProtocolError(
+                "Response has no backing protocol object for headers_array()".to_string(),
+            )
+        })?;
+        let obj = arc
+            .as_any()
+            .downcast_ref::<crate::protocol::ResponseObject>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Response backing object is not a ResponseObject".to_string(),
+                )
+            })?
+            .clone();
+        obj.raw_headers().await
+    }
+
+    /// Returns all response headers merged into a HashMap with lowercase keys.
+    ///
+    /// When multiple headers have the same name, their values are joined with `, `.
+    /// This matches the behavior of `response.allHeaders()` in other Playwright bindings.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No backing protocol object is available (edge case)
+    /// - The RPC call to the server fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-all-headers>
+    pub async fn all_headers(
+        &self,
+    ) -> crate::error::Result<std::collections::HashMap<String, String>> {
+        let entries = self.headers_array().await?;
+        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        for entry in entries {
+            let key = entry.name.to_lowercase();
+            map.entry(key)
+                .and_modify(|v| {
+                    v.push_str(", ");
+                    v.push_str(&entry.value);
+                })
+                .or_insert(entry.value);
+        }
+        Ok(map)
+    }
+
+    /// Returns the value for a single response header, or `None` if not present.
+    ///
+    /// The lookup is case-insensitive.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No backing protocol object is available (edge case)
+    /// - The RPC call to the server fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-header-value>
+    /// Returns the value for a single response header, or `None` if not present.
+    ///
+    /// The lookup is case-insensitive. When multiple headers share the same name,
+    /// their values are joined with `, ` (matching Playwright's behavior).
+    ///
+    /// Uses the raw headers from the server for accurate results.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying `headers_array()` RPC call fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-header-value>
+    pub async fn header_value(&self, name: &str) -> crate::error::Result<Option<String>> {
+        let entries = self.headers_array().await?;
+        let name_lower = name.to_lowercase();
+        let mut values: Vec<String> = entries
+            .into_iter()
+            .filter(|h| h.name.to_lowercase() == name_lower)
+            .map(|h| h.value)
+            .collect();
+
+        if values.is_empty() {
+            Ok(None)
+        } else if values.len() == 1 {
+            Ok(Some(values.remove(0)))
+        } else {
+            Ok(Some(values.join(", ")))
+        }
+    }
+}
+
+impl std::fmt::Debug for Response {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Response")
+            .field("url", &self.url)
+            .field("status", &self.status)
+            .field("status_text", &self.status_text)
+            .field("ok", &self.ok)
+            .finish_non_exhaustive()
     }
 }
 

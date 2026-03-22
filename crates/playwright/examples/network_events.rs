@@ -53,10 +53,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     println!("Navigating to example.com...\n");
-    page.goto("https://example.com", None).await?;
+    let response = page
+        .goto("https://example.com", None)
+        .await?
+        .expect("Expected a response");
 
     // Small delay to let async event dispatching complete
     tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
+    // --- Response body access ---
+
+    println!("\n=== Response Body Access ===\n");
+
+    // Get response body as text
+    let body_text = response.text().await?;
+    println!(
+        "Response text (first 80 chars): {}...",
+        &body_text[..body_text.len().min(80)]
+    );
+
+    // Get response body as raw bytes
+    let body_bytes = response.body().await?;
+    println!("Response body size: {} bytes", body_bytes.len());
+
+    // Get individual header value
+    if let Some(content_type) = response.header_value("content-type").await? {
+        println!("Content-Type: {}", content_type);
+    }
+
+    // Get all headers as name/value pairs (preserves duplicates)
+    let headers = response.headers_array().await?;
+    println!("Response has {} header entries", headers.len());
 
     println!("\nClosing browser...");
     browser.close().await?;
