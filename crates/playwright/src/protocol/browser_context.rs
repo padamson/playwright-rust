@@ -101,10 +101,10 @@ pub struct BrowserContext {
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
     /// APIRequestContext GUID from initializer (resolved lazily)
     request_context_guid: Option<String>,
-    /// Default action timeout for all pages in this context (milliseconds).
-    default_timeout_ms: Arc<std::sync::RwLock<f64>>,
-    /// Default navigation timeout for all pages in this context (milliseconds).
-    default_navigation_timeout_ms: Arc<std::sync::RwLock<f64>>,
+    /// Default action timeout for all pages in this context (milliseconds), stored as f64 bits.
+    default_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
+    /// Default navigation timeout for all pages in this context (milliseconds), stored as f64 bits.
+    default_navigation_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl BrowserContext {
@@ -154,9 +154,11 @@ impl BrowserContext {
             pages: Arc::new(Mutex::new(Vec::new())),
             route_handlers: Arc::new(Mutex::new(Vec::new())),
             request_context_guid,
-            default_timeout_ms: Arc::new(std::sync::RwLock::new(crate::DEFAULT_TIMEOUT_MS)),
-            default_navigation_timeout_ms: Arc::new(std::sync::RwLock::new(
-                crate::DEFAULT_TIMEOUT_MS,
+            default_timeout_ms: Arc::new(std::sync::atomic::AtomicU64::new(
+                crate::DEFAULT_TIMEOUT_MS.to_bits(),
+            )),
+            default_navigation_timeout_ms: Arc::new(std::sync::atomic::AtomicU64::new(
+                crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
         };
 
@@ -253,10 +255,10 @@ impl BrowserContext {
         // Propagate context-level timeout defaults to the new page
         let ctx_timeout = self.default_timeout_ms();
         let ctx_nav_timeout = self.default_navigation_timeout_ms();
-        if (ctx_timeout - crate::DEFAULT_TIMEOUT_MS).abs() > f64::EPSILON {
+        if ctx_timeout.to_bits() != crate::DEFAULT_TIMEOUT_MS.to_bits() {
             page.set_default_timeout(ctx_timeout).await;
         }
-        if (ctx_nav_timeout - crate::DEFAULT_TIMEOUT_MS).abs() > f64::EPSILON {
+        if ctx_nav_timeout.to_bits() != crate::DEFAULT_TIMEOUT_MS.to_bits() {
             page.set_default_navigation_timeout(ctx_nav_timeout).await;
         }
 
@@ -353,24 +355,18 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout>
     pub async fn set_default_timeout(&self, timeout: f64) {
-        if let Ok(mut t) = self.default_timeout_ms.write() {
-            *t = timeout;
-        }
-        // Collect page handles while holding the lock, then release it before awaiting
+        self.default_timeout_ms
+            .store(timeout.to_bits(), std::sync::atomic::Ordering::Relaxed);
         let pages: Vec<Page> = self.pages.lock().unwrap().clone();
         for page in pages {
             page.set_default_timeout(timeout).await;
         }
-        if let Err(e) = self
-            .channel()
-            .send_no_result(
-                "setDefaultTimeoutNoReply",
-                serde_json::json!({ "timeout": timeout }),
-            )
-            .await
-        {
-            tracing::warn!("BrowserContext::set_default_timeout send error: {}", e);
-        }
+        crate::protocol::page::set_timeout_and_notify(
+            self.channel(),
+            "setDefaultTimeoutNoReply",
+            timeout,
+        )
+        .await;
     }
 
     /// Sets the default timeout for navigation operations in this browser context.
@@ -384,43 +380,34 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-navigation-timeout>
     pub async fn set_default_navigation_timeout(&self, timeout: f64) {
-        if let Ok(mut t) = self.default_navigation_timeout_ms.write() {
-            *t = timeout;
-        }
-        // Collect page handles while holding the lock, then release it before awaiting
+        self.default_navigation_timeout_ms
+            .store(timeout.to_bits(), std::sync::atomic::Ordering::Relaxed);
         let pages: Vec<Page> = self.pages.lock().unwrap().clone();
         for page in pages {
             page.set_default_navigation_timeout(timeout).await;
         }
-        if let Err(e) = self
-            .channel()
-            .send_no_result(
-                "setDefaultNavigationTimeoutNoReply",
-                serde_json::json!({ "timeout": timeout }),
-            )
-            .await
-        {
-            tracing::warn!(
-                "BrowserContext::set_default_navigation_timeout send error: {}",
-                e
-            );
-        }
+        crate::protocol::page::set_timeout_and_notify(
+            self.channel(),
+            "setDefaultNavigationTimeoutNoReply",
+            timeout,
+        )
+        .await;
     }
 
     /// Returns the context's current default action timeout in milliseconds.
     fn default_timeout_ms(&self) -> f64 {
-        self.default_timeout_ms
-            .read()
-            .map(|t| *t)
-            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+        f64::from_bits(
+            self.default_timeout_ms
+                .load(std::sync::atomic::Ordering::Relaxed),
+        )
     }
 
     /// Returns the context's current default navigation timeout in milliseconds.
     fn default_navigation_timeout_ms(&self) -> f64 {
-        self.default_navigation_timeout_ms
-            .read()
-            .map(|t| *t)
-            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+        f64::from_bits(
+            self.default_navigation_timeout_ms
+                .load(std::sync::atomic::Ordering::Relaxed),
+        )
     }
 
     /// Pauses the browser context.

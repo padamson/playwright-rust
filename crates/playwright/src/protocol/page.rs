@@ -14,7 +14,7 @@ use serde_json::Value;
 use std::any::Any;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 
 /// Page represents a web page within a browser context.
@@ -204,12 +204,10 @@ pub struct Page {
     /// Whether this page has been closed.
     /// Set to true when close() is called or a "close" event is received.
     is_closed: Arc<AtomicBool>,
-    /// Default timeout for actions (milliseconds).
-    /// Used when no explicit timeout is provided in action calls.
-    default_timeout_ms: Arc<RwLock<f64>>,
-    /// Default timeout for navigation operations (milliseconds).
-    /// Used when no explicit timeout is provided in navigation calls.
-    default_navigation_timeout_ms: Arc<RwLock<f64>>,
+    /// Default timeout for actions (milliseconds), stored as f64 bits.
+    default_timeout_ms: Arc<AtomicU64>,
+    /// Default timeout for navigation operations (milliseconds), stored as f64 bits.
+    default_navigation_timeout_ms: Arc<AtomicU64>,
 }
 
 /// Type alias for boxed route handler future
@@ -329,8 +327,10 @@ impl Page {
             websocket_handlers,
             viewport,
             is_closed: Arc::new(AtomicBool::new(false)),
-            default_timeout_ms: Arc::new(RwLock::new(crate::DEFAULT_TIMEOUT_MS)),
-            default_navigation_timeout_ms: Arc::new(RwLock::new(crate::DEFAULT_TIMEOUT_MS)),
+            default_timeout_ms: Arc::new(AtomicU64::new(crate::DEFAULT_TIMEOUT_MS.to_bits())),
+            default_navigation_timeout_ms: Arc::new(AtomicU64::new(
+                crate::DEFAULT_TIMEOUT_MS.to_bits(),
+            )),
         })
     }
 
@@ -436,19 +436,9 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-default-timeout>
     pub async fn set_default_timeout(&self, timeout: f64) {
-        if let Ok(mut t) = self.default_timeout_ms.write() {
-            *t = timeout;
-        }
-        if let Err(e) = self
-            .channel()
-            .send_no_result(
-                "setDefaultTimeoutNoReply",
-                serde_json::json!({ "timeout": timeout }),
-            )
-            .await
-        {
-            tracing::warn!("set_default_timeout send error: {}", e);
-        }
+        self.default_timeout_ms
+            .store(timeout.to_bits(), Ordering::Relaxed);
+        set_timeout_and_notify(self.channel(), "setDefaultTimeoutNoReply", timeout).await;
     }
 
     /// Sets the default timeout for navigation operations on this page.
@@ -456,51 +446,30 @@ impl Page {
     /// The timeout applies to navigation actions such as `goto`, `reload`,
     /// `go_back`, and `go_forward`. Pass `0` to disable timeouts.
     ///
-    /// This stores the value locally so that subsequent navigation calls use it
-    /// when no explicit timeout is provided, and also notifies the Playwright
-    /// server.
-    ///
     /// # Arguments
     ///
     /// * `timeout` - Timeout in milliseconds
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-default-navigation-timeout>
     pub async fn set_default_navigation_timeout(&self, timeout: f64) {
-        if let Ok(mut t) = self.default_navigation_timeout_ms.write() {
-            *t = timeout;
-        }
-        if let Err(e) = self
-            .channel()
-            .send_no_result(
-                "setDefaultNavigationTimeoutNoReply",
-                serde_json::json!({ "timeout": timeout }),
-            )
-            .await
-        {
-            tracing::warn!("set_default_navigation_timeout send error: {}", e);
-        }
+        self.default_navigation_timeout_ms
+            .store(timeout.to_bits(), Ordering::Relaxed);
+        set_timeout_and_notify(
+            self.channel(),
+            "setDefaultNavigationTimeoutNoReply",
+            timeout,
+        )
+        .await;
     }
 
     /// Returns the current default action timeout in milliseconds.
-    ///
-    /// This is the value set by `set_default_timeout`, or `DEFAULT_TIMEOUT_MS`
-    /// if it has not been set.
     pub fn default_timeout_ms(&self) -> f64 {
-        self.default_timeout_ms
-            .read()
-            .map(|t| *t)
-            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+        f64::from_bits(self.default_timeout_ms.load(Ordering::Relaxed))
     }
 
     /// Returns the current default navigation timeout in milliseconds.
-    ///
-    /// This is the value set by `set_default_navigation_timeout`, or
-    /// `DEFAULT_TIMEOUT_MS` if it has not been set.
     pub fn default_navigation_timeout_ms(&self) -> f64 {
-        self.default_navigation_timeout_ms
-            .read()
-            .map(|t| *t)
-            .unwrap_or(crate::DEFAULT_TIMEOUT_MS)
+        f64::from_bits(self.default_navigation_timeout_ms.load(Ordering::Relaxed))
     }
 
     /// Returns GotoOptions with the navigation timeout filled in if not already set.
@@ -2848,5 +2817,20 @@ impl Response {
     /// Returns the response headers
     pub fn headers(&self) -> &std::collections::HashMap<String, String> {
         &self.headers
+    }
+}
+
+/// Shared helper: store timeout locally and notify the Playwright server.
+/// Used by both Page and BrowserContext timeout setters.
+pub(crate) async fn set_timeout_and_notify(
+    channel: &crate::server::channel::Channel,
+    method: &str,
+    timeout: f64,
+) {
+    if let Err(e) = channel
+        .send_no_result(method, serde_json::json!({ "timeout": timeout }))
+        .await
+    {
+        tracing::warn!("{} send error: {}", method, e);
     }
 }

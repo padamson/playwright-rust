@@ -1352,9 +1352,9 @@ impl Locator {
                 ))
             })?;
 
-        // Delegate to ElementHandle.screenshot()
+        // Delegate to ElementHandle.screenshot() with default timeout injected
         element
-            .screenshot(options)
+            .screenshot(Some(self.with_timeout(options)))
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }
