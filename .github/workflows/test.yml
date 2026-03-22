@@ -47,7 +47,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: drivers/
-        key: ${{ runner.os }}-playwright-drivers-1.56.1
+        key: ${{ runner.os }}-playwright-drivers-1.58.2
 
     - name: Cache Playwright Browsers (Linux/macOS)
       if: runner.os != 'Windows'
@@ -56,18 +56,18 @@ jobs:
         path: |
           ~/.cache/ms-playwright
           ~/Library/Caches/ms-playwright
-        key: ${{ runner.os }}-playwright-browsers-1.56.1-v2
+        key: ${{ runner.os }}-playwright-browsers-1.58.2-v2
         restore-keys: |
-          ${{ runner.os }}-playwright-browsers-1.56.1-
+          ${{ runner.os }}-playwright-browsers-1.58.2-
 
     - name: Cache Playwright Browsers (Windows)
       if: runner.os == 'Windows'
       uses: actions/cache@v5
       with:
         path: ~\AppData\Local\ms-playwright
-        key: ${{ runner.os }}-playwright-browsers-1.56.1-v2
+        key: ${{ runner.os }}-playwright-browsers-1.58.2-v2
         restore-keys: |
-          ${{ runner.os }}-playwright-browsers-1.56.1-
+          ${{ runner.os }}-playwright-browsers-1.58.2-
 
     - name: Install cargo-nextest
       uses: taiki-e/install-action@v2
@@ -85,20 +85,20 @@ jobs:
 
     - name: Install Playwright browsers (Linux)
       if: runner.os == 'Linux'
-      run: drivers/playwright-1.56.1-linux/node drivers/playwright-1.56.1-linux/package/cli.js install chromium firefox webkit --with-deps
+      run: drivers/playwright-1.58.2-linux/node drivers/playwright-1.58.2-linux/package/cli.js install chromium firefox webkit --with-deps
 
     - name: Install Playwright browsers (macOS)
       if: runner.os == 'macOS'
       run: |
-        if [ -d "drivers/playwright-1.56.1-mac-arm64" ]; then
-          drivers/playwright-1.56.1-mac-arm64/node drivers/playwright-1.56.1-mac-arm64/package/cli.js install chromium firefox webkit
+        if [ -d "drivers/playwright-1.58.2-mac-arm64" ]; then
+          drivers/playwright-1.58.2-mac-arm64/node drivers/playwright-1.58.2-mac-arm64/package/cli.js install chromium firefox webkit
         else
-          drivers/playwright-1.56.1-mac/node drivers/playwright-1.56.1-mac/package/cli.js install chromium firefox webkit
+          drivers/playwright-1.58.2-mac/node drivers/playwright-1.58.2-mac/package/cli.js install chromium firefox webkit
         fi
 
     - name: Install Playwright browsers (Windows)
       if: runner.os == 'Windows'
-      run: drivers\playwright-1.56.1-win32_x64\node.exe drivers\playwright-1.56.1-win32_x64\package\cli.js install chromium firefox webkit
+      run: drivers\playwright-1.58.2-win32_x64\node.exe drivers\playwright-1.58.2-win32_x64\package\cli.js install chromium firefox webkit
 
     - name: Run tests (Linux/macOS)
       if: runner.os != 'Windows'

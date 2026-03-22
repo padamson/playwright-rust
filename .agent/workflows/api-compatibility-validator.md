@@ -33,7 +33,7 @@ Ensure API compatibility with playwright-python, playwright-java, and playwright
    - Note Python-specific patterns (sync vs async)
 
 3. **Read playwright-rust implementation**:
-   - Read: `crates/playwright/src/api/page.rs`
+   - Read: `crates/playwright/src/protocol/page.rs`
    - Extract current methods and signatures
 
 4. **Compare and report**:

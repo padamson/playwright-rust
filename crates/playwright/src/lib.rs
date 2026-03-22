@@ -165,7 +165,7 @@ pub mod protocol;
 /// When installing browsers, use this version to ensure compatibility:
 ///
 /// ```bash
-/// npx playwright@1.56.1 install
+/// npx playwright@1.58.2 install
 /// ```
 ///
 /// See: <https://playwright.dev/docs/browsers>

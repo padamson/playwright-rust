@@ -8,7 +8,7 @@
 // 1. Install the Playwright driver (needed locally to manage the CDP connection):
 //
 //    ```bash
-//    npx playwright@1.56.1 install chromium
+//    npx playwright@1.58.2 install chromium
 //    ```
 //
 // 2. Start a Chrome instance with remote debugging enabled. The easiest way

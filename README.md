@@ -73,23 +73,23 @@ See the [CHANGELOG](CHANGELOG.md) for version history and features.
 
 **Important:** Browsers must be installed separately using the Playwright CLI.
 
-The library bundles Playwright driver version **1.56.1**. You must install matching browser versions:
+The library bundles Playwright driver version **1.58.2**. You must install matching browser versions:
 
 ```bash
 # Install all browsers (recommended)
-npx playwright@1.56.1 install
+npx playwright@1.58.2 install
 
 # Or install specific browsers
-npx playwright@1.56.1 install chromium firefox webkit
+npx playwright@1.58.2 install chromium firefox webkit
 ```
 
-**Why version matters:** Each Playwright release expects specific browser builds. Using `playwright@1.56.1` ensures you get compatible browsers (chromium-1194, firefox-1495, webkit-2215).
+**Why version matters:** Each Playwright release expects specific browser builds. Using `playwright@1.58.2` ensures you get compatible browsers (chromium-1208, firefox-1471, webkit-2248).
 
 **In CI/CD:** Add this to your GitHub Actions workflow:
 
 ```yaml
 - name: Install Playwright Browsers
-  run: npx playwright@1.56.1 install chromium firefox webkit --with-deps
+  run: npx playwright@1.58.2 install chromium firefox webkit --with-deps
 ```
 
 The version constant is also available in code:
@@ -131,7 +131,7 @@ After building, install browsers as described in [Browser Installation](#browser
 
 ```bash
 cargo build
-npx playwright@1.56.1 install chromium firefox webkit
+npx playwright@1.58.2 install chromium firefox webkit
 ```
 
 The build script automatically downloads the Playwright driver to `drivers/` (gitignored). CI handles browser installation automatically - see `.github/workflows/test.yml`.

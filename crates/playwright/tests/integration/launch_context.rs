@@ -262,10 +262,25 @@ async fn test_launch_persistent_context_cross_browser() {
         tracing::info!("✓ Firefox persistent context works");
     }
 
-    // Test WebKit
-    // Skip WebKit: launchPersistentContext fails with "Browser started with no default context"
-    // on macOS ARM64 and Windows with Playwright 1.56.1. See: https://github.com/padamson/playwright-rust/issues/39
-    tracing::warn!("Skipping WebKit persistent context test (see issue #39)");
+    // Test WebKit (fixed in Playwright 1.58.2, was issue #39)
+    {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let user_data_dir = temp_dir.path().to_str().unwrap().to_string();
+
+        let webkit = playwright.webkit();
+        let context = webkit
+            .launch_persistent_context(&user_data_dir)
+            .await
+            .expect("Failed to launch WebKit persistent context");
+
+        let page = context.new_page().await.expect("Failed to create page");
+        page.goto("https://example.com", None)
+            .await
+            .expect("Failed to navigate in WebKit");
+
+        context.close().await.expect("Failed to close WebKit");
+        tracing::info!("✓ WebKit persistent context works");
+    }
 
     tracing::debug!("[TEST] test_launch_persistent_context_cross_browser: Complete");
 }

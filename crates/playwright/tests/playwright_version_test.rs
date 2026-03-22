@@ -32,9 +32,9 @@ fn test_playwright_version_format() {
 
 #[test]
 fn test_playwright_version_matches_expected() {
-    // RED: Verify version matches the current expected version (1.56.1)
+    // RED: Verify version matches the current expected version (1.58.2)
     // This ensures the constant is properly synced with build.rs
-    assert_eq!(PLAYWRIGHT_VERSION, "1.56.1");
+    assert_eq!(PLAYWRIGHT_VERSION, "1.58.2");
 }
 
 #[test]

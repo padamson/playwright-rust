@@ -9,7 +9,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 /// Playwright driver version to download
-const PLAYWRIGHT_VERSION: &str = "1.56.1";
+const PLAYWRIGHT_VERSION: &str = "1.58.2";
 
 /// Azure CDN base URL for Playwright drivers
 const DRIVER_BASE_URL: &str = "https://playwright.azureedge.net/builds/driver";

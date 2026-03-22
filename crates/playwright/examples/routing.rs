@@ -1,7 +1,7 @@
 // Network routing examples demonstrating request interception
 //
 // Run with:
-// PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.56.1-mac-arm64 \
+// PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.58.2-mac-arm64 \
 //     cargo run --package playwright --example routing
 
 use playwright_rs::protocol::{FulfillOptions, Playwright};

@@ -88,7 +88,7 @@ async fn test_{feature}_cross_browser() {
 
 Implement the JSON-RPC communication in `playwright-core`:
 
-1. **Add protocol types** in `crates/playwright-core/src/protocol/{class}.rs`:
+1. **Add protocol types** in `crates/playwright/src/protocol/{class}.rs`:
    - Request/response structs
    - Options structs
    - Serialization with serde
@@ -99,14 +99,14 @@ Implement the JSON-RPC communication in `playwright-core`:
    - Error mapping
 
 **Key files**:
-- `crates/playwright-core/src/protocol/{class}.rs`
-- `crates/playwright-core/src/connection.rs`
+- `crates/playwright/src/protocol/{class}.rs`
+- `crates/playwright/src/server/connection.rs`
 
 ### Step 4: Implement High-Level API (Green Stage - Part 2)
 
 Create the idiomatic Rust API in the `playwright` crate:
 
-1. **Add method to public API** in `crates/playwright/src/api/{class}.rs`:
+1. **Add method to public API** in `crates/playwright/src/protocol/{class}.rs`:
    - Builder pattern for options (if applicable)
    - Type-safe wrappers
    - Result<T, Error> return types
@@ -117,7 +117,7 @@ Create the idiomatic Rust API in the `playwright` crate:
    - Same behavior and semantics
 
 **Key files**:
-- `crates/playwright/src/api/{class}.rs`
+- `crates/playwright/src/protocol/{class}.rs`
 
 ### Step 5: Run Tests (Verify Green)
 
@@ -225,11 +225,11 @@ When implementing a feature, provide:
 
 3. **Protocol Layer Code**:
    - Protocol types
-   - File location: `crates/playwright-core/src/protocol/{class}.rs`
+   - File location: `crates/playwright/src/protocol/{class}.rs`
 
 4. **High-Level API Code**:
    - Public API methods
-   - File location: `crates/playwright/src/api/{class}.rs`
+   - File location: `crates/playwright/src/protocol/{class}.rs`
 
 5. **Documentation**:
    - Rustdoc with examples

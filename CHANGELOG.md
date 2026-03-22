@@ -47,8 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `pdf(options)` — generate PDF (Chromium only), with full options (margins, scale, landscape, etc.)
   - `add_script_tag(options)` — inject JavaScript via URL, file path, or inline content
 
+### Changed
+
+- **Playwright driver upgraded to 1.58.2** (from 1.56.1) — includes WebKit 26.0, Chromium 133, Firefox 135
+
 ### Fixed
 
+- **WebKit `launchPersistentContext` now works** — Closes #39. Upgraded Playwright driver resolves "Browser started with no default context" error on macOS ARM64
 - **docs.rs build** — Pin docs.rs to `nightly-2025-05-01` to work around `generic-array` 0.14 incompatibility with Rust 1.92+ (`doc_auto_cfg` removal)
 
 ## [0.8.6] - 2026-03-14
