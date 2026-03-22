@@ -1297,6 +1297,61 @@ impl Locator {
             .map_err(|e| self.wrap_error_with_selector(e))
     }
 
+    /// Drags this element to the `target` element.
+    ///
+    /// Both this locator and `target` must resolve to elements in the same frame.
+    /// Playwright performs a series of mouse events (move, press, move to target, release)
+    /// to simulate the drag.
+    ///
+    /// # Arguments
+    ///
+    /// * `target` - The locator of the element to drag onto
+    /// * `options` - Optional [`DragToOptions`] (force, no_wait_after, timeout, trial,
+    ///   source_position, target_position)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Either element is not found within the timeout
+    /// - Actionability checks fail (unless `force: true`)
+    /// - The protocol call fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-drag-to>
+    pub async fn drag_to(
+        &self,
+        target: &Locator,
+        options: Option<crate::protocol::DragToOptions>,
+    ) -> Result<()> {
+        self.frame
+            .locator_drag_to(&self.selector, &target.selector, options)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Waits until the element satisfies the given state condition.
+    ///
+    /// If no state is specified, waits for the element to be `visible` (the default).
+    ///
+    /// This method is useful for waiting for lazy-rendered elements or elements that
+    /// appear/disappear based on user interaction or async data loading.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional [`WaitForOptions`] specifying the `state` to wait for
+    ///   (`Visible`, `Hidden`, `Attached`, or `Detached`) and a `timeout` in milliseconds.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the element does not satisfy the expected state within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
+    pub async fn wait_for(&self, options: Option<crate::protocol::WaitForOptions>) -> Result<()> {
+        self.frame
+            .locator_wait_for(&self.selector, options)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
     /// Evaluates a JavaScript expression in the scope of the matched element.
     ///
     /// The element is passed as the first argument to the expression. The expression

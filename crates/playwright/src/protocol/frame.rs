@@ -1034,6 +1034,71 @@ impl Frame {
         self.channel().send_no_result("tap", params).await
     }
 
+    /// Drags the source element onto the target element.
+    ///
+    /// Both selectors must resolve to elements in this frame.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-drag-to>
+    pub(crate) async fn locator_drag_to(
+        &self,
+        source_selector: &str,
+        target_selector: &str,
+        options: Option<crate::protocol::DragToOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({
+            "source": source_selector,
+            "target": target_selector,
+            "strict": true
+        });
+
+        if let Some(opts) = options {
+            let opts_json = opts.to_json();
+            if let Some(obj) = params.as_object_mut() {
+                if let Some(opts_obj) = opts_json.as_object() {
+                    obj.extend(opts_obj.clone());
+                }
+            }
+        } else {
+            params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+        }
+
+        self.channel().send_no_result("dragAndDrop", params).await
+    }
+
+    /// Waits for the element to satisfy a state condition.
+    ///
+    /// Uses Playwright's `waitForSelector` RPC. The element state defaults to `visible`
+    /// if not specified.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
+    pub(crate) async fn locator_wait_for(
+        &self,
+        selector: &str,
+        options: Option<crate::protocol::WaitForOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "strict": true
+        });
+
+        if let Some(opts) = options {
+            let opts_json = opts.to_json();
+            if let Some(obj) = params.as_object_mut() {
+                if let Some(opts_obj) = opts_json.as_object() {
+                    obj.extend(opts_obj.clone());
+                }
+            }
+        } else {
+            // Default: wait for visible with default timeout
+            params["state"] = serde_json::json!("visible");
+            params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
+        }
+
+        // waitForSelector returns an ElementHandle or null — we discard the return value
+        let _: serde_json::Value = self.channel().send("waitForSelector", params).await?;
+        Ok(())
+    }
+
     /// Evaluates a JavaScript expression in the scope of the element matching the selector.
     ///
     /// The element is passed as the first argument to the expression. This is equivalent

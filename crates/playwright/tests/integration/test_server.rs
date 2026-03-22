@@ -49,7 +49,9 @@ impl TestServer {
             .route("/frame.html", get(frame_handler))
             .route("/focus_blur.html", get(focus_blur_page))
             .route("/all_texts.html", get(all_texts_page))
-            .route("/echo-headers", get(echo_headers_page));
+            .route("/echo-headers", get(echo_headers_page))
+            .route("/drag_drop.html", get(drag_drop_page))
+            .route("/wait_for.html", get(wait_for_page));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -650,6 +652,107 @@ async fn all_texts_page() -> Response<Body> {
   <li class="item">Alpha</li>
   <li class="item">Beta</li>
   <li class="item">Gamma</li>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+async fn drag_drop_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head>
+  <title>Drag and Drop Test</title>
+  <style>
+    #source {
+      width: 80px; height: 80px;
+      background: steelblue;
+      position: absolute; top: 50px; left: 50px;
+      cursor: grab;
+    }
+    #target {
+      width: 120px; height: 120px;
+      background: lightgreen;
+      position: absolute; top: 50px; left: 250px;
+      border: 2px dashed #666;
+    }
+    #target.dropped { background: gold; }
+    #result { position: absolute; top: 220px; left: 50px; }
+  </style>
+</head>
+<body>
+  <div id="source" draggable="true">Drag me</div>
+  <div id="target">Drop here</div>
+  <div id="result">no drop</div>
+  <script>
+    var source = document.getElementById('source');
+    var target = document.getElementById('target');
+    var result = document.getElementById('result');
+
+    source.addEventListener('dragstart', function(e) {
+      e.dataTransfer.setData('text/plain', 'dragged');
+    });
+    target.addEventListener('dragover', function(e) {
+      e.preventDefault();
+    });
+    target.addEventListener('drop', function(e) {
+      e.preventDefault();
+      target.classList.add('dropped');
+      result.textContent = 'dropped';
+    });
+  </script>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+async fn wait_for_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>Wait For Test</title></head>
+<body>
+  <div id="visible-element" style="display: block;">I am visible</div>
+  <div id="hidden-element" style="display: none;">I am hidden</div>
+  <div id="container"></div>
+  <script>
+    // showElement: makes #hidden-element visible after a delay
+    window.showElement = function(delayMs) {
+      setTimeout(function() {
+        document.getElementById('hidden-element').style.display = 'block';
+      }, delayMs);
+    };
+    // hideElement: hides #visible-element after a delay
+    window.hideElement = function(delayMs) {
+      setTimeout(function() {
+        document.getElementById('visible-element').style.display = 'none';
+      }, delayMs);
+    };
+    // appendElement: appends a new div#dynamic-element after a delay
+    window.appendElement = function(delayMs) {
+      setTimeout(function() {
+        var el = document.createElement('div');
+        el.id = 'dynamic-element';
+        el.textContent = 'I was appended';
+        document.getElementById('container').appendChild(el);
+      }, delayMs);
+    };
+    // removeElement: removes #visible-element after a delay
+    window.removeElement = function(delayMs) {
+      setTimeout(function() {
+        var el = document.getElementById('visible-element');
+        if (el) el.parentNode.removeChild(el);
+      }, delayMs);
+    };
+  </script>
 </body>
 </html>"#,
         ))

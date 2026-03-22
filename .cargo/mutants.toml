@@ -12,6 +12,9 @@ examine_globs = [
     "crates/playwright/src/protocol/screenshot.rs",
     "crates/playwright/src/protocol/select_option.rs",
     "crates/playwright/src/api/launch_options.rs",
+    "crates/playwright/src/protocol/tap.rs",
+    "crates/playwright/src/protocol/drag_to.rs",
+    "crates/playwright/src/protocol/wait_for.rs",
 ]
 
 # Only run unit tests and fast serialization tests (no Playwright server needed).
@@ -68,6 +71,8 @@ exclude_re = [
     "Locator::tap",
     "Locator::evaluate",
     "Locator::evaluate_all",
+    "Locator::drag_to",
+    "Locator::wait_for",
     "Locator::selector",
     "Locator::wrap_error",
     "impl std::fmt::Debug for Locator",

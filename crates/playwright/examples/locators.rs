@@ -112,6 +112,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         link_by_text.count().await?
     );
 
+    // --- wait_for() - wait for element state changes ---
+
+    page.set_content(
+        r#"<div id="target" style="display:none">Hello</div>
+           <script>setTimeout(() => document.getElementById('target').style.display = '', 500)</script>"#,
+        None,
+    )
+    .await?;
+
+    let target = page.locator("#target").await;
+    println!("Waiting for element to become visible...");
+    target
+        .wait_for(Some(playwright_rs::WaitForOptions {
+            state: Some(playwright_rs::WaitForState::Visible),
+            timeout: None,
+        }))
+        .await?;
+    println!("Element is now visible: {}", target.is_visible().await?);
+
+    // --- drag_to() - drag and drop between elements ---
+
+    page.set_content(
+        r#"<div id="source" draggable="true" style="width:50px;height:50px;background:blue">Drag</div>
+           <div id="drop" style="width:100px;height:100px;background:gray">Drop here</div>
+           <div id="result"></div>
+           <script>
+             document.getElementById('drop').addEventListener('drop', e => {
+               e.preventDefault();
+               document.getElementById('result').textContent = 'dropped';
+             });
+             document.getElementById('drop').addEventListener('dragover', e => e.preventDefault());
+           </script>"#,
+        None,
+    )
+    .await?;
+
+    let source = page.locator("#source").await;
+    let drop_zone = page.locator("#drop").await;
+    source.drag_to(&drop_zone, None).await?;
+    let result: String = page
+        .locator("#result")
+        .await
+        .text_content()
+        .await?
+        .unwrap_or_default();
+    println!("Drag result: {}", result);
+
     browser.close().await?;
     Ok(())
 }

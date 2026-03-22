@@ -1829,3 +1829,326 @@ async fn test_locator_evaluate_all_returns_count() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+// ============================================================================
+// drag_to() - Locator drag and drop
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_drag_to() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/drag_drop.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let source = page.locator("#source").await;
+    let target = page.locator("#target").await;
+
+    // Perform the drag operation
+    source
+        .drag_to(&target, None)
+        .await
+        .expect("drag_to should succeed");
+
+    // Verify the drop occurred by checking the result text
+    let result_text = page
+        .locator("#result")
+        .await
+        .text_content()
+        .await
+        .expect("Failed to get result text");
+    assert_eq!(
+        result_text,
+        Some("dropped".to_string()),
+        "Drop should have been triggered"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_drag_to_with_options() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/drag_drop.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::{DragToOptions, Position};
+
+    let source = page.locator("#source").await;
+    let target = page.locator("#target").await;
+
+    // Perform drag with explicit source and target positions
+    let options = DragToOptions::builder()
+        .source_position(Position { x: 10.0, y: 10.0 })
+        .target_position(Position { x: 60.0, y: 60.0 })
+        .build();
+
+    source
+        .drag_to(&target, Some(options))
+        .await
+        .expect("drag_to with options should succeed");
+
+    let result_text = page
+        .locator("#result")
+        .await
+        .text_content()
+        .await
+        .expect("Failed to get result text");
+    assert_eq!(
+        result_text,
+        Some("dropped".to_string()),
+        "Drop should have been triggered with options"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+// ============================================================================
+// wait_for() - Locator wait for element state
+// ============================================================================
+
+#[tokio::test]
+async fn test_locator_wait_for_visible() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/wait_for.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::{WaitForOptions, WaitForState};
+
+    // Schedule showing hidden element after 200ms
+    page.evaluate::<serde_json::Value, ()>("() => window.showElement(200)", None)
+        .await
+        .expect("Failed to schedule element show");
+
+    // Wait for the hidden element to become visible
+    let hidden_el = page.locator("#hidden-element").await;
+    hidden_el
+        .wait_for(Some(
+            WaitForOptions::builder()
+                .state(WaitForState::Visible)
+                .build(),
+        ))
+        .await
+        .expect("wait_for Visible should succeed");
+
+    // Verify element is now visible
+    assert!(
+        hidden_el
+            .is_visible()
+            .await
+            .expect("Failed to check visibility"),
+        "Element should be visible after wait_for"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_wait_for_hidden() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/wait_for.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::{WaitForOptions, WaitForState};
+
+    // Schedule hiding visible element after 200ms
+    page.evaluate::<serde_json::Value, ()>("() => window.hideElement(200)", None)
+        .await
+        .expect("Failed to schedule element hide");
+
+    // Wait for the visible element to become hidden
+    let visible_el = page.locator("#visible-element").await;
+    visible_el
+        .wait_for(Some(
+            WaitForOptions::builder()
+                .state(WaitForState::Hidden)
+                .build(),
+        ))
+        .await
+        .expect("wait_for Hidden should succeed");
+
+    // Verify element is now hidden
+    assert!(
+        visible_el
+            .is_hidden()
+            .await
+            .expect("Failed to check hidden state"),
+        "Element should be hidden after wait_for"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_wait_for_attached() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/wait_for.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::{WaitForOptions, WaitForState};
+
+    // Schedule appending element after 200ms
+    page.evaluate::<serde_json::Value, ()>("() => window.appendElement(200)", None)
+        .await
+        .expect("Failed to schedule element append");
+
+    // Wait for the dynamically added element to be attached to the DOM
+    let dynamic_el = page.locator("#dynamic-element").await;
+    dynamic_el
+        .wait_for(Some(
+            WaitForOptions::builder()
+                .state(WaitForState::Attached)
+                .build(),
+        ))
+        .await
+        .expect("wait_for Attached should succeed");
+
+    // Verify element is now attached
+    assert_eq!(
+        dynamic_el.count().await.expect("Failed to count"),
+        1,
+        "Element should be in DOM after wait_for Attached"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_wait_for_detached() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/wait_for.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::{WaitForOptions, WaitForState};
+
+    // Schedule removing element after 200ms
+    page.evaluate::<serde_json::Value, ()>("() => window.removeElement(200)", None)
+        .await
+        .expect("Failed to schedule element remove");
+
+    // Wait for the element to be removed from DOM
+    let visible_el = page.locator("#visible-element").await;
+    visible_el
+        .wait_for(Some(
+            WaitForOptions::builder()
+                .state(WaitForState::Detached)
+                .build(),
+        ))
+        .await
+        .expect("wait_for Detached should succeed");
+
+    // Verify element is now gone
+    assert_eq!(
+        visible_el.count().await.expect("Failed to count"),
+        0,
+        "Element should be removed from DOM after wait_for Detached"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_locator_wait_for_default_state() {
+    crate::common::init_tracing();
+    let server = TestServer::start().await;
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+    let page = browser.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/wait_for.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // Default state is Visible - element is already visible, should resolve immediately
+    let visible_el = page.locator("#visible-element").await;
+    visible_el
+        .wait_for(None)
+        .await
+        .expect("wait_for with no options (default Visible) should succeed for visible element");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
