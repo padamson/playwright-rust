@@ -191,6 +191,9 @@ pub use assertions::{
 // Re-export Playwright main entry point and browser API
 pub use protocol::{Browser, BrowserContext, BrowserType, HeaderEntry, Page, Playwright, Response};
 
+// Re-export Request and related types
+pub use protocol::{Request, ResourceTiming};
+
 // Re-export Locator and element APIs
 pub use protocol::{
     AriaRole, BoundingBox, ElementHandle, FilterOptions, GetByRoleOptions, Locator,

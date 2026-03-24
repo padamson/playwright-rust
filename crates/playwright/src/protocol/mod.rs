@@ -78,7 +78,7 @@ pub use page::{
 };
 pub use playwright::Playwright;
 pub use proxy::ProxySettings;
-pub use request::Request;
+pub use request::{Request, ResourceTiming};
 pub use response::{HeaderEntry, ResponseObject};
 pub use root::Root;
 pub use route::{

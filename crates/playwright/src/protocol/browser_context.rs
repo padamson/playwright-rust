@@ -745,6 +745,19 @@ impl BrowserContext {
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
                 .map(|v| v.to_owned());
+            // Extract failureText for requestFailed events
+            let failure_text = params
+                .get("failureText")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_owned());
+            // Extract response GUID for requestFinished events (to read timing)
+            let response_guid_owned = params
+                .get("response")
+                .and_then(|v| v.get("guid"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_owned());
+            // Extract responseEndTiming from requestFinished event params
+            let response_end_timing = params.get("responseEndTiming").and_then(|v| v.as_f64());
             let method = method.to_owned();
             tokio::spawn(async move {
                 let request_arc = match connection.get_object(&request_guid_owned).await {
@@ -756,6 +769,20 @@ impl BrowserContext {
                     Some(v) => v.clone(),
                     None => return,
                 };
+
+                // Set failure text on the request before dispatching to handlers
+                if let Some(text) = failure_text {
+                    request.set_failure_text(text);
+                }
+
+                // For requestFinished, extract timing from the Response object's initializer
+                if method == "requestFinished" {
+                    if let Some(timing) =
+                        extract_timing(&connection, response_guid_owned, response_end_timing).await
+                    {
+                        request.set_timing(timing);
+                    }
+                }
 
                 if let Some(page_guid) = page_guid_owned {
                     let page_arc = match connection.get_object(&page_guid).await {
@@ -1782,6 +1809,27 @@ impl BrowserContextOptionsBuilder {
             record_video: self.record_video,
         }
     }
+}
+
+/// Extracts timing data from a Response object's initializer, patching in
+/// `responseEnd` from the event's `responseEndTiming` if available.
+async fn extract_timing(
+    connection: &std::sync::Arc<dyn crate::server::connection::ConnectionLike>,
+    response_guid: Option<String>,
+    response_end_timing: Option<f64>,
+) -> Option<serde_json::Value> {
+    let resp_guid = response_guid?;
+    let resp_arc = connection.get_object(&resp_guid).await.ok()?;
+    let resp_obj = resp_arc
+        .as_any()
+        .downcast_ref::<crate::protocol::ResponseObject>()?;
+    let mut timing = resp_obj.initializer().get("timing")?.clone();
+    if let (Some(end), Some(obj)) = (response_end_timing, timing.as_object_mut()) {
+        if let Some(n) = serde_json::Number::from_f64(end) {
+            obj.insert("responseEnd".to_string(), serde_json::Value::Number(n));
+        }
+    }
+    Some(timing)
 }
 
 #[cfg(test)]

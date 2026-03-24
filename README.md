@@ -152,8 +152,11 @@ cargo nextest run
 # All tests (standard cargo)
 cargo test
 
-# Integration tests only (requires browsers)
-cargo nextest run --test '*'
+# Unit tests only (~2s, no browsers needed)
+cargo nextest run -p playwright-rs --lib
+
+# Tests matching a pattern (~1s)
+cargo nextest run -p playwright-rs -E 'test(response)'
 
 # Specific test
 cargo nextest run test_launch_chromium

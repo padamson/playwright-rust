@@ -59,6 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `all_headers()` — all response headers as HashMap (merges duplicates)
   - `header_value(name)` — get a single header value by name
   - `headers_array()` — all headers as `Vec<HeaderEntry>` preserving duplicates
+- **Request properties** — `headers()`, `post_data()`, `post_data_buffer()`, `post_data_json()`, `failure()`, `all_headers()`, `header_value()`, `headers_array()`, `timing()`
+  - `headers()` — request headers as HashMap (from initializer)
+  - `post_data()` / `post_data_buffer()` — request body as string or bytes (base64-decoded)
+  - `post_data_json::<T>()` — parse request body as typed JSON
+  - `failure()` — error text if request failed (set on `requestFailed` event)
+  - `all_headers()` / `header_value()` / `headers_array()` — full raw headers via RPC
+  - `timing()` — `ResourceTiming` with 9 timing fields (extracted from Response on `requestFinished`)
 
 ### Changed
 
