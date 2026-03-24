@@ -1,8 +1,14 @@
 # Playwright for Rust
 
-> 🎭 Rust language bindings for [Microsoft Playwright](https://playwright.dev)
+[![crates.io](https://img.shields.io/crates/v/playwright-rs.svg)](https://crates.io/crates/playwright-rs)
+[![docs.rs](https://docs.rs/playwright-rs/badge.svg)](https://docs.rs/playwright-rs)
+[![CI](https://github.com/padamson/playwright-rust/actions/workflows/test.yml/badge.svg)](https://github.com/padamson/playwright-rust/actions/workflows/test.yml)
+[![License](https://img.shields.io/crates/l/playwright-rs)](LICENSE)
+[![Playwright](https://img.shields.io/badge/Playwright-1.58.2-45ba4b)](https://playwright.dev)
 
-**Status:** 🚧 Active Development - Not yet ready for production use
+> Rust language bindings for [Microsoft Playwright](https://playwright.dev) — the industry standard for cross-browser end-to-end testing.
+
+**Status:** Pre-1.0, API stabilizing. See [coverage trajectory](#coverage-trajectory) for the path to v1.0.
 
 ## 🎯 Why playwright-rust?
 
@@ -15,6 +21,73 @@ Read our [WHY.md](WHY.md) to understand the vision, timing, and philosophy behin
 See [Development Roadmap](docs/roadmap.md) for plans and status of the development approach for `playwright-rust`.
 
 **Goal:** Build this library to a production-quality state for broad adoption as `@playwright/rust` or `playwright-rs`. Provide official-quality Rust bindings for Microsoft Playwright, following the same architecture as [playwright-python](https://github.com/microsoft/playwright-python), [playwright-java](https://github.com/microsoft/playwright-java), and [playwright-dotnet](https://github.com/microsoft/playwright-dotnet).
+
+## Quick Comparison: Python vs Rust
+
+The API matches Playwright's cross-language conventions — if you know playwright-python, you know playwright-rust:
+
+<table>
+<tr><th>Python</th><th>Rust</th></tr>
+<tr><td>
+
+```python
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    page = browser.new_page()
+    page.goto("https://example.com")
+
+    # Locator with auto-waiting
+    heading = page.locator("h1")
+    assert heading.text_content() == "Example Domain"
+
+    # Response body access
+    resp = page.goto("https://api.example.com/data")
+    data = resp.json()
+
+    browser.close()
+```
+
+</td><td>
+
+```rust
+use playwright_rs::Playwright;
+
+let pw = Playwright::launch().await?;
+let browser = pw.chromium().launch().await?;
+let page = browser.new_page().await?;
+page.goto("https://example.com", None).await?;
+
+// Locator with auto-waiting
+let heading = page.locator("h1").await;
+assert_eq!(heading.text_content().await?, Some("Example Domain".into()));
+
+// Response body access
+let resp = page.goto("https://api.example.com/data", None).await?.unwrap();
+let data: serde_json::Value = resp.json().await?;
+
+browser.close().await?;
+```
+
+</td></tr>
+</table>
+
+## Coverage Trajectory
+
+Each pre-v1.0 release targets 100% coverage of specific API classes:
+
+| Class | Methods | Current | v0.9.0 | v0.10.0 | v0.11.0 |
+|-------|---------|---------|--------|---------|---------|
+| **Locator** | 55 | **~89%** | 100% | 100% | 100% |
+| **Response** | 18 | **~72%** | 100% | 100% | 100% |
+| **Request** | 19 | **~63%** | 100% | 100% | 100% |
+| Page | 67 | ~78% | ~82% | ~90% | **100%** |
+| BrowserContext | 32 | ~66% | ~72% | **100%** | 100% |
+| Frame | 29 | ~38% | ~38% | **100%** | 100% |
+| FrameLocator | 10 | 0% | 0% | **100%** | 100% |
+
+Bold = release where the class reaches 100%. See the [full gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for details.
 
 ## How It Works
 
@@ -140,56 +213,26 @@ The build script automatically downloads the Playwright driver to `drivers/` (gi
 
 ### Running Tests
 
-**Note:** This project uses [cargo-nextest](https://nexte.st/) for faster test execution. Install it once globally:
-```bash
-cargo install cargo-nextest
-```
+This project uses [cargo-nextest](https://nexte.st/). Install once: `cargo install cargo-nextest`
 
 ```bash
-# All tests (recommended - faster)
-cargo nextest run
-
-# All tests (standard cargo)
-cargo test
-
-# Unit tests only (~2s, no browsers needed)
-cargo nextest run -p playwright-rs --lib
-
-# Tests matching a pattern (~1s)
-cargo nextest run -p playwright-rs -E 'test(response)'
-
-# Specific test
-cargo nextest run test_launch_chromium
-
-# With logging
-RUST_LOG=debug cargo nextest run
-
-# Doc-tests (nextest doesn't run these)
-# See CLAUDE.md "Documentation Testing Strategy" for details
-
-# Compile-only check (fast, used in pre-commit)
-cargo test --doc --workspace
-
-# Execute all ignored doctests (requires browsers, what CI does)
-cargo test --doc --workspace -- --ignored
-
-# Execute specific crate's doctests
-cargo test --doc -p playwright-rs -- --ignored
+cargo nextest run                                    # All tests
+cargo nextest run -p playwright-rs --lib             # Unit tests only (~2s, no browsers)
+cargo nextest run -p playwright-rs -E 'test(locator)' # Pattern match
+cargo test --doc --workspace -- --ignored            # Doc-tests (requires browsers)
 ```
 
 ### Running Examples
 
-> **Note:** See [examples/](crates/playwright/examples/) for usage examples.
+See [examples/](crates/playwright/examples/) for usage examples.
 
 ```bash
-# Run a single example
 cargo run --package playwright-rs --example basic
-
-# Run all examples
-for example in crates/playwright/examples/*.rs; do
-    cargo run --package playwright-rs --example $(basename "$example" .rs) || exit 1
-done
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=padamson/playwright-rust&type=Date)](https://star-history.com/#padamson/playwright-rust&Date)
 
 ## Contributing
 
