@@ -1039,19 +1039,18 @@ impl Page {
                 })
                 .collect();
 
-            let response = Response {
-                url: initializer["url"]
+            let response = Response::new(
+                initializer["url"]
                     .as_str()
                     .ok_or_else(|| {
                         crate::error::Error::ProtocolError("Response missing url".to_string())
                     })?
                     .to_string(),
                 status,
-                status_text: initializer["statusText"].as_str().unwrap_or("").to_string(),
-                ok: (200..300).contains(&status),
+                initializer["statusText"].as_str().unwrap_or("").to_string(),
                 headers,
-                response_channel_owner: Some(response_arc),
-            };
+                Some(response_arc),
+            );
 
             if let Ok(mut page_url) = self.url.write() {
                 *page_url = response.url().to_string();
@@ -2162,8 +2161,12 @@ impl ChannelOwner for Page {
                         };
 
                         // Create Download wrapper from Artifact + event params
-                        let download =
-                            Download::from_artifact(artifact_arc, url, suggested_filename);
+                        let download = Download::from_artifact(
+                            artifact_arc,
+                            url,
+                            suggested_filename,
+                            self_clone.clone(),
+                        );
 
                         // Call the download handlers
                         self_clone.on_download_event(download).await;
@@ -2787,20 +2790,39 @@ impl PdfOptionsBuilder {
 /// See: <https://playwright.dev/docs/api/class-response>
 #[derive(Clone)]
 pub struct Response {
-    /// URL of the response
-    pub url: String,
-    /// HTTP status code
-    pub status: u16,
-    /// HTTP status text
-    pub status_text: String,
-    /// Whether the response was successful (status 200-299)
-    pub ok: bool,
-    /// Response headers (from initializer, may not include all raw headers)
-    pub headers: std::collections::HashMap<String, String>,
+    url: String,
+    status: u16,
+    status_text: String,
+    ok: bool,
+    headers: std::collections::HashMap<String, String>,
     /// Reference to the backing channel owner for RPC calls (body, rawHeaders, etc.)
     /// Stored as the generic trait object so it can be downcast to ResponseObject when needed.
-    pub(crate) response_channel_owner:
-        Option<std::sync::Arc<dyn crate::server::channel_owner::ChannelOwner>>,
+    response_channel_owner: Option<std::sync::Arc<dyn crate::server::channel_owner::ChannelOwner>>,
+}
+
+impl Response {
+    /// Creates a new Response from protocol data.
+    ///
+    /// This is used internally when constructing a Response from the protocol
+    /// initializer (e.g., after `goto` or `reload`).
+    pub(crate) fn new(
+        url: String,
+        status: u16,
+        status_text: String,
+        headers: std::collections::HashMap<String, String>,
+        response_channel_owner: Option<
+            std::sync::Arc<dyn crate::server::channel_owner::ChannelOwner>,
+        >,
+    ) -> Self {
+        Self {
+            url,
+            status,
+            status_text,
+            ok: (200..300).contains(&status),
+            headers,
+            response_channel_owner,
+        }
+    }
 }
 
 impl Response {
@@ -2840,6 +2862,30 @@ impl Response {
     /// See: <https://playwright.dev/docs/api/class-response#response-headers>
     pub fn headers(&self) -> &std::collections::HashMap<String, String> {
         &self.headers
+    }
+
+    /// Returns the [`Request`](crate::protocol::Request) that triggered this response.
+    ///
+    /// Navigates the protocol object hierarchy: ResponseObject → parent (Request).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-request>
+    pub fn request(&self) -> Option<crate::protocol::Request> {
+        let owner = self.response_channel_owner.as_ref()?;
+        let parent = owner.parent()?;
+        parent
+            .as_any()
+            .downcast_ref::<crate::protocol::Request>()
+            .cloned()
+    }
+
+    /// Returns the [`Frame`](crate::protocol::Frame) that initiated the request for this response.
+    ///
+    /// Navigates the protocol object hierarchy: ResponseObject → Request → Frame.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-frame>
+    pub fn frame(&self) -> Option<crate::protocol::Frame> {
+        let request = self.request()?;
+        request.frame()
     }
 
     /// Returns the response body as raw bytes.

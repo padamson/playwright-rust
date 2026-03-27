@@ -168,19 +168,18 @@ impl Frame {
                 })
                 .collect();
 
-            Ok(Some(Response {
-                url: initializer["url"]
+            Ok(Some(Response::new(
+                initializer["url"]
                     .as_str()
                     .ok_or_else(|| {
                         crate::error::Error::ProtocolError("Response missing url".to_string())
                     })?
                     .to_string(),
                 status,
-                status_text: initializer["statusText"].as_str().unwrap_or("").to_string(),
-                ok: (200..300).contains(&status),
+                initializer["statusText"].as_str().unwrap_or("").to_string(),
                 headers,
-                response_channel_owner: Some(response_arc),
-            }))
+                Some(response_arc),
+            )))
         } else {
             // Navigation returned null (e.g., data URLs, about:blank)
             // This is a valid result, not an error

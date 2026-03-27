@@ -30,7 +30,8 @@ async fn test_route_fallback_basic() {
         .expect("Expected a response");
 
     assert_eq!(
-        response.status, 200,
+        response.status(),
+        200,
         "Fallback should allow request through"
     );
 

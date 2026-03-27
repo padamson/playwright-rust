@@ -30,6 +30,8 @@ pub struct Download {
     url: String,
     /// Suggested filename from download event params
     suggested_filename: String,
+    /// Back-reference to the Page that triggered this download
+    page: crate::protocol::Page,
 }
 
 impl Download {
@@ -43,16 +45,26 @@ impl Download {
     /// * `artifact` - The Artifact protocol object (from event params)
     /// * `url` - Download URL (from event params)
     /// * `suggested_filename` - Suggested filename (from event params)
-    pub fn from_artifact(
+    /// * `page` - The Page that triggered this download
+    pub(crate) fn from_artifact(
         artifact: Arc<dyn ChannelOwner>,
         url: String,
         suggested_filename: String,
+        page: crate::protocol::Page,
     ) -> Self {
         Self {
             artifact,
             url,
             suggested_filename,
+            page,
         }
+    }
+
+    /// Returns the [`Page`](crate::protocol::Page) that triggered this download.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-download#download-page>
+    pub fn page(&self) -> &crate::protocol::Page {
+        &self.page
     }
 
     /// Returns the download URL.

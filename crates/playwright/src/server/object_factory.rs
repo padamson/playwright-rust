@@ -155,17 +155,38 @@ pub async fn create_object(
         }
 
         "Request" => {
-            // Request has Frame as parent
+            // Request's parent in the protocol is Page (not Frame)
             let parent_owner = match parent {
                 ParentOrConnection::Parent(p) => p,
                 ParentOrConnection::Connection(_) => {
                     return Err(Error::ProtocolError(
-                        "Request must have Frame as parent".to_string(),
+                        "Request must have a parent object".to_string(),
                     ));
                 }
             };
 
-            Arc::new(Request::new(parent_owner, type_name, guid, initializer)?)
+            let request = Arc::new(Request::new(
+                parent_owner,
+                type_name,
+                guid,
+                initializer.clone(),
+            )?);
+
+            // Eagerly resolve the Frame back-reference from initializer["frame"]["guid"]
+            if let Some(frame_guid) = initializer
+                .get("frame")
+                .and_then(|v| v.get("guid"))
+                .and_then(|v| v.as_str())
+            {
+                if let Ok(frame_obj) = request.connection().get_object(frame_guid).await {
+                    if let Some(frame) = frame_obj.as_any().downcast_ref::<crate::protocol::Frame>()
+                    {
+                        request.set_frame(frame.clone());
+                    }
+                }
+            }
+
+            request
         }
 
         "Route" => {

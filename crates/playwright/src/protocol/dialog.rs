@@ -86,6 +86,19 @@ impl Dialog {
             .unwrap_or("")
     }
 
+    /// Returns the [`Page`](crate::protocol::Page) that owns this dialog.
+    ///
+    /// The dialog's parent in the protocol object hierarchy is the Page.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-dialog#dialog-page>
+    pub fn page(&self) -> Option<crate::protocol::Page> {
+        let parent = self.parent()?;
+        parent
+            .as_any()
+            .downcast_ref::<crate::protocol::Page>()
+            .cloned()
+    }
+
     /// Accepts the dialog.
     ///
     /// For prompt dialogs, optionally provides text input.

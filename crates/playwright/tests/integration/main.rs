@@ -11,6 +11,7 @@ mod test_server;
 
 mod actions;
 mod assertions;
+mod back_references;
 mod browser;
 mod browser_context;
 mod checkbox;

@@ -26,6 +26,8 @@ pub struct Request {
     /// Timing data set when the associated `requestFinished` event fires.
     /// The value is the raw JSON timing object from the Response initializer.
     timing: Arc<Mutex<Option<Value>>>,
+    /// Eagerly resolved Frame back-reference from the initializer's `frame.guid`.
+    frame: Arc<Mutex<Option<crate::protocol::Frame>>>,
 }
 
 impl Request {
@@ -50,7 +52,25 @@ impl Request {
             base,
             failure_text: Arc::new(Mutex::new(None)),
             timing: Arc::new(Mutex::new(None)),
+            frame: Arc::new(Mutex::new(None)),
         })
+    }
+
+    /// Returns the [`Frame`](crate::protocol::Frame) that initiated this request.
+    ///
+    /// The frame is resolved from the `frame` GUID in the protocol initializer data.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-frame>
+    pub fn frame(&self) -> Option<crate::protocol::Frame> {
+        self.frame.lock().unwrap().clone()
+    }
+
+    /// Sets the eagerly-resolved Frame back-reference.
+    ///
+    /// Called by the object factory after the Request is created and the Frame
+    /// has been looked up from the connection registry.
+    pub(crate) fn set_frame(&self, frame: crate::protocol::Frame) {
+        *self.frame.lock().unwrap() = Some(frame);
     }
 
     /// Returns the URL of the request.

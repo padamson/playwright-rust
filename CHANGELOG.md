@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Back-reference properties** — navigate the protocol object hierarchy from child to parent
+  - `dialog.page()` — returns the `Page` that owns the dialog (via protocol parent)
+  - `download.page()` — returns the `Page` that triggered the download (stored at construction)
+  - `response.request()` — returns the `Request` that triggered the response (via ResponseObject parent)
+  - `response.frame()` — returns the `Frame` that initiated the request (delegates to `request.frame()`)
+  - `request.frame()` — returns the `Frame` that initiated the request (eagerly resolved from initializer GUID)
+
+### Breaking Changes
+
+- **Response struct fields are now private** — `response.url`, `response.status`, `response.status_text`, `response.ok`, `response.headers` are no longer accessible as public fields. Use the existing accessor methods instead: `response.url()`, `response.status()`, `response.status_text()`, `response.ok()`, `response.headers()`. These methods were already available; only direct field access is removed.
+- **`Download::from_artifact` is now `pub(crate)`** — this was an internal constructor not intended for public use.
+
+### Fixed
+
+- **Request parent type corrected** — Request's parent in the Playwright protocol is Page (not Frame as previously assumed). The `request.frame()` method now correctly resolves the frame from the initializer's `frame` GUID via the connection registry.
+
 ## [0.8.7] - 2026-03-24
 
 ### Added
