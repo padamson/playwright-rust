@@ -1,10 +1,11 @@
-// Example: Network Event Listening
+// Example: Network Event Listening and Request/Response Inspection
 //
 // Demonstrates how to listen for network events on a Page:
-// - page.on_request() - fires when a request is issued
-// - page.on_response() - fires when a response is received
-// - page.on_request_finished() - fires when a request finishes successfully
-// - page.on_request_failed() - fires when a request fails
+// - page.on_request() / on_response() / on_request_finished() / on_request_failed()
+// - Response body access: body(), text(), header_value(), headers_array()
+// - Back-references: response.request(), response.frame(), request.frame()
+// - Server info: response.server_addr(), response.security_details()
+// - Request completion: request.response(), request.sizes()
 //
 // To run this example:
 // cargo run --example network_events
@@ -84,6 +85,74 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get all headers as name/value pairs (preserves duplicates)
     let headers = response.headers_array().await?;
     println!("Response has {} header entries", headers.len());
+
+    // --- Back-references ---
+
+    println!("\n=== Back-references ===\n");
+
+    // Navigate from response -> request -> frame
+    if let Some(request) = response.request() {
+        println!("Response request: {} {}", request.method(), request.url());
+        if let Some(frame) = request.frame() {
+            println!("Request frame URL: {}", frame.url());
+        }
+    }
+    if let Some(frame) = response.frame() {
+        println!("Response frame URL: {}", frame.url());
+    }
+
+    // --- Server address & security details ---
+
+    println!("\n=== Server Info ===\n");
+
+    if let Some(addr) = response.server_addr().await? {
+        println!("Server address: {}:{}", addr.ip_address, addr.port);
+    }
+
+    // HTTPS connections provide TLS security details
+    match response.security_details().await? {
+        Some(details) => {
+            println!("TLS protocol: {:?}", details.protocol);
+            println!("Certificate issuer: {:?}", details.issuer);
+        }
+        None => println!("No TLS (HTTP connection)"),
+    }
+
+    // --- Request.response() and sizes ---
+
+    println!("\n=== Request -> Response & Sizes ===\n");
+
+    // Use on_request_finished to get a request, then navigate back to its response
+    let page2 = browser.new_page().await?;
+    let captured = std::sync::Arc::new(std::sync::Mutex::new(None));
+    let captured_clone = captured.clone();
+    page2
+        .on_request_finished(move |req| {
+            let cap = captured_clone.clone();
+            async move {
+                if req.is_navigation_request() {
+                    *cap.lock().unwrap() = Some(req);
+                }
+                Ok(())
+            }
+        })
+        .await?;
+
+    page2.goto("https://example.com", None).await?;
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
+    let captured_req = captured.lock().unwrap().take();
+    if let Some(req) = captured_req {
+        // Get the Response from the Request
+        if let Ok(Some(resp)) = req.response().await {
+            println!("request.response() status: {}", resp.status());
+        }
+        // Get resource sizes
+        if let Ok(sizes) = req.sizes().await {
+            println!("Request headers size: {} bytes", sizes.request_headers_size);
+            println!("Response body size: {} bytes", sizes.response_body_size);
+        }
+    }
 
     println!("\nClosing browser...");
     browser.close().await?;

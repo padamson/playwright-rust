@@ -36,6 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("📥 Download started:");
             println!("  URL: {}", download.url());
             println!("  Suggested filename: {}", download.suggested_filename());
+            println!("  Page URL: {}", download.page().url());
 
             // Save to custom location
             let save_path = format!("/tmp/{}", download.suggested_filename());
@@ -76,6 +77,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("💬 Dialog appeared:");
             println!("  Type: {}", dialog_type);
             println!("  Message: {}", message);
+            if let Some(page) = dialog.page() {
+                println!("  Page URL: {}", page.url());
+            }
 
             // Store dialog info
             dialog_info

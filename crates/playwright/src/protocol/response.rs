@@ -10,6 +10,53 @@ use serde_json::Value;
 use std::any::Any;
 use std::sync::Arc;
 
+/// TLS/SSL security details for an HTTPS response.
+///
+/// All fields are optional — the server provides what's available.
+///
+/// See: <https://playwright.dev/docs/api/class-response#response-security-details>
+#[derive(Debug, Clone)]
+pub struct SecurityDetails {
+    /// Certificate issuer name.
+    pub issuer: Option<String>,
+    /// TLS protocol version (e.g., "TLS 1.3").
+    pub protocol: Option<String>,
+    /// Certificate subject name.
+    pub subject_name: Option<String>,
+    /// Unix timestamp (seconds) when the certificate becomes valid.
+    pub valid_from: Option<f64>,
+    /// Unix timestamp (seconds) when the certificate expires.
+    pub valid_to: Option<f64>,
+}
+
+/// Remote server address (IP and port).
+///
+/// See: <https://playwright.dev/docs/api/class-response#response-server-addr>
+#[derive(Debug, Clone)]
+pub struct RemoteAddr {
+    /// Server IP address.
+    pub ip_address: String,
+    /// Server port.
+    pub port: u16,
+}
+
+/// Resource size information for a request/response pair.
+///
+/// See: <https://playwright.dev/docs/api/class-request#request-sizes>
+#[derive(Debug, Clone)]
+pub struct RequestSizes {
+    /// Size of the request body in bytes. Set to 0 if there was no body.
+    pub request_body_size: i64,
+    /// Total number of bytes from the start of the HTTP request message
+    /// until (and including) the double CRLF before the body.
+    pub request_headers_size: i64,
+    /// Size of the received response body in bytes.
+    pub response_body_size: i64,
+    /// Total number of bytes from the start of the HTTP response message
+    /// until (and including) the double CRLF before the body.
+    pub response_headers_size: i64,
+}
+
 /// A single HTTP header entry with a name and value.
 ///
 /// Used by `Response::headers_array()` to return all headers preserving duplicates.
@@ -111,6 +158,87 @@ impl ResponseObject {
                 ))
             })?;
         Ok(bytes)
+    }
+
+    /// Returns TLS/SSL security details for HTTPS connections, or `None` for HTTP.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-security-details>
+    pub async fn security_details(&self) -> Result<Option<SecurityDetails>> {
+        let result: serde_json::Value = self
+            .channel()
+            .send("securityDetails", serde_json::json!({}))
+            .await?;
+
+        let value = result.get("value");
+        match value {
+            Some(v) if v.is_object() && !v.as_object().unwrap().is_empty() => {
+                Ok(Some(SecurityDetails {
+                    issuer: v.get("issuer").and_then(|v| v.as_str()).map(String::from),
+                    protocol: v.get("protocol").and_then(|v| v.as_str()).map(String::from),
+                    subject_name: v
+                        .get("subjectName")
+                        .and_then(|v| v.as_str())
+                        .map(String::from),
+                    valid_from: v.get("validFrom").and_then(|v| v.as_f64()),
+                    valid_to: v.get("validTo").and_then(|v| v.as_f64()),
+                }))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    /// Returns the server's IP address and port for this response, or `None`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-server-addr>
+    pub async fn server_addr(&self) -> Result<Option<RemoteAddr>> {
+        let result: serde_json::Value = self
+            .channel()
+            .send("serverAddr", serde_json::json!({}))
+            .await?;
+
+        let value = result.get("value");
+        match value {
+            Some(v) if !v.is_null() => {
+                let ip_address = v
+                    .get("ipAddress")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let port = v.get("port").and_then(|v| v.as_u64()).unwrap_or(0) as u16;
+                Ok(Some(RemoteAddr { ip_address, port }))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    /// Returns resource size information for this response.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-sizes>
+    pub async fn sizes(&self) -> Result<RequestSizes> {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct SizesRaw {
+            request_body_size: i64,
+            request_headers_size: i64,
+            response_body_size: i64,
+            response_headers_size: i64,
+        }
+
+        #[derive(Deserialize)]
+        struct RpcResult {
+            sizes: SizesRaw,
+        }
+
+        let result: RpcResult = self.channel().send("sizes", serde_json::json!({})).await?;
+
+        Ok(RequestSizes {
+            request_body_size: result.sizes.request_body_size,
+            request_headers_size: result.sizes.request_headers_size,
+            response_body_size: result.sizes.response_body_size,
+            response_headers_size: result.sizes.response_headers_size,
+        })
     }
 
     /// Returns the raw response headers as name-value pairs (preserving duplicates).

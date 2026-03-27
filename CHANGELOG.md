@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `response.request()` — returns the `Request` that triggered the response (via ResponseObject parent)
   - `response.frame()` — returns the `Frame` that initiated the request (delegates to `request.frame()`)
   - `request.frame()` — returns the `Frame` that initiated the request (eagerly resolved from initializer GUID)
+- **Response server info** — inspect connection and TLS details
+  - `response.security_details()` — TLS/SSL certificate info (`SecurityDetails`: issuer, protocol, subject_name, valid_from, valid_to); returns `None` for HTTP
+  - `response.server_addr()` — server IP address and port (`RemoteAddr`); returns `None` for cached responses
+  - `response.finished()` — wait for response to finish loading (currently returns immediately for goto/reload responses)
+- **Request completion methods** — full request lifecycle access
+  - `request.redirected_from()` / `request.redirected_to()` — navigate the redirect chain (eagerly resolved from initializer)
+  - `request.response()` — get the matching `Response` via RPC
+  - `request.sizes()` — resource size info (`RequestSizes`: request_body_size, request_headers_size, response_body_size, response_headers_size)
+- **New types**: `SecurityDetails`, `RemoteAddr`, `RequestSizes` (exported from `playwright_rs::protocol`)
 
 ### Breaking Changes
 

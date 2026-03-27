@@ -35,6 +35,7 @@ mod page_properties;
 mod pause;
 mod playwright_launch;
 mod request;
+mod request_response_complete;
 mod response;
 mod route_advanced;
 mod route_fallback_unroute;

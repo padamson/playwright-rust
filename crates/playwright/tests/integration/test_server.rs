@@ -52,7 +52,8 @@ impl TestServer {
             .route("/echo-headers", get(echo_headers_page))
             .route("/drag_drop.html", get(drag_drop_page))
             .route("/wait_for.html", get(wait_for_page))
-            .route("/api/data.json", get(json_data_endpoint));
+            .route("/api/data.json", get(json_data_endpoint))
+            .route("/redirect", get(redirect_handler));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -823,6 +824,15 @@ async fn json_data_endpoint() -> Response<Body> {
         .body(Body::from(
             r#"{"status":"ok","message":"hello from test server"}"#,
         ))
+        .unwrap()
+}
+
+/// Redirect handler: 302 redirect to /
+async fn redirect_handler() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::FOUND)
+        .header("Location", "/")
+        .body(Body::empty())
         .unwrap()
 }
 

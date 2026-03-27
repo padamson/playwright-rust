@@ -28,6 +28,10 @@ pub struct Request {
     timing: Arc<Mutex<Option<Value>>>,
     /// Eagerly resolved Frame back-reference from the initializer's `frame.guid`.
     frame: Arc<Mutex<Option<crate::protocol::Frame>>>,
+    /// The request that redirected to this one (from initializer `redirectedFrom`).
+    redirected_from: Arc<Mutex<Option<Request>>>,
+    /// The request that this one redirected to (set by the later request's construction).
+    redirected_to: Arc<Mutex<Option<Request>>>,
 }
 
 impl Request {
@@ -53,6 +57,8 @@ impl Request {
             failure_text: Arc::new(Mutex::new(None)),
             timing: Arc::new(Mutex::new(None)),
             frame: Arc::new(Mutex::new(None)),
+            redirected_from: Arc::new(Mutex::new(None)),
+            redirected_to: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -63,6 +69,144 @@ impl Request {
     /// See: <https://playwright.dev/docs/api/class-request#request-frame>
     pub fn frame(&self) -> Option<crate::protocol::Frame> {
         self.frame.lock().unwrap().clone()
+    }
+
+    /// Returns the request that redirected to this one, or `None`.
+    ///
+    /// When the server responds with a redirect, Playwright creates a new Request
+    /// for the redirect target. The new request's `redirected_from` points back to
+    /// the original request.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-redirected-from>
+    pub fn redirected_from(&self) -> Option<Request> {
+        self.redirected_from.lock().unwrap().clone()
+    }
+
+    /// Returns the request that this one redirected to, or `None`.
+    ///
+    /// This is the inverse of `redirected_from()`: if request A redirected to
+    /// request B, then `A.redirected_to()` returns B.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-redirected-to>
+    pub fn redirected_to(&self) -> Option<Request> {
+        self.redirected_to.lock().unwrap().clone()
+    }
+
+    /// Sets the redirect-from back-pointer. Called by the object factory
+    /// when a new Request has `redirectedFrom` in its initializer.
+    pub(crate) fn set_redirected_from(&self, from: Request) {
+        *self.redirected_from.lock().unwrap() = Some(from);
+    }
+
+    /// Sets the redirect-to forward pointer. Called as a side-effect when
+    /// the redirect target request is constructed.
+    pub(crate) fn set_redirected_to(&self, to: Request) {
+        *self.redirected_to.lock().unwrap() = Some(to);
+    }
+
+    /// Returns the [`Response`](crate::protocol::response::ResponseObject) for this request.
+    ///
+    /// Sends a `"response"` RPC call to the Playwright server.
+    /// Returns `None` if the request has not received a response (e.g., it failed).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-response>
+    pub async fn response(&self) -> Result<Option<crate::protocol::page::Response>> {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        struct GuidRef {
+            guid: String,
+        }
+
+        #[derive(Deserialize)]
+        struct ResponseResult {
+            response: Option<GuidRef>,
+        }
+
+        let result: ResponseResult = self
+            .channel()
+            .send("response", serde_json::json!({}))
+            .await?;
+
+        let guid = match result.response {
+            Some(r) => r.guid,
+            None => return Ok(None),
+        };
+
+        let connection = self.connection();
+        let response_arc = connection.get_object(&guid).await.map_err(|e| {
+            crate::error::Error::ProtocolError(format!(
+                "Failed to get Response object {}: {}",
+                guid, e
+            ))
+        })?;
+
+        let response_obj = response_arc
+            .as_any()
+            .downcast_ref::<crate::protocol::ResponseObject>()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Response object is not a ResponseObject".to_string(),
+                )
+            })?;
+
+        let initializer = response_obj.initializer();
+        let status = initializer
+            .get("status")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u16;
+        let headers: std::collections::HashMap<String, String> = initializer
+            .get("headers")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|h| {
+                        let name = h.get("name")?.as_str()?;
+                        let value = h.get("value")?.as_str()?;
+                        Some((name.to_string(), value.to_string()))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        Ok(Some(crate::protocol::page::Response::new(
+            initializer
+                .get("url")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            status,
+            initializer
+                .get("statusText")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            headers,
+            Some(response_arc),
+        )))
+    }
+
+    /// Returns resource size information for this request.
+    ///
+    /// Internally fetches the associated Response (via RPC) and calls `sizes()`
+    /// on the response's channel.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-sizes>
+    pub async fn sizes(&self) -> Result<crate::protocol::response::RequestSizes> {
+        let response = self.response().await?;
+        let response = response.ok_or_else(|| {
+            crate::error::Error::ProtocolError(
+                "Unable to fetch sizes for failed request".to_string(),
+            )
+        })?;
+
+        let response_obj = response.response_object().map_err(|_| {
+            crate::error::Error::ProtocolError(
+                "Response has no backing protocol object for sizes()".to_string(),
+            )
+        })?;
+
+        response_obj.sizes().await
     }
 
     /// Sets the eagerly-resolved Frame back-reference.

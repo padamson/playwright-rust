@@ -186,6 +186,21 @@ pub async fn create_object(
                 }
             }
 
+            // Eagerly resolve the redirect chain from initializer["redirectedFrom"]["guid"]
+            if let Some(from_guid) = initializer
+                .get("redirectedFrom")
+                .and_then(|v| v.get("guid"))
+                .and_then(|v| v.as_str())
+            {
+                if let Ok(from_obj) = request.connection().get_object(from_guid).await {
+                    if let Some(from_request) = from_obj.as_any().downcast_ref::<Request>() {
+                        request.set_redirected_from(from_request.clone());
+                        // Set the reverse pointer on the original request
+                        from_request.set_redirected_to((*request).clone());
+                    }
+                }
+            }
+
             request
         }
 

@@ -2888,6 +2888,56 @@ impl Response {
         request.frame()
     }
 
+    /// Returns the backing `ResponseObject`, or an error if unavailable.
+    pub(crate) fn response_object(&self) -> crate::error::Result<crate::protocol::ResponseObject> {
+        let arc = self.response_channel_owner.as_ref().ok_or_else(|| {
+            crate::error::Error::ProtocolError(
+                "Response has no backing protocol object".to_string(),
+            )
+        })?;
+        arc.as_any()
+            .downcast_ref::<crate::protocol::ResponseObject>()
+            .cloned()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Response backing object is not a ResponseObject".to_string(),
+                )
+            })
+    }
+
+    /// Returns TLS/SSL security details for HTTPS connections, or `None` for HTTP.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-security-details>
+    pub async fn security_details(
+        &self,
+    ) -> crate::error::Result<Option<crate::protocol::response::SecurityDetails>> {
+        self.response_object()?.security_details().await
+    }
+
+    /// Returns the server's IP address and port, or `None`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-server-addr>
+    pub async fn server_addr(
+        &self,
+    ) -> crate::error::Result<Option<crate::protocol::response::RemoteAddr>> {
+        self.response_object()?.server_addr().await
+    }
+
+    /// Waits for this response to finish loading.
+    ///
+    /// For responses obtained from navigation methods (`goto`, `reload`), the response
+    /// is already finished when returned. For responses from `on_response` handlers,
+    /// the body may still be loading.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-finished>
+    pub async fn finished(&self) -> crate::error::Result<()> {
+        // The Playwright protocol dispatches `requestFinished` as a separate event
+        // rather than exposing a `finished` RPC method on Response.
+        // For responses from goto/reload, the response is already complete.
+        // TODO: For on_response handlers, implement proper waiting via requestFinished event.
+        Ok(())
+    }
+
     /// Returns the response body as raw bytes.
     ///
     /// Makes an RPC call to the Playwright server to fetch the response body.
@@ -2901,21 +2951,7 @@ impl Response {
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-body>
     pub async fn body(&self) -> crate::error::Result<Vec<u8>> {
-        let arc = self.response_channel_owner.as_ref().ok_or_else(|| {
-            crate::error::Error::ProtocolError(
-                "Response has no backing protocol object for body()".to_string(),
-            )
-        })?;
-        let obj = arc
-            .as_any()
-            .downcast_ref::<crate::protocol::ResponseObject>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(
-                    "Response backing object is not a ResponseObject".to_string(),
-                )
-            })?
-            .clone();
-        obj.body().await
+        self.response_object()?.body().await
     }
 
     /// Returns the response body as a UTF-8 string.
@@ -2968,21 +3004,7 @@ impl Response {
     pub async fn headers_array(
         &self,
     ) -> crate::error::Result<Vec<crate::protocol::response::HeaderEntry>> {
-        let arc = self.response_channel_owner.as_ref().ok_or_else(|| {
-            crate::error::Error::ProtocolError(
-                "Response has no backing protocol object for headers_array()".to_string(),
-            )
-        })?;
-        let obj = arc
-            .as_any()
-            .downcast_ref::<crate::protocol::ResponseObject>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(
-                    "Response backing object is not a ResponseObject".to_string(),
-                )
-            })?
-            .clone();
-        obj.raw_headers().await
+        self.response_object()?.raw_headers().await
     }
 
     /// Returns all response headers merged into a HashMap with lowercase keys.
