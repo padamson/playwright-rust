@@ -4,8 +4,8 @@
 // PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.58.2-mac-arm64 \
 //     cargo run --package playwright --example assertions
 
-use playwright_rs::expect;
 use playwright_rs::protocol::Playwright;
+use playwright_rs::{expect, expect_page};
 use std::time::Duration;
 
 #[tokio::main]
@@ -124,6 +124,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(_) => println!("❌ Should have timed out"),
         Err(e) => println!("✓ Assertion timed out as expected: {}", e),
     }
+
+    // Example 10: Page title assertions
+    expect_page(&page).to_have_title("Example Domain").await?;
+    println!("✓ Page has expected title");
+
+    expect_page(&page).to_have_title_regex("Example.*").await?;
+    println!("✓ Page title matches regex");
+
+    // Example 11: Page URL assertions
+    expect_page(&page)
+        .to_have_url("https://example.com/")
+        .await?;
+    println!("✓ Page has expected URL");
+
+    expect_page(&page)
+        .to_have_url_regex("https://example\\.com.*")
+        .await?;
+    println!("✓ Page URL matches regex");
+
+    // Example 12: Negated page assertions
+    expect_page(&page)
+        .not()
+        .to_have_title("Wrong Title")
+        .await?;
+    println!("✓ Page does NOT have wrong title");
 
     // Cleanup
     browser.close().await?;

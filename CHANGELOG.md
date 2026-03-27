@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `request.response()` — get the matching `Response` via RPC
   - `request.sizes()` — resource size info (`RequestSizes`: request_body_size, request_headers_size, response_body_size, response_headers_size)
 - **New types**: `SecurityDetails`, `RemoteAddr`, `RequestSizes` (exported from `playwright_rs::protocol`)
+- **Page assertions** — `expect_page(&page)` now supports title and URL assertions
+  - `to_have_title(expected)` / `to_have_title_regex(pattern)` — assert page title with auto-retry
+  - `to_have_url(expected)` / `to_have_url_regex(pattern)` — assert page URL with auto-retry
+  - `.not()` negation and `.with_timeout()` supported (matching locator assertion pattern)
 
 ### Breaking Changes
 

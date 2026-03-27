@@ -4,8 +4,7 @@
 // Integration tests for back-reference properties:
 // - dialog.page()
 // - download.page()
-// - response.request()
-// - response.frame()
+// - response.request(), response.frame()
 // - request.frame()
 //
 // Also verifies Response struct field encapsulation (private fields, accessor methods).
@@ -16,12 +15,12 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 // ============================================================================
-// Response accessor methods (field encapsulation)
+// Response accessors, request(), and frame() — single browser session
 // ============================================================================
 
-/// Verify Response fields are accessible only via accessor methods
+/// Verify Response field encapsulation plus response.request() and response.frame()
 #[tokio::test]
-async fn test_response_accessor_methods() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_response_accessors_and_back_references() -> Result<(), Box<dyn std::error::Error>> {
     crate::common::init_tracing();
     let server = TestServer::start().await;
     let playwright = Playwright::launch().await?;
@@ -33,11 +32,25 @@ async fn test_response_accessor_methods() -> Result<(), Box<dyn std::error::Erro
         .await?
         .expect("goto should return a response");
 
+    // Field encapsulation: all accessors work
     assert!(response.url().starts_with("http://"));
     assert_eq!(response.status(), 200);
     assert!(response.ok());
-    assert!(!response.status_text().is_empty() || response.status_text().is_empty()); // just verify callable
-    let _headers = response.headers(); // verify returns HashMap reference
+    let _status_text = response.status_text();
+    let _headers = response.headers();
+
+    // response.request() back-reference
+    let request = response
+        .request()
+        .expect("response.request() should return the owning Request");
+    assert!(request.url().starts_with("http://"));
+    assert_eq!(request.method(), "GET");
+
+    // response.frame() back-reference
+    let frame = response
+        .frame()
+        .expect("response.frame() should return the owning Frame");
+    assert!(frame.url().starts_with("http://"));
 
     browser.close().await?;
     server.shutdown();
@@ -62,7 +75,6 @@ async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Err
     page.on_dialog(move |dialog| {
         let url_capture = url_clone.clone();
         async move {
-            // Use the back-reference to get the page and read its URL
             if let Some(dialog_page) = dialog.page() {
                 *url_capture.lock().unwrap() = Some(dialog_page.url().to_string());
             }
@@ -89,11 +101,7 @@ async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Err
     tokio::time::sleep(Duration::from_millis(300)).await;
 
     let url = page_url_from_dialog.lock().unwrap().take();
-    assert_eq!(
-        url,
-        Some("about:blank".to_string()),
-        "dialog.page() should return the owning Page with correct URL"
-    );
+    assert_eq!(url, Some("about:blank".to_string()));
 
     browser.close().await?;
     Ok(())
@@ -117,7 +125,6 @@ async fn test_download_page_back_reference() -> Result<(), Box<dyn std::error::E
     page.on_download(move |download| {
         let url_capture = url_clone.clone();
         async move {
-            // Use the back-reference to get the page
             let download_page = download.page();
             *url_capture.lock().unwrap() = Some(download_page.url().to_string());
             Ok(())
@@ -145,80 +152,9 @@ async fn test_download_page_back_reference() -> Result<(), Box<dyn std::error::E
     tokio::time::sleep(Duration::from_millis(500)).await;
 
     let url = page_url_from_download.lock().unwrap().take();
-    assert_eq!(
-        url,
-        Some("about:blank".to_string()),
-        "download.page() should return the owning Page with correct URL"
-    );
+    assert_eq!(url, Some("about:blank".to_string()));
 
     browser.close().await?;
-    Ok(())
-}
-
-// ============================================================================
-// response.request()
-// ============================================================================
-
-/// Verify response.request() returns the Request that triggered the response
-#[tokio::test]
-async fn test_response_request_back_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
-
-    let response = page
-        .goto(&server.url(), None)
-        .await?
-        .expect("goto should return a response");
-
-    let request = response
-        .request()
-        .expect("response.request() should return the owning Request");
-
-    assert!(
-        request.url().starts_with("http://"),
-        "Request URL should be an HTTP URL, got: {}",
-        request.url()
-    );
-    assert_eq!(request.method(), "GET", "Navigation request should be GET");
-
-    browser.close().await?;
-    server.shutdown();
-    Ok(())
-}
-
-// ============================================================================
-// response.frame()
-// ============================================================================
-
-/// Verify response.frame() returns the Frame that initiated the request
-#[tokio::test]
-async fn test_response_frame_back_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
-
-    let response = page
-        .goto(&server.url(), None)
-        .await?
-        .expect("goto should return a response");
-
-    let frame = response
-        .frame()
-        .expect("response.frame() should return the owning Frame");
-
-    assert!(
-        frame.url().starts_with("http://"),
-        "Frame URL should be an HTTP URL, got: {}",
-        frame.url()
-    );
-
-    browser.close().await?;
-    server.shutdown();
     Ok(())
 }
 

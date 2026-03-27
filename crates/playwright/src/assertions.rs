@@ -876,6 +876,172 @@ impl PageExpectation {
         self
     }
 
+    /// Asserts that the page title matches the expected string.
+    ///
+    /// Auto-retries until the title matches or the timeout expires.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-title>
+    pub async fn to_have_title(self, expected: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let expected = expected.trim();
+
+        loop {
+            let actual = self.page.title().await?;
+            let actual = actual.trim();
+
+            let matches = if self.negate {
+                actual != expected
+            } else {
+                actual == expected
+            };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected page NOT to have title '{}', but it did after {:?}",
+                        expected, self.timeout,
+                    )
+                } else {
+                    format!(
+                        "Expected page to have title '{}', but got '{}' after {:?}",
+                        expected, actual, self.timeout,
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the page title matches the given regex pattern.
+    ///
+    /// Auto-retries until the title matches or the timeout expires.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-title>
+    pub async fn to_have_title_regex(self, pattern: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let re = regex::Regex::new(pattern)
+            .map_err(|e| crate::error::Error::InvalidArgument(format!("Invalid regex: {}", e)))?;
+
+        loop {
+            let actual = self.page.title().await?;
+
+            let matches = if self.negate {
+                !re.is_match(&actual)
+            } else {
+                re.is_match(&actual)
+            };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected page title NOT to match '{}', but '{}' matched after {:?}",
+                        pattern, actual, self.timeout,
+                    )
+                } else {
+                    format!(
+                        "Expected page title to match '{}', but got '{}' after {:?}",
+                        pattern, actual, self.timeout,
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the page URL matches the expected string.
+    ///
+    /// Auto-retries until the URL matches or the timeout expires.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-url>
+    pub async fn to_have_url(self, expected: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+
+        loop {
+            let actual = self.page.url();
+
+            let matches = if self.negate {
+                actual != expected
+            } else {
+                actual == expected
+            };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected page NOT to have URL '{}', but it did after {:?}",
+                        expected, self.timeout,
+                    )
+                } else {
+                    format!(
+                        "Expected page to have URL '{}', but got '{}' after {:?}",
+                        expected, actual, self.timeout,
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the page URL matches the given regex pattern.
+    ///
+    /// Auto-retries until the URL matches or the timeout expires.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-url>
+    pub async fn to_have_url_regex(self, pattern: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let re = regex::Regex::new(pattern)
+            .map_err(|e| crate::error::Error::InvalidArgument(format!("Invalid regex: {}", e)))?;
+
+        loop {
+            let actual = self.page.url();
+
+            let matches = if self.negate {
+                !re.is_match(&actual)
+            } else {
+                re.is_match(&actual)
+            };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected page URL NOT to match '{}', but '{}' matched after {:?}",
+                        pattern, actual, self.timeout,
+                    )
+                } else {
+                    format!(
+                        "Expected page URL to match '{}', but got '{}' after {:?}",
+                        pattern, actual, self.timeout,
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
     /// Asserts that the page screenshot matches a baseline image.
     ///
     /// See: <https://playwright.dev/docs/test-assertions#page-assertions-to-have-screenshot-1>
