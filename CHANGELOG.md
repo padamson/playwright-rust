@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0] - 2026-03-27
 
 ### Added
 
@@ -468,7 +468,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.8.7...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/padamson/playwright-rust/compare/v0.8.7...v0.9.0
 [0.8.7]: https://github.com/padamson/playwright-rust/compare/v0.8.6...v0.8.7
 [0.8.6]: https://github.com/padamson/playwright-rust/compare/v0.8.5...v0.8.6
 [0.8.5]: https://github.com/padamson/playwright-rust/compare/v0.8.4...v0.8.5
