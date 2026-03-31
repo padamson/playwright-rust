@@ -5,6 +5,7 @@
 //
 // See: https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context
 
+use crate::test_server::TestServer;
 use playwright_rs::api::IgnoreDefaultArgs;
 use playwright_rs::protocol::{BrowserContextOptions, Playwright, Viewport};
 use tempfile::TempDir;
@@ -13,6 +14,8 @@ use tempfile::TempDir;
 async fn test_launch_persistent_context_basic() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_basic: Starting");
+
+    let server = TestServer::start().await;
 
     // Create temporary directory for user data
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -37,12 +40,13 @@ async fn test_launch_persistent_context_basic() {
 
     // Create a page and verify it works
     let page = context.new_page().await.expect("Failed to create page");
-    page.goto("https://example.com", None)
+    page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
     // Cleanup
     context.close().await.expect("Failed to close context");
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_basic: Complete");
 }
 
@@ -50,6 +54,8 @@ async fn test_launch_persistent_context_basic() {
 async fn test_launch_persistent_context_with_options() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_with_options: Starting");
+
+    let server = TestServer::start().await;
 
     // Create temporary directory for user data
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -77,12 +83,13 @@ async fn test_launch_persistent_context_with_options() {
 
     // Verify context works with options
     let page = context.new_page().await.expect("Failed to create page");
-    page.goto("https://example.com", None)
+    page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
     // Cleanup
     context.close().await.expect("Failed to close context");
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_with_options: Complete");
 }
 
@@ -90,6 +97,8 @@ async fn test_launch_persistent_context_with_options() {
 async fn test_launch_persistent_context_app_mode() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_app_mode: Starting");
+
+    let server = TestServer::start().await;
 
     // Create temporary directory for user data
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -103,7 +112,7 @@ async fn test_launch_persistent_context_app_mode() {
 
     // Launch with app mode args
     let options = BrowserContextOptions::builder()
-        .args(vec!["--app=https://example.com".to_string()])
+        .args(vec![format!("--app={}", server.url())])
         .headless(true) // App mode works in headless
         .build();
 
@@ -118,6 +127,7 @@ async fn test_launch_persistent_context_app_mode() {
 
     // Cleanup
     context.close().await.expect("Failed to close context");
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_app_mode: Complete");
 }
 
@@ -125,6 +135,11 @@ async fn test_launch_persistent_context_app_mode() {
 async fn test_launch_persistent_context_storage_persistence() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_storage_persistence: Starting");
+
+    // Use a single test server — both sessions navigate to the same origin
+    // so localStorage persists across context restarts
+    let server = TestServer::start().await;
+    let url = server.url();
 
     // Create temporary directory for user data
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -144,9 +159,7 @@ async fn test_launch_persistent_context_storage_persistence() {
             .expect("Failed to launch first persistent context");
 
         let page = context.new_page().await.expect("Failed to create page");
-        page.goto("https://example.com", None)
-            .await
-            .expect("Failed to navigate");
+        page.goto(&url, None).await.expect("Failed to navigate");
 
         // Set local storage value
         page.evaluate_expression("localStorage.setItem('test_key', 'test_value')")
@@ -164,9 +177,7 @@ async fn test_launch_persistent_context_storage_persistence() {
             .expect("Failed to launch second persistent context");
 
         let page = context.new_page().await.expect("Failed to create page");
-        page.goto("https://example.com", None)
-            .await
-            .expect("Failed to navigate");
+        page.goto(&url, None).await.expect("Failed to navigate");
 
         // Retrieve local storage value
         let stored_value = page
@@ -179,6 +190,7 @@ async fn test_launch_persistent_context_storage_persistence() {
         context.close().await.expect("Failed to close context");
     }
 
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_storage_persistence: Complete");
 }
 
@@ -218,6 +230,9 @@ async fn test_launch_persistent_context_cross_browser() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_cross_browser: Starting");
 
+    let server = TestServer::start().await;
+    let url = server.url();
+
     let playwright = Playwright::launch()
         .await
         .expect("Failed to launch Playwright");
@@ -234,7 +249,7 @@ async fn test_launch_persistent_context_cross_browser() {
             .expect("Failed to launch Chromium persistent context");
 
         let page = context.new_page().await.expect("Failed to create page");
-        page.goto("https://example.com", None)
+        page.goto(&url, None)
             .await
             .expect("Failed to navigate in Chromium");
 
@@ -254,7 +269,7 @@ async fn test_launch_persistent_context_cross_browser() {
             .expect("Failed to launch Firefox persistent context");
 
         let page = context.new_page().await.expect("Failed to create page");
-        page.goto("https://example.com", None)
+        page.goto(&url, None)
             .await
             .expect("Failed to navigate in Firefox");
 
@@ -275,7 +290,7 @@ async fn test_launch_persistent_context_cross_browser() {
             .expect("Failed to launch WebKit persistent context");
 
         let page = context.new_page().await.expect("Failed to create page");
-        page.goto("https://example.com", None)
+        page.goto(&url, None)
             .await
             .expect("Failed to navigate in WebKit");
 
@@ -285,6 +300,7 @@ async fn test_launch_persistent_context_cross_browser() {
         tracing::warn!("Skipping WebKit persistent context test on Windows");
     }
 
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_cross_browser: Complete");
 }
 
@@ -292,6 +308,8 @@ async fn test_launch_persistent_context_cross_browser() {
 async fn test_launch_persistent_context_ignore_default_args_bool() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_ignore_default_args_bool: Starting");
+
+    let server = TestServer::start().await;
 
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let user_data_dir = temp_dir.path().to_str().unwrap().to_string();
@@ -315,11 +333,12 @@ async fn test_launch_persistent_context_ignore_default_args_bool() {
         .expect("Failed to launch persistent context with ignore_default_args(false)");
 
     let page = context.new_page().await.expect("Failed to create page");
-    page.goto("https://example.com", None)
+    page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
     context.close().await.expect("Failed to close context");
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_ignore_default_args_bool: Complete");
 }
 
@@ -327,6 +346,8 @@ async fn test_launch_persistent_context_ignore_default_args_bool() {
 async fn test_launch_persistent_context_ignore_default_args_array() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_ignore_default_args_array: Starting");
+
+    let server = TestServer::start().await;
 
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let user_data_dir = temp_dir.path().to_str().unwrap().to_string();
@@ -350,10 +371,11 @@ async fn test_launch_persistent_context_ignore_default_args_array() {
         .expect("Failed to launch persistent context with ignore_default_args(array)");
 
     let page = context.new_page().await.expect("Failed to create page");
-    page.goto("https://example.com", None)
+    page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
     context.close().await.expect("Failed to close context");
+    server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_ignore_default_args_array: Complete");
 }
