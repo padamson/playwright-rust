@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`ConnectionExt` extension trait** — typed object retrieval via `connection.get_typed::<T>(guid).await?`, eliminating boilerplate `get_object` + `as_any().downcast_ref::<T>()` pattern
+- **`downcast_parent<T>()` helper** — one-line parent type resolution replacing manual parent + downcast chains
+- **`Error::TypeMismatch`** — structured error variant with guid, expected type, and actual type for better diagnostics
+
+### Breaking Changes
+
+- **`ConnectionLike` trait uses `#[async_trait]`** — methods migrated from manual `Pin<Box<dyn Future>>` returns to idiomatic `async fn`. Any code implementing `ConnectionLike` directly must update method signatures (internal server infrastructure, not user-facing API).
+
+### Changed
+
+- Added `async-trait` as a dependency
+
 ## [0.9.0] - 2026-03-27
 
 ### Added

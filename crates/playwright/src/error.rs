@@ -118,6 +118,18 @@ pub enum Error {
     #[error("Object not found (may have been closed): {0}")]
     ObjectNotFound(String),
 
+    /// Type mismatch when downcasting a protocol object
+    ///
+    /// Occurs when a protocol object's concrete type does not match the expected type.
+    /// This typically indicates a Playwright protocol version mismatch or a bug in the
+    /// object factory.
+    #[error("Type mismatch for object '{guid}': expected {expected}, got {actual}")]
+    TypeMismatch {
+        guid: String,
+        expected: String,
+        actual: String,
+    },
+
     /// Invalid path provided
     #[error("Invalid path: {0}")]
     InvalidPath(String),
