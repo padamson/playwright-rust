@@ -272,9 +272,9 @@ impl Connection {
 
         tracing::debug!("Root object registered, sending initialize message");
 
-        let root_typed = root
-            .as_any()
-            .downcast_ref::<Root>()
+        let root_typed: Root = self
+            .get_typed::<Root>("")
+            .await
             .expect("Root object should be Root type");
 
         let response = tokio::time::timeout(Duration::from_secs(30), root_typed.initialize())
@@ -291,15 +291,10 @@ impl Connection {
 
         let playwright_obj = self.wait_for_object(playwright_guid).await?;
 
-        playwright_obj
-            .as_any()
-            .downcast_ref::<crate::protocol::Playwright>()
-            .ok_or_else(|| {
-                Error::ProtocolError(format!(
-                    "Object with GUID '{}' is not a Playwright instance",
-                    playwright_guid
-                ))
-            })?;
+        // Validate that the object is indeed a Playwright instance
+        let _: crate::protocol::Playwright = self
+            .get_typed::<crate::protocol::Playwright>(playwright_guid)
+            .await?;
 
         let empty_guid: Arc<str> = Arc::from("");
         self.objects.lock().remove(&empty_guid);

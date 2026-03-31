@@ -8,6 +8,7 @@ use crate::protocol::browser_context::Viewport;
 use crate::protocol::{Dialog, Download, Request, ResponseObject, Route, WebSocket};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::{ConnectionExt, downcast_parent};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -345,28 +346,18 @@ impl Page {
     ///
     /// The main frame is where navigation and DOM operations actually happen.
     pub async fn main_frame(&self) -> Result<crate::protocol::Frame> {
-        // Get the Frame object from the connection's object registry
-        let frame_arc = self.connection().get_object(&self.main_frame_guid).await?;
-
-        // Downcast to Frame
-        let frame = frame_arc
-            .as_any()
-            .downcast_ref::<crate::protocol::Frame>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected Frame object, got {}",
-                    frame_arc.type_name()
-                ))
-            })?;
-
-        let frame_clone = frame.clone();
+        // Get and downcast the Frame object from the connection's object registry
+        let frame: crate::protocol::Frame = self
+            .connection()
+            .get_typed::<crate::protocol::Frame>(&self.main_frame_guid)
+            .await?;
 
         // Cache the frame for synchronous access in url()
         if let Ok(mut cached) = self.cached_main_frame.lock() {
-            *cached = Some(frame_clone.clone());
+            *cached = Some(frame.clone());
         }
 
-        Ok(frame_clone)
+        Ok(frame)
     }
 
     /// Returns the current URL of the page.
@@ -560,19 +551,8 @@ impl Page {
 
     /// Returns the browser context that the page belongs to.
     pub fn context(&self) -> Result<crate::protocol::BrowserContext> {
-        let parent = self.base.parent().ok_or_else(|| Error::TargetClosed {
-            target_type: "Page".into(),
-            context: "Parent context not found".into(),
-        })?;
-
-        let context = parent
-            .as_any()
-            .downcast_ref::<crate::protocol::BrowserContext>()
-            .ok_or_else(|| {
-                Error::ProtocolError("Page parent is not a BrowserContext".to_string())
-            })?;
-
-        Ok(context.clone())
+        downcast_parent::<crate::protocol::BrowserContext>(self)
+            .ok_or_else(|| Error::ProtocolError("Page parent is not a BrowserContext".to_string()))
     }
 
     /// Pauses script execution.
@@ -2090,34 +2070,23 @@ impl ChannelOwner for Page {
                     let self_clone = self.clone();
 
                     tokio::spawn(async move {
-                        // Wait for Route object to be created
-                        let route_arc = match connection.get_object(&route_guid_owned).await {
-                            Ok(obj) => obj,
-                            Err(e) => {
-                                tracing::warn!("Failed to get route object: {}", e);
-                                return;
-                            }
-                        };
-
-                        // Downcast to Route
-                        let route = match route_arc.as_any().downcast_ref::<Route>() {
-                            Some(r) => r.clone(),
-                            None => {
-                                tracing::warn!("Failed to downcast to Route");
-                                return;
-                            }
-                        };
+                        // Get and downcast Route object
+                        let route: Route =
+                            match connection.get_typed::<Route>(&route_guid_owned).await {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get route object: {}", e);
+                                    return;
+                                }
+                            };
 
                         // Set APIRequestContext on the route for fetch() support.
                         // Page's parent is BrowserContext, which has the request context.
-                        if let Some(parent) = self_clone.parent() {
-                            if let Some(ctx) = parent
-                                .as_any()
-                                .downcast_ref::<crate::protocol::BrowserContext>()
-                            {
-                                if let Ok(api_ctx) = ctx.request().await {
-                                    route.set_api_request_context(api_ctx);
-                                }
+                        if let Some(ctx) =
+                            downcast_parent::<crate::protocol::BrowserContext>(&self_clone)
+                        {
+                            if let Ok(api_ctx) = ctx.request().await {
+                                route.set_api_request_context(api_ctx);
                             }
                         }
 
@@ -2188,22 +2157,15 @@ impl ChannelOwner for Page {
                     let self_clone = self.clone();
 
                     tokio::spawn(async move {
-                        // Wait for WebSocket object to be created
-                        let ws_arc = match connection.get_object(&ws_guid_owned).await {
-                            Ok(obj) => obj,
-                            Err(e) => {
-                                tracing::warn!("Failed to get WebSocket object: {}", e);
-                                return;
-                            }
-                        };
-
-                        // Downcast to WebSocket
-                        let ws = if let Some(ws) = ws_arc.as_any().downcast_ref::<WebSocket>() {
-                            ws.clone()
-                        } else {
-                            tracing::warn!("Expected WebSocket object, got {}", ws_arc.type_name());
-                            return;
-                        };
+                        // Get and downcast WebSocket object
+                        let ws: WebSocket =
+                            match connection.get_typed::<WebSocket>(&ws_guid_owned).await {
+                                Ok(ws) => ws,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get WebSocket object: {}", e);
+                                    return;
+                                }
+                            };
 
                         // Call handlers
                         let handlers = self_clone.websocket_handlers.lock().unwrap().clone();
@@ -2871,11 +2833,7 @@ impl Response {
     /// See: <https://playwright.dev/docs/api/class-response#response-request>
     pub fn request(&self) -> Option<crate::protocol::Request> {
         let owner = self.response_channel_owner.as_ref()?;
-        let parent = owner.parent()?;
-        parent
-            .as_any()
-            .downcast_ref::<crate::protocol::Request>()
-            .cloned()
+        downcast_parent::<crate::protocol::Request>(&**owner)
     }
 
     /// Returns the [`Frame`](crate::protocol::Frame) that initiated the request for this response.
@@ -2898,10 +2856,10 @@ impl Response {
         arc.as_any()
             .downcast_ref::<crate::protocol::ResponseObject>()
             .cloned()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(
-                    "Response backing object is not a ResponseObject".to_string(),
-                )
+            .ok_or_else(|| crate::error::Error::TypeMismatch {
+                guid: arc.guid().to_string(),
+                expected: "ResponseObject".to_string(),
+                actual: arc.type_name().to_string(),
             })
     }
 

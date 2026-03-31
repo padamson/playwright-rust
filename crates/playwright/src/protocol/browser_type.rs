@@ -12,7 +12,7 @@ use crate::error::Result;
 use crate::protocol::{Browser, BrowserContext, BrowserContextOptions};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
-use crate::server::connection::ConnectionLike;
+use crate::server::connection::{ConnectionExt, ConnectionLike};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::any::Any;
@@ -88,6 +88,7 @@ use std::sync::Arc;
 /// ```
 ///
 /// See: <https://playwright.dev/docs/api/class-browsertype>
+#[derive(Clone)]
 pub struct BrowserType {
     /// Base ChannelOwner implementation
     base: ChannelOwnerImpl,
@@ -233,21 +234,13 @@ impl BrowserType {
         // Send launch RPC to server
         let response: LaunchResponse = self.base.channel().send("launch", params).await?;
 
-        // Get browser object from registry
-        let browser_arc = self.connection().get_object(&response.browser.guid).await?;
+        // Get browser object from registry and downcast
+        let browser: Browser = self
+            .connection()
+            .get_typed::<Browser>(&response.browser.guid)
+            .await?;
 
-        // Downcast to Browser
-        let browser = browser_arc
-            .as_any()
-            .downcast_ref::<Browser>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected Browser object, got {}",
-                    browser_arc.type_name()
-                ))
-            })?;
-
-        Ok(browser.clone())
+        Ok(browser)
     }
 
     /// Launches a browser with persistent storage using default options.
@@ -403,21 +396,13 @@ impl BrowserType {
             .send("launchPersistentContext", params)
             .await?;
 
-        // Get context object from registry
-        let context_arc = self.connection().get_object(&response.context.guid).await?;
+        // Get context object from registry and downcast
+        let context: BrowserContext = self
+            .connection()
+            .get_typed::<BrowserContext>(&response.context.guid)
+            .await?;
 
-        // Downcast to BrowserContext
-        let context = context_arc
-            .as_any()
-            .downcast_ref::<BrowserContext>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected BrowserContext object, got {}",
-                    context_arc.type_name()
-                ))
-            })?;
-
-        Ok(context.clone())
+        Ok(context)
     }
     /// Connects to an existing browser instance.
     ///
@@ -484,17 +469,10 @@ impl BrowserType {
                  )
             })?;
 
-        // 6. Get the existing Browser object
-        let browser_arc = connection.get_object(browser_guid).await?;
+        // 6. Get the existing Browser object and downcast
+        let browser: Browser = connection.get_typed::<Browser>(browser_guid).await?;
 
-        let browser = browser_arc
-            .as_any()
-            .downcast_ref::<Browser>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError("Object is not a Browser".to_string())
-            })?;
-
-        Ok(browser.clone())
+        Ok(browser)
     }
 
     /// Connects to a browser over the Chrome DevTools Protocol.
@@ -551,21 +529,13 @@ impl BrowserType {
         let response: ConnectOverCdpResponse =
             self.base.channel().send("connectOverCDP", params).await?;
 
-        // Get browser object from registry
-        let browser_arc = self.connection().get_object(&response.browser.guid).await?;
+        // Get browser object from registry and downcast
+        let browser: Browser = self
+            .connection()
+            .get_typed::<Browser>(&response.browser.guid)
+            .await?;
 
-        // Downcast to Browser
-        let browser = browser_arc
-            .as_any()
-            .downcast_ref::<Browser>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected Browser object, got {}",
-                    browser_arc.type_name()
-                ))
-            })?;
-
-        Ok(browser.clone())
+        Ok(browser)
     }
 }
 

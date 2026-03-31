@@ -11,6 +11,7 @@ use crate::protocol::route::UnrouteBehavior;
 use crate::protocol::{Browser, Page, ProxySettings, Request, ResponseObject, Route};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::ConnectionExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::any::Any;
@@ -235,22 +236,15 @@ impl BrowserContext {
             .send("newPage", serde_json::json!({}))
             .await?;
 
-        // Retrieve the Page object from the connection registry
-        let page_arc = self.connection().get_object(&response.page.guid).await?;
-
-        // Downcast to Page
-        let page = page_arc.as_any().downcast_ref::<Page>().ok_or_else(|| {
-            crate::error::Error::ProtocolError(format!(
-                "Expected Page object, got {}",
-                page_arc.type_name()
-            ))
-        })?;
+        // Retrieve and downcast the Page object from the connection registry
+        let page: Page = self
+            .connection()
+            .get_typed::<Page>(&response.page.guid)
+            .await?;
 
         // Note: Don't track the page here - it will be tracked via the "page" event
         // that Playwright server sends automatically when a page is created.
         // Tracking it here would create duplicates.
-
-        let page = page.clone();
 
         // Propagate context-level timeout defaults to the new page
         let ctx_timeout = self.default_timeout_ms();
@@ -313,16 +307,7 @@ impl BrowserContext {
             )
         })?;
 
-        let obj = self.connection().get_object(guid).await?;
-        obj.as_any()
-            .downcast_ref::<APIRequestContext>()
-            .cloned()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected APIRequestContext, got {}",
-                    obj.type_name()
-                ))
-            })
+        self.connection().get_typed::<APIRequestContext>(guid).await
     }
 
     /// Closes the browser context and all its pages.
@@ -760,15 +745,11 @@ impl BrowserContext {
             let response_end_timing = params.get("responseEndTiming").and_then(|v| v.as_f64());
             let method = method.to_owned();
             tokio::spawn(async move {
-                let request_arc = match connection.get_object(&request_guid_owned).await {
-                    Ok(obj) => obj,
-                    Err(_err) => return,
-                };
-
-                let request = match request_arc.as_any().downcast_ref::<Request>() {
-                    Some(v) => v.clone(),
-                    None => return,
-                };
+                let request: Request =
+                    match connection.get_typed::<Request>(&request_guid_owned).await {
+                        Ok(r) => r,
+                        Err(_) => return,
+                    };
 
                 // Set failure text on the request before dispatching to handlers
                 if let Some(text) = failure_text {
@@ -785,13 +766,9 @@ impl BrowserContext {
                 }
 
                 if let Some(page_guid) = page_guid_owned {
-                    let page_arc = match connection.get_object(&page_guid).await {
-                        Ok(v) => v,
+                    let page: Page = match connection.get_typed::<Page>(&page_guid).await {
+                        Ok(p) => p,
                         Err(_) => return,
-                    };
-                    let page = match page_arc.as_any().downcast_ref::<Page>() {
-                        Some(p) => p,
-                        None => return,
                     };
                     match method.as_str() {
                         "request" => page.trigger_request_event(request).await,
@@ -818,24 +795,18 @@ impl BrowserContext {
                 .and_then(|v| v.as_str())
                 .map(|v| v.to_owned());
             tokio::spawn(async move {
-                let response_arc = match connection.get_object(&response_guid_owned).await {
-                    Ok(obj) => obj,
-                    Err(_err) => return,
-                };
-
-                let response = match response_arc.as_any().downcast_ref::<ResponseObject>() {
-                    Some(v) => v.clone(),
-                    None => return,
+                let response: ResponseObject = match connection
+                    .get_typed::<ResponseObject>(&response_guid_owned)
+                    .await
+                {
+                    Ok(r) => r,
+                    Err(_) => return,
                 };
 
                 if let Some(page_guid) = page_guid_owned {
-                    let page_arc = match connection.get_object(&page_guid).await {
-                        Ok(v) => v,
+                    let page: Page = match connection.get_typed::<Page>(&page_guid).await {
+                        Ok(p) => p,
                         Err(_) => return,
-                    };
-                    let page = match page_arc.as_any().downcast_ref::<Page>() {
-                        Some(p) => p,
-                        None => return,
                     };
                     page.trigger_response_event(response).await;
                 }
@@ -906,16 +877,11 @@ impl ChannelOwner for BrowserContext {
                     let pages = self.pages.clone();
 
                     tokio::spawn(async move {
-                        // Get the Page object
-                        let page_arc = match connection.get_object(&page_guid_owned).await {
-                            Ok(obj) => obj,
+                        // Get and downcast the Page object
+                        let page: Page = match connection.get_typed::<Page>(&page_guid_owned).await
+                        {
+                            Ok(p) => p,
                             Err(_) => return,
-                        };
-
-                        // Downcast to Page
-                        let page = match page_arc.as_any().downcast_ref::<Page>() {
-                            Some(p) => p.clone(),
-                            None => return,
                         };
 
                         // Track the page
@@ -936,32 +902,21 @@ impl ChannelOwner for BrowserContext {
                     let dialog_guid_owned = dialog_guid.to_string();
 
                     tokio::spawn(async move {
-                        // Get the Dialog object
-                        let dialog_arc = match connection.get_object(&dialog_guid_owned).await {
-                            Ok(obj) => obj,
+                        // Get and downcast the Dialog object
+                        let dialog: crate::protocol::Dialog = match connection
+                            .get_typed::<crate::protocol::Dialog>(&dialog_guid_owned)
+                            .await
+                        {
+                            Ok(d) => d,
                             Err(_) => return,
                         };
 
-                        // Downcast to Dialog
-                        let dialog = match dialog_arc
-                            .as_any()
-                            .downcast_ref::<crate::protocol::Dialog>()
-                        {
-                            Some(d) => d.clone(),
-                            None => return,
-                        };
-
                         // Get the Page from the Dialog's parent
-                        let page_arc = match dialog_arc.parent() {
-                            Some(parent) => parent,
-                            None => return,
-                        };
-
-                        // Downcast to Page
-                        let page = match page_arc.as_any().downcast_ref::<Page>() {
-                            Some(p) => p.clone(),
-                            None => return,
-                        };
+                        let page: Page =
+                            match crate::server::connection::downcast_parent::<Page>(&dialog) {
+                                Some(p) => p,
+                                None => return,
+                            };
 
                         // Forward to Page's dialog handlers
                         page.trigger_dialog_event(dialog).await;
@@ -981,30 +936,21 @@ impl ChannelOwner for BrowserContext {
                     let request_context_guid = self.request_context_guid.clone();
 
                     tokio::spawn(async move {
-                        let route_arc = match connection.get_object(&route_guid_owned).await {
-                            Ok(obj) => obj,
-                            Err(e) => {
-                                tracing::warn!("Failed to get route object: {}", e);
-                                return;
-                            }
-                        };
-
-                        let route = match route_arc.as_any().downcast_ref::<Route>() {
-                            Some(r) => r.clone(),
-                            None => {
-                                tracing::warn!("Failed to downcast to Route");
-                                return;
-                            }
-                        };
+                        let route: Route =
+                            match connection.get_typed::<Route>(&route_guid_owned).await {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get route object: {}", e);
+                                    return;
+                                }
+                            };
 
                         // Set APIRequestContext on the route for fetch() support
                         if let Some(ref guid) = request_context_guid {
-                            if let Ok(obj) = connection.get_object(guid).await {
-                                if let Some(api_ctx) =
-                                    obj.as_any().downcast_ref::<APIRequestContext>()
-                                {
-                                    route.set_api_request_context(api_ctx.clone());
-                                }
+                            if let Ok(api_ctx) =
+                                connection.get_typed::<APIRequestContext>(guid).await
+                            {
+                                route.set_api_request_context(api_ctx);
                             }
                         }
 
@@ -1819,10 +1765,10 @@ async fn extract_timing(
     response_end_timing: Option<f64>,
 ) -> Option<serde_json::Value> {
     let resp_guid = response_guid?;
-    let resp_arc = connection.get_object(&resp_guid).await.ok()?;
-    let resp_obj = resp_arc
-        .as_any()
-        .downcast_ref::<crate::protocol::ResponseObject>()?;
+    let resp_obj: crate::protocol::ResponseObject = connection
+        .get_typed::<crate::protocol::ResponseObject>(&resp_guid)
+        .await
+        .ok()?;
     let mut timing = resp_obj.initializer().get("timing")?.clone();
     if let (Some(end), Some(obj)) = (response_end_timing, timing.as_object_mut()) {
         if let Some(n) = serde_json::Number::from_f64(end) {

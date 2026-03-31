@@ -9,6 +9,7 @@ use crate::error::Result;
 use crate::protocol::Request;
 use crate::protocol::api_request_context::{APIRequestContext, InnerFetchOptions};
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::downcast_parent;
 use serde_json::{Value, json};
 use std::any::Any;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -76,11 +77,8 @@ impl Route {
     /// See: <https://playwright.dev/docs/api/class-route#route-request>
     pub fn request(&self) -> Request {
         // The Route's parent is the Request object
-        // Try to downcast the parent to Request
-        if let Some(parent) = self.parent() {
-            if let Some(request) = parent.as_any().downcast_ref::<Request>() {
-                return request.clone();
-            }
+        if let Some(request) = downcast_parent::<Request>(self) {
+            return request;
         }
 
         // Fallback: Create a stub Request from initializer data

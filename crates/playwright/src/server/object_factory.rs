@@ -19,6 +19,7 @@ use crate::protocol::{
     artifact::Artifact,
 };
 use crate::server::channel_owner::{ChannelOwner, ParentOrConnection};
+use crate::server::connection::ConnectionExt;
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -178,11 +179,12 @@ pub async fn create_object(
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
             {
-                if let Ok(frame_obj) = request.connection().get_object(frame_guid).await {
-                    if let Some(frame) = frame_obj.as_any().downcast_ref::<crate::protocol::Frame>()
-                    {
-                        request.set_frame(frame.clone());
-                    }
+                if let Ok(frame) = request
+                    .connection()
+                    .get_typed::<crate::protocol::Frame>(frame_guid)
+                    .await
+                {
+                    request.set_frame(frame);
                 }
             }
 
@@ -192,12 +194,11 @@ pub async fn create_object(
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
             {
-                if let Ok(from_obj) = request.connection().get_object(from_guid).await {
-                    if let Some(from_request) = from_obj.as_any().downcast_ref::<Request>() {
-                        request.set_redirected_from(from_request.clone());
-                        // Set the reverse pointer on the original request
-                        from_request.set_redirected_to((*request).clone());
-                    }
+                if let Ok(from_request) = request.connection().get_typed::<Request>(from_guid).await
+                {
+                    request.set_redirected_from(from_request.clone());
+                    // Set the reverse pointer on the original request
+                    from_request.set_redirected_to((*request).clone());
                 }
             }
 
