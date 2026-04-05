@@ -25,6 +25,7 @@ tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+async-trait = "0.1"
 tracing = "0.1"
 parking_lot = "0.12"
 base64 = "0.22"
@@ -38,21 +39,21 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 
 [dev-dependencies]
 anyhow = { workspace = true }
-axum = { version = "0.8.8", features = ["ws"] }
-tower = "0.5.2"
-tower-http = "0.6.6"
+axum = { version = "0.8", features = ["ws"] }
+tower = "0.5"
+tower-http = "0.6"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
-urlencoding = "2.1"
-tempfile = "3.8"
+urlencoding = "2"
+tempfile = "3"
 
 [target.'cfg(windows)'.dev-dependencies]
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef"] }
 
 [build-dependencies]
 reqwest = { version = "0.13", features = ["blocking"] }
-zip = "8.1"
-dirs = "6.0"
+zip = "8"
+dirs = "6"
 
 [package.metadata.docs.rs]
 # Pin nightly to avoid generic-array 0.14 breakage (doc_auto_cfg removed in Rust 1.92)

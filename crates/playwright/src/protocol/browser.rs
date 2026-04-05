@@ -6,6 +6,7 @@ use crate::error::Result;
 use crate::protocol::{BrowserContext, Page};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::ConnectionExt;
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
@@ -178,21 +179,13 @@ impl Browser {
             .send("newContext", serde_json::json!({}))
             .await?;
 
-        // Retrieve the BrowserContext object from the connection registry
-        let context_arc = self.connection().get_object(&response.context.guid).await?;
+        // Retrieve and downcast the BrowserContext object from the connection registry
+        let context: BrowserContext = self
+            .connection()
+            .get_typed::<BrowserContext>(&response.context.guid)
+            .await?;
 
-        // Downcast to BrowserContext
-        let context = context_arc
-            .as_any()
-            .downcast_ref::<BrowserContext>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected BrowserContext object, got {}",
-                    context_arc.type_name()
-                ))
-            })?;
-
-        Ok(context.clone())
+        Ok(context)
     }
 
     /// Creates a new browser context with custom options.
@@ -261,21 +254,13 @@ impl Browser {
         // Send newContext RPC to server with options
         let response: NewContextResponse = self.channel().send("newContext", options_json).await?;
 
-        // Retrieve the BrowserContext object from the connection registry
-        let context_arc = self.connection().get_object(&response.context.guid).await?;
+        // Retrieve and downcast the BrowserContext object from the connection registry
+        let context: BrowserContext = self
+            .connection()
+            .get_typed::<BrowserContext>(&response.context.guid)
+            .await?;
 
-        // Downcast to BrowserContext
-        let context = context_arc
-            .as_any()
-            .downcast_ref::<BrowserContext>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Expected BrowserContext object, got {}",
-                    context_arc.type_name()
-                ))
-            })?;
-
-        Ok(context.clone())
+        Ok(context)
     }
 
     /// Creates a new page in a new browser context.

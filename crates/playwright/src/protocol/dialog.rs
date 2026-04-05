@@ -8,6 +8,7 @@
 
 use crate::error::Result;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::downcast_parent;
 use serde_json::{Value, json};
 use std::any::Any;
 use std::sync::Arc;
@@ -92,11 +93,7 @@ impl Dialog {
     ///
     /// See: <https://playwright.dev/docs/api/class-dialog#dialog-page>
     pub fn page(&self) -> Option<crate::protocol::Page> {
-        let parent = self.parent()?;
-        parent
-            .as_any()
-            .downcast_ref::<crate::protocol::Page>()
-            .cloned()
+        downcast_parent::<crate::protocol::Page>(self)
     }
 
     /// Accepts the dialog.

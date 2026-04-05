@@ -64,6 +64,7 @@ use std::sync::Arc;
 /// See:
 /// - Python: <https://github.com/microsoft/playwright-python/blob/main/playwright/_impl/_connection.py>
 /// - Java: <https://github.com/microsoft/playwright-java>
+#[derive(Clone)]
 pub struct Root {
     /// Base ChannelOwner implementation
     base: ChannelOwnerImpl,

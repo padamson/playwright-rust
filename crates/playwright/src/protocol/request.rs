@@ -6,6 +6,7 @@
 use crate::error::Result;
 use crate::protocol::response::HeaderEntry;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::ConnectionExt;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::any::Any;
@@ -134,21 +135,23 @@ impl Request {
         };
 
         let connection = self.connection();
+        // get_typed validates the type; get_object provides the Arc<dyn ChannelOwner>
+        // needed by Response::new for back-reference support
+        let response_obj: crate::protocol::ResponseObject = connection
+            .get_typed::<crate::protocol::ResponseObject>(&guid)
+            .await
+            .map_err(|e| {
+                crate::error::Error::ProtocolError(format!(
+                    "Failed to get Response object {}: {}",
+                    guid, e
+                ))
+            })?;
         let response_arc = connection.get_object(&guid).await.map_err(|e| {
             crate::error::Error::ProtocolError(format!(
                 "Failed to get Response object {}: {}",
                 guid, e
             ))
         })?;
-
-        let response_obj = response_arc
-            .as_any()
-            .downcast_ref::<crate::protocol::ResponseObject>()
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(
-                    "Response object is not a ResponseObject".to_string(),
-                )
-            })?;
 
         let initializer = response_obj.initializer();
         let status = initializer

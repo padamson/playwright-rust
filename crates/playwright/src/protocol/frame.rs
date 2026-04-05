@@ -8,6 +8,7 @@ use crate::protocol::page::{GotoOptions, Response, WaitUntil};
 use crate::protocol::{parse_result, serialize_argument, serialize_null};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
+use crate::server::connection::ConnectionExt;
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
@@ -400,23 +401,13 @@ impl Frame {
             crate::error::Error::ProtocolError("Element GUID missing".to_string())
         })?;
 
-        // Look up the ElementHandle object in the connection's object registry
+        // Look up the ElementHandle object in the connection's object registry and downcast
         let connection = self.base.connection();
-        let element = connection.get_object(guid).await?;
+        let handle: crate::protocol::ElementHandle = connection
+            .get_typed::<crate::protocol::ElementHandle>(guid)
+            .await?;
 
-        // Downcast to ElementHandle
-        let handle = element
-            .as_any()
-            .downcast_ref::<crate::protocol::ElementHandle>()
-            .map(|e| Arc::new(e.clone()))
-            .ok_or_else(|| {
-                crate::error::Error::ProtocolError(format!(
-                    "Object {} is not an ElementHandle",
-                    guid
-                ))
-            })?;
-
-        Ok(Some(handle))
+        Ok(Some(Arc::new(handle)))
     }
 
     /// Returns all elements matching the selector.
@@ -450,20 +441,11 @@ impl Frame {
                 crate::error::Error::ProtocolError("Element GUID missing".to_string())
             })?;
 
-            let element = connection.get_object(guid).await?;
+            let handle: crate::protocol::ElementHandle = connection
+                .get_typed::<crate::protocol::ElementHandle>(guid)
+                .await?;
 
-            let handle = element
-                .as_any()
-                .downcast_ref::<crate::protocol::ElementHandle>()
-                .map(|e| Arc::new(e.clone()))
-                .ok_or_else(|| {
-                    crate::error::Error::ProtocolError(format!(
-                        "Object {} is not an ElementHandle",
-                        guid
-                    ))
-                })?;
-
-            handles.push(handle);
+            handles.push(Arc::new(handle));
         }
 
         Ok(handles)
@@ -1752,17 +1734,11 @@ impl Frame {
         })?;
 
         let connection = self.base.connection();
-        let element = connection.get_object(guid).await?;
+        let handle: crate::protocol::ElementHandle = connection
+            .get_typed::<crate::protocol::ElementHandle>(guid)
+            .await?;
 
-        let handle = element
-            .as_any()
-            .downcast_ref::<crate::protocol::ElementHandle>()
-            .map(|e| Arc::new(e.clone()))
-            .ok_or_else(|| {
-                Error::ProtocolError(format!("Object {} is not an ElementHandle", guid))
-            })?;
-
-        Ok(handle)
+        Ok(Arc::new(handle))
     }
 
     /// Dispatches a DOM event on the element matching the selector.
@@ -1884,17 +1860,11 @@ impl Frame {
         })?;
 
         let connection = self.base.connection();
-        let element = connection.get_object(guid).await?;
+        let handle: crate::protocol::ElementHandle = connection
+            .get_typed::<crate::protocol::ElementHandle>(guid)
+            .await?;
 
-        let handle = element
-            .as_any()
-            .downcast_ref::<crate::protocol::ElementHandle>()
-            .map(|e| Arc::new(e.clone()))
-            .ok_or_else(|| {
-                Error::ProtocolError(format!("Object {} is not an ElementHandle", guid))
-            })?;
-
-        Ok(handle)
+        Ok(Arc::new(handle))
     }
 }
 

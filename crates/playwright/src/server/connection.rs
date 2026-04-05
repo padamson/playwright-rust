@@ -11,37 +11,73 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::sync::Mutex as TokioMutex;
 use tokio::sync::{mpsc, oneshot};
 
-use std::future::Future;
-use std::pin::Pin;
+use crate::server::channel_owner::ChannelOwner;
 
-/// Trait defining the interface that ChannelOwner needs from a Connection
+/// Trait defining the interface that ChannelOwner needs from a Connection.
+///
+/// Uses `#[async_trait]` for ergonomic async method definitions while
+/// maintaining dyn-safety (`Arc<dyn ConnectionLike>`).
+#[async_trait::async_trait]
 pub trait ConnectionLike: Send + Sync {
-    /// Send a message to the Playwright server and await response
-    fn send_message(
-        &self,
-        guid: &str,
-        method: &str,
-        params: Value,
-    ) -> Pin<Box<dyn Future<Output = Result<Value>> + Send + '_>>;
+    /// Send a message to the Playwright server and await response.
+    async fn send_message(&self, guid: &str, method: &str, params: Value) -> Result<Value>;
 
-    /// Register an object in the connection's registry
-    fn register_object(
-        &self,
-        guid: Arc<str>,
-        object: Arc<dyn ChannelOwner>,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>;
+    /// Register an object in the connection's registry.
+    async fn register_object(&self, guid: Arc<str>, object: Arc<dyn ChannelOwner>);
 
-    /// Unregister an object from the connection's registry
-    fn unregister_object(&self, guid: &str) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>;
+    /// Unregister an object from the connection's registry.
+    async fn unregister_object(&self, guid: &str);
 
-    /// Get an object by GUID
-    fn get_object(&self, guid: &str) -> AsyncChannelOwnerResult<'_>;
+    /// Get an object by GUID.
+    async fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>>;
 }
 
-type AsyncChannelOwnerResult<'a> =
-    Pin<Box<dyn Future<Output = Result<Arc<dyn ChannelOwner>>> + Send + 'a>>;
+/// Extension trait for typed object retrieval from a connection.
+///
+/// Provides `get_typed::<T>(guid)` which combines `get_object` + downcast
+/// into a single call with a proper `TypeMismatch` error.
+///
+/// # Example
+///
+/// ```ignore
+/// use playwright_rs::server::connection::ConnectionExt;
+///
+/// let page: Page = connection.get_typed::<Page>(&guid).await?;
+/// ```
+#[async_trait::async_trait]
+pub trait ConnectionExt: ConnectionLike {
+    /// Get an object by GUID and downcast to the expected concrete type.
+    ///
+    /// Returns `Error::TypeMismatch` if the object exists but is not of type `T`.
+    async fn get_typed<T: ChannelOwner + Clone + 'static>(&self, guid: &str) -> Result<T> {
+        let obj = self.get_object(guid).await?;
+        obj.as_any()
+            .downcast_ref::<T>()
+            .cloned()
+            .ok_or_else(|| Error::TypeMismatch {
+                guid: guid.to_string(),
+                expected: std::any::type_name::<T>().to_string(),
+                actual: obj.type_name().to_string(),
+            })
+    }
+}
 
-use crate::server::channel_owner::ChannelOwner;
+// Blanket implementation: any ConnectionLike automatically gets ConnectionExt.
+impl<C: ConnectionLike + ?Sized> ConnectionExt for C {}
+
+/// Downcast a protocol object's parent to a concrete type.
+///
+/// Returns `None` if the object has no parent or the parent is not of type `T`.
+///
+/// # Example
+///
+/// ```ignore
+/// let page: Option<Page> = downcast_parent::<Page>(&*dialog_arc);
+/// ```
+pub fn downcast_parent<T: ChannelOwner + Clone + 'static>(obj: &dyn ChannelOwner) -> Option<T> {
+    obj.parent()
+        .and_then(|p| p.as_any().downcast_ref::<T>().cloned())
+}
 
 /// Metadata attached to every Playwright protocol message
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -236,9 +272,9 @@ impl Connection {
 
         tracing::debug!("Root object registered, sending initialize message");
 
-        let root_typed = root
-            .as_any()
-            .downcast_ref::<Root>()
+        let root_typed: Root = self
+            .get_typed::<Root>("")
+            .await
             .expect("Root object should be Root type");
 
         let response = tokio::time::timeout(Duration::from_secs(30), root_typed.initialize())
@@ -255,15 +291,10 @@ impl Connection {
 
         let playwright_obj = self.wait_for_object(playwright_guid).await?;
 
-        playwright_obj
-            .as_any()
-            .downcast_ref::<crate::protocol::Playwright>()
-            .ok_or_else(|| {
-                Error::ProtocolError(format!(
-                    "Object with GUID '{}' is not a Playwright instance",
-                    playwright_guid
-                ))
-            })?;
+        // Validate that the object is indeed a Playwright instance
+        let _: crate::protocol::Playwright = self
+            .get_typed::<crate::protocol::Playwright>(playwright_guid)
+            .await?;
 
         let empty_guid: Arc<str> = Arc::from("");
         self.objects.lock().remove(&empty_guid);
@@ -516,46 +547,27 @@ impl Connection {
     }
 }
 
+#[async_trait::async_trait]
 impl ConnectionLike for Connection {
-    fn send_message(
-        &self,
-        guid: &str,
-        method: &str,
-        params: Value,
-    ) -> Pin<Box<dyn Future<Output = Result<Value>> + Send + '_>> {
-        let guid = guid.to_string();
-        let method = method.to_string();
-        Box::pin(self.send_message(guid, method, params))
+    async fn send_message(&self, guid: &str, method: &str, params: Value) -> Result<Value> {
+        self.send_message(guid.to_string(), method.to_string(), params)
+            .await
     }
 
-    fn register_object(
-        &self,
-        guid: Arc<str>,
-        object: Arc<dyn ChannelOwner>,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
-        let objects = self.objects.clone();
-        Box::pin(async move {
-            objects.lock().insert(guid, object);
-        })
+    async fn register_object(&self, guid: Arc<str>, object: Arc<dyn ChannelOwner>) {
+        self.objects.lock().insert(guid, object);
     }
 
-    fn unregister_object(&self, guid: &str) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
-        let objects = self.objects.clone();
-        let guid = Arc::from(guid);
-        Box::pin(async move {
-            objects.lock().remove(&guid);
-        })
+    async fn unregister_object(&self, guid: &str) {
+        self.objects.lock().remove(guid);
     }
 
-    fn get_object(&self, guid: &str) -> AsyncChannelOwnerResult<'_> {
-        let guid = Arc::from(guid);
-        Box::pin(async move {
-            self.objects.lock().get(&guid).cloned().ok_or_else(|| {
-                Error::ObjectNotFound(format!(
-                    "{} (object may have been closed or disposed)",
-                    guid
-                ))
-            })
+    async fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>> {
+        self.objects.lock().get(guid).cloned().ok_or_else(|| {
+            Error::ObjectNotFound(format!(
+                "{} (object may have been closed or disposed)",
+                guid
+            ))
         })
     }
 }
