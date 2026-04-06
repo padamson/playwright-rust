@@ -236,3 +236,6 @@ pub use protocol::{FetchOptions, FetchResponse, FulfillOptions, Route, UnrouteBe
 
 // Re-export launch and connection options
 pub use api::{ConnectOverCdpOptions, LaunchOptions};
+
+// Re-export browser installation helpers
+pub use server::driver::{install_browsers, install_browsers_with_deps};

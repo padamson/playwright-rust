@@ -24,6 +24,7 @@ mod element_handle;
 mod evaluate;
 mod frame_locator;
 mod initialization;
+mod install_browsers;
 mod keyboard_mouse;
 mod launch_context;
 mod locator;

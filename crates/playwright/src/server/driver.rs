@@ -255,6 +255,118 @@ fn find_node_executable() -> Result<PathBuf> {
     ))
 }
 
+/// Install Playwright browsers programmatically.
+///
+/// Finds the bundled Playwright driver and runs:
+/// `<driver>/node <driver>/package/cli.js install [browsers...]`
+///
+/// # Parameters
+///
+/// - `browsers` — optional slice of browser names (e.g. `&["chromium", "firefox"]`).
+///   Pass `None` to install all browsers (equivalent to `npx playwright install`).
+///   Pass `Some(&[])` for a no-op invocation that validates the driver is reachable.
+///
+/// On Linux, `--with-deps` is automatically appended so that required system
+/// libraries (libgtk, libnss, etc.) are installed alongside the browser binaries.
+/// Use [`install_browsers_with_deps`] to force this flag on other platforms.
+///
+/// # Errors
+///
+/// - [`Error::ServerNotFound`] if the Playwright driver cannot be located.
+/// - [`Error::LaunchFailed`] if the installation process exits with a non-zero
+///   status or fails to spawn.
+///
+/// # Example
+///
+/// ```ignore
+/// use playwright_rs::install_browsers;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     // Install only Chromium
+///     install_browsers(Some(&["chromium"])).await?;
+///
+///     // Install all browsers
+///     install_browsers(None).await?;
+///     Ok(())
+/// }
+/// ```
+///
+/// See: <https://playwright.dev/docs/browsers#installing-browsers>
+pub async fn install_browsers(browsers: Option<&[&str]>) -> Result<()> {
+    install_browsers_impl(browsers, /* with_deps_forced */ false).await
+}
+
+/// Install Playwright browsers and their system dependencies.
+///
+/// Identical to [`install_browsers`] but always passes `--with-deps` to the
+/// Playwright CLI, regardless of the current operating system. This is the
+/// recommended call for CI environments where system libraries may be missing.
+///
+/// # Parameters
+///
+/// - `browsers` — optional slice of browser names. `None` installs all browsers.
+///
+/// # Errors
+///
+/// - [`Error::ServerNotFound`] if the Playwright driver cannot be located.
+/// - [`Error::LaunchFailed`] if the installation process exits with a non-zero
+///   status or fails to spawn.
+///
+/// # Example
+///
+/// ```ignore
+/// use playwright_rs::install_browsers_with_deps;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     install_browsers_with_deps(Some(&["chromium", "firefox"])).await?;
+///     Ok(())
+/// }
+/// ```
+///
+/// See: <https://playwright.dev/docs/browsers#installing-browsers>
+pub async fn install_browsers_with_deps(browsers: Option<&[&str]>) -> Result<()> {
+    install_browsers_impl(browsers, /* with_deps_forced */ true).await
+}
+
+/// Internal implementation shared by [`install_browsers`] and [`install_browsers_with_deps`].
+async fn install_browsers_impl(browsers: Option<&[&str]>, with_deps_forced: bool) -> Result<()> {
+    let (node_exe, cli_js) = get_driver_executable()?;
+
+    let mut cmd = tokio::process::Command::new(&node_exe);
+    cmd.arg(&cli_js).arg("install");
+
+    if let Some(browser_list) = browsers {
+        for browser in browser_list {
+            cmd.arg(browser);
+        }
+    }
+
+    // Pass --with-deps on Linux automatically (needed for system libraries),
+    // or when the caller explicitly requested it via install_browsers_with_deps.
+    if with_deps_forced || cfg!(target_os = "linux") {
+        cmd.arg("--with-deps");
+    }
+
+    let output = cmd.output().await.map_err(|e| {
+        Error::LaunchFailed(format!("Failed to spawn browser install process: {}", e))
+    })?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        return Err(Error::LaunchFailed(format!(
+            "Browser installation failed (exit code {:?}).\nstdout: {}\nstderr: {}",
+            output.status.code(),
+            stdout.trim(),
+            stderr.trim(),
+        )));
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

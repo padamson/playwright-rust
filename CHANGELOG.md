@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`install_browsers()` / `install_browsers_with_deps()`** — programmatic browser installation (closes #46)
+  - `install_browsers(None)` — install all browsers
+  - `install_browsers(Some(&["chromium", "firefox"]))` — install specific browsers
+  - `install_browsers_with_deps(browsers)` — also installs system dependencies (useful for CI)
+  - Reuses the bundled Playwright driver — no `npx` required
 - **`FrameLocator` class** — locate elements inside iframes using Playwright's `internal:control=enter-frame` selector engine
   - `page.frame_locator(selector)` / `locator.frame_locator(selector)` — entry points
   - `frame_locator.locator(selector)` — create Locator inside iframe

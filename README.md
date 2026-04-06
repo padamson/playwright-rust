@@ -144,19 +144,15 @@ See the [CHANGELOG](CHANGELOG.md) for version history and features.
 
 ### Browser Installation (Required)
 
-**Important:** Browsers must be installed separately using the Playwright CLI.
-
-The library bundles Playwright driver version **1.58.2**. You must install matching browser versions:
+Browsers must be installed before use. Install once, then run tests as many times as needed.
 
 ```bash
-# Install all browsers (recommended)
+# Install all browsers
 npx playwright@1.58.2 install
 
 # Or install specific browsers
 npx playwright@1.58.2 install chromium firefox webkit
 ```
-
-**Why version matters:** Each Playwright release expects specific browser builds. Using `playwright@1.58.2` ensures you get compatible browsers (chromium-1208, firefox-1471, webkit-2248).
 
 **In CI/CD:** Add this to your GitHub Actions workflow:
 
@@ -165,13 +161,16 @@ npx playwright@1.58.2 install chromium firefox webkit
   run: npx playwright@1.58.2 install chromium firefox webkit --with-deps
 ```
 
-The version constant is also available in code:
+**Programmatic installation:** For setup scripts, Docker images, or tools built on playwright-rs, you can install browsers from Rust code:
 
 ```rust
-use playwright_rs::PLAYWRIGHT_VERSION;
+use playwright_rs::install_browsers;
 
-println!("Install with: npx playwright@{} install", PLAYWRIGHT_VERSION);
+install_browsers(None).await?;                          // all browsers
+install_browsers(Some(&["chromium"])).await?;            // specific browsers
 ```
+
+**Why version matters:** The library bundles Playwright driver **1.58.2**. Each release expects specific browser builds. Using the matching version ensures compatible browsers.
 
 **What happens if I don't install browsers?** You'll get a helpful error message with the correct install command when trying to launch a browser.
 
