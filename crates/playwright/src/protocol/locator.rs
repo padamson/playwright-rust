@@ -537,6 +537,19 @@ impl Locator {
         &self.selector
     }
 
+    /// Creates a [`FrameLocator`](crate::protocol::FrameLocator) scoped within this locator's subtree.
+    ///
+    /// The `selector` identifies an iframe element within the locator's scope.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-frame-locator>
+    pub fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
+        crate::protocol::FrameLocator::new(
+            Arc::clone(&self.frame),
+            format!("{} >> {}", self.selector, selector),
+            self.page.clone(),
+        )
+    }
+
     /// Returns the Page this locator belongs to.
     ///
     /// Each locator is bound to the page that created it. Chained locators (via

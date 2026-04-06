@@ -53,7 +53,12 @@ impl TestServer {
             .route("/drag_drop.html", get(drag_drop_page))
             .route("/wait_for.html", get(wait_for_page))
             .route("/api/data.json", get(json_data_endpoint))
-            .route("/redirect", get(redirect_handler));
+            .route("/redirect", get(redirect_handler))
+            .route("/iframe-test.html", get(iframe_test_page))
+            .route("/iframe-content.html", get(iframe_content_page))
+            .route("/iframe-content2.html", get(iframe_content2_page))
+            .route("/nested-iframe.html", get(nested_iframe_page))
+            .route("/inner-iframe.html", get(inner_iframe_page));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -823,6 +828,105 @@ async fn json_data_endpoint() -> Response<Body> {
         .header("Content-Type", "application/json")
         .body(Body::from(
             r#"{"status":"ok","message":"hello from test server"}"#,
+        ))
+        .unwrap()
+}
+
+/// Page with two named iframes for FrameLocator testing
+async fn iframe_test_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r##"<!DOCTYPE html>
+<html>
+<head><title>IFrame Test</title></head>
+<body>
+  <h1>Main Page</h1>
+  <iframe name="content" src="/iframe-content.html" id="frame1" width="400" height="300"></iframe>
+  <iframe name="secondary" src="/iframe-content2.html" id="frame2" width="400" height="300"></iframe>
+</body>
+</html>"##,
+        ))
+        .unwrap()
+}
+
+/// Content page loaded inside iframes — has elements for all get_by_* methods
+async fn iframe_content_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r##"<!DOCTYPE html>
+<html>
+<head><title>IFrame Content</title></head>
+<body>
+  <h1>Inside Frame</h1>
+  <button id="frame-btn" onclick="this.textContent='clicked'">Click Me</button>
+  <label for="frame-input">Email</label>
+  <input id="frame-input" type="text" placeholder="Enter email" />
+  <img src="logo.png" alt="Frame Logo" />
+  <span title="Frame Tooltip">Info</span>
+  <button data-testid="frame-submit">Submit</button>
+  <nav>
+    <a href="#" role="link">Frame Link</a>
+  </nav>
+</body>
+</html>"##,
+        ))
+        .unwrap()
+}
+
+/// Second iframe content — distinct from first for multi-iframe tests
+async fn iframe_content2_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>IFrame Content 2</title></head>
+<body>
+  <h1>Second Frame</h1>
+  <button id="btn2" onclick="this.textContent='clicked2'">Other Button</button>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+/// Page with a nested iframe (iframe within iframe)
+async fn nested_iframe_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r##"<!DOCTYPE html>
+<html>
+<head><title>Nested IFrame</title></head>
+<body>
+  <h1>Outer Page</h1>
+  <iframe id="outer" src="/inner-iframe.html" width="500" height="400"></iframe>
+</body>
+</html>"##,
+        ))
+        .unwrap()
+}
+
+/// Inner iframe page that itself contains an iframe
+async fn inner_iframe_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r##"<!DOCTYPE html>
+<html>
+<head><title>Inner IFrame</title></head>
+<body>
+  <h1>Inner Frame</h1>
+  <iframe id="innermost" src="/iframe-content.html" width="300" height="200"></iframe>
+</body>
+</html>"##,
         ))
         .unwrap()
 }

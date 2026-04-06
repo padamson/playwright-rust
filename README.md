@@ -77,15 +77,15 @@ browser.close().await?;
 
 Each pre-v1.0 release targets 100% coverage of specific API classes:
 
-| Class | Methods | Current (v0.9) | v0.10.0 | v0.11.0 |
-|-------|---------|----------------|---------|---------|
+| Class | Methods | Current | v0.10.0 | v0.11.0 |
+|-------|---------|---------|---------|---------|
 | **Locator** | 55 | **100%** | 100% | 100% |
 | **Response** | 18 | **100%** | 100% | 100% |
 | **Request** | 19 | **100%** | 100% | 100% |
-| Page | 67 | ~81% | ~90% | **100%** |
+| **FrameLocator** | 10 | **100%** | 100% | 100% |
+| Page | 67 | ~82% | ~90% | **100%** |
 | BrowserContext | 32 | ~66% | **100%** | 100% |
 | Frame | 29 | ~38% | **100%** | 100% |
-| FrameLocator | 10 | 0% | **100%** | 100% |
 
 Bold = release where the class reaches 100%. See the [full gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for details.
 

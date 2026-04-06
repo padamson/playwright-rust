@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`FrameLocator` class** — locate elements inside iframes using Playwright's `internal:control=enter-frame` selector engine
+  - `page.frame_locator(selector)` / `locator.frame_locator(selector)` — entry points
+  - `frame_locator.locator(selector)` — create Locator inside iframe
+  - `frame_locator.frame_locator(selector)` — nested iframes
+  - All 7 `get_by_*` methods (`get_by_text`, `get_by_label`, `get_by_role`, etc.)
+  - `first()`, `last()`, `nth(index)` — composition for multiple matching iframes
+  - `owner()` — Locator for the iframe element itself
 - **`ConnectionExt` extension trait** — typed object retrieval via `connection.get_typed::<T>(guid).await?`, eliminating boilerplate `get_object` + `as_any().downcast_ref::<T>()` pattern
 - **`downcast_parent<T>()` helper** — one-line parent type resolution replacing manual parent + downcast chains
 - **`Error::TypeMismatch`** — structured error variant with guid, expected type, and actual type for better diagnostics

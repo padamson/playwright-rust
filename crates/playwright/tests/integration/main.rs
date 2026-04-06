@@ -22,6 +22,7 @@ mod context_runtime_setters;
 mod downloads_dialogs;
 mod element_handle;
 mod evaluate;
+mod frame_locator;
 mod initialization;
 mod keyboard_mouse;
 mod launch_context;

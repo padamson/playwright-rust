@@ -631,6 +631,16 @@ impl Page {
         crate::protocol::Locator::new(Arc::new(frame), selector.to_string(), self.clone())
     }
 
+    /// Creates a [`FrameLocator`](crate::protocol::FrameLocator) for an iframe on this page.
+    ///
+    /// The `selector` identifies the iframe element (e.g., `"iframe[name='content']"`).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-frame-locator>
+    pub async fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
+        let frame = self.main_frame().await.expect("Main frame should exist");
+        crate::protocol::FrameLocator::new(Arc::new(frame), selector.to_string(), self.clone())
+    }
+
     /// Returns a locator that matches elements containing the given text.
     ///
     /// By default, matching is case-insensitive and searches for a substring.
