@@ -44,6 +44,23 @@ jobs:
     - name: Run cargo deny
       run: cargo deny check
 
+  semver-checks:
+    name: Semver Compatibility
+    runs-on: ubuntu-latest
+    # Only check on release tags — compares against last published version
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-semver-checks
+      run: cargo install cargo-semver-checks
+
+    - name: Check semver compatibility
+      run: cargo semver-checks check-release
+
   mutation-testing:
     name: Mutation Testing
     runs-on: ubuntu-latest
