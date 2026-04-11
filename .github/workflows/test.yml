@@ -13,6 +13,20 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  msrv:
+    name: MSRV Check (Rust 1.85)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install MSRV toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: "1.85"
+
+    - name: Check compilation on MSRV
+      run: cargo check --workspace
+
   test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
