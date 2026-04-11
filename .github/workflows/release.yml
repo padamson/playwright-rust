@@ -11,6 +11,8 @@ env:
 
 permissions:
   contents: write
+  id-token: write       # Required for SLSA provenance attestation
+  attestations: write   # Required for GitHub artifact attestations
 
 jobs:
   build-release:
@@ -173,6 +175,13 @@ jobs:
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate SLSA provenance attestation
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
+        continue-on-error: true  # Don't fail release if attestation fails
 
   publish-crates:
     name: Publish to crates.io
