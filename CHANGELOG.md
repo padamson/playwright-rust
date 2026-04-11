@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `on_close(handler)` — fires when context is closed
   - `on_request(handler)` / `on_request_finished(handler)` / `on_request_failed(handler)` — network events from any page
   - `on_response(handler)` — response events from any page
+- **`expect_page()` / `expect_close()`** — promise-based event waiting with timeout
+  - `expect_page(timeout)` — returns `EventWaiter<Page>` that resolves when a new page is created
+  - `expect_close(timeout)` — returns `EventWaiter<()>` that resolves when the context closes
+  - `EventWaiter<T>` — generic one-shot waiter backed by `tokio::sync::oneshot` with configurable timeout (default 30s)
 - Added `async-trait` as a dependency
 
 ## [0.9.0] - 2026-03-27

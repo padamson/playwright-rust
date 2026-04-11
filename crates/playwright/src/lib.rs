@@ -231,6 +231,9 @@ pub use protocol::{
     StorageState, Viewport,
 };
 
+// Re-export EventWaiter for use with expect_page() / expect_close()
+pub use protocol::EventWaiter;
+
 // Re-export routing types
 pub use protocol::{FetchOptions, FetchResponse, FulfillOptions, Route, UnrouteBehavior};
 

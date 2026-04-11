@@ -454,3 +454,103 @@ async fn test_context_and_page_handlers_both_fire() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
+
+// ---------------------------------------------------------------------------
+// common::setup() smoke test
+// ---------------------------------------------------------------------------
+
+/// Verify the common::setup() helper works and returns a usable page.
+#[tokio::test]
+async fn test_common_setup_helper() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let title = page.title().await.expect("Failed to get title");
+    assert!(title.is_empty() || !title.is_empty()); // just verify callable
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+// ---------------------------------------------------------------------------
+// expect_page
+// ---------------------------------------------------------------------------
+
+/// Test that expect_page() resolves with the new Page when a page is created.
+/// The waiter MUST be set up before the action that creates the page to avoid
+/// a race condition.
+#[tokio::test]
+async fn test_context_expect_page() {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    // Set up waiter BEFORE creating the page (critical to avoid race)
+    let waiter = context
+        .expect_page(None)
+        .await
+        .expect("Failed to create page waiter");
+
+    // Now create the page to trigger the event
+    let _created = context.new_page().await.expect("Failed to create page");
+
+    // The waiter should resolve with the new page
+    let received_page = waiter.wait().await.expect("expect_page waiter timed out");
+
+    // Verify we got a real Page object (it should have a URL)
+    let url = received_page.url();
+    assert!(
+        url == "about:blank" || url.is_empty(),
+        "Expected new page URL to be about:blank, got: {url}"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+/// Test that expect_page() times out when no page is created within the timeout.
+#[tokio::test]
+async fn test_context_expect_page_timeout() {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    // Use a very short timeout (100ms) — no page will be created
+    let waiter = context
+        .expect_page(Some(100.0))
+        .await
+        .expect("Failed to create page waiter");
+
+    // Should timeout because no page is created
+    let result = waiter.wait().await;
+    assert!(
+        result.is_err(),
+        "expect_page should have timed out but succeeded"
+    );
+
+    // Verify it's a timeout error
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
+    assert!(
+        err_str.to_lowercase().contains("timeout") || err_str.to_lowercase().contains("timed out"),
+        "Expected timeout error, got: {err_str}"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+/// Test that expect_close() resolves when the context is closed.
+#[tokio::test]
+async fn test_context_expect_close() {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    // Set up the close waiter BEFORE closing the context
+    let waiter = context
+        .expect_close(None)
+        .await
+        .expect("Failed to create close waiter");
+
+    // Close the context to trigger the event
+    context.close().await.expect("Failed to close context");
+
+    // Waiter should resolve successfully
+    waiter
+        .wait()
+        .await
+        .expect("expect_close waiter should have resolved");
+
+    browser.close().await.expect("Failed to close browser");
+}

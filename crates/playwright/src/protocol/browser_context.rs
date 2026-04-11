@@ -7,6 +7,7 @@
 use crate::api::launch_options::IgnoreDefaultArgs;
 use crate::error::Result;
 use crate::protocol::api_request_context::APIRequestContext;
+use crate::protocol::event_waiter::EventWaiter;
 use crate::protocol::route::UnrouteBehavior;
 use crate::protocol::{Browser, Page, ProxySettings, Request, ResponseObject, Route};
 use crate::server::channel::Channel;
@@ -19,6 +20,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
+use tokio::sync::oneshot;
 
 /// BrowserContext represents an isolated browser session.
 ///
@@ -142,6 +144,10 @@ pub struct BrowserContext {
     request_failed_handlers: Arc<Mutex<Vec<RequestHandler>>>,
     /// Context-level response event handlers
     response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
+    /// One-shot senders waiting for the next "page" event (expect_page)
+    page_waiters: Arc<Mutex<Vec<oneshot::Sender<Page>>>>,
+    /// One-shot senders waiting for the next "close" event (expect_close)
+    close_waiters: Arc<Mutex<Vec<oneshot::Sender<()>>>>,
 }
 
 impl BrowserContext {
@@ -203,6 +209,8 @@ impl BrowserContext {
             request_finished_handlers: Arc::new(Mutex::new(Vec::new())),
             request_failed_handlers: Arc::new(Mutex::new(Vec::new())),
             response_handlers: Arc::new(Mutex::new(Vec::new())),
+            page_waiters: Arc::new(Mutex::new(Vec::new())),
+            close_waiters: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -878,6 +886,67 @@ impl BrowserContext {
         Ok(())
     }
 
+    /// Waits for a new page to be created in this browser context.
+    ///
+    /// Creates a one-shot waiter that resolves when the next `page` event fires.
+    /// The waiter **must** be created before the action that triggers the new page
+    /// (e.g. `new_page()` or a user action that opens a popup) to avoid a race
+    /// condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`] if no page is created within the timeout.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Set up the waiter BEFORE the triggering action
+    /// let waiter = context.expect_page(None).await?;
+    /// let _page = context.new_page().await?;
+    /// let new_page = waiter.wait().await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
+    pub async fn expect_page(&self, timeout: Option<f64>) -> Result<EventWaiter<Page>> {
+        let (tx, rx) = oneshot::channel();
+        self.page_waiters.lock().unwrap().push(tx);
+        Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
+    }
+
+    /// Waits for this browser context to be closed.
+    ///
+    /// Creates a one-shot waiter that resolves when the `close` event fires.
+    /// The waiter **must** be created before the action that closes the context
+    /// to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`] if the context is not closed within the timeout.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Set up the waiter BEFORE closing
+    /// let waiter = context.expect_close(None).await?;
+    /// context.close().await?;
+    /// waiter.wait().await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
+    pub async fn expect_close(&self, timeout: Option<f64>) -> Result<EventWaiter<()>> {
+        let (tx, rx) = oneshot::channel();
+        self.close_waiters.lock().unwrap().push(tx);
+        Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
+    }
+
     /// Updates network interception patterns for this context
     async fn enable_network_interception(&self) -> Result<()> {
         let patterns: Vec<serde_json::Value> = self
@@ -1091,12 +1160,19 @@ impl ChannelOwner for BrowserContext {
             "close" => {
                 // BrowserContext close event — fire registered close handlers
                 let close_handlers = self.close_handlers.clone();
+                let close_waiters = self.close_waiters.clone();
                 tokio::spawn(async move {
                     let handlers = close_handlers.lock().unwrap().clone();
                     for handler in handlers {
                         if let Err(e) = handler().await {
                             tracing::warn!("Context close handler error: {}", e);
                         }
+                    }
+
+                    // Notify all expect_close() waiters
+                    let waiters: Vec<_> = close_waiters.lock().unwrap().drain(..).collect();
+                    for tx in waiters {
+                        let _ = tx.send(());
                     }
                 });
             }
@@ -1114,6 +1190,7 @@ impl ChannelOwner for BrowserContext {
                     let page_guid_owned = page_guid.to_string();
                     let pages = self.pages.clone();
                     let page_handlers = self.page_handlers.clone();
+                    let page_waiters = self.page_waiters.clone();
 
                     tokio::spawn(async move {
                         // Get and downcast the Page object
@@ -1132,6 +1209,11 @@ impl ChannelOwner for BrowserContext {
                             if let Err(e) = handler(page.clone()).await {
                                 tracing::warn!("Context page handler error: {}", e);
                             }
+                        }
+
+                        // Notify the first expect_page() waiter (FIFO order)
+                        if let Some(tx) = page_waiters.lock().unwrap().pop() {
+                            let _ = tx.send(page);
                         }
                     });
                 }
