@@ -1,0 +1,39 @@
+[package]
+name = "playwright-rs-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+# Prevent this from being picked up by the parent workspace
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json = "1.0"
+
+[dependencies.playwright-rs]
+path = ".."
+
+[[bin]]
+name = "fuzz_parse_value"
+path = "fuzz_targets/fuzz_parse_value.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_serialize_argument"
+path = "fuzz_targets/fuzz_serialize_argument.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_parse_result"
+path = "fuzz_targets/fuzz_parse_result.rs"
+test = false
+doc = false
+bench = false
