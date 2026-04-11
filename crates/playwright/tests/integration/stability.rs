@@ -35,10 +35,10 @@ fn get_process_memory_mb() -> Option<f64> {
     for line in status.lines() {
         if line.starts_with("VmRSS:") {
             // Line format: "VmRSS: 12345 kB"
-            if let Some(kb_str) = line.split_whitespace().nth(1) {
-                if let Ok(kb) = kb_str.parse::<f64>() {
-                    return Some(kb / 1024.0); // Convert KB to MB
-                }
+            if let Some(kb_str) = line.split_whitespace().nth(1)
+                && let Ok(kb) = kb_str.parse::<f64>()
+            {
+                return Some(kb / 1024.0); // Convert KB to MB
             }
         }
     }
