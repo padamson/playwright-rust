@@ -554,3 +554,79 @@ async fn test_context_expect_close() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+// ---------------------------------------------------------------------------
+// on_dialog (context-level)
+// ---------------------------------------------------------------------------
+
+/// A dialog handler registered on the BrowserContext fires for dialogs triggered
+/// from any page in that context.
+#[tokio::test]
+async fn test_context_on_dialog() {
+    crate::common::init_tracing();
+
+    let playwright = playwright_rs::protocol::Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch browser");
+
+    let context = browser
+        .new_context()
+        .await
+        .expect("Failed to create context");
+
+    let dialog_messages: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
+    let dialog_messages2 = dialog_messages.clone();
+
+    context
+        .on_dialog(move |dialog| {
+            let msgs = dialog_messages2.clone();
+            async move {
+                msgs.lock().unwrap().push(dialog.message().to_string());
+                dialog.accept(None).await
+            }
+        })
+        .await
+        .expect("Failed to register on_dialog handler");
+
+    let page = context.new_page().await.expect("Failed to create page");
+    let _ = page.goto("about:blank", None).await;
+
+    page.evaluate_expression(
+        r#"
+        const button = document.createElement('button');
+        button.onclick = () => alert('Context dialog!');
+        button.textContent = 'Alert';
+        document.body.appendChild(button);
+        "#,
+    )
+    .await
+    .expect("evaluate_expression should succeed");
+
+    let locator = page.locator("button").await;
+    locator.click(None).await.expect("click should succeed");
+
+    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+
+    {
+        let msgs = dialog_messages.lock().unwrap();
+        assert_eq!(
+            msgs.len(),
+            1,
+            "on_dialog context handler should fire once, got: {:?}",
+            msgs
+        );
+        assert_eq!(
+            msgs[0], "Context dialog!",
+            "dialog message mismatch: {:?}",
+            msgs
+        );
+    }
+
+    browser.close().await.expect("Failed to close browser");
+}

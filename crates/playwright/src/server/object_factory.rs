@@ -14,9 +14,9 @@
 
 use crate::error::{Error, Result};
 use crate::protocol::{
-    APIRequestContext, Android, Browser, BrowserContext, BrowserType, CDPSession, Dialog, Electron,
-    Frame, LocalUtils, Page, Playwright, Request, ResponseObject, Route, Tracing, WebSocket,
-    artifact::Artifact,
+    APIRequestContext, Android, BindingCall, Browser, BrowserContext, BrowserType, CDPSession,
+    Dialog, Electron, Frame, LocalUtils, Page, Playwright, Request, ResponseObject, Route, Tracing,
+    WebSocket, artifact::Artifact,
 };
 use crate::server::channel_owner::{ChannelOwner, ParentOrConnection};
 use crate::server::connection::ConnectionExt;
@@ -328,6 +328,25 @@ pub async fn create_object(
             };
 
             Arc::new(WebSocket::new(parent_owner, type_name, guid, initializer)?)
+        }
+
+        "BindingCall" => {
+            // BindingCall — a JS → Rust callback invocation
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "BindingCall must have a parent object".to_string(),
+                    ));
+                }
+            };
+
+            Arc::new(BindingCall::new(
+                parent_owner,
+                type_name,
+                guid,
+                initializer,
+            )?)
         }
 
         _ => {

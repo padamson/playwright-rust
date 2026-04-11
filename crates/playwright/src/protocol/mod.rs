@@ -15,6 +15,7 @@ pub mod action_options;
 pub mod android;
 pub mod api_request_context;
 pub mod artifact;
+pub mod binding_call;
 pub mod browser;
 pub mod browser_context;
 pub mod browser_type;
@@ -54,6 +55,7 @@ pub use action_options::{
 };
 pub use android::Android;
 pub use api_request_context::APIRequestContext;
+pub use binding_call::BindingCall;
 pub use browser::Browser;
 pub use browser_context::{
     BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, ClearCookiesOptions,

@@ -13,6 +13,7 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::any::Any;
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -209,6 +210,8 @@ pub struct Page {
     default_timeout_ms: Arc<AtomicU64>,
     /// Default timeout for navigation operations (milliseconds), stored as f64 bits.
     default_navigation_timeout_ms: Arc<AtomicU64>,
+    /// Page-level binding callbacks registered via expose_function / expose_binding
+    binding_callbacks: Arc<Mutex<HashMap<String, PageBindingCallback>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -250,6 +253,13 @@ type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Sen
 
 /// WebSocket event handler
 type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed page-level binding callback future
+type PageBindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
+
+/// Page-level binding callback: receives deserialized JS args, returns a JSON value
+type PageBindingCallback =
+    Arc<dyn Fn(Vec<serde_json::Value>) -> PageBindingCallbackFuture + Send + Sync>;
 
 impl Page {
     /// Creates a new Page from protocol initialization
@@ -332,6 +342,7 @@ impl Page {
             default_navigation_timeout_ms: Arc::new(AtomicU64::new(
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
+            binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
         })
     }
 
@@ -1457,6 +1468,100 @@ impl Page {
         Ok(())
     }
 
+    /// Exposes a Rust function to this page as `window[name]` in JavaScript.
+    ///
+    /// When JavaScript code calls `window[name](arg1, arg2, …)` the Playwright
+    /// server fires a `bindingCall` event on the **page** channel that invokes
+    /// `callback` with the deserialized arguments. The return value is sent back
+    /// to JS so the `await window[name](…)` expression resolves with it.
+    ///
+    /// The binding is page-scoped and not visible to other pages in the same context.
+    ///
+    /// # Arguments
+    ///
+    /// * `name`     – JavaScript identifier that will be available as `window[name]`.
+    /// * `callback` – Async closure called with `Vec<serde_json::Value>` (JS arguments)
+    ///   returning `serde_json::Value` (the result).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed.
+    /// - Communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-expose-function>
+    pub async fn expose_function<F, Fut>(&self, name: &str, callback: F) -> Result<()>
+    where
+        F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = serde_json::Value> + Send + 'static,
+    {
+        self.expose_binding_internal(name, false, callback).await
+    }
+
+    /// Exposes a Rust function to this page as `window[name]` in JavaScript,
+    /// with `needsHandle: true`.
+    ///
+    /// Identical to [`expose_function`](Self::expose_function) but the Playwright
+    /// server passes the first argument as a `JSHandle` object rather than a plain
+    /// value.
+    ///
+    /// # Arguments
+    ///
+    /// * `name`     – JavaScript identifier.
+    /// * `callback` – Async closure with `Vec<serde_json::Value>` → `serde_json::Value`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed.
+    /// - Communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-expose-binding>
+    pub async fn expose_binding<F, Fut>(&self, name: &str, callback: F) -> Result<()>
+    where
+        F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = serde_json::Value> + Send + 'static,
+    {
+        self.expose_binding_internal(name, true, callback).await
+    }
+
+    /// Internal implementation shared by page-level expose_function and expose_binding.
+    ///
+    /// Both `expose_function` and `expose_binding` use `needsHandle: false` because
+    /// the current implementation does not support JSHandle objects. Using
+    /// `needsHandle: true` would cause the Playwright server to wrap the first
+    /// argument as a `JSHandle`, which requires a JSHandle protocol object that
+    /// is not yet implemented.
+    async fn expose_binding_internal<F, Fut>(
+        &self,
+        name: &str,
+        _needs_handle: bool,
+        callback: F,
+    ) -> Result<()>
+    where
+        F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = serde_json::Value> + Send + 'static,
+    {
+        let callback: PageBindingCallback = Arc::new(move |args: Vec<serde_json::Value>| {
+            Box::pin(callback(args)) as PageBindingCallbackFuture
+        });
+
+        // Store callback before sending RPC (avoids race with early bindingCall events)
+        self.binding_callbacks
+            .lock()
+            .unwrap()
+            .insert(name.to_string(), callback);
+
+        // Tell the Playwright server to inject window[name] into this page.
+        // Always use needsHandle: false — see note above.
+        self.channel()
+            .send_no_result(
+                "exposeBinding",
+                serde_json::json!({ "name": name, "needsHandle": false }),
+            )
+            .await
+    }
+
     /// Handles a download event from the protocol
     async fn on_download_event(&self, download: Download) {
         let handlers = self.download_handlers.lock().unwrap().clone();
@@ -2191,6 +2296,59 @@ impl ChannelOwner for Page {
                                     tracing::error!("Error in websocket handler: {}", e);
                                 }
                             });
+                        }
+                    });
+                }
+            }
+            "bindingCall" => {
+                // A JS caller on this page invoked a page-level exposed function.
+                // Event format: {binding: {guid: "..."}}
+                if let Some(binding_guid) = params
+                    .get("binding")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let binding_guid_owned = binding_guid.to_string();
+                    let binding_callbacks = self.binding_callbacks.clone();
+
+                    tokio::spawn(async move {
+                        let binding_call: crate::protocol::BindingCall = match connection
+                            .get_typed::<crate::protocol::BindingCall>(&binding_guid_owned)
+                            .await
+                        {
+                            Ok(bc) => bc,
+                            Err(e) => {
+                                tracing::warn!("Failed to get BindingCall object: {}", e);
+                                return;
+                            }
+                        };
+
+                        let name = binding_call.name().to_string();
+
+                        // Look up page-level callback
+                        let callback = {
+                            let callbacks = binding_callbacks.lock().unwrap();
+                            callbacks.get(&name).cloned()
+                        };
+
+                        let Some(callback) = callback else {
+                            // No page-level handler — the context-level handler on
+                            // BrowserContext::on_event("bindingCall") will handle it.
+                            return;
+                        };
+
+                        // Deserialize args from Playwright protocol format
+                        let raw_args = binding_call.args();
+                        let args = crate::protocol::browser_context::BrowserContext::deserialize_binding_args_pub(raw_args);
+
+                        // Call callback and serialize result
+                        let result_value = callback(args).await;
+                        let serialized =
+                            crate::protocol::evaluate_conversion::serialize_argument(&result_value);
+
+                        if let Err(e) = binding_call.resolve(serialized).await {
+                            tracing::warn!("Failed to resolve BindingCall '{}': {}", name, e);
                         }
                     });
                 }

@@ -100,6 +100,12 @@ type RequestHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 /// Type alias for boxed response handler future
 type ResponseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
+/// Type alias for boxed dialog handler future
+type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed binding callback future
+type BindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
+
 /// Context-level page event handler
 type PageHandler = Arc<dyn Fn(Page) -> PageHandlerFuture + Send + Sync>;
 
@@ -111,6 +117,12 @@ type RequestHandler = Arc<dyn Fn(Request) -> RequestHandlerFuture + Send + Sync>
 
 /// Context-level response event handler
 type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Send + Sync>;
+
+/// Context-level dialog event handler
+type DialogHandler = Arc<dyn Fn(crate::protocol::Dialog) -> DialogHandlerFuture + Send + Sync>;
+
+/// Binding callback: receives deserialized JS args, returns a JSON value
+type BindingCallback = Arc<dyn Fn(Vec<serde_json::Value>) -> BindingCallbackFuture + Send + Sync>;
 
 /// Storage for a single route handler
 #[derive(Clone)]
@@ -152,6 +164,10 @@ pub struct BrowserContext {
     page_waiters: Arc<Mutex<Vec<oneshot::Sender<Page>>>>,
     /// One-shot senders waiting for the next "close" event (expect_close)
     close_waiters: Arc<Mutex<Vec<oneshot::Sender<()>>>>,
+    /// Context-level dialog event handlers (fired for dialogs on any page in the context)
+    dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
+    /// Registered binding callbacks keyed by name (for expose_function / expose_binding)
+    binding_callbacks: Arc<Mutex<HashMap<String, BindingCallback>>>,
 }
 
 impl BrowserContext {
@@ -223,6 +239,8 @@ impl BrowserContext {
             response_handlers: Arc::new(Mutex::new(Vec::new())),
             page_waiters: Arc::new(Mutex::new(Vec::new())),
             close_waiters: Arc::new(Mutex::new(Vec::new())),
+            dialog_handlers: Arc::new(Mutex::new(Vec::new())),
+            binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
         };
 
         // Enable dialog event subscription
@@ -961,6 +979,138 @@ impl BrowserContext {
         Ok(())
     }
 
+    /// Adds a listener for the `dialog` event on this browser context.
+    ///
+    /// The handler fires whenever a JavaScript dialog (alert, confirm, prompt,
+    /// or beforeunload) is triggered from **any** page in the context. Context-level
+    /// handlers fire before page-level handlers.
+    ///
+    /// The dialog must be explicitly accepted or dismissed; otherwise the page
+    /// will freeze waiting for a response.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function that receives the [`Dialog`] and calls
+    ///   `dialog.accept()` or `dialog.dismiss()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-dialog>
+    pub async fn on_dialog<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::Dialog) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |dialog: crate::protocol::Dialog| -> DialogHandlerFuture {
+                Box::pin(handler(dialog))
+            },
+        );
+        self.dialog_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Exposes a Rust function to every page in this browser context as
+    /// `window[name]` in JavaScript.
+    ///
+    /// When JavaScript code calls `window[name](arg1, arg2, …)` the Playwright
+    /// server fires a `bindingCall` event that invokes `callback` with the
+    /// deserialized arguments. The return value of `callback` is serialized back
+    /// to JavaScript so the `await window[name](…)` expression resolves with it.
+    ///
+    /// The binding is injected into every existing page and every new page
+    /// created in this context.
+    ///
+    /// # Arguments
+    ///
+    /// * `name`     – JavaScript identifier that will be available as `window[name]`.
+    /// * `callback` – Async closure called with `Vec<serde_json::Value>` (the JS
+    ///   arguments) and returning `serde_json::Value` (the result).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The context has been closed.
+    /// - Communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-expose-function>
+    pub async fn expose_function<F, Fut>(&self, name: &str, callback: F) -> Result<()>
+    where
+        F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = serde_json::Value> + Send + 'static,
+    {
+        self.expose_binding_internal(name, false, callback).await
+    }
+
+    /// Exposes a Rust function to every page in this browser context as
+    /// `window[name]` in JavaScript, with `needsHandle: true`.
+    ///
+    /// Identical to [`expose_function`](Self::expose_function) but the Playwright
+    /// server passes the first argument as a `JSHandle` object rather than a plain
+    /// value.  Use this when the JS caller passes complex objects that you want to
+    /// inspect on the Rust side.
+    ///
+    /// # Arguments
+    ///
+    /// * `name`     – JavaScript identifier.
+    /// * `callback` – Async closure with `Vec<serde_json::Value>` → `serde_json::Value`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The context has been closed.
+    /// - Communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-expose-binding>
+    pub async fn expose_binding<F, Fut>(&self, name: &str, callback: F) -> Result<()>
+    where
+        F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = serde_json::Value> + Send + 'static,
+    {
+        self.expose_binding_internal(name, true, callback).await
+    }
+
+    /// Internal implementation shared by expose_function and expose_binding.
+    ///
+    /// Both `expose_function` and `expose_binding` use `needsHandle: false` because
+    /// the current implementation does not support JSHandle objects. Using
+    /// `needsHandle: true` would cause the Playwright server to wrap the first
+    /// argument as a `JSHandle`, which requires a JSHandle protocol object that
+    /// is not yet implemented.
+    async fn expose_binding_internal<F, Fut>(
+        &self,
+        name: &str,
+        _needs_handle: bool,
+        callback: F,
+    ) -> Result<()>
+    where
+        F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = serde_json::Value> + Send + 'static,
+    {
+        // Wrap callback with type erasure
+        let callback: BindingCallback = Arc::new(move |args: Vec<serde_json::Value>| {
+            Box::pin(callback(args)) as BindingCallbackFuture
+        });
+
+        // Store the callback before sending the RPC so that a race-condition
+        // where a bindingCall arrives before we finish registering is avoided.
+        self.binding_callbacks
+            .lock()
+            .unwrap()
+            .insert(name.to_string(), callback);
+
+        // Tell the Playwright server to inject window[name] into every page.
+        // Always use needsHandle: false — see note above.
+        self.channel()
+            .send_no_result(
+                "exposeBinding",
+                serde_json::json!({ "name": name, "needsHandle": false }),
+            )
+            .await
+    }
+
     /// Waits for a new page to be created in this browser context.
     ///
     /// Creates a one-shot waiter that resolves when the next `page` event fires.
@@ -1038,6 +1188,32 @@ impl BrowserContext {
                 serde_json::json!({ "patterns": patterns }),
             )
             .await
+    }
+
+    /// Deserializes binding call arguments from Playwright's protocol format.
+    ///
+    /// The `args` field in the BindingCall initializer is a JSON array where each
+    /// element is in `serialize_argument` format: `{"value": <tagged>, "handles": []}`.
+    /// This helper extracts the inner "value" from each entry and parses it.
+    ///
+    /// This is `pub` so that `Page::on_event("bindingCall")` can reuse it without
+    /// duplicating the deserialization logic.
+    pub fn deserialize_binding_args_pub(raw_args: &Value) -> Vec<Value> {
+        Self::deserialize_binding_args(raw_args)
+    }
+
+    fn deserialize_binding_args(raw_args: &Value) -> Vec<Value> {
+        let Some(arr) = raw_args.as_array() else {
+            return vec![];
+        };
+
+        arr.iter()
+            .map(|arg| {
+                // Each arg is a direct Playwright type-tagged value, e.g. {"n": 3} or {"s": "hello"}
+                // (NOT wrapped in {"value": ..., "handles": []} — that format is only for evaluate args)
+                crate::protocol::evaluate_conversion::parse_value(arg, None)
+            })
+            .collect()
     }
 
     /// Handles a route event from the protocol
@@ -1294,7 +1470,8 @@ impl ChannelOwner for BrowserContext {
                 }
             }
             "dialog" => {
-                // Dialog events come to BrowserContext, need to forward to the associated Page
+                // Dialog events come to BrowserContext.
+                // Dispatch to context-level handlers first, then forward to the Page.
                 // Event format: {dialog: {guid: "..."}}
                 // The Dialog protocol object has the Page as its parent
                 if let Some(dialog_guid) = params
@@ -1304,6 +1481,7 @@ impl ChannelOwner for BrowserContext {
                 {
                     let connection = self.connection();
                     let dialog_guid_owned = dialog_guid.to_string();
+                    let dialog_handlers = self.dialog_handlers.clone();
 
                     tokio::spawn(async move {
                         // Get and downcast the Dialog object
@@ -1315,15 +1493,78 @@ impl ChannelOwner for BrowserContext {
                             Err(_) => return,
                         };
 
-                        // Get the Page from the Dialog's parent
+                        // Dispatch to context-level dialog handlers first
+                        let ctx_handlers = dialog_handlers.lock().unwrap().clone();
+                        for handler in ctx_handlers {
+                            if let Err(e) = handler(dialog.clone()).await {
+                                tracing::warn!("Context dialog handler error: {}", e);
+                            }
+                        }
+
+                        // Then forward to the Page's dialog handlers
                         let page: Page =
                             match crate::server::connection::downcast_parent::<Page>(&dialog) {
                                 Some(p) => p,
                                 None => return,
                             };
 
-                        // Forward to Page's dialog handlers
                         page.trigger_dialog_event(dialog).await;
+                    });
+                }
+            }
+            "bindingCall" => {
+                // A JS caller invoked an exposed function. Dispatch to the registered
+                // callback and send the result back via BindingCall::fulfill.
+                // Event format: {binding: {guid: "..."}}
+                if let Some(binding_guid) = params
+                    .get("binding")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let binding_guid_owned = binding_guid.to_string();
+                    let binding_callbacks = self.binding_callbacks.clone();
+
+                    tokio::spawn(async move {
+                        let binding_call: crate::protocol::BindingCall = match connection
+                            .get_typed::<crate::protocol::BindingCall>(&binding_guid_owned)
+                            .await
+                        {
+                            Ok(bc) => bc,
+                            Err(e) => {
+                                tracing::warn!("Failed to get BindingCall object: {}", e);
+                                return;
+                            }
+                        };
+
+                        let name = binding_call.name().to_string();
+
+                        // Look up the registered callback
+                        let callback = {
+                            let callbacks = binding_callbacks.lock().unwrap();
+                            callbacks.get(&name).cloned()
+                        };
+
+                        let Some(callback) = callback else {
+                            tracing::warn!("No callback registered for binding '{}'", name);
+                            let _ = binding_call
+                                .reject(&format!("No Rust handler for binding '{name}'"))
+                                .await;
+                            return;
+                        };
+
+                        // Deserialize the args from Playwright protocol format
+                        let raw_args = binding_call.args();
+                        let args = Self::deserialize_binding_args(raw_args);
+
+                        // Call the callback and serialize the result
+                        let result_value = callback(args).await;
+                        let serialized =
+                            crate::protocol::evaluate_conversion::serialize_argument(&result_value);
+
+                        if let Err(e) = binding_call.resolve(serialized).await {
+                            tracing::warn!("Failed to resolve BindingCall '{}': {}", name, e);
+                        }
                     });
                 }
             }

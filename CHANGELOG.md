@@ -66,6 +66,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `expect_page(timeout)` — returns `EventWaiter<Page>` that resolves when a new page is created
   - `expect_close(timeout)` — returns `EventWaiter<()>` that resolves when the context closes
   - `EventWaiter<T>` — generic one-shot waiter backed by `tokio::sync::oneshot` with configurable timeout (default 30s)
+- **`on_dialog(handler)`** — context-level dialog handler, fires before page handlers
+- **`expose_function()` / `expose_binding()`** — JS→Rust callback bridge on both BrowserContext and Page
+  - `expose_function(name, callback)` — inject a Rust function callable from JS as `window[name](...)`
+  - `expose_binding(name, callback)` — same with source info (note: `needsHandle: true` not yet supported)
+  - BindingCall protocol object for handling JS→Rust invocations
 - Added `async-trait` as a dependency
 
 ## [0.9.0] - 2026-03-27

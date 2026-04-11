@@ -24,6 +24,7 @@ mod context_runtime_setters;
 mod downloads_dialogs;
 mod element_handle;
 mod evaluate;
+mod expose_binding;
 mod frame_api;
 mod frame_locator;
 mod initialization;
