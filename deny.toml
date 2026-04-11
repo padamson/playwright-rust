@@ -1,0 +1,64 @@
+# cargo-deny configuration for playwright-rust
+#
+# Run: cargo deny check
+# Docs: https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+all-features = false
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+# Advisory database checks (same as cargo audit, but integrated)
+[advisories]
+ignore = []
+
+# License compliance — we are Apache-2.0, so all deps must be compatible
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Zlib",
+    "OpenSSL",
+    "BSL-1.0",        # Boost Software License
+    "CC0-1.0",        # Public domain dedication
+    "MPL-2.0",        # Mozilla Public License (compatible with Apache-2.0)
+    "bzip2-1.0.6",    # bzip2 license (BSD-like, permissive)
+    "CDLA-Permissive-2.0",  # Community Data License Agreement (permissive)
+]
+confidence-threshold = 0.8
+exceptions = []
+
+[licenses.private]
+ignore = false
+registries = []
+
+# Crate bans — block problematic crates, detect duplicates
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+allow = []
+deny = [
+    # openssl-sys is a common source of build issues; prefer rustls
+    # Uncomment if you want to enforce this:
+    # { crate = "openssl-sys", reason = "Use rustls instead for TLS" },
+]
+skip = []
+skip-tree = []
+
+# Source restrictions — only allow crates.io
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

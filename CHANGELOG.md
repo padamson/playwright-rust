@@ -38,7 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Security & quality CI** — `cargo audit` runs on every push to main and weekly; mutation testing moved from `test.yml` to dedicated `security.yml` with weekly schedule + release tag triggers
+- **Security & quality CI** — `cargo audit` and `cargo deny` run on every push to main and weekly; mutation testing moved from `test.yml` to dedicated `security.yml` with weekly schedule + release tag triggers
+- **`deny.toml`** — license compliance (Apache-2.0 compatible), crate bans, source restrictions, duplicate detection
 - Added `async-trait` as a dependency
 
 ## [0.9.0] - 2026-03-27

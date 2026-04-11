@@ -92,3 +92,13 @@ repos:
         pass_filenames: false
         # Only run when dependency files change (not on every Rust file edit)
         files: (Cargo\.toml|Cargo\.lock)$
+
+      # 7. License & dependency check (same as CI: cargo deny check)
+      - id: cargo-deny
+        name: cargo deny
+        description: Check licenses, bans, and source restrictions
+        entry: cargo deny check
+        language: system
+        pass_filenames: false
+        # Only run when dependency or deny config files change
+        files: (Cargo\.toml|Cargo\.lock|deny\.toml)$
