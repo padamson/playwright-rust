@@ -14,6 +14,7 @@ mod assertions;
 mod back_references;
 mod browser;
 mod browser_context;
+mod cdp_tracing;
 mod checkbox;
 mod click_options;
 mod connection;

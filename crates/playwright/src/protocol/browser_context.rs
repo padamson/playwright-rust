@@ -7,8 +7,10 @@
 use crate::api::launch_options::IgnoreDefaultArgs;
 use crate::error::Result;
 use crate::protocol::api_request_context::APIRequestContext;
+use crate::protocol::cdp_session::CDPSession;
 use crate::protocol::event_waiter::EventWaiter;
 use crate::protocol::route::UnrouteBehavior;
+use crate::protocol::tracing::Tracing;
 use crate::protocol::{Browser, Page, ProxySettings, Request, ResponseObject, Route};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
@@ -128,6 +130,8 @@ pub struct BrowserContext {
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
     /// APIRequestContext GUID from initializer (resolved lazily)
     request_context_guid: Option<String>,
+    /// Tracing GUID from initializer (resolved lazily)
+    tracing_guid: Option<String>,
     /// Default action timeout for all pages in this context (milliseconds), stored as f64 bits.
     default_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
     /// Default navigation timeout for all pages in this context (milliseconds), stored as f64 bits.
@@ -179,6 +183,13 @@ impl BrowserContext {
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
+        // Extract Tracing GUID from initializer before moving it
+        let tracing_guid = initializer
+            .get("tracing")
+            .and_then(|v| v.get("guid"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
         let base = ChannelOwnerImpl::new(
             ParentOrConnection::Parent(parent.clone()),
             type_name,
@@ -197,6 +208,7 @@ impl BrowserContext {
             pages: Arc::new(Mutex::new(Vec::new())),
             route_handlers: Arc::new(Mutex::new(Vec::new())),
             request_context_guid,
+            tracing_guid,
             default_timeout_ms: Arc::new(std::sync::atomic::AtomicU64::new(
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
@@ -358,6 +370,69 @@ impl BrowserContext {
         })?;
 
         self.connection().get_typed::<APIRequestContext>(guid).await
+    }
+
+    /// Creates a new Chrome DevTools Protocol session for the given page.
+    ///
+    /// CDPSession provides low-level access to the Chrome DevTools Protocol.
+    /// This method is only available in Chromium-based browsers.
+    ///
+    /// # Arguments
+    ///
+    /// * `page` - The page to create a CDP session for
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The browser is not Chromium-based
+    /// - Context has been closed
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-new-cdp-session>
+    pub async fn new_cdp_session(&self, page: &Page) -> Result<CDPSession> {
+        #[derive(serde::Deserialize)]
+        struct NewCDPSessionResponse {
+            session: GuidRef,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct GuidRef {
+            #[serde(deserialize_with = "crate::server::connection::deserialize_arc_str")]
+            guid: Arc<str>,
+        }
+
+        let response: NewCDPSessionResponse = self
+            .channel()
+            .send(
+                "newCDPSession",
+                serde_json::json!({ "page": { "guid": page.guid() } }),
+            )
+            .await?;
+
+        self.connection()
+            .get_typed::<CDPSession>(&response.session.guid)
+            .await
+    }
+
+    /// Returns the Tracing object for this browser context.
+    ///
+    /// The Tracing object is created automatically by the Playwright server for each
+    /// BrowserContext. Use it to start and stop trace recording.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if no Tracing object is available for this context (rare,
+    /// should not happen in normal usage).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-tracing>
+    pub async fn tracing(&self) -> Result<Tracing> {
+        let guid = self.tracing_guid.as_ref().ok_or_else(|| {
+            crate::error::Error::ProtocolError(
+                "No Tracing object available for this context".to_string(),
+            )
+        })?;
+
+        self.connection().get_typed::<Tracing>(guid).await
     }
 
     /// Closes the browser context and all its pages.

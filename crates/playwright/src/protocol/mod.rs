@@ -18,6 +18,7 @@ pub mod artifact;
 pub mod browser;
 pub mod browser_context;
 pub mod browser_type;
+pub mod cdp_session;
 pub mod click;
 pub mod dialog;
 pub mod download;
@@ -60,6 +61,7 @@ pub use browser_context::{
     StorageState, Viewport,
 };
 pub use browser_type::BrowserType;
+pub use cdp_session::CDPSession;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};
 pub use dialog::Dialog;
 pub use download::Download;
@@ -92,6 +94,6 @@ pub use route::{
 pub use screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 pub use select_option::SelectOption;
 pub use tap::{TapOptions, TapOptionsBuilder};
-pub use tracing::Tracing;
+pub use tracing::{Tracing, TracingStartOptions, TracingStopOptions};
 pub use wait_for::{WaitForOptions, WaitForOptionsBuilder, WaitForState};
 pub use web_socket::WebSocket;

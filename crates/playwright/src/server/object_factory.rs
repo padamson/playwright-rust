@@ -14,8 +14,8 @@
 
 use crate::error::{Error, Result};
 use crate::protocol::{
-    APIRequestContext, Android, Browser, BrowserContext, BrowserType, Dialog, Electron, Frame,
-    LocalUtils, Page, Playwright, Request, ResponseObject, Route, Tracing, WebSocket,
+    APIRequestContext, Android, Browser, BrowserContext, BrowserType, CDPSession, Dialog, Electron,
+    Frame, LocalUtils, Page, Playwright, Request, ResponseObject, Route, Tracing, WebSocket,
     artifact::Artifact,
 };
 use crate::server::channel_owner::{ChannelOwner, ParentOrConnection};
@@ -291,8 +291,13 @@ pub async fn create_object(
             Arc::new(Electron::new(parent, type_name, guid, initializer)?)
         }
 
+        "CDPSession" => {
+            // CDPSession — Chrome DevTools Protocol session (Chromium only)
+            Arc::new(CDPSession::new(parent, type_name, guid, initializer)?)
+        }
+
         "Tracing" => {
-            // Tracing stub
+            // Tracing — trace recording per BrowserContext
             Arc::new(Tracing::new(parent, type_name, guid, initializer)?)
         }
 

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`BrowserContext::new_cdp_session(page)`** — creates a Chrome DevTools Protocol session (Chromium only)
+  - `CDPSession::send(method, params)` — send any CDP command and receive the result as JSON
+  - `CDPSession::detach()` — detach from the CDP session
+  - `CDPSession` registered in the object factory for server-created sessions
+  - See: <https://playwright.dev/docs/api/class-cdpsession>
+- **`BrowserContext::tracing()`** — access the per-context Tracing object
+  - `Tracing::start(options)` — begin trace recording (`tracingStart` + `tracingStartChunk`)
+  - `Tracing::stop(options)` — stop trace recording (`tracingStopChunk` + `tracingStop`)
+  - `TracingStartOptions` — `name`, `screenshots`, `snapshots` fields
+  - `TracingStopOptions` — `path` field to export trace as a `.zip` archive
+  - Artifact export wired through `Artifact::save_as` for path-based stop
+  - See: <https://playwright.dev/docs/api/class-tracing>
+
 - **`install_browsers()` / `install_browsers_with_deps()`** — programmatic browser installation (closes #46)
   - `install_browsers(None)` — install all browsers
   - `install_browsers(Some(&["chromium", "firefox"]))` — install specific browsers

@@ -38,6 +38,16 @@ impl Artifact {
 
         Ok(Self { base })
     }
+
+    /// Saves the artifact to the specified path.
+    ///
+    /// Used internally to export trace archives and other artifacts.
+    pub async fn save_as(&self, path: &str) -> Result<()> {
+        self.base
+            .channel()
+            .send_no_result("saveAs", serde_json::json!({ "path": path }))
+            .await
+    }
 }
 
 impl ChannelOwner for Artifact {

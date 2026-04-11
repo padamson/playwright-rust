@@ -1,5 +1,54 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
+//
+// Tracing — Playwright trace recording
+//
+// Architecture Reference:
+// - Python: playwright-python/playwright/_impl/_tracing.py
+// - JavaScript: playwright/packages/playwright-core/src/client/tracing.ts
+// - Docs: https://playwright.dev/docs/api/class-tracing
+
+//! Tracing — record Playwright traces for debugging
+//!
+//! Tracing is a per-context feature. Access the Tracing object via
+//! [`BrowserContext::tracing`].
+//!
+//! # Example
+//!
+//! ```ignore
+//! use playwright_rs::protocol::{Playwright, TracingStartOptions};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let playwright = Playwright::launch().await?;
+//!     let browser = playwright.chromium().launch().await?;
+//!     let context = browser.new_context().await?;
+//!
+//!     let tracing = context.tracing()?;
+//!
+//!     // Start tracing with options
+//!     tracing.start(Some(TracingStartOptions {
+//!         name: Some("my-trace".to_string()),
+//!         screenshots: Some(true),
+//!         snapshots: Some(true),
+//!     })).await?;
+//!
+//!     let page = context.new_page().await?;
+//!     page.goto("https://example.com", None).await?;
+//!
+//!     // Stop and save the trace
+//!     use playwright_rs::protocol::TracingStopOptions;
+//!     tracing.stop(Some(TracingStopOptions {
+//!         path: Some("/tmp/trace.zip".to_string()),
+//!     })).await?;
+//!
+//!     context.close().await?;
+//!     browser.close().await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! See: <https://playwright.dev/docs/api/class-tracing>
 
 use crate::error::Result;
 use crate::server::channel::Channel;
@@ -11,14 +60,46 @@ use serde_json::Value;
 use std::any::Any;
 use std::sync::Arc;
 
-/// Tracing protocol object
+/// Options for starting a trace recording.
 ///
-/// TODO: Complete implementation. Currently a stub to support protocol registration.
+/// See: <https://playwright.dev/docs/api/class-tracing#tracing-start>
+#[derive(Debug, Clone, Default)]
+pub struct TracingStartOptions {
+    /// Custom name for the trace. Shown in trace viewer as the trace title.
+    pub name: Option<String>,
+    /// Whether to capture screenshots during tracing. Screenshots are used as
+    /// a timeline preview in the trace viewer.
+    pub screenshots: Option<bool>,
+    /// Whether to capture DOM snapshots on each action.
+    pub snapshots: Option<bool>,
+}
+
+/// Options for stopping a trace recording.
+///
+/// See: <https://playwright.dev/docs/api/class-tracing#tracing-stop>
+#[derive(Debug, Clone, Default)]
+pub struct TracingStopOptions {
+    /// Path to export the trace file to. If not provided, the trace is discarded.
+    /// The file is written as a `.zip` archive.
+    pub path: Option<String>,
+}
+
+/// Tracing — records Playwright traces for debugging and inspection.
+///
+/// Trace files can be opened in the Playwright Trace Viewer.
+/// This is a Chromium-only feature; calling tracing methods on Firefox or
+/// WebKit contexts will fail.
+///
+/// See: <https://playwright.dev/docs/api/class-tracing>
+#[derive(Clone)]
 pub struct Tracing {
     base: ChannelOwnerImpl,
 }
 
 impl Tracing {
+    /// Creates a new Tracing from protocol initialization.
+    ///
+    /// Called by the object factory when the server sends a `__create__` message.
     pub fn new(
         parent: ParentOrConnection,
         type_name: String,
@@ -28,6 +109,116 @@ impl Tracing {
         Ok(Self {
             base: ChannelOwnerImpl::new(parent, type_name, guid, initializer),
         })
+    }
+
+    /// Start tracing.
+    ///
+    /// Playwright implements tracing as a two-step process: `tracingStart` to
+    /// configure the trace, then `tracingStartChunk` to begin recording.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional trace configuration (name, screenshots, snapshots)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Tracing is already active
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start>
+    pub async fn start(&self, options: Option<TracingStartOptions>) -> Result<()> {
+        let opts = options.unwrap_or_default();
+
+        // Step 1: tracingStart — configure the trace
+        let mut start_params = serde_json::json!({});
+        if let Some(ref name) = opts.name {
+            start_params["name"] = serde_json::Value::String(name.clone());
+        }
+        if let Some(screenshots) = opts.screenshots {
+            start_params["screenshots"] = serde_json::Value::Bool(screenshots);
+        }
+        if let Some(snapshots) = opts.snapshots {
+            start_params["snapshots"] = serde_json::Value::Bool(snapshots);
+        }
+
+        self.channel()
+            .send_no_result("tracingStart", start_params)
+            .await?;
+
+        // Step 2: tracingStartChunk — begin the chunk/recording
+        let mut chunk_params = serde_json::json!({});
+        if let Some(name) = opts.name {
+            chunk_params["name"] = serde_json::Value::String(name);
+        }
+
+        self.channel()
+            .send_no_result("tracingStartChunk", chunk_params)
+            .await
+    }
+
+    /// Stop tracing.
+    ///
+    /// Playwright implements stopping as a two-step process: `tracingStopChunk`
+    /// to finalize the recording, then `tracingStop` to tear down.
+    ///
+    /// If `options.path` is provided, the trace is exported to that file as a
+    /// `.zip` archive. If no path is provided, the trace is discarded.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional stop options; set `path` to save the trace to a file
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Tracing was not active
+    /// - Communication with browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-tracing#tracing-stop>
+    pub async fn stop(&self, options: Option<TracingStopOptions>) -> Result<()> {
+        let path = options.and_then(|o| o.path);
+
+        // Step 1: tracingStopChunk — mode "entries" collects trace data
+        // mode "archive" or "compressedTrace" would export, but "entries" is simpler
+        let mode = if path.is_some() { "archive" } else { "discard" };
+        let stop_chunk_params = serde_json::json!({ "mode": mode });
+
+        let chunk_result: Value = self
+            .channel()
+            .send("tracingStopChunk", stop_chunk_params)
+            .await?;
+
+        // Step 2: tracingStop — tear down
+        self.channel()
+            .send_no_result("tracingStop", serde_json::json!({}))
+            .await?;
+
+        // If a path was requested, save the artifact
+        if let Some(dest_path) = path
+            && let Some(artifact_guid) = chunk_result
+                .get("artifact")
+                .and_then(|a| a.get("guid"))
+                .and_then(|g| g.as_str())
+        {
+            // Resolve the artifact and save it
+            self.save_artifact(artifact_guid, &dest_path).await?;
+        }
+
+        Ok(())
+    }
+
+    /// Save a trace artifact to a file path.
+    async fn save_artifact(&self, artifact_guid: &str, dest_path: &str) -> Result<()> {
+        use crate::protocol::artifact::Artifact;
+        use crate::server::connection::ConnectionExt;
+
+        let artifact = self
+            .connection()
+            .get_typed::<Artifact>(artifact_guid)
+            .await?;
+
+        artifact.save_as(dest_path).await
     }
 }
 
