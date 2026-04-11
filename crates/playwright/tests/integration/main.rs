@@ -17,6 +17,7 @@ mod browser_context;
 mod checkbox;
 mod click_options;
 mod connection;
+mod context_events;
 mod context_route;
 mod context_runtime_setters;
 mod downloads_dialogs;

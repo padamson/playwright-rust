@@ -84,6 +84,30 @@ use std::sync::{Arc, Mutex};
 /// Type alias for boxed route handler future
 type RouteHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
+/// Type alias for boxed page handler future
+type PageHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed close handler future
+type CloseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed request handler future
+type RequestHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed response handler future
+type ResponseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Context-level page event handler
+type PageHandler = Arc<dyn Fn(Page) -> PageHandlerFuture + Send + Sync>;
+
+/// Context-level close event handler
+type CloseHandler = Arc<dyn Fn() -> CloseHandlerFuture + Send + Sync>;
+
+/// Context-level request event handler
+type RequestHandler = Arc<dyn Fn(Request) -> RequestHandlerFuture + Send + Sync>;
+
+/// Context-level response event handler
+type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Send + Sync>;
+
 /// Storage for a single route handler
 #[derive(Clone)]
 struct RouteHandlerEntry {
@@ -106,6 +130,18 @@ pub struct BrowserContext {
     default_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
     /// Default navigation timeout for all pages in this context (milliseconds), stored as f64 bits.
     default_navigation_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
+    /// Context-level page event handlers (fired when a new page is created)
+    page_handlers: Arc<Mutex<Vec<PageHandler>>>,
+    /// Context-level close event handlers (fired when the context is closed)
+    close_handlers: Arc<Mutex<Vec<CloseHandler>>>,
+    /// Context-level request event handlers
+    request_handlers: Arc<Mutex<Vec<RequestHandler>>>,
+    /// Context-level request finished event handlers
+    request_finished_handlers: Arc<Mutex<Vec<RequestHandler>>>,
+    /// Context-level request failed event handlers
+    request_failed_handlers: Arc<Mutex<Vec<RequestHandler>>>,
+    /// Context-level response event handlers
+    response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
 }
 
 impl BrowserContext {
@@ -161,6 +197,12 @@ impl BrowserContext {
             default_navigation_timeout_ms: Arc::new(std::sync::atomic::AtomicU64::new(
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
+            page_handlers: Arc::new(Mutex::new(Vec::new())),
+            close_handlers: Arc::new(Mutex::new(Vec::new())),
+            request_handlers: Arc::new(Mutex::new(Vec::new())),
+            request_finished_handlers: Arc::new(Mutex::new(Vec::new())),
+            request_failed_handlers: Arc::new(Mutex::new(Vec::new())),
+            response_handlers: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -679,6 +721,163 @@ impl BrowserContext {
         self.enable_network_interception().await
     }
 
+    /// Adds a listener for the `page` event.
+    ///
+    /// The handler is called whenever a new page is created in this context,
+    /// including popup pages opened through user interactions.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function that receives the new `Page`
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-page>
+    pub async fn on_page<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Page) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |page: Page| -> PageHandlerFuture { Box::pin(handler(page)) });
+        self.page_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Adds a listener for the `close` event.
+    ///
+    /// The handler is called when the browser context is closed.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function called with no arguments when the context closes
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-close>
+    pub async fn on_close<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move || -> CloseHandlerFuture { Box::pin(handler()) });
+        self.close_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Adds a listener for the `request` event.
+    ///
+    /// The handler fires whenever a request is issued from any page in the context.
+    /// This is equivalent to subscribing to `on_request` on each individual page,
+    /// but covers all current and future pages of the context.
+    ///
+    /// Context-level handlers fire before page-level handlers.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function that receives the `Request`
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-request>
+    pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
+        let needs_subscription = self.request_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("request", true).await;
+        }
+        self.request_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Adds a listener for the `requestFinished` event.
+    ///
+    /// The handler fires after the request has been successfully received by the server
+    /// and a response has been fully downloaded for any page in the context.
+    ///
+    /// Context-level handlers fire before page-level handlers.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function that receives the completed `Request`
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-request-finished>
+    pub async fn on_request_finished<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
+        let needs_subscription = self.request_finished_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self
+                .channel()
+                .update_subscription("requestFinished", true)
+                .await;
+        }
+        self.request_finished_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Adds a listener for the `requestFailed` event.
+    ///
+    /// The handler fires when a request from any page in the context fails,
+    /// for example due to a network error or if the server returned an error response.
+    ///
+    /// Context-level handlers fire before page-level handlers.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function that receives the failed `Request`
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-request-failed>
+    pub async fn on_request_failed<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
+            Box::pin(handler(request))
+        });
+        let needs_subscription = self.request_failed_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self
+                .channel()
+                .update_subscription("requestFailed", true)
+                .await;
+        }
+        self.request_failed_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Adds a listener for the `response` event.
+    ///
+    /// The handler fires whenever a response is received from any page in the context.
+    ///
+    /// Context-level handlers fire before page-level handlers.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async function that receives the `ResponseObject`
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-response>
+    pub async fn on_response<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture {
+            Box::pin(handler(response))
+        });
+        let needs_subscription = self.response_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("response", true).await;
+        }
+        self.response_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
     /// Updates network interception patterns for this context
     async fn enable_network_interception(&self) -> Result<()> {
         let patterns: Vec<serde_json::Value> = self
@@ -744,6 +943,10 @@ impl BrowserContext {
             // Extract responseEndTiming from requestFinished event params
             let response_end_timing = params.get("responseEndTiming").and_then(|v| v.as_f64());
             let method = method.to_owned();
+            // Clone context-level handler vecs for use in spawn
+            let ctx_request_handlers = self.request_handlers.clone();
+            let ctx_request_finished_handlers = self.request_finished_handlers.clone();
+            let ctx_request_failed_handlers = self.request_failed_handlers.clone();
             tokio::spawn(async move {
                 let request: Request =
                     match connection.get_typed::<Request>(&request_guid_owned).await {
@@ -764,6 +967,20 @@ impl BrowserContext {
                     request.set_timing(timing);
                 }
 
+                // Dispatch to context-level handlers first (matching playwright-python behavior)
+                let ctx_handlers = match method.as_str() {
+                    "request" => ctx_request_handlers.lock().unwrap().clone(),
+                    "requestFinished" => ctx_request_finished_handlers.lock().unwrap().clone(),
+                    "requestFailed" => ctx_request_failed_handlers.lock().unwrap().clone(),
+                    _ => vec![],
+                };
+                for handler in ctx_handlers {
+                    if let Err(e) = handler(request.clone()).await {
+                        tracing::warn!("Context {} handler error: {}", method, e);
+                    }
+                }
+
+                // Then dispatch to page-level handlers
                 if let Some(page_guid) = page_guid_owned {
                     let page: Page = match connection.get_typed::<Page>(&page_guid).await {
                         Ok(p) => p,
@@ -793,6 +1010,7 @@ impl BrowserContext {
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
                 .map(|v| v.to_owned());
+            let ctx_response_handlers = self.response_handlers.clone();
             tokio::spawn(async move {
                 let response: ResponseObject = match connection
                     .get_typed::<ResponseObject>(&response_guid_owned)
@@ -802,6 +1020,15 @@ impl BrowserContext {
                     Err(_) => return,
                 };
 
+                // Dispatch to context-level handlers first (matching playwright-python behavior)
+                let ctx_handlers = ctx_response_handlers.lock().unwrap().clone();
+                for handler in ctx_handlers {
+                    if let Err(e) = handler(response.clone()).await {
+                        tracing::warn!("Context response handler error: {}", e);
+                    }
+                }
+
+                // Then dispatch to page-level handlers
                 if let Some(page_guid) = page_guid_owned {
                     let page: Page = match connection.get_typed::<Page>(&page_guid).await {
                         Ok(p) => p,
@@ -861,6 +1088,18 @@ impl ChannelOwner for BrowserContext {
                 self.dispatch_request_event(method, params)
             }
             "response" => self.dispatch_response_event(method, params),
+            "close" => {
+                // BrowserContext close event — fire registered close handlers
+                let close_handlers = self.close_handlers.clone();
+                tokio::spawn(async move {
+                    let handlers = close_handlers.lock().unwrap().clone();
+                    for handler in handlers {
+                        if let Err(e) = handler().await {
+                            tracing::warn!("Context close handler error: {}", e);
+                        }
+                    }
+                });
+            }
             "page" => {
                 // Page events are triggered when pages are created, including:
                 // - Initial page in persistent context with --app mode
@@ -874,6 +1113,7 @@ impl ChannelOwner for BrowserContext {
                     let connection = self.connection();
                     let page_guid_owned = page_guid.to_string();
                     let pages = self.pages.clone();
+                    let page_handlers = self.page_handlers.clone();
 
                     tokio::spawn(async move {
                         // Get and downcast the Page object
@@ -884,7 +1124,15 @@ impl ChannelOwner for BrowserContext {
                         };
 
                         // Track the page
-                        pages.lock().unwrap().push(page);
+                        pages.lock().unwrap().push(page.clone());
+
+                        // Dispatch to context-level page handlers
+                        let handlers = page_handlers.lock().unwrap().clone();
+                        for handler in handlers {
+                            if let Err(e) = handler(page.clone()).await {
+                                tracing::warn!("Context page handler error: {}", e);
+                            }
+                        }
                     });
                 }
             }

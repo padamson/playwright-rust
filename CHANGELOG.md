@@ -44,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`cargo vet`** — supply chain review with trusted imports from 7 organizations; new dependencies require audit
 - **SLSA provenance** — release artifacts include signed build attestations via `actions/attest-build-provenance`
 - **Fuzz targets** — `cargo-fuzz` targets for `parse_value`, `serialize_argument`, `parse_result` (protocol parsing layer)
+- **BrowserContext event handlers** — context-level event subscriptions (fire before page handlers)
+  - `on_page(handler)` — fires when new page created in context
+  - `on_close(handler)` — fires when context is closed
+  - `on_request(handler)` / `on_request_finished(handler)` / `on_request_failed(handler)` — network events from any page
+  - `on_response(handler)` — response events from any page
 - Added `async-trait` as a dependency
 
 ## [0.9.0] - 2026-03-27
