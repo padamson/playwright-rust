@@ -219,24 +219,24 @@ impl LaunchOptions {
         }
 
         // Convert env HashMap to array of {name, value} objects
-        if let Some(env_map) = value.get_mut("env") {
-            if let Some(map) = env_map.as_object() {
-                let env_array: Vec<_> = map
-                    .iter()
-                    .map(|(k, v)| json!({"name": k, "value": v}))
-                    .collect();
-                *env_map = json!(env_array);
-            }
+        if let Some(env_map) = value.get_mut("env")
+            && let Some(map) = env_map.as_object()
+        {
+            let env_array: Vec<_> = map
+                .iter()
+                .map(|(k, v)| json!({"name": k, "value": v}))
+                .collect();
+            *env_map = json!(env_array);
         }
 
         // Convert bool ignoreDefaultArgs to ignoreAllDefaultArgs
-        if let Some(ignore) = value.get("ignoreDefaultArgs") {
-            if let Some(b) = ignore.as_bool() {
-                if b {
-                    value["ignoreAllDefaultArgs"] = json!(true);
-                }
-                value.as_object_mut().unwrap().remove("ignoreDefaultArgs");
+        if let Some(ignore) = value.get("ignoreDefaultArgs")
+            && let Some(b) = ignore.as_bool()
+        {
+            if b {
+                value["ignoreAllDefaultArgs"] = json!(true);
             }
+            value.as_object_mut().unwrap().remove("ignoreDefaultArgs");
         }
 
         value

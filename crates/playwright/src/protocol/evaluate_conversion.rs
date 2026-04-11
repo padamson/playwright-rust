@@ -498,13 +498,13 @@ pub fn parse_value(value: &Value, refs: Option<&mut HashMap<usize, Value>>) -> V
             let mut result_obj = serde_json::Map::new();
 
             for prop in props {
-                if let Some(prop_obj) = prop.as_object() {
-                    if let (Some(key), Some(val)) = (
+                if let Some(prop_obj) = prop.as_object()
+                    && let (Some(key), Some(val)) = (
                         prop_obj.get("k").and_then(|v| v.as_str()),
                         prop_obj.get("v"),
-                    ) {
-                        result_obj.insert(key.to_string(), parse_value(val, Some(refs)));
-                    }
+                    )
+                {
+                    result_obj.insert(key.to_string(), parse_value(val, Some(refs)));
                 }
             }
 

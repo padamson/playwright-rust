@@ -543,10 +543,10 @@ impl BrowserContext {
         options: Option<GrantPermissionsOptions>,
     ) -> Result<()> {
         let mut params = serde_json::json!({ "permissions": permissions });
-        if let Some(opts) = options {
-            if let Some(origin) = opts.origin {
-                params["origin"] = serde_json::Value::String(origin);
-            }
+        if let Some(opts) = options
+            && let Some(origin) = opts.origin
+        {
+            params["origin"] = serde_json::Value::String(origin);
         }
         self.channel()
             .send_no_result("grantPermissions", params)
@@ -757,12 +757,11 @@ impl BrowserContext {
                 }
 
                 // For requestFinished, extract timing from the Response object's initializer
-                if method == "requestFinished" {
-                    if let Some(timing) =
+                if method == "requestFinished"
+                    && let Some(timing) =
                         extract_timing(&connection, response_guid_owned, response_end_timing).await
-                    {
-                        request.set_timing(timing);
-                    }
+                {
+                    request.set_timing(timing);
                 }
 
                 if let Some(page_guid) = page_guid_owned {
@@ -946,12 +945,11 @@ impl ChannelOwner for BrowserContext {
                             };
 
                         // Set APIRequestContext on the route for fetch() support
-                        if let Some(ref guid) = request_context_guid {
-                            if let Ok(api_ctx) =
+                        if let Some(ref guid) = request_context_guid
+                            && let Ok(api_ctx) =
                                 connection.get_typed::<APIRequestContext>(guid).await
-                            {
-                                route.set_api_request_context(api_ctx);
-                            }
+                        {
+                            route.set_api_request_context(api_ctx);
                         }
 
                         BrowserContext::on_route_event(route_handlers, route).await;
@@ -1770,10 +1768,10 @@ async fn extract_timing(
         .await
         .ok()?;
     let mut timing = resp_obj.initializer().get("timing")?.clone();
-    if let (Some(end), Some(obj)) = (response_end_timing, timing.as_object_mut()) {
-        if let Some(n) = serde_json::Number::from_f64(end) {
-            obj.insert("responseEnd".to_string(), serde_json::Value::Number(n));
-        }
+    if let (Some(end), Some(obj)) = (response_end_timing, timing.as_object_mut())
+        && let Some(n) = serde_json::Number::from_f64(end)
+    {
+        obj.insert("responseEnd".to_string(), serde_json::Value::Number(n));
     }
     Some(timing)
 }

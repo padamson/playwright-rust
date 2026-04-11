@@ -126,11 +126,11 @@ async fn test_no_memory_leak_browser_cycles() {
         browser.close().await.expect("Failed to close browser");
 
         // Sample memory every 10 iterations
-        if i % 10 == 9 {
-            if let Some(mem) = get_process_memory_mb() {
-                memory_samples.push(mem);
-                tracing::debug!("After {} cycles: {:.2} MB", i + 1, mem);
-            }
+        if i % 10 == 9
+            && let Some(mem) = get_process_memory_mb()
+        {
+            memory_samples.push(mem);
+            tracing::debug!("After {} cycles: {:.2} MB", i + 1, mem);
         }
     }
 
@@ -208,11 +208,11 @@ async fn test_no_memory_leak_page_cycles() {
         page.close().await.expect("Failed to close page");
 
         // Sample memory every 5 iterations
-        if i % 5 == 4 {
-            if let Some(mem) = get_process_memory_mb() {
-                memory_samples.push(mem);
-                tracing::debug!("After {} page cycles: {:.2} MB", i + 1, mem);
-            }
+        if i % 5 == 4
+            && let Some(mem) = get_process_memory_mb()
+        {
+            memory_samples.push(mem);
+            tracing::debug!("After {} page cycles: {:.2} MB", i + 1, mem);
         }
     }
 
@@ -298,11 +298,11 @@ async fn test_no_memory_leak_context_cycles() {
         context.close().await.expect("Failed to close context");
 
         // Sample memory every 5 iterations
-        if i % 5 == 4 {
-            if let Some(mem) = get_process_memory_mb() {
-                memory_samples.push(mem);
-                tracing::debug!("After {} context cycles: {:.2} MB", i + 1, mem);
-            }
+        if i % 5 == 4
+            && let Some(mem) = get_process_memory_mb()
+        {
+            memory_samples.push(mem);
+            tracing::debug!("After {} context cycles: {:.2} MB", i + 1, mem);
         }
     }
 

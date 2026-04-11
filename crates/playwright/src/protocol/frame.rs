@@ -648,10 +648,10 @@ impl Frame {
 
             if matches {
                 // URL matches — optionally wait for load state
-                if let Some(ref opts) = options {
-                    if let Some(wait_until) = opts.wait_until {
-                        self.wait_for_load_state(Some(wait_until)).await?;
-                    }
+                if let Some(ref opts) = options
+                    && let Some(wait_until) = opts.wait_until
+                {
+                    self.wait_for_load_state(Some(wait_until)).await?;
                 }
                 return Ok(());
             }
@@ -1038,10 +1038,10 @@ impl Frame {
         let result: EvaluateResult = self.channel().send("evaluateExpression", params).await?;
 
         // Playwright protocol returns booleans as {"b": true} or {"b": false}
-        if let serde_json::Value::Object(map) = &result.value {
-            if let Some(b) = map.get("b").and_then(|v| v.as_bool()) {
-                return Ok(b);
-            }
+        if let serde_json::Value::Object(map) = &result.value
+            && let Some(b) = map.get("b").and_then(|v| v.as_bool())
+        {
+            return Ok(b);
         }
 
         // Fallback: check if the string representation is "true"
@@ -1063,10 +1063,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1096,10 +1096,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1123,10 +1123,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1149,10 +1149,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1176,10 +1176,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1233,10 +1233,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1311,10 +1311,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1342,10 +1342,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1372,10 +1372,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             // Default: wait for visible with default timeout
@@ -1498,10 +1498,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1522,10 +1522,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1546,10 +1546,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             params["timeout"] = serde_json::json!(crate::DEFAULT_TIMEOUT_MS);
@@ -1598,10 +1598,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             // No options provided, add default timeout (required in Playwright 1.56.1+)
@@ -1634,10 +1634,10 @@ impl Frame {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         } else {
             // No options provided, add default timeout (required in Playwright 1.56.1+)
@@ -2220,12 +2220,12 @@ impl ChannelOwner for Frame {
         match method {
             "navigated" => {
                 // Update frame's URL when navigation occurs (including hash changes)
-                if let Some(url_value) = params.get("url") {
-                    if let Some(url_str) = url_value.as_str() {
-                        // Update frame's URL
-                        if let Ok(mut url) = self.url.write() {
-                            *url = url_str.to_string();
-                        }
+                if let Some(url_value) = params.get("url")
+                    && let Some(url_str) = url_value.as_str()
+                {
+                    // Update frame's URL
+                    if let Ok(mut url) = self.url.write() {
+                        *url = url_str.to_string();
                     }
                 }
             }

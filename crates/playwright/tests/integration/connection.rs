@@ -770,10 +770,10 @@ const {{ chromium }} = require('{}');
 
     // Wait for the WebSocket endpoint with timeout
     let ws_endpoint = tokio::time::timeout(Duration::from_secs(30), async {
-        if let Ok(Some(line)) = reader.next_line().await {
-            if line.starts_with("ws://") {
-                return Some(line);
-            }
+        if let Ok(Some(line)) = reader.next_line().await
+            && line.starts_with("ws://")
+        {
+            return Some(line);
         }
         None
     })

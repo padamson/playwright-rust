@@ -375,10 +375,10 @@ impl Page {
     /// See: <https://playwright.dev/docs/api/class-page#page-url>
     pub fn url(&self) -> String {
         // Try to get URL from the cached main frame (source of truth for navigation including hashes)
-        if let Ok(cached) = self.cached_main_frame.lock() {
-            if let Some(frame) = cached.as_ref() {
-                return frame.url();
-            }
+        if let Ok(cached) = self.cached_main_frame.lock()
+            && let Some(frame) = cached.as_ref()
+        {
+            return frame.url();
         }
 
         // Fallback to cached URL if frame not yet loaded
@@ -547,10 +547,10 @@ impl Page {
         })?;
 
         // Update the page's URL if we got a response
-        if let Some(ref resp) = response {
-            if let Ok(mut page_url) = self.url.write() {
-                *page_url = resp.url().to_string();
-            }
+        if let Some(ref resp) = response
+            && let Ok(mut page_url) = self.url.write()
+        {
+            *page_url = resp.url().to_string();
         }
 
         Ok(response)
@@ -772,10 +772,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -793,10 +793,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -829,10 +829,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -852,10 +852,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -876,10 +876,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -894,10 +894,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -912,10 +912,10 @@ impl Page {
 
         if let Some(opts) = options {
             let opts_json = opts.to_json();
-            if let Some(obj) = params.as_object_mut() {
-                if let Some(opts_obj) = opts_json.as_object() {
-                    obj.extend(opts_obj.clone());
-                }
+            if let Some(obj) = params.as_object_mut()
+                && let Some(opts_obj) = opts_json.as_object()
+            {
+                obj.extend(opts_obj.clone());
             }
         }
 
@@ -2066,12 +2066,11 @@ impl ChannelOwner for Page {
         match method {
             "navigated" => {
                 // Update URL when page navigates
-                if let Some(url_value) = params.get("url") {
-                    if let Some(url_str) = url_value.as_str() {
-                        if let Ok(mut url) = self.url.write() {
-                            *url = url_str.to_string();
-                        }
-                    }
+                if let Some(url_value) = params.get("url")
+                    && let Some(url_str) = url_value.as_str()
+                    && let Ok(mut url) = self.url.write()
+                {
+                    *url = url_str.to_string();
                 }
             }
             "route" => {
@@ -2101,10 +2100,9 @@ impl ChannelOwner for Page {
                         // Page's parent is BrowserContext, which has the request context.
                         if let Some(ctx) =
                             downcast_parent::<crate::protocol::BrowserContext>(&self_clone)
+                            && let Ok(api_ctx) = ctx.request().await
                         {
-                            if let Ok(api_ctx) = ctx.request().await {
-                                route.set_api_request_context(api_ctx);
-                            }
+                            route.set_api_request_context(api_ctx);
                         }
 
                         // Call the route handler and wait for completion

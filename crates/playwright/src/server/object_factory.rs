@@ -178,14 +178,12 @@ pub async fn create_object(
                 .get("frame")
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
-            {
-                if let Ok(frame) = request
+                && let Ok(frame) = request
                     .connection()
                     .get_typed::<crate::protocol::Frame>(frame_guid)
                     .await
-                {
-                    request.set_frame(frame);
-                }
+            {
+                request.set_frame(frame);
             }
 
             // Eagerly resolve the redirect chain from initializer["redirectedFrom"]["guid"]
@@ -193,13 +191,11 @@ pub async fn create_object(
                 .get("redirectedFrom")
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
+                && let Ok(from_request) = request.connection().get_typed::<Request>(from_guid).await
             {
-                if let Ok(from_request) = request.connection().get_typed::<Request>(from_guid).await
-                {
-                    request.set_redirected_from(from_request.clone());
-                    // Set the reverse pointer on the original request
-                    from_request.set_redirected_to((*request).clone());
-                }
+                request.set_redirected_from(from_request.clone());
+                // Set the reverse pointer on the original request
+                from_request.set_redirected_to((*request).clone());
             }
 
             request

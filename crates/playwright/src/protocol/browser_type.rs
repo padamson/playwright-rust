@@ -380,13 +380,13 @@ impl BrowserType {
 
         // Convert bool ignoreDefaultArgs to ignoreAllDefaultArgs
         // (matches playwright-python's parameter normalization)
-        if let Some(ignore) = params.get("ignoreDefaultArgs") {
-            if let Some(b) = ignore.as_bool() {
-                if b {
-                    params["ignoreAllDefaultArgs"] = serde_json::json!(true);
-                }
-                params.as_object_mut().unwrap().remove("ignoreDefaultArgs");
+        if let Some(ignore) = params.get("ignoreDefaultArgs")
+            && let Some(b) = ignore.as_bool()
+        {
+            if b {
+                params["ignoreAllDefaultArgs"] = serde_json::json!(true);
             }
+            params.as_object_mut().unwrap().remove("ignoreDefaultArgs");
         }
 
         // Send launchPersistentContext RPC to server

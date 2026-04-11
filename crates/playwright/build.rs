@@ -96,18 +96,17 @@ fn get_drivers_dir() -> PathBuf {
     let mut current = manifest_dir.as_path();
     while let Some(parent) = current.parent() {
         let cargo_toml = parent.join("Cargo.toml");
-        if cargo_toml.exists() {
-            if let Ok(contents) = fs::read_to_string(&cargo_toml) {
-                if contents.contains("[workspace]") {
-                    let drivers_dir = parent.join("drivers");
-                    println!("cargo:warning=Found workspace at: {}", parent.display());
-                    println!(
-                        "cargo:warning=Using drivers directory: {}",
-                        drivers_dir.display()
-                    );
-                    return drivers_dir;
-                }
-            }
+        if cargo_toml.exists()
+            && fs::read_to_string(&cargo_toml)
+                .is_ok_and(|contents| contents.contains("[workspace]"))
+        {
+            let drivers_dir = parent.join("drivers");
+            println!("cargo:warning=Found workspace at: {}", parent.display());
+            println!(
+                "cargo:warning=Using drivers directory: {}",
+                drivers_dir.display()
+            );
+            return drivers_dir;
         }
         current = parent;
     }

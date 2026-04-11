@@ -143,15 +143,15 @@ fn try_node_cli_env() -> Result<Option<(PathBuf, PathBuf)>> {
 fn try_npm_global() -> Result<Option<(PathBuf, PathBuf)>> {
     let output = Command::new("npm").args(["root", "-g"]).output();
 
-    if let Ok(output) = output {
-        if output.status.success() {
-            let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let node_modules = PathBuf::from(npm_root);
-            if node_modules.exists() {
-                if let Ok(paths) = find_playwright_in_node_modules(&node_modules) {
-                    return Ok(Some(paths));
-                }
-            }
+    if let Ok(output) = output
+        && output.status.success()
+    {
+        let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let node_modules = PathBuf::from(npm_root);
+        if node_modules.exists()
+            && let Ok(paths) = find_playwright_in_node_modules(&node_modules)
+        {
+            return Ok(Some(paths));
         }
     }
 
@@ -162,15 +162,15 @@ fn try_npm_global() -> Result<Option<(PathBuf, PathBuf)>> {
 fn try_npm_local() -> Result<Option<(PathBuf, PathBuf)>> {
     let output = Command::new("npm").args(["root"]).output();
 
-    if let Ok(output) = output {
-        if output.status.success() {
-            let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let node_modules = PathBuf::from(npm_root);
-            if node_modules.exists() {
-                if let Ok(paths) = find_playwright_in_node_modules(&node_modules) {
-                    return Ok(Some(paths));
-                }
-            }
+    if let Ok(output) = output
+        && output.status.success()
+    {
+        let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let node_modules = PathBuf::from(npm_root);
+        if node_modules.exists()
+            && let Ok(paths) = find_playwright_in_node_modules(&node_modules)
+        {
+            return Ok(Some(paths));
         }
     }
 
@@ -215,14 +215,14 @@ fn find_node_executable() -> Result<PathBuf> {
     #[cfg(windows)]
     let which_cmd = "where";
 
-    if let Ok(output) = Command::new(which_cmd).arg("node").output() {
-        if output.status.success() {
-            let node_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            if !node_path.is_empty() {
-                let path = PathBuf::from(node_path.lines().next().unwrap_or(&node_path));
-                if path.exists() {
-                    return Ok(path);
-                }
+    if let Ok(output) = Command::new(which_cmd).arg("node").output()
+        && output.status.success()
+    {
+        let node_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !node_path.is_empty() {
+            let path = PathBuf::from(node_path.lines().next().unwrap_or(&node_path));
+            if path.exists() {
+                return Ok(path);
             }
         }
     }
