@@ -1,6 +1,10 @@
 
 # cargo-vet imports lock
 
+[[unpublished.playwright-rs]]
+version = "0.10.0"
+audited_as = "0.9.0"
+
 [[publisher.bumpalo]]
 version = "3.20.2"
 when = "2026-02-19"

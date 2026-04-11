@@ -136,7 +136,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.9"  # Auto-updates to latest 0.9.x
+playwright-rs = "0.10"  # Auto-updates to latest 0.10.x
 tokio = { version = "1", features = ["full"] }
 ```
 
