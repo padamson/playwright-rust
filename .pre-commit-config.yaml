@@ -102,3 +102,13 @@ repos:
         pass_filenames: false
         # Only run when dependency or deny config files change
         files: (Cargo\.toml|Cargo\.lock|deny\.toml)$
+
+      # 8. Supply chain review (same as CI: cargo vet)
+      - id: cargo-vet
+        name: cargo vet
+        description: Verify dependency supply chain audits
+        entry: cargo vet
+        language: system
+        pass_filenames: false
+        # Only run when dependency or supply-chain config files change
+        files: (Cargo\.toml|Cargo\.lock|supply-chain/)$

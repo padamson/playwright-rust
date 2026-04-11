@@ -44,6 +44,21 @@ jobs:
     - name: Run cargo deny
       run: cargo deny check
 
+  supply-chain:
+    name: Supply Chain Review
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-vet
+      run: cargo install cargo-vet
+
+    - name: Run cargo vet
+      run: cargo vet
+
   semver-checks:
     name: Semver Compatibility
     runs-on: ubuntu-latest
