@@ -990,7 +990,7 @@ impl BrowserContext {
     ///
     /// # Arguments
     ///
-    /// * `handler` - Async function that receives the [`Dialog`] and calls
+    /// * `handler` - Async function that receives the [`Dialog`](crate::protocol::Dialog) and calls
     ///   `dialog.accept()` or `dialog.dismiss()`.
     ///
     /// # Errors
@@ -1124,7 +1124,7 @@ impl BrowserContext {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`] if no page is created within the timeout.
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no page is created within the timeout.
     ///
     /// # Example
     ///
@@ -1154,7 +1154,7 @@ impl BrowserContext {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`] if the context is not closed within the timeout.
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the context is not closed within the timeout.
     ///
     /// # Example
     ///

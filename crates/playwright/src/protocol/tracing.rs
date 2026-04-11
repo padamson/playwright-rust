@@ -11,7 +11,7 @@
 //! Tracing — record Playwright traces for debugging
 //!
 //! Tracing is a per-context feature. Access the Tracing object via
-//! [`BrowserContext::tracing`].
+//! [`BrowserContext::tracing`](crate::protocol::BrowserContext::tracing).
 //!
 //! # Example
 //!

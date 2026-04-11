@@ -4,7 +4,7 @@
 
 use serde::Serialize;
 
-/// The state to wait for when using [`Locator::wait_for()`].
+/// The state to wait for when using [`Locator::wait_for()`](crate::protocol::Locator::wait_for).
 ///
 /// Matches Playwright's `WaitForSelectorState` across all language bindings.
 ///
@@ -22,7 +22,7 @@ pub enum WaitForState {
     Hidden,
 }
 
-/// Options for [`Locator::wait_for()`].
+/// Options for [`Locator::wait_for()`](crate::protocol::Locator::wait_for).
 ///
 /// Configuration for waiting until an element satisfies a given state condition.
 /// If no state is specified, defaults to `Visible`.

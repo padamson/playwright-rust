@@ -1074,7 +1074,7 @@ impl Locator {
     /// # Arguments
     ///
     /// * `text` - Text to type into the element
-    /// * `options` - Optional [`PressSequentiallyOptions`] (e.g., `delay` between key presses)
+    /// * `options` - Optional [`PressSequentiallyOptions`](crate::protocol::PressSequentiallyOptions) (e.g., `delay` between key presses)
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-press-sequentially>
     pub async fn press_sequentially(
@@ -1380,7 +1380,7 @@ impl Locator {
     ///
     /// # Arguments
     ///
-    /// * `options` - Optional [`TapOptions`] (force, modifiers, position, timeout, trial)
+    /// * `options` - Optional [`TapOptions`](crate::protocol::TapOptions) (force, modifiers, position, timeout, trial)
     ///
     /// # Errors
     ///
@@ -1406,7 +1406,7 @@ impl Locator {
     /// # Arguments
     ///
     /// * `target` - The locator of the element to drag onto
-    /// * `options` - Optional [`DragToOptions`] (force, no_wait_after, timeout, trial,
+    /// * `options` - Optional [`DragToOptions`](crate::protocol::DragToOptions) (force, no_wait_after, timeout, trial,
     ///   source_position, target_position)
     ///
     /// # Errors
@@ -1441,7 +1441,7 @@ impl Locator {
     ///
     /// # Arguments
     ///
-    /// * `options` - Optional [`WaitForOptions`] specifying the `state` to wait for
+    /// * `options` - Optional [`WaitForOptions`](crate::protocol::WaitForOptions) specifying the `state` to wait for
     ///   (`Visible`, `Hidden`, `Attached`, or `Detached`) and a `timeout` in milliseconds.
     ///
     /// # Errors

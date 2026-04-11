@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MSRV bumped from 1.85 to 1.88** — transitive dependencies (`icu_*`, `image`, `time`, `zip`) now require Rust 1.88
 - **`ConnectionLike` trait uses `#[async_trait]`** — methods migrated from manual `Pin<Box<dyn Future>>` returns to idiomatic `async fn`. Any code implementing `ConnectionLike` directly must update method signatures (internal server infrastructure, not user-facing API).
 
+### Fixed
+
+- **15 broken rustdoc links** — all intra-doc links now resolve correctly (qualified paths for cross-module references)
+
 ### Changed
 
 - **Security & quality CI** — `cargo audit` and `cargo deny` run on every push to main and weekly; mutation testing moved from `test.yml` to dedicated `security.yml` with weekly schedule + release tag triggers; MSRV check (Rust 1.85) in `test.yml`

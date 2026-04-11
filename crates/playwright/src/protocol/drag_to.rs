@@ -4,7 +4,7 @@
 
 use crate::protocol::click::Position;
 
-/// Options for [`Locator::drag_to()`].
+/// Options for [`Locator::drag_to()`](crate::protocol::Locator::drag_to).
 ///
 /// Configuration for dragging a source element onto a target element.
 ///

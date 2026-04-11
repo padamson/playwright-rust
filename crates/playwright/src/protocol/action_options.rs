@@ -342,7 +342,7 @@ impl HoverOptionsBuilder {
     }
 }
 
-/// Options for [`Locator::press_sequentially()`].
+/// Options for [`Locator::press_sequentially()`](crate::protocol::Locator::press_sequentially).
 ///
 /// Controls timing between key presses when typing characters one by one.
 ///

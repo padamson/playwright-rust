@@ -11,7 +11,7 @@
 //! CDPSession — Chrome DevTools Protocol session
 //!
 //! Provides access to the Chrome DevTools Protocol for Chromium-based browsers.
-//! CDPSession is created via [`BrowserContext::new_cdp_session`].
+//! CDPSession is created via [`BrowserContext::new_cdp_session`](crate::protocol::BrowserContext::new_cdp_session).
 //!
 //! # Example
 //!

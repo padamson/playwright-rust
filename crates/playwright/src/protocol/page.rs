@@ -2999,7 +2999,7 @@ impl Response {
         &self.headers
     }
 
-    /// Returns the [`Request`](crate::protocol::Request) that triggered this response.
+    /// Returns the [`Request`] that triggered this response.
     ///
     /// Navigates the protocol object hierarchy: ResponseObject → parent (Request).
     ///

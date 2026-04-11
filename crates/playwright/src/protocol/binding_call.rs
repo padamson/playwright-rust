@@ -24,7 +24,7 @@ use std::sync::Arc;
 /// When JavaScript calls an exposed function (registered via `expose_function`
 /// or `expose_binding`), the server sends a `bindingCall` event on the
 /// BrowserContext channel containing the GUID of a freshly created BindingCall
-/// object. The Rust handler must call either [`fulfill`](BindingCall::fulfill)
+/// object. The Rust handler must call either [`resolve`](BindingCall::resolve)
 /// or [`reject`](BindingCall::reject) to unblock the JS caller.
 ///
 /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-expose-function>
