@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **15 broken rustdoc links** — all intra-doc links now resolve correctly (qualified paths for cross-module references)
+- **unwrap() audit (closes #48)** — replaced bare `unwrap()` calls in library code with `expect()` (for infallible operations) or proper error handling (for protocol data). Remaining `unwrap()` calls are only mutex locks (`lock().unwrap()`) and test code.
 
 ### Changed
 

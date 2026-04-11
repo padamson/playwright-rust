@@ -210,7 +210,8 @@ impl LaunchOptions {
     ///
     /// This matches the behavior of playwright-python's parameter normalization.
     pub(crate) fn normalize(self) -> Value {
-        let mut value = serde_json::to_value(&self).unwrap();
+        let mut value =
+            serde_json::to_value(&self).expect("serialization of LaunchOptions cannot fail");
 
         // Set default timeout if not specified
         // Note: In Playwright 1.56.1+, timeout became a required parameter
@@ -236,7 +237,10 @@ impl LaunchOptions {
             if b {
                 value["ignoreAllDefaultArgs"] = json!(true);
             }
-            value.as_object_mut().unwrap().remove("ignoreDefaultArgs");
+            value
+                .as_object_mut()
+                .expect("params is a JSON object")
+                .remove("ignoreDefaultArgs");
         }
 
         value

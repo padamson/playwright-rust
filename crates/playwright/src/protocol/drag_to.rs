@@ -79,11 +79,13 @@ impl DragToOptions {
         }
 
         if let Some(source_position) = &self.source_position {
-            json["sourcePosition"] = serde_json::to_value(source_position).unwrap();
+            json["sourcePosition"] = serde_json::to_value(source_position)
+                .expect("serialization of position cannot fail");
         }
 
         if let Some(target_position) = &self.target_position {
-            json["targetPosition"] = serde_json::to_value(target_position).unwrap();
+            json["targetPosition"] = serde_json::to_value(target_position)
+                .expect("serialization of position cannot fail");
         }
 
         json

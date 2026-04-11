@@ -57,11 +57,13 @@ impl TapOptions {
         }
 
         if let Some(modifiers) = &self.modifiers {
-            json["modifiers"] = serde_json::to_value(modifiers).unwrap();
+            json["modifiers"] =
+                serde_json::to_value(modifiers).expect("serialization of modifiers cannot fail");
         }
 
         if let Some(position) = &self.position {
-            json["position"] = serde_json::to_value(position).unwrap();
+            json["position"] =
+                serde_json::to_value(position).expect("serialization of position cannot fail");
         }
 
         // Timeout is required in Playwright 1.56.1+

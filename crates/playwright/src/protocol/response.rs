@@ -171,7 +171,7 @@ impl ResponseObject {
 
         let value = result.get("value");
         match value {
-            Some(v) if v.is_object() && !v.as_object().unwrap().is_empty() => {
+            Some(v) if v.as_object().is_some_and(|obj| !obj.is_empty()) => {
                 Ok(Some(SecurityDetails {
                     issuer: v.get("issuer").and_then(|v| v.as_str()).map(String::from),
                     protocol: v.get("protocol").and_then(|v| v.as_str()).map(String::from),

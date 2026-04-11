@@ -119,7 +119,7 @@ impl Metadata {
         Self {
             wall_time: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("system clock is before UNIX epoch")
                 .as_millis() as i64,
             internal: Some(false),
             location: None,

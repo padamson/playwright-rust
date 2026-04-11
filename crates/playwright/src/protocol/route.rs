@@ -109,7 +109,7 @@ impl Route {
             Arc::from(request_guid),
             request_data,
         )
-        .unwrap()
+        .expect("stub Request construction cannot fail")
     }
 
     /// Aborts the route's request.

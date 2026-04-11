@@ -67,7 +67,8 @@ impl WaitForOptions {
 
         // Default to "visible" when no state is specified (matches Playwright behavior)
         let state = self.state.unwrap_or(WaitForState::Visible);
-        json["state"] = serde_json::to_value(state).unwrap();
+        json["state"] =
+            serde_json::to_value(state).expect("serialization of WaitForState cannot fail");
 
         // Timeout is required in Playwright 1.56.1+
         if let Some(timeout) = self.timeout {

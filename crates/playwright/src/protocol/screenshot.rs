@@ -112,7 +112,8 @@ impl ScreenshotOptions {
         let mut json = serde_json::json!({});
 
         if let Some(screenshot_type) = &self.screenshot_type {
-            json["type"] = serde_json::to_value(screenshot_type).unwrap();
+            json["type"] = serde_json::to_value(screenshot_type)
+                .expect("serialization of ScreenshotType cannot fail");
         }
 
         if let Some(quality) = self.quality {
@@ -124,7 +125,7 @@ impl ScreenshotOptions {
         }
 
         if let Some(clip) = &self.clip {
-            json["clip"] = serde_json::to_value(clip).unwrap();
+            json["clip"] = serde_json::to_value(clip).expect("serialization of clip cannot fail");
         }
 
         if let Some(omit_background) = self.omit_background {
