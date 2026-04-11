@@ -178,7 +178,7 @@ install_browsers(Some(&["chromium"])).await?;            // specific browsers
 
 ### Prerequisites
 
-- Rust 1.85+
+- Rust 1.88+
 - Node.js 18+ (for Playwright server and browser installation)
 - tokio async runtime
 

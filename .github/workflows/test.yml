@@ -14,7 +14,7 @@ env:
 
 jobs:
   msrv:
-    name: MSRV Check (Rust 1.85)
+    name: MSRV Check (Rust 1.88)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
@@ -22,7 +22,7 @@ jobs:
     - name: Install MSRV toolchain
       uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: "1.85"
+        toolchain: "1.88"
 
     - name: Check compilation on MSRV
       run: cargo check --workspace

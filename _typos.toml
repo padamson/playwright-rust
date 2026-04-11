@@ -1,0 +1,8 @@
+# typos configuration
+# Docs: https://github.com/crate-ci/typos
+
+[files]
+extend-exclude = [
+    # cargo-vet files contain crate names that look like typos (e.g., flate2)
+    "supply-chain/",
+]

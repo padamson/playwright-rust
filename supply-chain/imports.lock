@@ -22,6 +22,13 @@ user-id = 4484
 user-login = "hsivonen"
 user-name = "Henri Sivonen"
 
+[[publisher.flate2]]
+version = "1.1.9"
+when = "2026-02-03"
+user-id = 980
+user-login = "Byron"
+user-name = "Sebastian Thiel"
+
 [[publisher.unicode-xid]]
 version = "0.2.6"
 when = "2024-09-19"
