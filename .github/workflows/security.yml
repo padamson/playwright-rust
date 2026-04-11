@@ -1,0 +1,68 @@
+name: Security & Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Weekly Saturday 5am ET — catches new advisories and test quality drift
+    - cron: '0 9 * * 6'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+
+    - name: Run cargo audit
+      run: cargo audit
+
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    # Run on weekly schedule and release tags only (too slow for every push)
+    if: github.event_name == 'schedule' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Cargo
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-mutants-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-mutants-
+
+    - name: Install cargo-mutants
+      run: cargo install cargo-mutants
+
+    - name: Run mutation testing
+      run: cargo mutants
+
+    - name: Upload mutation report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: mutation-report
+        path: mutants.out/

@@ -82,3 +82,13 @@ repos:
         language: system
         types: [rust]
         pass_filenames: false
+
+      # 6. Security audit (same as CI: cargo audit)
+      - id: cargo-audit
+        name: cargo audit
+        description: Check dependencies for known vulnerabilities
+        entry: cargo audit
+        language: system
+        pass_filenames: false
+        # Only run when dependency files change (not on every Rust file edit)
+        files: (Cargo\.toml|Cargo\.lock)$

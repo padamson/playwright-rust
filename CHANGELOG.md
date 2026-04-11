@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Security & quality CI** — `cargo audit` runs on every push to main and weekly; mutation testing moved from `test.yml` to dedicated `security.yml` with weekly schedule + release tag triggers
 - Added `async-trait` as a dependency
 
 ## [0.9.0] - 2026-03-27
