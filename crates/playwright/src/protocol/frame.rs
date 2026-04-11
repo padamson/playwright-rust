@@ -12,7 +12,7 @@ use crate::server::connection::ConnectionExt;
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 
 /// Frame represents a frame within a page.
 ///
@@ -25,13 +25,27 @@ use std::sync::{Arc, RwLock};
 #[derive(Clone)]
 pub struct Frame {
     base: ChannelOwnerImpl,
-    /// Current URL of the frame
-    /// Wrapped in RwLock to allow updates from events
+    /// Current URL of the frame.
+    /// Wrapped in RwLock to allow updates from events.
     url: Arc<RwLock<String>>,
+    /// The name attribute of the frame element (empty string for the main frame).
+    /// Extracted from the protocol initializer.
+    name: Arc<str>,
+    /// GUID of the parent frame, if any (None for the main/top-level frame).
+    /// Extracted from the protocol initializer.
+    parent_frame_guid: Option<Arc<str>>,
+    /// Whether this frame has been detached from the page.
+    /// Set to true when a "detached" event is received.
+    is_detached: Arc<RwLock<bool>>,
+    /// The owning Page, set after the Page is created and the frame is adopted.
+    ///
+    /// This is `None` until `set_page()` is called by the owning Page.
+    /// Using `Mutex<Option<...>>` so that `set_page()` can be called on a shared `&Frame`.
+    page: Arc<Mutex<Option<crate::protocol::Page>>>,
 }
 
 impl Frame {
-    /// Creates a new Frame from protocol initialization
+    /// Creates a new Frame from protocol initialization.
     ///
     /// This is called by the object factory when the server sends a `__create__` message
     /// for a Frame object.
@@ -57,7 +71,300 @@ impl Frame {
 
         let url = Arc::new(RwLock::new(initial_url));
 
-        Ok(Self { base, url })
+        // Extract the frame's name attribute (empty string for main frame)
+        let name: Arc<str> = Arc::from(
+            initializer
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or(""),
+        );
+
+        // Extract parent frame GUID if present
+        let parent_frame_guid: Option<Arc<str>> = initializer
+            .get("parentFrame")
+            .and_then(|v| v.get("guid"))
+            .and_then(|v| v.as_str())
+            .map(Arc::from);
+
+        Ok(Self {
+            base,
+            url,
+            name,
+            parent_frame_guid,
+            is_detached: Arc::new(RwLock::new(false)),
+            page: Arc::new(Mutex::new(None)),
+        })
+    }
+
+    /// Sets the owning Page for this frame.
+    ///
+    /// Called by `Page::main_frame()` after the frame is retrieved from the registry.
+    /// This allows `frame.page()` and `frame.locator()` to work.
+    pub(crate) fn set_page(&self, page: crate::protocol::Page) {
+        if let Ok(mut guard) = self.page.lock() {
+            *guard = Some(page);
+        }
+    }
+
+    /// Returns the owning Page for this frame, if it has been set.
+    ///
+    /// Returns `None` if `set_page()` has not been called yet (i.e., before the frame
+    /// has been adopted by a Page). In normal usage the main frame always has a Page.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-page>
+    pub fn page(&self) -> Option<crate::protocol::Page> {
+        self.page.lock().ok().and_then(|g| g.clone())
+    }
+
+    /// Returns the `name` attribute value of the frame element used to create this frame.
+    ///
+    /// For the main (top-level) frame this is always an empty string.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-name>
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Returns the parent `Frame`, or `None` if this is the top-level (main) frame.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-parent-frame>
+    pub fn parent_frame(&self) -> Option<crate::protocol::Frame> {
+        let guid = self.parent_frame_guid.as_ref()?;
+        // Look up the parent frame in the connection registry (sync-compatible via block_on)
+        // We spawn a brief async lookup using the connection.
+        let conn = self.base.connection();
+        // Use tokio's block_in_place / futures executor to do a synchronous resolution.
+        // This mirrors how other Rust Playwright clients resolve parent references.
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current()
+                .block_on(conn.get_typed::<crate::protocol::Frame>(guid))
+                .ok()
+        })
+    }
+
+    /// Returns `true` if the frame has been detached from its page.
+    ///
+    /// A frame becomes detached when the corresponding `<iframe>` element is removed
+    /// from the DOM or when the owning page is closed.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-is-detached>
+    pub fn is_detached(&self) -> bool {
+        self.is_detached.read().map(|v| *v).unwrap_or(false)
+    }
+
+    /// Returns all child frames embedded in this frame.
+    ///
+    /// Child frames are created by `<iframe>` elements within this frame.
+    /// For the main frame this may include multiple iframes.
+    ///
+    /// # Implementation Note
+    ///
+    /// This iterates all objects in the connection registry to find `Frame` objects
+    /// whose `parentFrame` initializer field matches this frame's GUID. This matches
+    /// the relationship Playwright establishes when creating child frames.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-child-frames>
+    pub fn child_frames(&self) -> Vec<crate::protocol::Frame> {
+        let my_guid = self.guid().to_string();
+        let conn = self.base.connection();
+
+        // Use the synchronous registry snapshot — no async needed since the
+        // underlying storage is a parking_lot::Mutex (sync-safe to lock).
+        conn.all_objects_sync()
+            .into_iter()
+            .filter_map(|obj| {
+                // Only consider Frame-typed objects
+                if obj.type_name() != "Frame" {
+                    return None;
+                }
+                // Check the initializer's parentFrame.guid field
+                let parent_guid = obj
+                    .initializer()
+                    .get("parentFrame")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())?;
+
+                if parent_guid == my_guid {
+                    obj.as_any()
+                        .downcast_ref::<crate::protocol::Frame>()
+                        .cloned()
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Evaluates a JavaScript expression and returns a handle to the result.
+    ///
+    /// Unlike [`evaluate`](Frame::evaluate) which serializes the return value to JSON,
+    /// `evaluate_handle` returns a handle to the in-browser object. This is useful when
+    /// the return value is a non-serializable DOM element or complex JS object.
+    ///
+    /// # Arguments
+    ///
+    /// * `expression` - JavaScript expression to evaluate in the frame context
+    ///
+    /// # Returns
+    ///
+    /// An `Arc<ElementHandle>` pointing to the in-browser object.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    /// page.goto("https://example.com", None).await?;
+    /// let frame = page.main_frame().await?;
+    ///
+    /// let handle = frame.evaluate_handle("document.body").await?;
+    /// let screenshot = handle.screenshot(None).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The JavaScript expression throws an error
+    /// - The result handle GUID cannot be found in the registry
+    /// - Communication with the browser fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate-handle>
+    pub async fn evaluate_handle(
+        &self,
+        expression: &str,
+    ) -> Result<Arc<crate::protocol::ElementHandle>> {
+        let params = serde_json::json!({
+            "expression": expression,
+            "isFunction": false,
+            "arg": {"value": {"v": "undefined"}, "handles": []}
+        });
+
+        // The server returns {"handle": {"guid": "JSHandle@..."}}
+        #[derive(Deserialize)]
+        struct HandleRef {
+            guid: String,
+        }
+        #[derive(Deserialize)]
+        struct EvaluateHandleResponse {
+            handle: HandleRef,
+        }
+
+        let response: EvaluateHandleResponse = self
+            .channel()
+            .send("evaluateExpressionHandle", params)
+            .await?;
+
+        let guid = &response.handle.guid;
+
+        // Look up in the connection registry with retry (the __create__ may arrive slightly later)
+        let connection = self.base.connection();
+        let mut attempts = 0;
+        let max_attempts = 20;
+        let handle = loop {
+            match connection
+                .get_typed::<crate::protocol::ElementHandle>(guid)
+                .await
+            {
+                Ok(h) => break h,
+                Err(_) if attempts < max_attempts => {
+                    attempts += 1;
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                }
+                Err(e) => return Err(e),
+            }
+        };
+
+        Ok(Arc::new(handle))
+    }
+
+    /// Creates a [`Locator`](crate::protocol::Locator) scoped to this frame.
+    ///
+    /// The locator is lazy — it does not query the DOM until an action is performed on it.
+    ///
+    /// # Arguments
+    ///
+    /// * `selector` - A CSS selector or other Playwright selector strategy
+    ///
+    /// # Panics
+    ///
+    /// Panics if the owning Page has not been set (i.e., `set_page()` was never called).
+    /// In normal usage the main frame always has its page wired up by `Page::main_frame()`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-locator>
+    pub fn locator(&self, selector: &str) -> crate::protocol::Locator {
+        let page = self
+            .page()
+            .expect("Frame::locator() called before set_page(); call page.main_frame() first");
+        crate::protocol::Locator::new(Arc::new(self.clone()), selector.to_string(), page)
+    }
+
+    /// Returns a locator that matches elements containing the given text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-text>
+    pub fn get_by_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_text_selector(text, exact))
+    }
+
+    /// Returns a locator that matches elements by their associated label text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-label>
+    pub fn get_by_label(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_label_selector(
+            text, exact,
+        ))
+    }
+
+    /// Returns a locator that matches elements by their placeholder text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-placeholder>
+    pub fn get_by_placeholder(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_placeholder_selector(
+            text, exact,
+        ))
+    }
+
+    /// Returns a locator that matches elements by their alt text.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-alt-text>
+    pub fn get_by_alt_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_alt_text_selector(
+            text, exact,
+        ))
+    }
+
+    /// Returns a locator that matches elements by their title attribute.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-title>
+    pub fn get_by_title(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_title_selector(
+            text, exact,
+        ))
+    }
+
+    /// Returns a locator that matches elements by their `data-testid` attribute.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-test-id>
+    pub fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_test_id_selector(test_id))
+    }
+
+    /// Returns a locator that matches elements by their ARIA role.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-role>
+    pub fn get_by_role(
+        &self,
+        role: crate::protocol::locator::AriaRole,
+        options: Option<crate::protocol::locator::GetByRoleOptions>,
+    ) -> crate::protocol::Locator {
+        self.locator(&crate::protocol::locator::get_by_role_selector(
+            role, options,
+        ))
     }
 
     /// Returns the channel for sending protocol messages
@@ -1920,6 +2227,12 @@ impl ChannelOwner for Frame {
                             *url = url_str.to_string();
                         }
                     }
+                }
+            }
+            "detached" => {
+                // Mark this frame as detached
+                if let Ok(mut flag) = self.is_detached.write() {
+                    *flag = true;
                 }
             }
             _ => {

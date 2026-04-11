@@ -345,12 +345,19 @@ impl Page {
     /// Returns the main frame of the page.
     ///
     /// The main frame is where navigation and DOM operations actually happen.
+    ///
+    /// This method also wires up the back-reference from the frame to the page so that
+    /// `frame.page()`, `frame.locator()`, and `frame.get_by_*()` work correctly.
     pub async fn main_frame(&self) -> Result<crate::protocol::Frame> {
         // Get and downcast the Frame object from the connection's object registry
         let frame: crate::protocol::Frame = self
             .connection()
             .get_typed::<crate::protocol::Frame>(&self.main_frame_guid)
             .await?;
+
+        // Wire up the back-reference so frame.page() / frame.locator() work.
+        // This is safe to call multiple times (subsequent calls are no-ops once set).
+        frame.set_page(self.clone());
 
         // Cache the frame for synchronous access in url()
         if let Ok(mut cached) = self.cached_main_frame.lock() {

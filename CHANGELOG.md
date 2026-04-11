@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `install_browsers(Some(&["chromium", "firefox"]))` — install specific browsers
   - `install_browsers_with_deps(browsers)` — also installs system dependencies (useful for CI)
   - Reuses the bundled Playwright driver — no `npx` required
+- **Frame public API completion** — Frame now at **100%** coverage
+  - `frame.locator(selector)` — create Locator scoped to a frame (was internal-only)
+  - All 7 `get_by_*` methods (`get_by_text`, `get_by_label`, `get_by_role`, etc.)
+  - `evaluate_handle(expression)` — returns ElementHandle from JS evaluation
+  - `child_frames()` — returns child frames by scanning the connection registry
+  - Properties: `name()`, `page()`, `parent_frame()`, `is_detached()`
+  - `frame.page()` back-reference set lazily when Page accesses its main frame
 - **`FrameLocator` class** — locate elements inside iframes using Playwright's `internal:control=enter-frame` selector engine
   - `page.frame_locator(selector)` / `locator.frame_locator(selector)` — entry points
   - `frame_locator.locator(selector)` — create Locator inside iframe

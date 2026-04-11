@@ -30,6 +30,19 @@ pub trait ConnectionLike: Send + Sync {
 
     /// Get an object by GUID.
     async fn get_object(&self, guid: &str) -> Result<Arc<dyn ChannelOwner>>;
+
+    /// Returns all objects currently registered in the connection's registry.
+    ///
+    /// Used for operations that need to search across all known objects,
+    /// such as finding child frames by matching their `parentFrame` GUID.
+    async fn get_all_objects(&self) -> Vec<Arc<dyn ChannelOwner>>;
+
+    /// Returns all objects currently registered in the connection's registry, synchronously.
+    ///
+    /// This is a synchronous variant for use in non-async contexts such as `child_frames()`.
+    /// Callers that hold a reference to `Arc<dyn ConnectionLike>` can call this without
+    /// needing to enter an async context.
+    fn all_objects_sync(&self) -> Vec<Arc<dyn ChannelOwner>>;
 }
 
 /// Extension trait for typed object retrieval from a connection.
@@ -569,6 +582,14 @@ impl ConnectionLike for Connection {
                 guid
             ))
         })
+    }
+
+    async fn get_all_objects(&self) -> Vec<Arc<dyn ChannelOwner>> {
+        self.objects.lock().values().cloned().collect()
+    }
+
+    fn all_objects_sync(&self) -> Vec<Arc<dyn ChannelOwner>> {
+        self.objects.lock().values().cloned().collect()
     }
 }
 
