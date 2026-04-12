@@ -54,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **15 broken rustdoc links** — all intra-doc links now resolve correctly (qualified paths for cross-module references)
 - **unwrap() audit (closes #48)** — replaced bare `unwrap()` calls in library code with `expect()` (for infallible operations) or proper error handling (for protocol data). Remaining `unwrap()` calls are only mutex locks (`lock().unwrap()`) and test code.
+- **`ConsoleMessage` class** — captures JavaScript console output (`console.log`, `console.error`, etc.)
+  - `type_()`, `text()`, `location()`, `page()` properties
+  - `ConsoleMessageLocation` with url, line_number, column_number
+  - `page.on_console(handler)` — page-level console event handler
+  - `context.on_console(handler)` — context-level handler (fires for all pages)
+  - Lazy subscription via `updateSubscription("console", true)`
 
 ### Changed
 

@@ -121,6 +121,13 @@ type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Sen
 /// Context-level dialog event handler
 type DialogHandler = Arc<dyn Fn(crate::protocol::Dialog) -> DialogHandlerFuture + Send + Sync>;
 
+/// Type alias for boxed console handler future
+type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Context-level console event handler
+type ConsoleHandler =
+    Arc<dyn Fn(crate::protocol::ConsoleMessage) -> ConsoleHandlerFuture + Send + Sync>;
+
 /// Binding callback: receives deserialized JS args, returns a JSON value
 type BindingCallback = Arc<dyn Fn(Vec<serde_json::Value>) -> BindingCallbackFuture + Send + Sync>;
 
@@ -168,6 +175,8 @@ pub struct BrowserContext {
     dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
     /// Registered binding callbacks keyed by name (for expose_function / expose_binding)
     binding_callbacks: Arc<Mutex<HashMap<String, BindingCallback>>>,
+    /// Context-level console event handlers
+    console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
 }
 
 impl BrowserContext {
@@ -241,6 +250,7 @@ impl BrowserContext {
             close_waiters: Arc::new(Mutex::new(Vec::new())),
             dialog_handlers: Arc::new(Mutex::new(Vec::new())),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
+            console_handlers: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -1012,6 +1022,39 @@ impl BrowserContext {
         Ok(())
     }
 
+    /// Registers a context-level console event handler.
+    ///
+    /// The handler fires for any console message emitted by any page in this context.
+    /// Context-level handlers fire before page-level handlers.
+    ///
+    /// The server only sends console events after the first handler is registered
+    /// (subscription is managed automatically per context channel).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the [`ConsoleMessage`](crate::protocol::ConsoleMessage)
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-console>
+    pub async fn on_console<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::ConsoleMessage) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |msg: crate::protocol::ConsoleMessage| -> ConsoleHandlerFuture {
+                Box::pin(handler(msg))
+            },
+        );
+
+        let needs_subscription = self.console_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("console", true).await;
+        }
+        self.console_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
     /// Exposes a Rust function to every page in this browser context as
     /// `window[name]` in JavaScript.
     ///
@@ -1601,6 +1644,88 @@ impl ChannelOwner for BrowserContext {
                         BrowserContext::on_route_event(route_handlers, route).await;
                     });
                 }
+            }
+            "console" => {
+                // Console events are sent to BrowserContext.
+                // Construct ConsoleMessage from params, dispatch to context-level handlers,
+                // then forward to the Page's on_console handlers.
+                //
+                // Event params format:
+                // {
+                //   type: "log"|"error"|"warning"|...,
+                //   text: "rendered text",
+                //   location: { url: "...", lineNumber: N, columnNumber: N },
+                //   page: { guid: "page@..." },
+                //   args: [ ... ]   -- JSHandle refs, ignored (JSHandle not yet implemented)
+                // }
+                let type_ = params
+                    .get("type")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("log")
+                    .to_string();
+                let text = params
+                    .get("text")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let loc_url = params
+                    .get("location")
+                    .and_then(|v| v.get("url"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let loc_line = params
+                    .get("location")
+                    .and_then(|v| v.get("lineNumber"))
+                    .and_then(|v| v.as_i64())
+                    .unwrap_or(0) as i32;
+                let loc_col = params
+                    .get("location")
+                    .and_then(|v| v.get("columnNumber"))
+                    .and_then(|v| v.as_i64())
+                    .unwrap_or(0) as i32;
+                let page_guid_owned = params
+                    .get("page")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+
+                let connection = self.connection();
+                let ctx_console_handlers = self.console_handlers.clone();
+
+                tokio::spawn(async move {
+                    use crate::protocol::console_message::{
+                        ConsoleMessage, ConsoleMessageLocation,
+                    };
+
+                    // Optionally resolve the page back-reference
+                    let page = if let Some(ref guid) = page_guid_owned {
+                        connection.get_typed::<Page>(guid).await.ok()
+                    } else {
+                        None
+                    };
+
+                    let location = ConsoleMessageLocation {
+                        url: loc_url,
+                        line_number: loc_line,
+                        column_number: loc_col,
+                    };
+
+                    let msg = ConsoleMessage::new(type_, text, location, page.clone());
+
+                    // Dispatch to context-level handlers first
+                    let ctx_handlers = ctx_console_handlers.lock().unwrap().clone();
+                    for handler in ctx_handlers {
+                        if let Err(e) = handler(msg.clone()).await {
+                            tracing::warn!("Context console handler error: {}", e);
+                        }
+                    }
+
+                    // Forward to page-level handlers
+                    if let Some(p) = page {
+                        p.trigger_console_event(msg).await;
+                    }
+                });
             }
             _ => {
                 // Other events will be handled in future phases

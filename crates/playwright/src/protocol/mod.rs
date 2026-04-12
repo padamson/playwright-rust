@@ -21,6 +21,7 @@ pub mod browser_context;
 pub mod browser_type;
 pub mod cdp_session;
 pub mod click;
+pub mod console_message;
 pub mod dialog;
 pub mod download;
 pub mod drag_to;
@@ -65,6 +66,7 @@ pub use browser_context::{
 pub use browser_type::BrowserType;
 pub use cdp_session::CDPSession;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};
+pub use console_message::{ConsoleMessage, ConsoleMessageLocation};
 pub use dialog::Dialog;
 pub use download::Download;
 pub use drag_to::{DragToOptions, DragToOptionsBuilder};

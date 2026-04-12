@@ -18,6 +18,7 @@ mod cdp_tracing;
 mod checkbox;
 mod click_options;
 mod connection;
+mod console_message;
 mod context_events;
 mod context_route;
 mod context_runtime_setters;

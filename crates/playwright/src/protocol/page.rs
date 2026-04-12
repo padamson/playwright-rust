@@ -212,6 +212,8 @@ pub struct Page {
     default_navigation_timeout_ms: Arc<AtomicU64>,
     /// Page-level binding callbacks registered via expose_function / expose_binding
     binding_callbacks: Arc<Mutex<HashMap<String, PageBindingCallback>>>,
+    /// Console event handlers
+    console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -253,6 +255,13 @@ type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Sen
 
 /// WebSocket event handler
 type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed console handler future
+type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Console event handler
+type ConsoleHandler =
+    Arc<dyn Fn(crate::protocol::ConsoleMessage) -> ConsoleHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed page-level binding callback future
 type PageBindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
@@ -343,6 +352,7 @@ impl Page {
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
+            console_handlers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -1366,6 +1376,39 @@ impl Page {
         Ok(())
     }
 
+    /// Registers a console event handler.
+    ///
+    /// The handler is called whenever the page emits a JavaScript console message
+    /// (e.g. `console.log`, `console.error`, `console.warn`, etc.).
+    ///
+    /// The server only sends console events after the first handler is registered
+    /// (subscription is managed automatically).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the [`ConsoleMessage`](crate::protocol::ConsoleMessage)
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-console>
+    pub async fn on_console<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::ConsoleMessage) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |msg: crate::protocol::ConsoleMessage| -> ConsoleHandlerFuture {
+                Box::pin(handler(msg))
+            },
+        );
+
+        let needs_subscription = self.console_handlers.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("console", true).await;
+        }
+        self.console_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
     where
@@ -1648,6 +1691,24 @@ impl Page {
     /// Triggers response event (called by BrowserContext when response events arrive)
     pub(crate) async fn trigger_response_event(&self, response: ResponseObject) {
         self.on_response_event(response).await;
+    }
+
+    /// Triggers console event (called by BrowserContext when console events arrive).
+    ///
+    /// The BrowserContext receives all `"console"` events, constructs the
+    /// [`ConsoleMessage`](crate::protocol::ConsoleMessage), dispatches to
+    /// context-level handlers, then calls this method to forward to page-level handlers.
+    pub(crate) async fn trigger_console_event(&self, msg: crate::protocol::ConsoleMessage) {
+        self.on_console_event(msg).await;
+    }
+
+    async fn on_console_event(&self, msg: crate::protocol::ConsoleMessage) {
+        let handlers = self.console_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(msg.clone()).await {
+                tracing::warn!("Console handler error: {}", e);
+            }
+        }
     }
 
     /// Adds a `<style>` tag into the page with the desired content.
