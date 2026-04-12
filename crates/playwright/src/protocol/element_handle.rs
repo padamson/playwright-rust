@@ -125,6 +125,54 @@ impl ElementHandle {
         Ok(response.value)
     }
 
+    /// Sets files on this element (which must be an `<input type="file">`).
+    ///
+    /// Called by [`FileChooser::set_files`](crate::protocol::FileChooser::set_files) to
+    /// satisfy a file chooser dialog by setting files directly on the element.
+    ///
+    /// # Arguments
+    ///
+    /// * `files` - Slice of file paths to set on the input element
+    ///
+    /// See: <https://playwright.dev/docs/api/class-filechooser#file-chooser-set-files>
+    pub(crate) async fn set_input_files(
+        &self,
+        files: &[std::path::PathBuf],
+    ) -> crate::error::Result<()> {
+        use base64::{Engine as _, engine::general_purpose};
+
+        let payloads: Vec<serde_json::Value> = files
+            .iter()
+            .map(|path| {
+                let name = path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| "file".to_string());
+                let mime_type = mime_guess::from_path(path)
+                    .first_or_octet_stream()
+                    .to_string();
+                let buffer = std::fs::read(path).unwrap_or_default();
+                let b64 = general_purpose::STANDARD.encode(&buffer);
+                serde_json::json!({
+                    "name": name,
+                    "mimeType": mime_type,
+                    "buffer": b64
+                })
+            })
+            .collect();
+
+        self.base
+            .channel()
+            .send_no_result(
+                "setInputFiles",
+                serde_json::json!({
+                    "payloads": payloads,
+                    "timeout": crate::DEFAULT_TIMEOUT_MS
+                }),
+            )
+            .await
+    }
+
     /// Scrolls this element into the viewport if it is not already visible.
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-scroll-into-view-if-needed>

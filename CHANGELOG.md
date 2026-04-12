@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`ConsoleMessage` class** — captures JavaScript console output (`console.log`, `console.error`, etc.)
+  - `type_()`, `text()`, `location()`, `page()` properties
+  - `ConsoleMessageLocation` with url, line_number, column_number
+  - `page.on_console(handler)` — page-level console event handler
+  - `context.on_console(handler)` — context-level handler (fires for all pages)
+  - Lazy subscription via `updateSubscription("console", true)`
+- **`FileChooser` class** — handle file upload dialogs triggered by `<input type="file">`
+  - `page()`, `element()`, `is_multiple()` properties
+  - `set_files(files)` — set files on the input element
+  - `page.on_filechooser(handler)` — event handler
+  - `page.expect_file_chooser(timeout)` — returns `EventWaiter<FileChooser>`
+
+### Fixed
+
+- **unwrap() audit (closes #48)** — replaced bare `unwrap()` calls in library code with `expect()` (for infallible operations) or proper error handling (for protocol data). Remaining `unwrap()` calls are only mutex locks (`lock().unwrap()`) and test code.
+- **15 broken rustdoc links** — all intra-doc links now resolve correctly (qualified paths for cross-module references)
+
 ## [0.10.0] - 2026-04-11
 
 ### Added
@@ -49,17 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **MSRV bumped from 1.85 to 1.88** — transitive dependencies (`icu_*`, `image`, `time`, `zip`) now require Rust 1.88
 - **`ConnectionLike` trait uses `#[async_trait]`** — methods migrated from manual `Pin<Box<dyn Future>>` returns to idiomatic `async fn`. Any code implementing `ConnectionLike` directly must update method signatures (internal server infrastructure, not user-facing API).
-
-### Fixed
-
-- **15 broken rustdoc links** — all intra-doc links now resolve correctly (qualified paths for cross-module references)
-- **unwrap() audit (closes #48)** — replaced bare `unwrap()` calls in library code with `expect()` (for infallible operations) or proper error handling (for protocol data). Remaining `unwrap()` calls are only mutex locks (`lock().unwrap()`) and test code.
-- **`ConsoleMessage` class** — captures JavaScript console output (`console.log`, `console.error`, etc.)
-  - `type_()`, `text()`, `location()`, `page()` properties
-  - `ConsoleMessageLocation` with url, line_number, column_number
-  - `page.on_console(handler)` — page-level console event handler
-  - `context.on_console(handler)` — context-level handler (fires for all pages)
-  - Lazy subscription via `updateSubscription("console", true)`
 
 ### Changed
 

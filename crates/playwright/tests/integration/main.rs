@@ -26,6 +26,7 @@ mod downloads_dialogs;
 mod element_handle;
 mod evaluate;
 mod expose_binding;
+mod file_chooser;
 mod frame_api;
 mod frame_locator;
 mod initialization;

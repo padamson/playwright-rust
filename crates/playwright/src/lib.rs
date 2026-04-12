@@ -237,6 +237,9 @@ pub use protocol::EventWaiter;
 // Re-export ConsoleMessage types
 pub use protocol::{ConsoleMessage, ConsoleMessageLocation};
 
+// Re-export FileChooser
+pub use protocol::FileChooser;
+
 // Re-export routing types
 pub use protocol::{FetchOptions, FetchResponse, FulfillOptions, Route, UnrouteBehavior};
 

@@ -214,6 +214,11 @@ pub struct Page {
     binding_callbacks: Arc<Mutex<HashMap<String, PageBindingCallback>>>,
     /// Console event handlers
     console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
+    /// FileChooser event handlers
+    filechooser_handlers: Arc<Mutex<Vec<FileChooserHandler>>>,
+    /// One-shot senders waiting for the next "fileChooser" event (expect_file_chooser)
+    filechooser_waiters:
+        Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::FileChooser>>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -262,6 +267,13 @@ type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 /// Console event handler
 type ConsoleHandler =
     Arc<dyn Fn(crate::protocol::ConsoleMessage) -> ConsoleHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed filechooser handler future
+type FileChooserHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// FileChooser event handler
+type FileChooserHandler =
+    Arc<dyn Fn(crate::protocol::FileChooser) -> FileChooserHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed page-level binding callback future
 type PageBindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
@@ -353,6 +365,8 @@ impl Page {
             )),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
             console_handlers: Arc::new(Mutex::new(Vec::new())),
+            filechooser_handlers: Arc::new(Mutex::new(Vec::new())),
+            filechooser_waiters: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -1409,6 +1423,107 @@ impl Page {
         Ok(())
     }
 
+    /// Registers a handler for file chooser events.
+    ///
+    /// The handler is called whenever the page opens a file chooser dialog
+    /// (e.g. when the user clicks an `<input type="file">` element).
+    ///
+    /// Use [`FileChooser::set_files`](crate::protocol::FileChooser::set_files) inside
+    /// the handler to satisfy the file chooser without OS-level interaction.
+    ///
+    /// The server only sends `"fileChooser"` events after the first handler is
+    /// registered (subscription is managed automatically via `updateSubscription`).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives a [`FileChooser`](crate::protocol::FileChooser)
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// page.on_filechooser(|chooser| async move {
+    ///     chooser.set_files(&[std::path::PathBuf::from("/tmp/file.txt")]).await
+    /// }).await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-file-chooser>
+    pub async fn on_filechooser<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::FileChooser) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |chooser: crate::protocol::FileChooser| -> FileChooserHandlerFuture {
+                Box::pin(handler(chooser))
+            },
+        );
+
+        let needs_subscription = {
+            let handlers = self.filechooser_handlers.lock().unwrap();
+            let waiters = self.filechooser_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
+        if needs_subscription {
+            _ = self
+                .channel()
+                .update_subscription("fileChooser", true)
+                .await;
+        }
+        self.filechooser_handlers.lock().unwrap().push(handler);
+
+        Ok(())
+    }
+
+    /// Creates a one-shot waiter that resolves when the next file chooser opens.
+    ///
+    /// The waiter **must** be created before the action that triggers the file
+    /// chooser to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the file chooser
+    /// does not open within the timeout.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Set up waiter BEFORE triggering the file chooser
+    /// let waiter = page.expect_file_chooser(None).await?;
+    /// page.locator("input[type=file]").await.click(None).await?;
+    /// let chooser = waiter.wait().await?;
+    /// chooser.set_files(&[PathBuf::from("/tmp/file.txt")]).await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_file_chooser(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<crate::protocol::FileChooser>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+
+        let needs_subscription = {
+            let handlers = self.filechooser_handlers.lock().unwrap();
+            let waiters = self.filechooser_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
+        if needs_subscription {
+            _ = self
+                .channel()
+                .update_subscription("fileChooser", true)
+                .await;
+        }
+        self.filechooser_waiters.lock().unwrap().push(tx);
+
+        Ok(crate::protocol::EventWaiter::new(
+            rx,
+            timeout.or(Some(30_000.0)),
+        ))
+    }
+
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
     where
@@ -1708,6 +1823,22 @@ impl Page {
             if let Err(e) = handler(msg.clone()).await {
                 tracing::warn!("Console handler error: {}", e);
             }
+        }
+    }
+
+    /// Dispatches a FileChooser event to registered handlers and one-shot waiters.
+    async fn on_filechooser_event(&self, chooser: crate::protocol::FileChooser) {
+        // Dispatch to persistent handlers
+        let handlers = self.filechooser_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(chooser.clone()).await {
+                tracing::warn!("FileChooser handler error: {}", e);
+            }
+        }
+
+        // Notify the first expect_file_chooser() waiter (FIFO order)
+        if let Some(tx) = self.filechooser_waiters.lock().unwrap().pop() {
+            let _ = tx.send(chooser);
         }
     }
 
@@ -2411,6 +2542,48 @@ impl ChannelOwner for Page {
                         if let Err(e) = binding_call.resolve(serialized).await {
                             tracing::warn!("Failed to resolve BindingCall '{}': {}", name, e);
                         }
+                    });
+                }
+            }
+            "fileChooser" => {
+                // FileChooser event: sent when an <input type="file"> is interacted with.
+                // Event params: {element: {guid: "..."}, isMultiple: bool}
+                let is_multiple = params
+                    .get("isMultiple")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+
+                if let Some(element_guid) = params
+                    .get("element")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let element_guid_owned = element_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let element: crate::protocol::ElementHandle = match connection
+                            .get_typed::<crate::protocol::ElementHandle>(&element_guid_owned)
+                            .await
+                        {
+                            Ok(e) => e,
+                            Err(err) => {
+                                tracing::warn!(
+                                    "Failed to get ElementHandle for fileChooser: {}",
+                                    err
+                                );
+                                return;
+                            }
+                        };
+
+                        let chooser = crate::protocol::FileChooser::new(
+                            self_clone.clone(),
+                            std::sync::Arc::new(element),
+                            is_multiple,
+                        );
+
+                        self_clone.on_filechooser_event(chooser).await;
                     });
                 }
             }
