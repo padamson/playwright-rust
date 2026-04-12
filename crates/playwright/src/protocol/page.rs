@@ -734,13 +734,18 @@ impl Page {
         .await
     }
 
-    /// Returns a locator that matches elements by their `data-testid` attribute.
+    /// Returns a locator that matches elements by their test ID attribute.
+    ///
+    /// By default, uses the `data-testid` attribute. Call
+    /// [`playwright.selectors().set_test_id_attribute()`](crate::protocol::Selectors::set_test_id_attribute)
+    /// to change the attribute name.
     ///
     /// Always uses exact matching (case-sensitive).
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-test-id>
     pub async fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_test_id_selector(test_id))
+        let attr = self.connection().selectors().test_id_attribute();
+        self.locator(&crate::protocol::locator::get_by_test_id_selector_with_attr(test_id, &attr))
             .await
     }
 

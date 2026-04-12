@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `set_files(files)` — set files on the input element
   - `page.on_filechooser(handler)` — event handler
   - `page.expect_file_chooser(timeout)` — returns `EventWaiter<FileChooser>`
+- **`Selectors` class** — custom selector engines and test ID configuration
+  - `playwright.selectors().register(name, script)` — register custom selector engine
+  - `playwright.selectors().set_test_id_attribute(attr)` — change `get_by_test_id` attribute (default: `data-testid`)
+  - Auto-propagates to all active BrowserContexts and new contexts
+
+### Breaking Changes
+
+- **`ConnectionLike` trait gains `selectors()` method** — internal server infrastructure, not user-facing API. Any code implementing `ConnectionLike` directly must add the new method.
 
 ### Fixed
 

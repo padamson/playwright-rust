@@ -260,6 +260,9 @@ impl BrowserContext {
             _ = channel.update_subscription("dialog", true).await;
         });
 
+        // Note: Selectors registration is done by the caller (e.g. Browser::new_context())
+        // after this object is returned, so that add_context() can be awaited properly.
+
         Ok(context)
     }
 
@@ -476,6 +479,10 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-close>
     pub async fn close(&self) -> Result<()> {
+        // Unregister from Selectors coordinator so closed channels are not sent future messages.
+        let selectors = self.connection().selectors();
+        selectors.remove_context(self.channel());
+
         // Send close RPC to server
         self.channel()
             .send_no_result("close", serde_json::json!({}))

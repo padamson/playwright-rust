@@ -2,7 +2,7 @@
 /target/
 **/*.rs.bk
 *.pdb
-Cargo.lock
+# Cargo.lock is committed for CI reproducibility (cargo vet requires exact versions)
 
 # Playwright drivers (downloaded at build time)
 /drivers/

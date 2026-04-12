@@ -185,6 +185,13 @@ impl Browser {
             .get_typed::<BrowserContext>(&response.context.guid)
             .await?;
 
+        // Register new context with the Selectors coordinator so custom selector
+        // engines and test ID attribute changes are applied to it.
+        let selectors = self.connection().selectors();
+        if let Err(e) = selectors.add_context(context.channel().clone()).await {
+            tracing::warn!("Failed to register BrowserContext with Selectors: {}", e);
+        }
+
         Ok(context)
     }
 
@@ -259,6 +266,12 @@ impl Browser {
             .connection()
             .get_typed::<BrowserContext>(&response.context.guid)
             .await?;
+
+        // Register new context with the Selectors coordinator.
+        let selectors = self.connection().selectors();
+        if let Err(e) = selectors.add_context(context.channel().clone()).await {
+            tracing::warn!("Failed to register BrowserContext with Selectors: {}", e);
+        }
 
         Ok(context)
     }

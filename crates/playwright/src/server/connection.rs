@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::sync::Mutex as TokioMutex;
 use tokio::sync::{mpsc, oneshot};
 
+use crate::protocol::selectors::Selectors;
 use crate::server::channel_owner::ChannelOwner;
 
 /// Trait defining the interface that ChannelOwner needs from a Connection.
@@ -43,6 +44,13 @@ pub trait ConnectionLike: Send + Sync {
     /// Callers that hold a reference to `Arc<dyn ConnectionLike>` can call this without
     /// needing to enter an async context.
     fn all_objects_sync(&self) -> Vec<Arc<dyn ChannelOwner>>;
+
+    /// Returns the shared Selectors coordinator for this connection.
+    ///
+    /// Selectors is a pure client-side object that tracks custom selector
+    /// engine registrations and the test ID attribute, propagating them to
+    /// all BrowserContext instances.
+    fn selectors(&self) -> Arc<Selectors>;
 }
 
 /// Extension trait for typed object retrieval from a connection.
@@ -215,6 +223,11 @@ pub struct Connection {
     message_rx: Arc<TokioMutex<Option<mpsc::UnboundedReceiver<Value>>>>,
     transport_receiver: Arc<TokioMutex<Option<Box<dyn TransportReceiver>>>>,
     objects: Arc<ParkingLotMutex<ObjectRegistry>>,
+    /// Shared Selectors coordinator for this connection.
+    ///
+    /// Selectors is a client-side object; it is created once per Connection and
+    /// wired into every BrowserContext that is created on this connection.
+    selectors: Arc<Selectors>,
 }
 
 // Type alias for compatibility (though generic parameters are gone, we can keep alias if needed)
@@ -233,6 +246,7 @@ impl Connection {
             message_rx: Arc::new(TokioMutex::new(Some(message_rx))),
             transport_receiver: Arc::new(TokioMutex::new(Some(Box::new(receiver)))),
             objects: Arc::new(ParkingLotMutex::new(HashMap::new())),
+            selectors: Arc::new(Selectors::new()),
         }
     }
 
@@ -590,6 +604,10 @@ impl ConnectionLike for Connection {
 
     fn all_objects_sync(&self) -> Vec<Arc<dyn ChannelOwner>> {
         self.objects.lock().values().cloned().collect()
+    }
+
+    fn selectors(&self) -> Arc<Selectors> {
+        Arc::clone(&self.selectors)
     }
 }
 

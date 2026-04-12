@@ -405,6 +405,12 @@ impl BrowserType {
             .get_typed::<BrowserContext>(&response.context.guid)
             .await?;
 
+        // Register with Selectors coordinator
+        let selectors = self.connection().selectors();
+        if let Err(e) = selectors.add_context(context.channel().clone()).await {
+            tracing::warn!("Failed to register BrowserContext with Selectors: {}", e);
+        }
+
         Ok(context)
     }
     /// Connects to an existing browser instance.

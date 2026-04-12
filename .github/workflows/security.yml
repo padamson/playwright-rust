@@ -53,9 +53,6 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Generate lockfile
-      run: cargo generate-lockfile
-
     - name: Install cargo-vet
       run: cargo install cargo-vet
 

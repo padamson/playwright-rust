@@ -46,6 +46,7 @@ pub mod root;
 pub mod route;
 pub mod screenshot;
 pub mod select_option;
+pub mod selectors;
 pub mod tap;
 pub mod tracing;
 pub mod wait_for;
@@ -99,6 +100,7 @@ pub use route::{
 };
 pub use screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 pub use select_option::SelectOption;
+pub use selectors::Selectors;
 pub use tap::{TapOptions, TapOptionsBuilder};
 pub use tracing::{Tracing, TracingStartOptions, TracingStopOptions};
 pub use wait_for::{WaitForOptions, WaitForOptionsBuilder, WaitForState};

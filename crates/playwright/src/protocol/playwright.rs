@@ -9,6 +9,7 @@
 
 use crate::error::Result;
 use crate::protocol::BrowserType;
+use crate::protocol::selectors::Selectors;
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::server::connection::{ConnectionExt, ConnectionLike};
@@ -154,6 +155,9 @@ impl Playwright {
     ///   "webkit": { "guid": "browserType@webkit" }
     /// }
     /// ```
+    ///
+    /// Note: `Selectors` is a pure client-side coordinator, not a protocol object.
+    /// It is created fresh here rather than looked up from the registry.
     pub async fn new(
         connection: Arc<dyn ConnectionLike>,
         type_name: String,
@@ -186,11 +190,14 @@ impl Playwright {
             )
         })?;
 
-        // Get BrowserType objects from connection registry and downcast
-        // Note: These objects should already exist (created by earlier __create__ messages)
+        // Get BrowserType objects from connection registry and downcast.
+        // Note: These objects should already exist (created by earlier __create__ messages).
         let chromium: BrowserType = connection.get_typed::<BrowserType>(chromium_guid).await?;
         let firefox: BrowserType = connection.get_typed::<BrowserType>(firefox_guid).await?;
         let webkit: BrowserType = connection.get_typed::<BrowserType>(webkit_guid).await?;
+
+        // Selectors is a pure client-side coordinator stored in the connection.
+        // No need to create or store it here; access it via self.connection().selectors().
 
         Ok(Self {
             base,
@@ -214,6 +221,30 @@ impl Playwright {
     /// Returns the WebKit browser type.
     pub fn webkit(&self) -> &BrowserType {
         &self.webkit
+    }
+
+    /// Returns the Selectors object for registering custom selector engines.
+    ///
+    /// The Selectors instance is shared across all browser contexts created on this
+    /// connection. Register custom selector engines here before creating any pages
+    /// that will use them.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let selectors = playwright.selectors();
+    /// selectors.set_test_id_attribute("data-custom-id").await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-playwright#playwright-selectors>
+    pub fn selectors(&self) -> std::sync::Arc<Selectors> {
+        self.connection().selectors()
     }
 
     /// Shuts down the Playwright server gracefully.
@@ -332,6 +363,7 @@ impl std::fmt::Debug for Playwright {
             .field("chromium", &self.chromium().name())
             .field("firefox", &self.firefox().name())
             .field("webkit", &self.webkit().name())
+            .field("selectors", &*self.selectors())
             .finish()
     }
 }

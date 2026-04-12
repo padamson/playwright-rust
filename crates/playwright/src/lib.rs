@@ -191,6 +191,7 @@ pub use assertions::{
 // Re-export Playwright main entry point and browser API
 pub use protocol::{
     Browser, BrowserContext, BrowserType, FrameLocator, HeaderEntry, Page, Playwright, Response,
+    Selectors,
 };
 
 // Re-export Request and related types

@@ -347,11 +347,16 @@ impl Frame {
         ))
     }
 
-    /// Returns a locator that matches elements by their `data-testid` attribute.
+    /// Returns a locator that matches elements by their test ID attribute.
+    ///
+    /// By default, uses the `data-testid` attribute. Call
+    /// `playwright.selectors().set_test_id_attribute()` to change the attribute name.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-test-id>
     pub fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_test_id_selector(test_id))
+        use crate::server::channel_owner::ChannelOwner;
+        let attr = self.connection().selectors().test_id_attribute();
+        self.locator(&crate::protocol::locator::get_by_test_id_selector_with_attr(test_id, &attr))
     }
 
     /// Returns a locator that matches elements by their ARIA role.

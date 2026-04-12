@@ -124,8 +124,16 @@ pub(crate) fn get_by_title_selector(text: &str, exact: bool) -> String {
 /// Uses `data-testid` attribute by default (matching Playwright's default).
 /// Always uses exact matching (`s` suffix).
 pub(crate) fn get_by_test_id_selector(test_id: &str) -> String {
+    get_by_test_id_selector_with_attr(test_id, "data-testid")
+}
+
+/// Builds the internal selector string for `get_by_test_id` with a custom attribute.
+///
+/// Used when `playwright.selectors().set_test_id_attribute()` has been called.
+pub(crate) fn get_by_test_id_selector_with_attr(test_id: &str, attribute: &str) -> String {
     format!(
-        "internal:testid=[data-testid={}]",
+        "internal:testid=[{}={}]",
+        attribute,
         escape_for_selector(test_id, true)
     )
 }
@@ -670,13 +678,18 @@ impl Locator {
         self.locator(&get_by_title_selector(text, exact))
     }
 
-    /// Returns a locator that matches elements by their `data-testid` attribute.
+    /// Returns a locator that matches elements by their test ID attribute.
+    ///
+    /// By default, uses the `data-testid` attribute. Call
+    /// `playwright.selectors().set_test_id_attribute()` to change the attribute name.
     ///
     /// Always uses exact matching (case-sensitive).
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-get-by-test-id>
     pub fn get_by_test_id(&self, test_id: &str) -> Locator {
-        self.locator(&get_by_test_id_selector(test_id))
+        use crate::server::channel_owner::ChannelOwner as _;
+        let attr = self.frame.connection().selectors().test_id_attribute();
+        self.locator(&get_by_test_id_selector_with_attr(test_id, &attr))
     }
 
     /// Returns a locator that matches elements by their ARIA role.

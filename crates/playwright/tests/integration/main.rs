@@ -52,6 +52,7 @@ mod route_fetch;
 mod screenshot;
 mod scripts_styles;
 mod select_upload;
+mod selectors;
 mod stability;
 mod storage_state;
 mod transport;
