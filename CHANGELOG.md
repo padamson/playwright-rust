@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Browser methods** — `contexts()`, `browser_type()`, `on_disconnected(handler)`, `start_tracing(options)` / `stop_tracing()`
+
 - **`ConsoleMessage` class** — captures JavaScript console output (`console.log`, `console.error`, etc.)
   - `type_()`, `text()`, `location()`, `page()` properties
   - `ConsoleMessageLocation` with url, line_number, column_number

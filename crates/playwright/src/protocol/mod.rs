@@ -59,7 +59,7 @@ pub use action_options::{
 pub use android::Android;
 pub use api_request_context::APIRequestContext;
 pub use binding_call::BindingCall;
-pub use browser::Browser;
+pub use browser::{Browser, StartTracingOptions};
 pub use browser_context::{
     BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, ClearCookiesOptions,
     Cookie, Geolocation, GrantPermissionsOptions, LocalStorageItem, Origin, RecordHar, RecordVideo,

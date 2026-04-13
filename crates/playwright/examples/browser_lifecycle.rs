@@ -18,15 +18,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Firefox: {} {}", firefox.name(), firefox.version());
     println!("  WebKit: {} {}", webkit.name(), webkit.version());
 
+    // browser_type() back-reference
+    println!(
+        "\nChromium browser_type: {}",
+        chromium.browser_type().name()
+    );
+
     // Create isolated browser contexts (like incognito windows)
     let context1 = chromium.new_context().await?;
     let context2 = chromium.new_context().await?;
+
+    // contexts() lists all open contexts
+    println!("Open contexts: {}", chromium.contexts().len());
 
     // Each context can have multiple pages
     let page1 = context1.new_page().await?;
     let page2 = context2.new_page().await?;
 
-    // Navigate to different sites in each context
     page1.goto("https://example.com", None).await?;
     page2.goto("https://www.rust-lang.org", None).await?;
 

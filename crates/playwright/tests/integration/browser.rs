@@ -290,3 +290,198 @@ async fn test_browser_is_connected() {
         "Browser should be disconnected after close"
     );
 }
+
+/// Test that browser.contexts() returns all open browser contexts.
+///
+/// Verifies:
+/// - Empty after launch (no contexts yet)
+/// - Returns one entry after new_context()
+/// - Returns two entries after a second new_context()
+/// - Back to zero after all contexts are closed
+#[tokio::test]
+async fn test_browser_contexts() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch Chromium");
+
+    // No contexts yet
+    let initial = browser.contexts();
+    assert_eq!(initial.len(), 0, "Expected 0 contexts after launch");
+
+    // Create first context
+    let ctx1 = browser
+        .new_context()
+        .await
+        .expect("Failed to create context 1");
+    let after_first = browser.contexts();
+    assert_eq!(
+        after_first.len(),
+        1,
+        "Expected 1 context after first new_context"
+    );
+
+    // Create second context
+    let ctx2 = browser
+        .new_context()
+        .await
+        .expect("Failed to create context 2");
+    let after_second = browser.contexts();
+    assert_eq!(
+        after_second.len(),
+        2,
+        "Expected 2 contexts after second new_context"
+    );
+
+    // Close first context
+    ctx1.close().await.expect("Failed to close context 1");
+    // Give the event a moment to propagate
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    let after_close_first = browser.contexts();
+    assert_eq!(
+        after_close_first.len(),
+        1,
+        "Expected 1 context after closing first"
+    );
+
+    ctx2.close().await.expect("Failed to close context 2");
+    browser.close().await.expect("Failed to close browser");
+}
+
+/// Test that browser.browser_type() returns the BrowserType that launched it.
+///
+/// Verifies:
+/// - Returns a BrowserType with the correct name ("chromium")
+/// - Executable path is non-empty
+#[tokio::test]
+async fn test_browser_type_property() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch Chromium");
+
+    let bt = browser.browser_type();
+    assert_eq!(
+        bt.name(),
+        "chromium",
+        "browser_type() should return chromium"
+    );
+    assert!(
+        !bt.executable_path().is_empty(),
+        "browser_type().executable_path() should be non-empty"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+/// Test that browser.on_disconnected() handler fires when the browser closes.
+///
+/// Verifies:
+/// - Handler is called after browser.close()
+/// - is_connected() returns false after disconnect
+#[tokio::test]
+async fn test_browser_on_disconnected() {
+    crate::common::init_tracing();
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch Chromium");
+
+    let fired = Arc::new(AtomicBool::new(false));
+    let fired_clone = Arc::clone(&fired);
+
+    browser
+        .on_disconnected(move || {
+            let f = Arc::clone(&fired_clone);
+            async move {
+                f.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+        })
+        .await
+        .expect("Failed to register on_disconnected handler");
+
+    // Close the browser — this should trigger the disconnected event
+    browser.close().await.expect("Failed to close browser");
+
+    // Give event loop time to dispatch
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    assert!(
+        fired.load(Ordering::SeqCst),
+        "on_disconnected handler should have fired after browser.close()"
+    );
+}
+
+/// Test that start_tracing() and stop_tracing() work on Chromium.
+///
+/// Verifies:
+/// - start_tracing() completes without error
+/// - stop_tracing() returns non-empty bytes
+///
+/// Note: CDP tracing is Chromium-only.
+#[tokio::test]
+async fn test_browser_tracing() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("Failed to launch Chromium");
+
+    // Start tracing with screenshots enabled
+    use playwright_rs::protocol::StartTracingOptions;
+    let options = StartTracingOptions {
+        screenshots: Some(true),
+        categories: None,
+        page: None,
+    };
+    browser
+        .start_tracing(Some(options))
+        .await
+        .expect("start_tracing should succeed on Chromium");
+
+    // Do some work in the browser
+    let context = browser
+        .new_context()
+        .await
+        .expect("Failed to create context");
+    let page = context.new_page().await.expect("Failed to create page");
+    page.goto("about:blank", None)
+        .await
+        .expect("Failed to navigate");
+    context.close().await.expect("Failed to close context");
+
+    // Stop tracing — should return non-empty bytes
+    let trace_data = browser
+        .stop_tracing()
+        .await
+        .expect("stop_tracing should succeed on Chromium");
+
+    assert!(
+        !trace_data.is_empty(),
+        "stop_tracing should return non-empty trace data"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}

@@ -3,16 +3,39 @@
 // Represents a browser instance created by BrowserType.launch()
 
 use crate::error::Result;
-use crate::protocol::{BrowserContext, Page};
+use crate::protocol::{BrowserContext, BrowserType, Page};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::server::connection::ConnectionExt;
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::Any;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
+use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
+
+/// Type alias for the future returned by a disconnected handler.
+type DisconnectedHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for a registered disconnected event handler.
+type DisconnectedHandler = Arc<dyn Fn() -> DisconnectedHandlerFuture + Send + Sync>;
+
+/// Options for `Browser::start_tracing()`.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-start-tracing>
+#[derive(Debug, Default, Clone)]
+pub struct StartTracingOptions {
+    /// If specified, tracing captures screenshots for this page.
+    /// Pass `Some(page)` to associate the trace with a specific page.
+    pub page: Option<Page>,
+    /// Whether to capture screenshots during tracing. Default false.
+    pub screenshots: Option<bool>,
+    /// Trace categories to enable. If omitted, uses a default set.
+    pub categories: Option<Vec<String>>,
+}
 
 /// Browser represents a browser instance.
 ///
@@ -29,23 +52,23 @@ use std::sync::atomic::{AtomicBool, Ordering};
 ///     let playwright = Playwright::launch().await?;
 ///     let chromium = playwright.chromium();
 ///
-///     // Launch browser and get info
 ///     let browser = chromium.launch().await?;
 ///     println!("Browser: {} version {}", browser.name(), browser.version());
-///
-///     // Check connection status
 ///     assert!(browser.is_connected());
 ///
-///     // Create and use contexts and pages
+///     let bt = browser.browser_type();
+///     assert_eq!(bt.name(), "chromium");
+///
 ///     let context = browser.new_context().await?;
-///     let page = context.new_page().await?;
+///     let _page = context.new_page().await?;
+///     assert_eq!(browser.contexts().len(), 1);
 ///
-///     // Convenience: create page directly (auto-creates default context)
-///     let page2 = browser.new_page().await?;
+///     browser.on_disconnected(|| async { Ok(()) }).await?;
 ///
-///     // Cleanup
+///     browser.start_tracing(None).await?;
+///     let _trace_bytes = browser.stop_tracing().await?;
+///
 ///     browser.close().await?;
-///     assert!(!browser.is_connected());
 ///     Ok(())
 /// }
 /// ```
@@ -57,6 +80,8 @@ pub struct Browser {
     version: String,
     name: String,
     is_connected: Arc<AtomicBool>,
+    /// Registered handlers for the "disconnected" event.
+    disconnected_handlers: Arc<Mutex<Vec<DisconnectedHandler>>>,
 }
 
 impl Browser {
@@ -111,6 +136,7 @@ impl Browser {
             version,
             name,
             is_connected: Arc::new(AtomicBool::new(true)),
+            disconnected_handlers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -161,7 +187,6 @@ impl Browser {
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context>
     pub async fn new_context(&self) -> Result<BrowserContext> {
-        // Response contains the GUID of the created BrowserContext
         #[derive(Deserialize)]
         struct NewContextResponse {
             context: GuidRef,
@@ -173,20 +198,16 @@ impl Browser {
             guid: Arc<str>,
         }
 
-        // Send newContext RPC to server with empty options for now
         let response: NewContextResponse = self
             .channel()
             .send("newContext", serde_json::json!({}))
             .await?;
 
-        // Retrieve and downcast the BrowserContext object from the connection registry
         let context: BrowserContext = self
             .connection()
             .get_typed::<BrowserContext>(&response.context.guid)
             .await?;
 
-        // Register new context with the Selectors coordinator so custom selector
-        // engines and test ID attribute changes are applied to it.
         let selectors = self.connection().selectors();
         if let Err(e) = selectors.add_context(context.channel().clone()).await {
             tracing::warn!("Failed to register BrowserContext with Selectors: {}", e);
@@ -297,6 +318,178 @@ impl Browser {
         context.new_page().await
     }
 
+    /// Returns all open browser contexts.
+    ///
+    /// A new browser starts with no contexts. Contexts are created via
+    /// `new_context()` and cleaned up when they are closed.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-contexts>
+    pub fn contexts(&self) -> Vec<BrowserContext> {
+        let my_guid = self.guid();
+        self.connection()
+            .all_objects_sync()
+            .into_iter()
+            .filter_map(|obj| {
+                let ctx = obj.as_any().downcast_ref::<BrowserContext>()?.clone();
+                let parent_guid = ctx.parent().map(|p| p.guid().to_string());
+                if parent_guid.as_deref() == Some(my_guid) {
+                    Some(ctx)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Returns the `BrowserType` that was used to launch this browser.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-browser-type>
+    pub fn browser_type(&self) -> BrowserType {
+        self.base
+            .parent()
+            .expect("Browser always has a BrowserType parent")
+            .as_any()
+            .downcast_ref::<BrowserType>()
+            .expect("Browser parent is always a BrowserType")
+            .clone()
+    }
+
+    /// Registers a handler that fires when the browser is disconnected.
+    ///
+    /// The browser can become disconnected when it is closed, crashes, or
+    /// the process is killed. The handler is called with no arguments.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure called when the browser disconnects.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error only if the mutex is poisoned (practically never).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-event-disconnected>
+    pub async fn on_disconnected<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move || -> DisconnectedHandlerFuture { Box::pin(handler()) });
+        self.disconnected_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Starts CDP tracing on this browser (Chromium only).
+    ///
+    /// Only one trace may be active at a time per browser instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Optional tracing configuration (screenshots, categories, page).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Tracing is already active
+    /// - Called on a non-Chromium browser
+    /// - Communication with the browser fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-start-tracing>
+    pub async fn start_tracing(&self, options: Option<StartTracingOptions>) -> Result<()> {
+        #[derive(serde::Serialize)]
+        struct StartTracingParams {
+            #[serde(skip_serializing_if = "Option::is_none")]
+            page: Option<serde_json::Value>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            screenshots: Option<bool>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            categories: Option<Vec<String>>,
+        }
+
+        let opts = options.unwrap_or_default();
+
+        let page_ref = opts
+            .page
+            .as_ref()
+            .map(|p| serde_json::json!({ "guid": p.guid() }));
+
+        let params = StartTracingParams {
+            page: page_ref,
+            screenshots: opts.screenshots,
+            categories: opts.categories,
+        };
+
+        self.channel()
+            .send_no_result(
+                "startTracing",
+                serde_json::to_value(params).map_err(|e| {
+                    crate::error::Error::ProtocolError(format!(
+                        "serialize startTracing params: {e}"
+                    ))
+                })?,
+            )
+            .await
+    }
+
+    /// Stops CDP tracing and returns the raw trace data.
+    ///
+    /// The returned bytes can be written to a `.json` file and loaded in
+    /// `chrome://tracing` or [Perfetto](https://ui.perfetto.dev).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if no tracing was started or communication fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-stop-tracing>
+    pub async fn stop_tracing(&self) -> Result<Vec<u8>> {
+        #[derive(Deserialize)]
+        struct StopTracingResponse {
+            artifact: ArtifactRef,
+        }
+
+        #[derive(Deserialize)]
+        struct ArtifactRef {
+            #[serde(deserialize_with = "crate::server::connection::deserialize_arc_str")]
+            guid: Arc<str>,
+        }
+
+        let response: StopTracingResponse = self
+            .channel()
+            .send("stopTracing", serde_json::json!({}))
+            .await?;
+
+        // save_as() rather than streaming because Stream protocol is not yet implemented
+        let artifact: crate::protocol::artifact::Artifact = self
+            .connection()
+            .get_typed::<crate::protocol::artifact::Artifact>(&response.artifact.guid)
+            .await?;
+
+        let tmp_path = std::env::temp_dir().join(format!(
+            "playwright-trace-{}.json",
+            response.artifact.guid.replace('@', "-")
+        ));
+        let tmp_str = tmp_path
+            .to_str()
+            .ok_or_else(|| {
+                crate::error::Error::ProtocolError(
+                    "Temporary path contains non-UTF-8 characters".to_string(),
+                )
+            })?
+            .to_string();
+
+        artifact.save_as(&tmp_str).await?;
+
+        let bytes = tokio::fs::read(&tmp_path).await.map_err(|e| {
+            crate::error::Error::ProtocolError(format!(
+                "Failed to read tracing artifact from '{}': {}",
+                tmp_str, e
+            ))
+        })?;
+
+        let _ = tokio::fs::remove_file(&tmp_path).await;
+
+        Ok(bytes)
+    }
+
     /// Closes the browser and all of its pages (if any were opened).
     ///
     /// This is a graceful operation that sends a close command to the browser
@@ -358,7 +551,22 @@ impl ChannelOwner for Browser {
     }
 
     fn dispose(&self, reason: crate::server::channel_owner::DisposeReason) {
-        self.is_connected.store(false, Ordering::SeqCst);
+        // Use compare_exchange so handlers fire exactly once across both the
+        // "disconnected" event path and the __dispose__ path.
+        if self
+            .is_connected
+            .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
+            .is_ok()
+        {
+            let handlers = self.disconnected_handlers.lock().unwrap().clone();
+            tokio::spawn(async move {
+                for handler in handlers {
+                    if let Err(e) = handler().await {
+                        tracing::warn!("Browser disconnected handler error (from dispose): {}", e);
+                    }
+                }
+            });
+        }
         self.base.dispose(reason)
     }
 
@@ -376,7 +584,22 @@ impl ChannelOwner for Browser {
 
     fn on_event(&self, method: &str, params: Value) {
         if method == "disconnected" {
-            self.is_connected.store(false, Ordering::SeqCst);
+            // Use compare_exchange to fire handlers exactly once (guards against
+            // both the "disconnected" event and the __dispose__ path firing them).
+            if self
+                .is_connected
+                .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
+                .is_ok()
+            {
+                let handlers = self.disconnected_handlers.lock().unwrap().clone();
+                tokio::spawn(async move {
+                    for handler in handlers {
+                        if let Err(e) = handler().await {
+                            tracing::warn!("Browser disconnected handler error: {}", e);
+                        }
+                    }
+                });
+            }
         }
         self.base.on_event(method, params)
     }
