@@ -367,6 +367,34 @@ impl Browser {
     ///
     /// Returns an error only if the mutex is poisoned (practically never).
     ///
+    /// Creates a browser-level Chrome DevTools Protocol session.
+    ///
+    /// Unlike [`BrowserContext::new_cdp_session`](crate::protocol::BrowserContext::new_cdp_session)
+    /// which is scoped to a page, this session is attached to the browser itself.
+    /// Chromium only.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-new-browser-cdp-session>
+    pub async fn new_browser_cdp_session(&self) -> Result<crate::protocol::CDPSession> {
+        #[derive(Deserialize)]
+        struct Response {
+            session: GuidRef,
+        }
+        #[derive(Deserialize)]
+        struct GuidRef {
+            #[serde(deserialize_with = "crate::server::connection::deserialize_arc_str")]
+            guid: Arc<str>,
+        }
+
+        let response: Response = self
+            .channel()
+            .send("newBrowserCDPSession", serde_json::json!({}))
+            .await?;
+
+        self.connection()
+            .get_typed::<crate::protocol::CDPSession>(&response.session.guid)
+            .await
+    }
+
     /// See: <https://playwright.dev/docs/api/class-browser#browser-event-disconnected>
     pub async fn on_disconnected<F, Fut>(&self, handler: F) -> Result<()>
     where

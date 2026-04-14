@@ -485,3 +485,26 @@ async fn test_browser_tracing() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+#[tokio::test]
+async fn test_browser_new_browser_cdp_session() {
+    let (_pw, browser, _page) = crate::common::setup().await;
+
+    let session = browser
+        .new_browser_cdp_session()
+        .await
+        .expect("new_browser_cdp_session should succeed on Chromium");
+
+    let result = session
+        .send("Browser.getVersion", None)
+        .await
+        .expect("CDP Browser.getVersion should succeed");
+
+    assert!(
+        result.get("product").is_some() || result.get("result").is_some(),
+        "CDP response should contain version info"
+    );
+
+    session.detach().await.expect("detach should succeed");
+    browser.close().await.expect("Failed to close browser");
+}
