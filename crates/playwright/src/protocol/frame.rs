@@ -2233,6 +2233,27 @@ impl ChannelOwner for Frame {
                         *url = url_str.to_string();
                     }
                 }
+                // Forward frameNavigated event to page-level handlers
+                let self_clone = self.clone();
+                tokio::spawn(async move {
+                    if let Some(page) = self_clone.page() {
+                        page.trigger_framenavigated_event(self_clone).await;
+                    }
+                });
+            }
+            "loadstate" => {
+                // Track which load states are active.
+                // When "load" is added, fire page-level on_load handlers.
+                if let Some(add) = params.get("add").and_then(|v| v.as_str())
+                    && add == "load"
+                {
+                    let self_clone = self.clone();
+                    tokio::spawn(async move {
+                        if let Some(page) = self_clone.page() {
+                            page.trigger_load_event().await;
+                        }
+                    });
+                }
             }
             "detached" => {
                 // Mark this frame as detached
@@ -2241,8 +2262,7 @@ impl ChannelOwner for Frame {
                 }
             }
             _ => {
-                // Other events will be handled in future phases
-                // Events: loadstate, etc.
+                // Other frame events not yet handled
             }
         }
     }

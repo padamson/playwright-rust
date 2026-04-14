@@ -1504,6 +1504,18 @@ impl ChannelOwner for BrowserContext {
                         // Track the page
                         pages.lock().unwrap().push(page.clone());
 
+                        // If this page has an opener, dispatch popup event to opener's handlers.
+                        // The opener guid is in the page's initializer: {"opener": {"guid": "..."}}
+                        if let Some(opener_guid) = page
+                            .initializer()
+                            .get("opener")
+                            .and_then(|v| v.get("guid"))
+                            .and_then(|v| v.as_str())
+                            && let Ok(opener) = connection.get_typed::<Page>(opener_guid).await
+                        {
+                            opener.trigger_popup_event(page.clone()).await;
+                        }
+
                         // Dispatch to context-level page handlers
                         let handlers = page_handlers.lock().unwrap().clone();
                         for handler in handlers {
@@ -1515,6 +1527,34 @@ impl ChannelOwner for BrowserContext {
                         // Notify the first expect_page() waiter (FIFO order)
                         if let Some(tx) = page_waiters.lock().unwrap().pop() {
                             let _ = tx.send(page);
+                        }
+                    });
+                }
+            }
+            "pageError" => {
+                // pageError event: fired when an uncaught JS exception occurs on a page.
+                // Event format:
+                //   { "error": { "error": { "message": "...", "name": "...", "stack": "..." } },
+                //     "page": { "guid": "page@..." } }
+                let message = params
+                    .get("error")
+                    .and_then(|e| e.get("error"))
+                    .and_then(|e| e.get("message"))
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                if let Some(page_guid) = params
+                    .get("page")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let page_guid_owned = page_guid.to_string();
+
+                    tokio::spawn(async move {
+                        if let Ok(page) = connection.get_typed::<Page>(&page_guid_owned).await {
+                            page.trigger_pageerror_event(message).await;
                         }
                     });
                 }

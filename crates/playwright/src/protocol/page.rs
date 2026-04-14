@@ -219,6 +219,32 @@ pub struct Page {
     /// One-shot senders waiting for the next "fileChooser" event (expect_file_chooser)
     filechooser_waiters:
         Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::FileChooser>>>>,
+    /// One-shot senders waiting for the next "popup" event (expect_popup)
+    popup_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Page>>>>,
+    /// One-shot senders waiting for the next "download" event (expect_download)
+    download_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Download>>>>,
+    /// One-shot senders waiting for the next "response" event (expect_response)
+    response_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<ResponseObject>>>>,
+    /// One-shot senders waiting for the next "request" event (expect_request)
+    request_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Request>>>>,
+    /// One-shot senders waiting for the next "console" event (expect_console_message)
+    console_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::ConsoleMessage>>>>,
+    /// close event handlers (fires when page is closed)
+    close_handlers: Arc<Mutex<Vec<CloseHandler>>>,
+    /// load event handlers (fires when page fully loads)
+    load_handlers: Arc<Mutex<Vec<LoadHandler>>>,
+    /// crash event handlers (fires when page crashes)
+    crash_handlers: Arc<Mutex<Vec<CrashHandler>>>,
+    /// pageError event handlers (fires on uncaught JS exceptions)
+    pageerror_handlers: Arc<Mutex<Vec<PageErrorHandler>>>,
+    /// popup event handlers (fires when a popup window opens)
+    popup_handlers: Arc<Mutex<Vec<PopupHandler>>>,
+    /// frameAttached event handlers
+    frameattached_handlers: Arc<Mutex<Vec<FrameAttachedHandler>>>,
+    /// frameDetached event handlers
+    framedetached_handlers: Arc<Mutex<Vec<FrameDetachedHandler>>>,
+    /// frameNavigated event handlers
+    framenavigated_handlers: Arc<Mutex<Vec<FrameNavigatedHandler>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -274,6 +300,51 @@ type FileChooserHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>
 /// FileChooser event handler
 type FileChooserHandler =
     Arc<dyn Fn(crate::protocol::FileChooser) -> FileChooserHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed close handler future
+type CloseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// close event handler (no arguments)
+type CloseHandler = Arc<dyn Fn() -> CloseHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed load handler future
+type LoadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// load event handler (no arguments)
+type LoadHandler = Arc<dyn Fn() -> LoadHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed crash handler future
+type CrashHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// crash event handler (no arguments)
+type CrashHandler = Arc<dyn Fn() -> CrashHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed pageError handler future
+type PageErrorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// pageError event handler — receives the error message as a String
+type PageErrorHandler = Arc<dyn Fn(String) -> PageErrorHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed popup handler future
+type PopupHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// popup event handler — receives the new popup Page
+type PopupHandler = Arc<dyn Fn(Page) -> PopupHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed frameAttached/Detached/Navigated handler future
+type FrameEventHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// frameAttached event handler
+type FrameAttachedHandler =
+    Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
+
+/// frameDetached event handler
+type FrameDetachedHandler =
+    Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
+
+/// frameNavigated event handler
+type FrameNavigatedHandler =
+    Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed page-level binding callback future
 type PageBindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
@@ -367,6 +438,19 @@ impl Page {
             console_handlers: Arc::new(Mutex::new(Vec::new())),
             filechooser_handlers: Arc::new(Mutex::new(Vec::new())),
             filechooser_waiters: Arc::new(Mutex::new(Vec::new())),
+            popup_waiters: Arc::new(Mutex::new(Vec::new())),
+            download_waiters: Arc::new(Mutex::new(Vec::new())),
+            response_waiters: Arc::new(Mutex::new(Vec::new())),
+            request_waiters: Arc::new(Mutex::new(Vec::new())),
+            console_waiters: Arc::new(Mutex::new(Vec::new())),
+            close_handlers: Arc::new(Mutex::new(Vec::new())),
+            load_handlers: Arc::new(Mutex::new(Vec::new())),
+            crash_handlers: Arc::new(Mutex::new(Vec::new())),
+            pageerror_handlers: Arc::new(Mutex::new(Vec::new())),
+            popup_handlers: Arc::new(Mutex::new(Vec::new())),
+            frameattached_handlers: Arc::new(Mutex::new(Vec::new())),
+            framedetached_handlers: Arc::new(Mutex::new(Vec::new())),
+            framenavigated_handlers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -1419,7 +1503,11 @@ impl Page {
             },
         );
 
-        let needs_subscription = self.console_handlers.lock().unwrap().is_empty();
+        let needs_subscription = {
+            let handlers = self.console_handlers.lock().unwrap();
+            let waiters = self.console_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
         if needs_subscription {
             _ = self.channel().update_subscription("console", true).await;
         }
@@ -1529,6 +1617,171 @@ impl Page {
         ))
     }
 
+    /// Creates a one-shot waiter that resolves when the next popup window opens.
+    ///
+    /// The waiter **must** be created before the action that opens the popup to
+    /// avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no popup
+    /// opens within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_popup(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<Page>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.popup_waiters.lock().unwrap().push(tx);
+        Ok(crate::protocol::EventWaiter::new(
+            rx,
+            timeout.or(Some(30_000.0)),
+        ))
+    }
+
+    /// Creates a one-shot waiter that resolves when the next download starts.
+    ///
+    /// The waiter **must** be created before the action that triggers the download
+    /// to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no download
+    /// starts within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_download(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<Download>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.download_waiters.lock().unwrap().push(tx);
+        Ok(crate::protocol::EventWaiter::new(
+            rx,
+            timeout.or(Some(30_000.0)),
+        ))
+    }
+
+    /// Creates a one-shot waiter that resolves when the next network response is received.
+    ///
+    /// The waiter **must** be created before the action that triggers the response
+    /// to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no response
+    /// arrives within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_response(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<ResponseObject>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+
+        let needs_subscription = {
+            let handlers = self.response_handlers.lock().unwrap();
+            let waiters = self.response_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
+        if needs_subscription {
+            _ = self.channel().update_subscription("response", true).await;
+        }
+        self.response_waiters.lock().unwrap().push(tx);
+
+        Ok(crate::protocol::EventWaiter::new(
+            rx,
+            timeout.or(Some(30_000.0)),
+        ))
+    }
+
+    /// Creates a one-shot waiter that resolves when the next network request is issued.
+    ///
+    /// The waiter **must** be created before the action that issues the request
+    /// to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no request
+    /// is issued within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_request(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<Request>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+
+        let needs_subscription = {
+            let handlers = self.request_handlers.lock().unwrap();
+            let waiters = self.request_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
+        if needs_subscription {
+            _ = self.channel().update_subscription("request", true).await;
+        }
+        self.request_waiters.lock().unwrap().push(tx);
+
+        Ok(crate::protocol::EventWaiter::new(
+            rx,
+            timeout.or(Some(30_000.0)),
+        ))
+    }
+
+    /// Creates a one-shot waiter that resolves when the next console message is produced.
+    ///
+    /// The waiter **must** be created before the action that produces the console
+    /// message to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no console
+    /// message is produced within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_console_message(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<crate::protocol::ConsoleMessage>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+
+        let needs_subscription = {
+            let handlers = self.console_handlers.lock().unwrap();
+            let waiters = self.console_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
+        if needs_subscription {
+            _ = self.channel().update_subscription("console", true).await;
+        }
+        self.console_waiters.lock().unwrap().push(tx);
+
+        Ok(crate::protocol::EventWaiter::new(
+            rx,
+            timeout.or(Some(30_000.0)),
+        ))
+    }
+
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
     where
@@ -1539,7 +1792,11 @@ impl Page {
             Box::pin(handler(request))
         });
 
-        let needs_subscription = self.request_handlers.lock().unwrap().is_empty();
+        let needs_subscription = {
+            let handlers = self.request_handlers.lock().unwrap();
+            let waiters = self.request_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
         if needs_subscription {
             _ = self.channel().update_subscription("request", true).await;
         }
@@ -1602,7 +1859,11 @@ impl Page {
             Box::pin(handler(response))
         });
 
-        let needs_subscription = self.response_handlers.lock().unwrap().is_empty();
+        let needs_subscription = {
+            let handlers = self.response_handlers.lock().unwrap();
+            let waiters = self.response_waiters.lock().unwrap();
+            handlers.is_empty() && waiters.is_empty()
+        };
         if needs_subscription {
             _ = self.channel().update_subscription("response", true).await;
         }
@@ -1628,6 +1889,190 @@ impl Page {
         let handler =
             Arc::new(move |ws: WebSocket| -> WebSocketHandlerFuture { Box::pin(handler(ws)) });
         self.websocket_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `close` event.
+    ///
+    /// The handler is called when the page is closed, either by calling `page.close()`,
+    /// by the browser context being closed, or when the browser process exits.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure called with no arguments when the page closes
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-close>
+    pub async fn on_close<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move || -> CloseHandlerFuture { Box::pin(handler()) });
+        self.close_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `load` event.
+    ///
+    /// The handler is called when the page's `load` event fires, i.e. after
+    /// all resources including stylesheets and images have finished loading.
+    ///
+    /// The server only sends `"load"` events after the first handler is registered
+    /// (subscription is managed automatically).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure called with no arguments when the page loads
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-load>
+    pub async fn on_load<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move || -> LoadHandlerFuture { Box::pin(handler()) });
+        // "load" events come via Frame's "loadstate" event, no subscription needed.
+        self.load_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `crash` event.
+    ///
+    /// The handler is called when the page crashes (e.g. runs out of memory).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure called with no arguments when the page crashes
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-crash>
+    pub async fn on_crash<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move || -> CrashHandlerFuture { Box::pin(handler()) });
+        self.crash_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `pageError` event.
+    ///
+    /// The handler is called when an uncaught JavaScript exception is thrown in the page.
+    /// The handler receives the error message as a `String`.
+    ///
+    /// The server only sends `"pageError"` events after the first handler is registered
+    /// (subscription is managed automatically).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the error message string
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-page-error>
+    pub async fn on_pageerror<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(String) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler =
+            Arc::new(move |msg: String| -> PageErrorHandlerFuture { Box::pin(handler(msg)) });
+        // "pageError" events come via BrowserContext, no subscription needed.
+        self.pageerror_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `popup` event.
+    ///
+    /// The handler is called when the page opens a popup window (e.g. via `window.open()`).
+    /// The handler receives the new popup [`Page`] object.
+    ///
+    /// The server only sends `"popup"` events after the first handler is registered
+    /// (subscription is managed automatically).
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the popup Page
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-popup>
+    pub async fn on_popup<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Page) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |page: Page| -> PopupHandlerFuture { Box::pin(handler(page)) });
+        // "popup" events arrive via BrowserContext's "page" event when a page has an opener.
+        self.popup_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `frameAttached` event.
+    ///
+    /// The handler is called when a new frame (iframe) is attached to the page.
+    /// The handler receives the attached [`Frame`](crate::protocol::Frame) object.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the attached Frame
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-frameattached>
+    pub async fn on_frameattached<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |frame: crate::protocol::Frame| -> FrameEventHandlerFuture {
+                Box::pin(handler(frame))
+            },
+        );
+        self.frameattached_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `frameDetached` event.
+    ///
+    /// The handler is called when a frame (iframe) is detached from the page.
+    /// The handler receives the detached [`Frame`](crate::protocol::Frame) object.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the detached Frame
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-framedetached>
+    pub async fn on_framedetached<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |frame: crate::protocol::Frame| -> FrameEventHandlerFuture {
+                Box::pin(handler(frame))
+            },
+        );
+        self.framedetached_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
+    /// Registers a handler for the `frameNavigated` event.
+    ///
+    /// The handler is called when a frame navigates to a new URL.
+    /// The handler receives the navigated [`Frame`](crate::protocol::Frame) object.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives the navigated Frame
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-framenavigated>
+    pub async fn on_framenavigated<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |frame: crate::protocol::Frame| -> FrameEventHandlerFuture {
+                Box::pin(handler(frame))
+            },
+        );
+        self.framenavigated_handlers.lock().unwrap().push(handler);
         Ok(())
     }
 
@@ -1734,6 +2179,10 @@ impl Page {
                 tracing::warn!("Download handler error: {}", e);
             }
         }
+        // Notify the first expect_download() waiter (FIFO order)
+        if let Some(tx) = self.download_waiters.lock().unwrap().pop() {
+            let _ = tx.send(download);
+        }
     }
 
     /// Handles a dialog event from the protocol
@@ -1754,6 +2203,10 @@ impl Page {
             if let Err(e) = handler(request.clone()).await {
                 tracing::warn!("Request handler error: {}", e);
             }
+        }
+        // Notify the first expect_request() waiter (FIFO order)
+        if let Some(tx) = self.request_waiters.lock().unwrap().pop() {
+            let _ = tx.send(request);
         }
     }
 
@@ -1784,6 +2237,10 @@ impl Page {
             if let Err(e) = handler(response.clone()).await {
                 tracing::warn!("Response handler error: {}", e);
             }
+        }
+        // Notify the first expect_response() waiter (FIFO order)
+        if let Some(tx) = self.response_waiters.lock().unwrap().pop() {
+            let _ = tx.send(response);
         }
     }
 
@@ -1823,6 +2280,10 @@ impl Page {
     }
 
     async fn on_console_event(&self, msg: crate::protocol::ConsoleMessage) {
+        // Notify the first expect_console_message() waiter (FIFO order)
+        if let Some(tx) = self.console_waiters.lock().unwrap().pop() {
+            let _ = tx.send(msg.clone());
+        }
         let handlers = self.console_handlers.lock().unwrap().clone();
         for handler in handlers {
             if let Err(e) = handler(msg.clone()).await {
@@ -1844,6 +2305,102 @@ impl Page {
         // Notify the first expect_file_chooser() waiter (FIFO order)
         if let Some(tx) = self.filechooser_waiters.lock().unwrap().pop() {
             let _ = tx.send(chooser);
+        }
+    }
+
+    /// Triggers load event (called by Frame when loadstate "load" is added)
+    pub(crate) async fn trigger_load_event(&self) {
+        self.on_load_event().await;
+    }
+
+    /// Triggers pageError event (called by BrowserContext when pageError arrives)
+    pub(crate) async fn trigger_pageerror_event(&self, message: String) {
+        self.on_pageerror_event(message).await;
+    }
+
+    /// Triggers popup event (called by BrowserContext when a page is opened with an opener)
+    pub(crate) async fn trigger_popup_event(&self, popup: Page) {
+        self.on_popup_event(popup).await;
+    }
+
+    /// Triggers frameNavigated event (called by Frame when "navigated" is received)
+    pub(crate) async fn trigger_framenavigated_event(&self, frame: crate::protocol::Frame) {
+        self.on_framenavigated_event(frame).await;
+    }
+
+    async fn on_close_event(&self) {
+        let handlers = self.close_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler().await {
+                tracing::warn!("Close handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_load_event(&self) {
+        let handlers = self.load_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler().await {
+                tracing::warn!("Load handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_crash_event(&self) {
+        let handlers = self.crash_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler().await {
+                tracing::warn!("Crash handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_pageerror_event(&self, message: String) {
+        let handlers = self.pageerror_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(message.clone()).await {
+                tracing::warn!("PageError handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_popup_event(&self, popup: Page) {
+        let handlers = self.popup_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(popup.clone()).await {
+                tracing::warn!("Popup handler error: {}", e);
+            }
+        }
+        // Notify the first expect_popup() waiter (FIFO order)
+        if let Some(tx) = self.popup_waiters.lock().unwrap().pop() {
+            let _ = tx.send(popup);
+        }
+    }
+
+    async fn on_frameattached_event(&self, frame: crate::protocol::Frame) {
+        let handlers = self.frameattached_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(frame.clone()).await {
+                tracing::warn!("FrameAttached handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_framedetached_event(&self, frame: crate::protocol::Frame) {
+        let handlers = self.framedetached_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(frame.clone()).await {
+                tracing::warn!("FrameDetached handler error: {}", e);
+            }
+        }
+    }
+
+    async fn on_framenavigated_event(&self, frame: crate::protocol::Frame) {
+        let handlers = self.framenavigated_handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(frame.clone()).await {
+                tracing::warn!("FrameNavigated handler error: {}", e);
+            }
         }
     }
 
@@ -2595,10 +3152,121 @@ impl ChannelOwner for Page {
             "close" => {
                 // Server-initiated close (e.g. context was closed)
                 self.is_closed.store(true, Ordering::Relaxed);
+                // Dispatch close handlers
+                let self_clone = self.clone();
+                tokio::spawn(async move {
+                    self_clone.on_close_event().await;
+                });
+            }
+            "load" => {
+                let self_clone = self.clone();
+                tokio::spawn(async move {
+                    self_clone.on_load_event().await;
+                });
+            }
+            "crash" => {
+                let self_clone = self.clone();
+                tokio::spawn(async move {
+                    self_clone.on_crash_event().await;
+                });
+            }
+            "pageError" => {
+                // params: {"error": {"message": "...", "stack": "..."}}
+                let message = params
+                    .get("error")
+                    .and_then(|e| e.get("message"))
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let self_clone = self.clone();
+                tokio::spawn(async move {
+                    self_clone.on_pageerror_event(message).await;
+                });
+            }
+            // "popup" is forwarded from BrowserContext::on_event when a "page" event
+            // is received for a page that has an opener. No direct "popup" event on Page.
+            "frameAttached" => {
+                // params: {"frame": {"guid": "..."}}
+                if let Some(frame_guid) = params
+                    .get("frame")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let frame_guid_owned = frame_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let frame: crate::protocol::Frame = match connection
+                            .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
+                            .await
+                        {
+                            Ok(f) => f,
+                            Err(e) => {
+                                tracing::warn!("Failed to get Frame for frameAttached: {}", e);
+                                return;
+                            }
+                        };
+                        self_clone.on_frameattached_event(frame).await;
+                    });
+                }
+            }
+            "frameDetached" => {
+                // params: {"frame": {"guid": "..."}}
+                if let Some(frame_guid) = params
+                    .get("frame")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let frame_guid_owned = frame_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let frame: crate::protocol::Frame = match connection
+                            .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
+                            .await
+                        {
+                            Ok(f) => f,
+                            Err(e) => {
+                                tracing::warn!("Failed to get Frame for frameDetached: {}", e);
+                                return;
+                            }
+                        };
+                        self_clone.on_framedetached_event(frame).await;
+                    });
+                }
+            }
+            "frameNavigated" => {
+                // params: {"frame": {"guid": "..."}}
+                // Note: frameNavigated may also contain url, name, etc. at top level
+                // The frame guid is in the "frame" field (same as attached/detached)
+                if let Some(frame_guid) = params
+                    .get("frame")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let frame_guid_owned = frame_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let frame: crate::protocol::Frame = match connection
+                            .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
+                            .await
+                        {
+                            Ok(f) => f,
+                            Err(e) => {
+                                tracing::warn!("Failed to get Frame for frameNavigated: {}", e);
+                                return;
+                            }
+                        };
+                        self_clone.on_framenavigated_event(frame).await;
+                    });
+                }
             }
             _ => {
-                // Other events will be handled in future phases
-                // Events: load, domcontentloaded, crash, etc.
+                // Other events not yet handled
             }
         }
     }

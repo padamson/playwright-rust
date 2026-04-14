@@ -84,7 +84,7 @@ Each pre-v1.0 release targets 100% coverage of specific API classes:
 | **Request** | 19 | **100%** | 100% | 100% |
 | **FrameLocator** | 10 | **100%** | 100% | 100% |
 | Browser | 12 | **100%** | 100% | 100% |
-| Page | 67 | ~87% | ~90% | **100%** |
+| Page | 67 | **~99%** | ~99% | **100%** |
 | BrowserContext | 32 | ~97% | ~97% | **100%** |
 | Frame | 29 | **100%** | 100% | 100% |
 

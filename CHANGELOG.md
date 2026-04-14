@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Browser methods** — `contexts()`, `browser_type()`, `on_disconnected(handler)`, `start_tracing(options)` / `stop_tracing()`, `new_browser_cdp_session()`
+- **Page event handlers** — `on_close`, `on_load`, `on_crash`, `on_pageerror`, `on_popup`, `on_frameattached`, `on_framedetached`, `on_framenavigated`
+- **Page expect methods** — `expect_popup`, `expect_download`, `expect_response`, `expect_request`, `expect_console_message` (all return `EventWaiter<T>`)
 
 - **`ConsoleMessage` class** — captures JavaScript console output (`console.log`, `console.error`, etc.)
   - `type_()`, `text()`, `location()`, `page()` properties
