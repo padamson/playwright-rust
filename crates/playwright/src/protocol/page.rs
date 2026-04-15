@@ -5,7 +5,7 @@
 
 use crate::error::{Error, Result};
 use crate::protocol::browser_context::Viewport;
-use crate::protocol::{Dialog, Download, Request, ResponseObject, Route, WebSocket};
+use crate::protocol::{Dialog, Download, Request, ResponseObject, Route, WebSocket, Worker};
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use crate::server::connection::{ConnectionExt, downcast_parent};
@@ -245,6 +245,8 @@ pub struct Page {
     framedetached_handlers: Arc<Mutex<Vec<FrameDetachedHandler>>>,
     /// frameNavigated event handlers
     framenavigated_handlers: Arc<Mutex<Vec<FrameNavigatedHandler>>>,
+    /// worker event handlers (fires when a web worker is created in the page)
+    worker_handlers: Arc<Mutex<Vec<WorkerHandler>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -345,6 +347,12 @@ type FrameDetachedHandler =
 /// frameNavigated event handler
 type FrameNavigatedHandler =
     Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed worker handler future
+type WorkerHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// worker event handler — receives the new Worker
+type WorkerHandler = Arc<dyn Fn(crate::protocol::Worker) -> WorkerHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed page-level binding callback future
 type PageBindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
@@ -451,6 +459,7 @@ impl Page {
             frameattached_handlers: Arc::new(Mutex::new(Vec::new())),
             framedetached_handlers: Arc::new(Mutex::new(Vec::new())),
             framenavigated_handlers: Arc::new(Mutex::new(Vec::new())),
+            worker_handlers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -1892,6 +1901,25 @@ impl Page {
         Ok(())
     }
 
+    /// Registers a handler for the `worker` event.
+    ///
+    /// The handler is called when a new Web Worker is created in the page.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure called with the new [`Worker`] object
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-worker>
+    pub async fn on_worker<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Worker) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(move |w: Worker| -> WorkerHandlerFuture { Box::pin(handler(w)) });
+        self.worker_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
     /// Registers a handler for the `close` event.
     ///
     /// The handler is called when the page is closed, either by calling `page.close()`,
@@ -3048,6 +3076,40 @@ impl ChannelOwner for Page {
                             tokio::spawn(async move {
                                 if let Err(e) = handler(ws_clone).await {
                                     tracing::error!("Error in websocket handler: {}", e);
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+            "worker" => {
+                // A new Web Worker was created in the page.
+                // Event format: {worker: {guid: "Worker@..."}}
+                if let Some(worker_guid) = params
+                    .get("worker")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let worker_guid_owned = worker_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let worker: Worker =
+                            match connection.get_typed::<Worker>(&worker_guid_owned).await {
+                                Ok(w) => w,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get Worker object: {}", e);
+                                    return;
+                                }
+                            };
+
+                        let handlers = self_clone.worker_handlers.lock().unwrap().clone();
+                        for handler in handlers {
+                            let worker_clone = worker.clone();
+                            tokio::spawn(async move {
+                                if let Err(e) = handler(worker_clone).await {
+                                    tracing::error!("Error in worker handler: {}", e);
                                 }
                             });
                         }

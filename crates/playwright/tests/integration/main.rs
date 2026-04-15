@@ -60,3 +60,4 @@ mod storage_state;
 mod transport;
 mod web_error;
 mod windows_cleanup;
+mod worker;

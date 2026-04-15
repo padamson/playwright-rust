@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Worker` class** — represents a Web Worker or Service Worker
+  - `url()` — the URL of the worker script
+  - `evaluate(expression, arg)` — evaluates a JS expression in the worker context, returns deserialized result
+  - `evaluate_handle(expression)` — evaluates a JS expression in the worker context, returns `Arc<JSHandle>`
+  - Registered in the object factory for server-created `"Worker"` objects
+  - `Page::on_worker(handler)` — fires when a new Web Worker is created in the page
+  - `BrowserContext::on_serviceworker(handler)` — fires when a service worker is registered in the context
+  - See: <https://playwright.dev/docs/api/class-worker>
+
 - **`WebError` class** — represents an uncaught JavaScript exception from any page in a context
   - `error()` — the error message of the uncaught exception
   - `page()` — optional back-reference to the page that threw the error

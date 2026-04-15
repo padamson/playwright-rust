@@ -135,6 +135,13 @@ type WebErrorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 type WebErrorHandler =
     Arc<dyn Fn(crate::protocol::WebError) -> WebErrorHandlerFuture + Send + Sync>;
 
+/// Type alias for boxed service worker handler future
+type ServiceWorkerHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Context-level service worker event handler
+type ServiceWorkerHandler =
+    Arc<dyn Fn(crate::protocol::Worker) -> ServiceWorkerHandlerFuture + Send + Sync>;
+
 /// Binding callback: receives deserialized JS args, returns a JSON value
 type BindingCallback = Arc<dyn Fn(Vec<serde_json::Value>) -> BindingCallbackFuture + Send + Sync>;
 
@@ -188,6 +195,8 @@ pub struct BrowserContext {
     console_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::ConsoleMessage>>>>,
     /// Context-level weberror event handlers (fired for uncaught JS exceptions from any page)
     weberror_handlers: Arc<Mutex<Vec<WebErrorHandler>>>,
+    /// Context-level service worker event handlers (fired when a service worker is registered)
+    serviceworker_handlers: Arc<Mutex<Vec<ServiceWorkerHandler>>>,
 }
 
 impl BrowserContext {
@@ -264,6 +273,7 @@ impl BrowserContext {
             console_handlers: Arc::new(Mutex::new(Vec::new())),
             console_waiters: Arc::new(Mutex::new(Vec::new())),
             weberror_handlers: Arc::new(Mutex::new(Vec::new())),
+            serviceworker_handlers: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -1106,6 +1116,31 @@ impl BrowserContext {
         Ok(())
     }
 
+    /// Registers a handler for the `serviceWorker` event.
+    ///
+    /// The handler is called when a new service worker is registered in the browser context.
+    ///
+    /// Note: Service worker testing typically requires HTTPS and a registered service worker.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure called with the new [`Worker`](crate::protocol::Worker) object
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-service-worker>
+    pub async fn on_serviceworker<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::Worker) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |worker: crate::protocol::Worker| -> ServiceWorkerHandlerFuture {
+                Box::pin(handler(worker))
+            },
+        );
+        self.serviceworker_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
     /// Exposes a Rust function to every page in this browser context as
     /// `window[name]` in JavaScript.
     ///
@@ -1861,6 +1896,45 @@ impl ChannelOwner for BrowserContext {
                         p.trigger_console_event(msg).await;
                     }
                 });
+            }
+            "serviceWorker" => {
+                // A new service worker was registered in this context.
+                // Event format: {worker: {guid: "Worker@..."}}
+                if let Some(worker_guid) = params
+                    .get("worker")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let worker_guid_owned = worker_guid.to_string();
+                    let serviceworker_handlers = self.serviceworker_handlers.clone();
+
+                    tokio::spawn(async move {
+                        let worker: crate::protocol::Worker = match connection
+                            .get_typed::<crate::protocol::Worker>(&worker_guid_owned)
+                            .await
+                        {
+                            Ok(w) => w,
+                            Err(e) => {
+                                tracing::warn!(
+                                    "Failed to get Worker object for serviceWorker event: {}",
+                                    e
+                                );
+                                return;
+                            }
+                        };
+
+                        let handlers = serviceworker_handlers.lock().unwrap().clone();
+                        for handler in handlers {
+                            let worker_clone = worker.clone();
+                            tokio::spawn(async move {
+                                if let Err(e) = handler(worker_clone).await {
+                                    tracing::error!("Error in serviceworker handler: {}", e);
+                                }
+                            });
+                        }
+                    });
+                }
             }
             _ => {
                 // Other events will be handled in future phases

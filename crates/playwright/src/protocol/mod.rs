@@ -53,6 +53,7 @@ pub mod tracing;
 pub mod wait_for;
 pub mod web_error;
 pub mod web_socket;
+pub mod worker;
 
 pub use action_options::{
     CheckOptions, FillOptions, HoverOptions, KeyboardOptions, MouseOptions, PressOptions,
@@ -109,3 +110,4 @@ pub use tracing::{Tracing, TracingStartOptions, TracingStopOptions};
 pub use wait_for::{WaitForOptions, WaitForOptionsBuilder, WaitForState};
 pub use web_error::WebError;
 pub use web_socket::WebSocket;
+pub use worker::Worker;
