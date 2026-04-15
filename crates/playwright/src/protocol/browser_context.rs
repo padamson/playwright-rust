@@ -128,6 +128,13 @@ type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 type ConsoleHandler =
     Arc<dyn Fn(crate::protocol::ConsoleMessage) -> ConsoleHandlerFuture + Send + Sync>;
 
+/// Type alias for boxed weberror handler future
+type WebErrorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Context-level weberror event handler
+type WebErrorHandler =
+    Arc<dyn Fn(crate::protocol::WebError) -> WebErrorHandlerFuture + Send + Sync>;
+
 /// Binding callback: receives deserialized JS args, returns a JSON value
 type BindingCallback = Arc<dyn Fn(Vec<serde_json::Value>) -> BindingCallbackFuture + Send + Sync>;
 
@@ -179,6 +186,8 @@ pub struct BrowserContext {
     console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
     /// One-shot senders waiting for the next "console" event (expect_console_message)
     console_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::ConsoleMessage>>>>,
+    /// Context-level weberror event handlers (fired for uncaught JS exceptions from any page)
+    weberror_handlers: Arc<Mutex<Vec<WebErrorHandler>>>,
 }
 
 impl BrowserContext {
@@ -254,6 +263,7 @@ impl BrowserContext {
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
             console_handlers: Arc::new(Mutex::new(Vec::new())),
             console_waiters: Arc::new(Mutex::new(Vec::new())),
+            weberror_handlers: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -1065,6 +1075,37 @@ impl BrowserContext {
         Ok(())
     }
 
+    /// Registers a context-level handler for uncaught JavaScript exceptions.
+    ///
+    /// The handler fires whenever a page in this context throws an unhandled
+    /// JavaScript error (i.e. an exception that propagates to `window.onerror`
+    /// or an unhandled promise rejection). The [`WebError`](crate::protocol::WebError)
+    /// passed to the handler contains the error message and an optional back-reference
+    /// to the originating page.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Async closure that receives a [`WebError`](crate::protocol::WebError).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-web-error>
+    pub async fn on_weberror<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::WebError) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |web_error: crate::protocol::WebError| -> WebErrorHandlerFuture {
+                Box::pin(handler(web_error))
+            },
+        );
+        self.weberror_handlers.lock().unwrap().push(handler);
+        Ok(())
+    }
+
     /// Exposes a Rust function to every page in this browser context as
     /// `window[name]` in JavaScript.
     ///
@@ -1556,6 +1597,10 @@ impl ChannelOwner for BrowserContext {
                 // Event format:
                 //   { "error": { "error": { "message": "...", "name": "...", "stack": "..." } },
                 //     "page": { "guid": "page@..." } }
+                //
+                // Dispatch path:
+                //  1. Construct WebError and fire context-level on_weberror handlers.
+                //  2. Forward the raw message to the page's on_pageerror handlers.
                 let message = params
                     .get("error")
                     .and_then(|e| e.get("error"))
@@ -1564,20 +1609,37 @@ impl ChannelOwner for BrowserContext {
                     .unwrap_or("")
                     .to_string();
 
-                if let Some(page_guid) = params
+                let page_guid_owned = params
                     .get("page")
                     .and_then(|v| v.get("guid"))
                     .and_then(|v| v.as_str())
-                {
-                    let connection = self.connection();
-                    let page_guid_owned = page_guid.to_string();
+                    .map(|s| s.to_string());
 
-                    tokio::spawn(async move {
-                        if let Ok(page) = connection.get_typed::<Page>(&page_guid_owned).await {
-                            page.trigger_pageerror_event(message).await;
+                let connection = self.connection();
+                let weberror_handlers = self.weberror_handlers.clone();
+
+                tokio::spawn(async move {
+                    // Resolve page (optional — may be None if page already closed)
+                    let page = if let Some(ref guid) = page_guid_owned {
+                        connection.get_typed::<Page>(guid).await.ok()
+                    } else {
+                        None
+                    };
+
+                    // 1. Dispatch to context-level weberror handlers
+                    let web_error = crate::protocol::WebError::new(message.clone(), page.clone());
+                    let handlers = weberror_handlers.lock().unwrap().clone();
+                    for handler in handlers {
+                        if let Err(e) = handler(web_error.clone()).await {
+                            tracing::warn!("Context weberror handler error: {}", e);
                         }
-                    });
-                }
+                    }
+
+                    // 2. Forward to page-level pageerror handlers
+                    if let Some(p) = page {
+                        p.trigger_pageerror_event(message).await;
+                    }
+                });
             }
             "dialog" => {
                 // Dialog events come to BrowserContext.

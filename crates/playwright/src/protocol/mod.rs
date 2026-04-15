@@ -51,6 +51,7 @@ pub mod selectors;
 pub mod tap;
 pub mod tracing;
 pub mod wait_for;
+pub mod web_error;
 pub mod web_socket;
 
 pub use action_options::{
@@ -106,4 +107,5 @@ pub use selectors::Selectors;
 pub use tap::{TapOptions, TapOptionsBuilder};
 pub use tracing::{Tracing, TracingStartOptions, TracingStopOptions};
 pub use wait_for::{WaitForOptions, WaitForOptionsBuilder, WaitForState};
+pub use web_error::WebError;
 pub use web_socket::WebSocket;

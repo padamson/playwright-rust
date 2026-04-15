@@ -58,4 +58,5 @@ mod selectors;
 mod stability;
 mod storage_state;
 mod transport;
+mod web_error;
 mod windows_cleanup;

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`WebError` class** — represents an uncaught JavaScript exception from any page in a context
+  - `error()` — the error message of the uncaught exception
+  - `page()` — optional back-reference to the page that threw the error
+  - `BrowserContext::on_weberror(handler)` — context-level handler for uncaught JS exceptions
+  - Wired into existing `"pageError"` event dispatch alongside page-level `on_pageerror` handlers
+  - See: <https://playwright.dev/docs/api/class-weberror>
+
 - **`JSHandle` class** — represents an in-browser JavaScript object handle
   - `json_value()` — returns the JSON-serializable value of the handle
   - `get_property(name)` — returns a `JSHandle` for a named property
