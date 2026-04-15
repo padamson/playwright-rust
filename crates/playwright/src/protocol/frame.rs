@@ -283,6 +283,84 @@ impl Frame {
         Ok(Arc::new(handle))
     }
 
+    /// Evaluates a JavaScript expression and returns a [`JSHandle`](crate::protocol::JSHandle) to the result.
+    ///
+    /// Unlike [`evaluate_handle`](Frame::evaluate_handle) which returns an `Arc<ElementHandle>`,
+    /// this method returns an `Arc<JSHandle>` and is suitable for non-DOM values such as
+    /// plain objects, numbers, and strings.
+    ///
+    /// # Arguments
+    ///
+    /// * `expression` - JavaScript expression to evaluate in the frame context
+    ///
+    /// # Returns
+    ///
+    /// An `Arc<JSHandle>` pointing to the in-browser value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The JavaScript expression throws an error
+    /// - The result handle GUID cannot be found in the registry
+    /// - Communication with the browser fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate-handle>
+    pub async fn evaluate_handle_js(
+        &self,
+        expression: &str,
+    ) -> Result<std::sync::Arc<crate::protocol::JSHandle>> {
+        // Detect whether the expression is a function (arrow function or function keyword)
+        // so we can set isFunction correctly and the server invokes it rather than
+        // evaluating the function literal.
+        let trimmed = expression.trim();
+        let is_function = trimmed.starts_with("(")
+            || trimmed.starts_with("function")
+            || trimmed.starts_with("async ");
+
+        let params = serde_json::json!({
+            "expression": expression,
+            "isFunction": is_function,
+            "arg": {"value": {"v": "undefined"}, "handles": []}
+        });
+
+        // The server returns {"handle": {"guid": "JSHandle@..."}}
+        #[derive(Deserialize)]
+        struct HandleRef {
+            guid: String,
+        }
+        #[derive(Deserialize)]
+        struct EvaluateHandleResponse {
+            handle: HandleRef,
+        }
+
+        let response: EvaluateHandleResponse = self
+            .channel()
+            .send("evaluateExpressionHandle", params)
+            .await?;
+
+        let guid = &response.handle.guid;
+
+        // Look up in the connection registry with retry (the __create__ may arrive slightly later)
+        let connection = self.base.connection();
+        let mut attempts = 0;
+        let max_attempts = 20;
+        let handle = loop {
+            match connection
+                .get_typed::<crate::protocol::JSHandle>(guid)
+                .await
+            {
+                Ok(h) => break h,
+                Err(_) if attempts < max_attempts => {
+                    attempts += 1;
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                }
+                Err(e) => return Err(e),
+            }
+        };
+
+        Ok(std::sync::Arc::new(handle))
+    }
+
     /// Creates a [`Locator`](crate::protocol::Locator) scoped to this frame.
     ///
     /// The locator is lazy — it does not query the DOM until an action is performed on it.

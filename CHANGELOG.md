@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`JSHandle` class** — represents an in-browser JavaScript object handle
+  - `json_value()` — returns the JSON-serializable value of the handle
+  - `get_property(name)` — returns a `JSHandle` for a named property
+  - `get_properties()` — returns a `HashMap<String, JSHandle>` of all enumerable own properties
+  - `evaluate(expr, arg)` — evaluates JS expression with the handle as the first argument
+  - `evaluate_handle(expr, arg)` — same but returns a new `JSHandle`
+  - `dispose()` — releases the handle and frees browser resources
+  - `as_element_type_name()` — returns the GUID if this handle is typed as an ElementHandle
+  - Registered in the object factory for server-created `JSHandle` objects
+  - `Frame::evaluate_handle_js()` — evaluates an expression and returns `Arc<JSHandle>`
+  - See: <https://playwright.dev/docs/api/class-jshandle>
+
 - **Browser methods** — `contexts()`, `browser_type()`, `on_disconnected(handler)`, `start_tracing(options)` / `stop_tracing()`, `new_browser_cdp_session()`
 - **Page event handlers** — `on_close`, `on_load`, `on_crash`, `on_pageerror`, `on_popup`, `on_frameattached`, `on_framedetached`, `on_framenavigated`
 - **Page expect methods** — `expect_popup`, `expect_download`, `expect_response`, `expect_request`, `expect_console_message` (all return `EventWaiter<T>`)

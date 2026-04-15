@@ -31,6 +31,7 @@ mod frame_api;
 mod frame_locator;
 mod initialization;
 mod install_browsers;
+mod js_handle;
 mod keyboard_mouse;
 mod launch_context;
 mod locator;
