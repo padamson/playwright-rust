@@ -330,6 +330,12 @@ who = "Pat Hickey <pat@moreproductive.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.28 -> 0.3.31"
 
+[[audits.bytecode-alliance.audits.getrandom]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.4.1 -> 0.4.2"
+notes = "Nothing awry in this update, standard updates for some platforms and other misc things."
+
 [[audits.bytecode-alliance.audits.heck]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
@@ -1341,6 +1347,16 @@ version = "0.8.1"
 who = "J.C. Jones <jc@divviup.org>"
 criteria = "safe-to-run"
 delta = "0.8.1 -> 0.8.2"
+
+[[audits.isrg.audits.getrandom]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.4 -> 0.4.0"
+
+[[audits.isrg.audits.getrandom]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.4.0 -> 0.4.1"
 
 [[audits.isrg.audits.hmac]]
 who = "David Cook <dcook@divviup.org>"
