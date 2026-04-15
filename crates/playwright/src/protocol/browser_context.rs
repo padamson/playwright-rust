@@ -177,6 +177,8 @@ pub struct BrowserContext {
     binding_callbacks: Arc<Mutex<HashMap<String, BindingCallback>>>,
     /// Context-level console event handlers
     console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
+    /// One-shot senders waiting for the next "console" event (expect_console_message)
+    console_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::ConsoleMessage>>>>,
 }
 
 impl BrowserContext {
@@ -251,6 +253,7 @@ impl BrowserContext {
             dialog_handlers: Arc::new(Mutex::new(Vec::new())),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
             console_handlers: Arc::new(Mutex::new(Vec::new())),
+            console_waiters: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -1222,6 +1225,23 @@ impl BrowserContext {
         Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
     }
 
+    /// Waits for a console message from any page in this context.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-console>
+    pub async fn expect_console_message(
+        &self,
+        timeout: Option<f64>,
+    ) -> Result<EventWaiter<crate::protocol::ConsoleMessage>> {
+        let needs_subscription = self.console_handlers.lock().unwrap().is_empty()
+            && self.console_waiters.lock().unwrap().is_empty();
+        if needs_subscription {
+            _ = self.channel().update_subscription("console", true).await;
+        }
+        let (tx, rx) = oneshot::channel();
+        self.console_waiters.lock().unwrap().push(tx);
+        Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
+    }
+
     /// Updates network interception patterns for this context
     async fn enable_network_interception(&self) -> Result<()> {
         let patterns: Vec<serde_json::Value> = self
@@ -1739,6 +1759,7 @@ impl ChannelOwner for BrowserContext {
 
                 let connection = self.connection();
                 let ctx_console_handlers = self.console_handlers.clone();
+                let ctx_console_waiters = self.console_waiters.clone();
 
                 tokio::spawn(async move {
                     use crate::protocol::console_message::{
@@ -1760,7 +1781,12 @@ impl ChannelOwner for BrowserContext {
 
                     let msg = ConsoleMessage::new(type_, text, location, page.clone());
 
-                    // Dispatch to context-level handlers first
+                    // Satisfy the first pending waiter (expect_console_message)
+                    if let Some(tx) = ctx_console_waiters.lock().unwrap().pop() {
+                        let _ = tx.send(msg.clone());
+                    }
+
+                    // Dispatch to context-level handlers
                     let ctx_handlers = ctx_console_handlers.lock().unwrap().clone();
                     for handler in ctx_handlers {
                         if let Err(e) = handler(msg.clone()).await {

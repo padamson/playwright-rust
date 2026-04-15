@@ -219,3 +219,21 @@ async fn test_context_on_console() -> Result<(), Box<dyn std::error::Error>> {
     context.close().await?;
     Ok(())
 }
+
+#[tokio::test]
+async fn test_context_expect_console_message() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, _browser, context) = crate::common::setup_context().await;
+    let page = context.new_page().await?;
+
+    let waiter = context.expect_console_message(None).await?;
+
+    page.evaluate_expression("console.log('expect-test')")
+        .await?;
+
+    let msg = waiter.wait().await?;
+    assert_eq!(msg.text(), "expect-test");
+    assert_eq!(msg.type_(), "log");
+
+    context.close().await?;
+    Ok(())
+}
