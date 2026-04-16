@@ -61,7 +61,7 @@ playwright-rust/
 
 **Integration Points:**
 - crates.io publishing (two packages to publish in order)
-- Downstream projects (e.g., Folio) depending on playwright-rs
+- Downstream projects (e.g., t2t) depending on playwright-rs
 - Future: playwright codegen, inspector, trace viewer
 
 ---
@@ -454,7 +454,7 @@ See detailed implementation plan: [docs/implementation-plans/v1.0-real-world-val
 
 - [ ] Run full test suite (`cargo nextest run`)
 - [ ] Run all examples
-- [ ] Test as dependency in Folio (real-world validation)
+- [ ] Test as dependency in t2t (real-world validation)
 - [ ] Verify publishing workflow
 - [ ] Cross-platform CI (Linux, macOS, Windows)
 

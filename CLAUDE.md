@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Strategic Positioning:**
 - **Not reinventing the wheel**: Uses official Playwright server for browser automation
 - **Cross-language consistency**: Same API as Python/JS/Java/.NET implementations
-- **Folio project driver**: Development driven by real-world need in [folio repo](https://github.com/padamson/folio) (browser testing for media ingestion tool)
+- **t2t project driver**: Development driven by real-world need in [t2t repo](https://github.com/padamson/t2t) (browser testing for full stack app)
 
 ### Technology Stack
 
@@ -40,43 +40,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 playwright-rust/
-├── crates/                          # Rust workspace
-│   ├── playwright/                  # High-level public API (like playwright-python)
-│   │   ├── src/
-│   │   │   ├── api/                # Public API modules
-│   │   │   │   ├── browser.rs
-│   │   │   │   ├── browser_context.rs
-│   │   │   │   ├── page.rs
-│   │   │   │   ├── locator.rs
-│   │   │   │   └── assertions.rs
-│   │   │   ├── lib.rs             # Public exports
-│   │   │   └── playwright.rs      # Main entry point
-│   │   └── Cargo.toml
-│   ├── playwright-core/            # Protocol implementation (internal)
-│   │   ├── src/
-│   │   │   ├── connection.rs      # JSON-RPC client
-│   │   │   ├── protocol/          # Protocol types
-│   │   │   │   ├── generated.rs   # Auto-generated from Playwright protocol
-│   │   │   │   └── mod.rs
-│   │   │   ├── server.rs          # Playwright server management
-│   │   │   └── lib.rs
-│   │   └── Cargo.toml
-│   └── playwright-codegen/         # Code generation from protocol (build-time)
+├── crates/
+│   └── playwright/                  # Single crate (consolidated from playwright-core in v0.7)
+│       ├── src/
+│       │   ├── api/                # Launch options, connect options
+│       │   ├── protocol/          # Protocol objects (Page, Browser, Locator, etc.)
+│       │   ├── server/            # Connection, transport, channel, object factory
+│       │   ├── lib.rs             # Public exports
+│       │   ├── assertions.rs      # Expect API (auto-retry assertions)
+│       │   └── error.rs           # Error types
+│       ├── tests/integration/     # Integration tests (632+ tests)
+│       ├── examples/              # Usage examples
+│       ├── fuzz/                  # Fuzz targets (cargo-fuzz)
 │       └── Cargo.toml
 ├── drivers/                        # Playwright server binaries (gitignored)
-├── examples/                       # Usage examples
-│   ├── basic.rs                   # Simple example
-│   ├── screenshots.rs             # Screenshot example
-│   └── assertions.rs              # Testing example
-├── tests/                         # Integration tests
-│   ├── browser_test.rs
-│   ├── page_test.rs
-│   └── assertions_test.rs
-├── docs/                          # Documentation
-│   ├── architecture/              # Architecture docs
+├── supply-chain/                   # cargo-vet audit config
+├── docs/
+│   ├── implementation-plans/      # Gap analysis, version plans
 │   ├── adr/                       # Architecture Decision Records
-│   └── templates/                 # Planning templates
-├── scripts/                       # Helper scripts
+│   └── roadmap.md
 └── README.md
 ```
 
@@ -295,7 +277,7 @@ We use a **module-level doctest approach** that ensures documentation stays sync
 //! # Example
 //!
 //! ```ignore
-//! use playwright_core::protocol::Playwright;
+//! use playwright_rs::Playwright;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -336,10 +318,10 @@ cargo test --doc --workspace
 cargo test --doc --workspace -- --ignored
 
 # Execute specific module's doctest
-cargo test --doc -p playwright-core assertions -- --ignored
+cargo test --doc -p playwright-rs assertions -- --ignored
 
 # Execute specific file's doctest
-cargo test --doc --package playwright-core 'protocol::page::Page' -- --ignored
+cargo test --doc --package playwright-rs 'protocol::page::Page' -- --ignored
 ```
 
 ### CI/Pre-commit Integration
@@ -373,34 +355,16 @@ cargo test --doc --package playwright-core 'protocol::page::Page' -- --ignored
 
 ## Versioning and Release Strategy
 
-### Semantic Versioning
-
 - **0.x.y** - Pre-1.0, API may change (current stage)
 - **1.0.0** - Stable API, ready for production
-- **2.0.0+** - Major version aligns with Playwright version if possible
 
-### Release Milestones
-
-- **v0.1.0** - Basic browser launch, page navigation, locators (folio needs)
-- **v0.2.0** - Actions, assertions, screenshots
-- **v0.3.0** - Network interception, advanced features
-- **v0.4.0** - Feature parity with playwright-python basics
-- **v0.5.0** - Production hardening, documentation
-- **v1.0.0** - Stable release
-
-### Publishing to crates.io
-
-**Incremental publishing:**
-1. Publish `playwright-core` v0.1.0 (internal crate)
-2. Publish `playwright` v0.1.0 (public API)
-3. Iterate with minor versions for new features
-4. Breaking changes increment to 0.x+1.0
+See [v1.0 Gap Analysis](docs/implementation-plans/v1.0-gap-analysis.md) for the detailed release plan, coverage trajectory, and remaining work.
 
 ## Testing Strategy
 
 ### Test Levels
 
-1. **Unit Tests** (`playwright-core`)
+1. **Unit Tests** (`playwright-rs`)
    - Protocol serialization/deserialization
    - Connection management
    - Server lifecycle
@@ -432,7 +396,7 @@ cargo test --doc --package playwright-core 'protocol::page::Page' -- --ignored
 ### Build-time Download
 
 ```rust
-// build.rs in playwright-core
+// build.rs in crates/playwright
 // Download Playwright server on first build
 
 fn main() {
@@ -455,7 +419,7 @@ fn main() {
 ### Runtime Launch
 
 ```rust
-// Server lifecycle managed in playwright-core/src/server.rs
+// Server lifecycle managed in crates/playwright/src/server/playwright_server.rs
 
 pub struct PlaywrightServer {
     process: Child,
@@ -570,7 +534,7 @@ pub enum Error {
 - **Playwright Docs**: https://playwright.dev/docs/api
 - **playwright-python**: https://github.com/microsoft/playwright-python
 - **Playwright Protocol**: https://github.com/microsoft/playwright/tree/main/packages/playwright-core/src/server
-- **Folio Project**: Example usage driver (browser testing for media tool)
+- **t2t Project**: Example usage driver (browser testing for full stack app)
 
 ## Development Commands
 
@@ -582,7 +546,7 @@ cargo build
 cargo nextest run
 
 # Test specific crate
-cargo nextest run -p playwright-core
+cargo nextest run -p playwright-rs
 
 # Test (standard cargo, fallback)
 cargo test
@@ -592,7 +556,7 @@ cargo test
 cargo test --doc
 
 # Doc-tests for specific crate
-cargo test --doc -p playwright-core
+cargo test --doc -p playwright-rs
 
 # Run example
 cargo run --example basic

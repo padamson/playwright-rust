@@ -194,13 +194,13 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 ## Version 1.0: Real-World Validation & Final Polish
 
-**Goal:** Real-world testing in folio, incorporate user feedback, final polish before v1.0.0.
+**Goal:** Real-world testing in t2t, incorporate user feedback, final polish before v1.0.0.
 
 **Status:** 🚀 In Progress - See [v1.0-real-world-validation.md](./implementation-plans/v1.0-real-world-validation.md)
 
 **Milestones by Slice:**
 - Slice 0: Single-crate architecture consolidation (Completed in v0.7)
-- Slice 1: Folio integration & dogfooding
+- Slice 1: t2t integration & dogfooding
 - Slice 2: Community feedback analysis
 - Slice 3: Examples and documentation (informed by feedback)
 - Slice 4: Performance optimization (data-driven)
@@ -266,7 +266,7 @@ Throughout all versions, we maintain:
 - **Version completions** - Publish to crates.io as `0.x.0`
 - **Bug fixes** - Patch releases as `0.x.y`
 - **Version 0.6 complete** - Publish `v0.6.0` for early adopter feedback and real-world testing
-- **Version 1.0 complete** - Publish `v1.0.0` after folio integration and user validation
+- **Version 1.0 complete** - Publish `v1.0.0` after t2t integration and user validation
 
 ### Communication
 

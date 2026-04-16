@@ -77,18 +77,26 @@ browser.close().await?;
 
 Each pre-v1.0 release targets 100% coverage of specific API classes:
 
-| Class | Methods | Current | v0.10.0 | v0.11.0 |
-|-------|---------|---------|---------|---------|
-| **Locator** | 55 | **100%** | 100% | 100% |
-| **Response** | 18 | **100%** | 100% | 100% |
-| **Request** | 19 | **100%** | 100% | 100% |
-| **FrameLocator** | 10 | **100%** | 100% | 100% |
-| Browser | 12 | **100%** | 100% | 100% |
-| Page | 67 | **~99%** | ~99% | **100%** |
-| BrowserContext | 32 | ~97% | ~97% | **100%** |
-| Frame | 29 | **100%** | 100% | 100% |
+| Class | Methods | Current (v0.11) | v0.12.0 |
+|-------|---------|-----------------|---------|
+| **Locator** | 55 | **100%** | 100% |
+| **Response** | 18 | **100%** | 100% |
+| **Request** | 19 | **100%** | 100% |
+| **FrameLocator** | 10 | **100%** | 100% |
+| **Browser** | 12 | **100%** | 100% |
+| **Frame** | 29 | **100%** | 100% |
+| **JSHandle** | 7 | **100%** | 100% |
+| **Worker** | 3 | **100%** | 100% |
+| **WebSocket** | 8 | **100%** | 100% |
+| **ConsoleMessage** | 6 | **100%** | 100% |
+| **FileChooser** | 4 | **100%** | 100% |
+| **Selectors** | 2 | **100%** | 100% |
+| **WebError** | 2 | **100%** | 100% |
+| Page | 67 | ~99% | **100%** |
+| BrowserContext | 32 | ~99% | **100%** |
 
-Bold = release where the class reaches 100%. See the [full gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for details.
+v0.12.0 targets full Python parity. v1.0.0 follows after multi-month dogfooding.
+See the [full gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for details.
 
 ## How It Works
 
@@ -137,7 +145,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.10"  # Auto-updates to latest 0.10.x
+playwright-rs = "0.11"  # Auto-updates to latest 0.11.x
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -252,4 +260,3 @@ Apache-2.0 (same as Microsoft Playwright)
 
 - **Microsoft Playwright Team** - For the amazing browser automation framework
 - **playwright-python** - API design reference
-- **Folio Project** - Initial driver for development needs
