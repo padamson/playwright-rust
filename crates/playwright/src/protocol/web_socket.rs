@@ -1,77 +1,90 @@
-// WebSocket protocol object
-//
-// Represents a WebSocket connection in the page.
-//
-// # Example
-//
-// ```ignore
-// use playwright_rs::protocol::{Playwright, WebSocket};
-//
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let playwright = Playwright::launch().await?;
-//     let browser = playwright.chromium().launch().await?;
-//     let page = browser.new_page().await?;
-//
-//     // Listen for WebSocket connections
-//     page.on_websocket(|ws| {
-//         println!("WebSocket opened: {}", ws.url());
-//
-//         // Listen for frames
-//         let ws_clone = ws.clone();
-//         Box::pin(async move {
-//             ws_clone.on_frame_received(|payload| {
-//                 Box::pin(async move {
-//                     println!("Received: {:?}", payload);
-//                     Ok(())
-//                 })
-//             }).await?;
-//             Ok(())
-//         })
-//     }).await?;
-//
-//     page.goto("https://websocket.org/echo.html", None).await?;
-//
-//     browser.close().await?;
-//     Ok(())
-// }
-// ```
+//! WebSocket protocol object — represents a WebSocket connection in the page.
+//!
+//! # Example
+//!
+//! ```ignore
+//! use playwright_rs::protocol::Playwright;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let playwright = Playwright::launch().await?;
+//!     let browser = playwright.chromium().launch().await?;
+//!     let page = browser.new_page().await?;
+//!
+//!     // Set up the waiter BEFORE the action that opens the WebSocket
+//!     let ws_waiter = page.expect_websocket(None).await?;
+//!
+//!     // Navigate to a page that opens a WebSocket
+//!     page.goto("https://example.com/ws-demo", None).await?;
+//!
+//!     let ws = ws_waiter.wait().await?;
+//!     println!("WebSocket URL: {}", ws.url());
+//!
+//!     // Wait for the connection to close
+//!     let close_waiter = ws.expect_close(Some(5000.0)).await?;
+//!     // ... trigger close ...
+//!     close_waiter.wait().await?;
+//!
+//!     assert!(ws.is_closed());
+//!
+//!     browser.close().await?;
+//!     Ok(())
+//! }
+//! ```
 
 use crate::error::Result;
+use crate::protocol::EventWaiter;
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
 use serde_json::Value;
 use std::any::Any;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use tokio::sync::oneshot;
 
-/// WebSocket represents a WebSocket connection in the page.
+/// Represents a WebSocket connection initiated by a page.
+///
+/// `WebSocket` objects are created by the Playwright server when the page
+/// opens a WebSocket connection. Use [`Page::on_websocket`] to receive
+/// `WebSocket` objects.
+///
+/// See: <https://playwright.dev/docs/api/class-websocket>
 #[derive(Clone)]
 pub struct WebSocket {
     base: ChannelOwnerImpl,
+    /// The URL of the WebSocket connection.
     url: String,
-    // Event handlers
+    /// Tracks whether the WebSocket has been closed.
+    is_closed: Arc<AtomicBool>,
+    /// General event handlers (frameSent, frameReceived, socketError, close).
     handlers: Arc<Mutex<Vec<WebSocketEventHandler>>>,
+    /// One-shot senders waiting for the next "close" event.
+    close_waiters: Arc<Mutex<Vec<oneshot::Sender<()>>>>,
+    /// One-shot senders waiting for the next "frameReceived" event.
+    frame_received_waiters: Arc<Mutex<Vec<oneshot::Sender<String>>>>,
+    /// One-shot senders waiting for the next "frameSent" event.
+    frame_sent_waiters: Arc<Mutex<Vec<oneshot::Sender<String>>>>,
 }
 
-/// Type alias for boxed event handler future
+/// Type alias for boxed event handler future.
 type WebSocketEventHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
-/// WebSocket event handler
+/// WebSocket event handler type.
 type WebSocketEventHandler =
     Arc<dyn Fn(WebSocketEvent) -> WebSocketEventHandlerFuture + Send + Sync>;
 
 #[derive(Clone, Debug)]
 enum WebSocketEvent {
-    FrameSent(String), // Payload is string (text) or base64 (binary)
+    FrameSent(String),
     FrameReceived(String),
     SocketError(String),
     Close,
 }
 
 impl WebSocket {
-    /// Creates a new WebSocket object
+    /// Creates a new `WebSocket` object.
     pub fn new(
         parent: Arc<dyn ChannelOwner>,
         type_name: String,
@@ -87,28 +100,46 @@ impl WebSocket {
             initializer,
         );
 
-        let handlers = Arc::new(Mutex::new(Vec::new()));
-
         Ok(Self {
             base,
             url,
-            handlers,
+            is_closed: Arc::new(AtomicBool::new(false)),
+            handlers: Arc::new(Mutex::new(Vec::new())),
+            close_waiters: Arc::new(Mutex::new(Vec::new())),
+            frame_received_waiters: Arc::new(Mutex::new(Vec::new())),
+            frame_sent_waiters: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
-    /// Returns the URL of the WebSocket.
+    /// Returns the URL of the WebSocket connection.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-url>
     pub fn url(&self) -> &str {
         &self.url
     }
 
-    /// Returns true if the WebSocket is closed.
+    /// Returns `true` if the WebSocket is closed.
+    ///
+    /// The value becomes `true` when the `"close"` event fires (i.e. when the
+    /// underlying TCP connection is torn down). It remains `false` from
+    /// construction until that point.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-is-closed>
     pub fn is_closed(&self) -> bool {
-        // Simple check based on basic close event tracking could be added here
-        // For now, we rely on the protocol state or user tracking
-        false
+        self.is_closed.load(Ordering::Acquire)
     }
 
-    /// Adds a listener for FrameSent events.
+    /// Registers a handler that fires when a frame is sent from the page to the server.
+    ///
+    /// The handler receives the frame payload as a `String`. For binary frames the
+    /// value is the base-64-encoded representation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error only if the handler cannot be registered (in practice
+    /// this never fails).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-event-frame-sent>
     pub async fn on_frame_sent<F>(&self, handler: F) -> Result<()>
     where
         F: Fn(String) -> WebSocketEventHandlerFuture + Send + Sync + 'static,
@@ -121,7 +152,17 @@ impl WebSocket {
         Ok(())
     }
 
-    /// Adds a listener for FrameReceived events.
+    /// Registers a handler that fires when a frame is received from the server.
+    ///
+    /// The handler receives the frame payload as a `String`. For binary frames the
+    /// value is the base-64-encoded representation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error only if the handler cannot be registered (in practice
+    /// this never fails).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-event-frame-received>
     pub async fn on_frame_received<F>(&self, handler: F) -> Result<()>
     where
         F: Fn(String) -> WebSocketEventHandlerFuture + Send + Sync + 'static,
@@ -134,7 +175,11 @@ impl WebSocket {
         Ok(())
     }
 
-    /// Adds a listener for SocketError events.
+    /// Registers a handler that fires when the WebSocket encounters an error.
+    ///
+    /// The handler receives the error message as a `String`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-event-socket-error>
     pub async fn on_error<F>(&self, handler: F) -> Result<()>
     where
         F: Fn(String) -> WebSocketEventHandlerFuture + Send + Sync + 'static,
@@ -147,7 +192,9 @@ impl WebSocket {
         Ok(())
     }
 
-    /// Adds a listener for Close events.
+    /// Registers a handler that fires when the WebSocket is closed.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-event-close>
     pub async fn on_close<F>(&self, handler: F) -> Result<()>
     where
         F: Fn(()) -> WebSocketEventHandlerFuture + Send + Sync + 'static,
@@ -160,22 +207,73 @@ impl WebSocket {
         Ok(())
     }
 
-    // Dispatch methods required by the protocol layer
-    // These are called when the server sends an event
+    /// Creates a one-shot waiter that resolves when the WebSocket is closed.
+    ///
+    /// The waiter **must** be created before the action that closes the
+    /// WebSocket to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` — Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the WebSocket
+    /// is not closed within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-wait-for-event>
+    pub async fn expect_close(&self, timeout: Option<f64>) -> Result<EventWaiter<()>> {
+        let (tx, rx) = oneshot::channel();
+        self.close_waiters.lock().unwrap().push(tx);
+        Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
+    }
 
+    /// Creates a one-shot waiter that resolves when the next frame is received from the server.
+    ///
+    /// The waiter **must** be created before the action that causes a frame to be
+    /// received to avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` — Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no frame is
+    /// received within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-wait-for-event>
+    pub async fn expect_frame_received(&self, timeout: Option<f64>) -> Result<EventWaiter<String>> {
+        let (tx, rx) = oneshot::channel();
+        self.frame_received_waiters.lock().unwrap().push(tx);
+        Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
+    }
+
+    /// Creates a one-shot waiter that resolves when the next frame is sent from the page.
+    ///
+    /// The waiter **must** be created before the action that sends the frame to
+    /// avoid a race condition.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` — Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no frame is
+    /// sent within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-websocket#web-socket-wait-for-event>
+    pub async fn expect_frame_sent(&self, timeout: Option<f64>) -> Result<EventWaiter<String>> {
+        let (tx, rx) = oneshot::channel();
+        self.frame_sent_waiters.lock().unwrap().push(tx);
+        Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
+    }
+
+    /// Dispatches a server-sent event to all registered handlers and waiters.
     pub(crate) fn handle_event(&self, event: &str, params: &Value) {
         let ws_event = match event {
             "frameSent" => {
-                let _payload = params["opcode"].as_i64().map_or("".to_string(), |op| {
-                    if op == 2 {
-                        // Binary
-                        params["data"].as_str().unwrap_or("").to_string()
-                    } else {
-                        // Text
-                        params["data"].as_str().unwrap_or("").to_string()
-                    }
-                });
-                // Simplified: Just returning data for now
                 WebSocketEvent::FrameSent(params["data"].as_str().unwrap_or("").to_string())
             }
             "frameReceived" => {
@@ -184,15 +282,40 @@ impl WebSocket {
             "socketError" => {
                 WebSocketEvent::SocketError(params["error"].as_str().unwrap_or("").to_string())
             }
-            "close" => WebSocketEvent::Close,
+            "close" => {
+                // Mark as closed before notifying waiters so is_closed() is true
+                // when any await continuation runs.
+                self.is_closed.store(true, Ordering::Release);
+                WebSocketEvent::Close
+            }
             _ => return,
         };
 
-        let handlers = self.handlers.lock().unwrap();
-        for handler in handlers.iter() {
-            let handler = handler.clone();
+        // Notify one-shot waiters for specific event types
+        match &ws_event {
+            WebSocketEvent::Close => {
+                let waiters: Vec<_> = std::mem::take(&mut *self.close_waiters.lock().unwrap());
+                for tx in waiters {
+                    let _ = tx.send(());
+                }
+            }
+            WebSocketEvent::FrameReceived(payload) => {
+                if let Some(tx) = self.frame_received_waiters.lock().unwrap().pop() {
+                    let _ = tx.send(payload.clone());
+                }
+            }
+            WebSocketEvent::FrameSent(payload) => {
+                if let Some(tx) = self.frame_sent_waiters.lock().unwrap().pop() {
+                    let _ = tx.send(payload.clone());
+                }
+            }
+            WebSocketEvent::SocketError(_) => {}
+        }
+
+        // Notify general handlers (fire-and-forget)
+        let handlers = self.handlers.lock().unwrap().clone();
+        for handler in handlers {
             let event = ws_event.clone();
-            // Fire and forget
             tokio::spawn(async move {
                 let _ = handler(event).await;
             });
@@ -226,6 +349,14 @@ impl ChannelOwner for WebSocket {
     }
 
     fn dispose(&self, reason: crate::server::channel_owner::DisposeReason) {
+        // When the WebSocket object is disposed (page closed, or server-initiated),
+        // mark it as closed and satisfy any pending close waiters — even if the
+        // "close" event was never explicitly delivered before __dispose__.
+        self.is_closed.store(true, Ordering::Release);
+        let waiters: Vec<_> = std::mem::take(&mut *self.close_waiters.lock().unwrap());
+        for tx in waiters {
+            let _ = tx.send(());
+        }
         self.base.dispose(reason)
     }
 

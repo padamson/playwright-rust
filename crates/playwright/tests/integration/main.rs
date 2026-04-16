@@ -59,5 +59,6 @@ mod stability;
 mod storage_state;
 mod transport;
 mod web_error;
+mod websocket;
 mod windows_cleanup;
 mod worker;

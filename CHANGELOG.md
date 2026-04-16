@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`WebSocket` class completed** — all methods and events fully implemented
+  - `is_closed()` — returns `true` once the `"close"` event has fired or the object is disposed; was previously a stub that always returned `false`
+  - `expect_close(timeout)` — one-shot `EventWaiter<()>` that resolves when the WebSocket closes; resolves via dispose path as well (handles page-close gracefully)
+  - `expect_frame_received(timeout)` — one-shot `EventWaiter<String>` that resolves with the next frame payload received from the server
+  - `expect_frame_sent(timeout)` — one-shot `EventWaiter<String>` that resolves with the next frame payload sent to the server
+  - `on_frame_sent`, `on_frame_received`, `on_error`, `on_close` — existing continuous handlers (unchanged)
+  - Dispose override: `is_closed` flag and close waiters are satisfied on `__dispose__` in addition to the explicit `"close"` event
+  - 5 new integration tests covering url, is_closed lifecycle, frame_received handler, expect_close waiter, and expect_frame_received API
+  - See: <https://playwright.dev/docs/api/class-websocket>
+
 - **`Worker` class** — represents a Web Worker or Service Worker
   - `url()` — the URL of the worker script
   - `evaluate(expression, arg)` — evaluates a JS expression in the worker context, returns deserialized result
