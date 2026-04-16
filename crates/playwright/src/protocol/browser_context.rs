@@ -197,6 +197,14 @@ pub struct BrowserContext {
     weberror_handlers: Arc<Mutex<Vec<WebErrorHandler>>>,
     /// Context-level service worker event handlers (fired when a service worker is registered)
     serviceworker_handlers: Arc<Mutex<Vec<ServiceWorkerHandler>>>,
+    /// One-shot senders waiting for the next "request" event (expect_event("request"))
+    request_waiters: Arc<Mutex<Vec<oneshot::Sender<Request>>>>,
+    /// One-shot senders waiting for the next "response" event (expect_event("response"))
+    response_waiters: Arc<Mutex<Vec<oneshot::Sender<ResponseObject>>>>,
+    /// One-shot senders waiting for the next "weberror" event (expect_event("weberror"))
+    weberror_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::WebError>>>>,
+    /// One-shot senders waiting for the next "serviceworker" event (expect_event("serviceworker"))
+    serviceworker_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::Worker>>>>,
 }
 
 impl BrowserContext {
@@ -274,6 +282,10 @@ impl BrowserContext {
             console_waiters: Arc::new(Mutex::new(Vec::new())),
             weberror_handlers: Arc::new(Mutex::new(Vec::new())),
             serviceworker_handlers: Arc::new(Mutex::new(Vec::new())),
+            request_waiters: Arc::new(Mutex::new(Vec::new())),
+            response_waiters: Arc::new(Mutex::new(Vec::new())),
+            weberror_waiters: Arc::new(Mutex::new(Vec::new())),
+            serviceworker_waiters: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog event subscription
@@ -1318,6 +1330,170 @@ impl BrowserContext {
         Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
     }
 
+    /// Waits for the given event to fire and returns a typed `EventValue`.
+    ///
+    /// This is the generic version of the specific `expect_*` methods. It matches
+    /// the playwright-python / playwright-js `context.expect_event(event_name)` API.
+    ///
+    /// The waiter **must** be created before the action that triggers the event.
+    ///
+    /// # Supported event names
+    ///
+    /// `"page"`, `"close"`, `"console"`, `"request"`, `"response"`,
+    /// `"weberror"`, `"serviceworker"`
+    ///
+    /// # Arguments
+    ///
+    /// * `event` - Event name (case-sensitive, matches Playwright protocol names).
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::InvalidArgument`](crate::error::Error::InvalidArgument) for unknown event names.
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the event does not fire within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
+    pub async fn expect_event(
+        &self,
+        event: &str,
+        timeout: Option<f64>,
+    ) -> crate::error::Result<EventWaiter<crate::protocol::EventValue>> {
+        use crate::protocol::EventValue;
+        use tokio::sync::oneshot;
+
+        let timeout_ms = timeout.or(Some(30_000.0));
+
+        match event {
+            "page" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<Page>();
+                self.page_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Page(v));
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            "close" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<()>();
+                self.close_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if inner_rx.await.is_ok() {
+                        let _ = tx.send(EventValue::Close);
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            "console" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::ConsoleMessage>();
+
+                let needs_subscription = self.console_handlers.lock().unwrap().is_empty()
+                    && self.console_waiters.lock().unwrap().is_empty();
+                if needs_subscription {
+                    _ = self.channel().update_subscription("console", true).await;
+                }
+                self.console_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::ConsoleMessage(v));
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            "request" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<Request>();
+
+                let needs_subscription = {
+                    let handlers = self.request_handlers.lock().unwrap();
+                    let waiters = self.request_waiters.lock().unwrap();
+                    handlers.is_empty() && waiters.is_empty()
+                };
+                if needs_subscription {
+                    _ = self.channel().update_subscription("request", true).await;
+                }
+                self.request_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Request(v));
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            "response" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<ResponseObject>();
+
+                let needs_subscription = {
+                    let handlers = self.response_handlers.lock().unwrap();
+                    let waiters = self.response_waiters.lock().unwrap();
+                    handlers.is_empty() && waiters.is_empty()
+                };
+                if needs_subscription {
+                    _ = self.channel().update_subscription("response", true).await;
+                }
+                self.response_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Response(v));
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            "weberror" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::WebError>();
+                self.weberror_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::WebError(v));
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            "serviceworker" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Worker>();
+                self.serviceworker_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Worker(v));
+                    }
+                });
+
+                Ok(EventWaiter::new(rx, timeout_ms))
+            }
+
+            other => Err(crate::error::Error::InvalidArgument(format!(
+                "Unknown event name '{}'. Supported: page, close, console, request, response, \
+                 weberror, serviceworker",
+                other
+            ))),
+        }
+    }
+
     /// Updates network interception patterns for this context
     async fn enable_network_interception(&self) -> Result<()> {
         let patterns: Vec<serde_json::Value> = self
@@ -1413,6 +1589,7 @@ impl BrowserContext {
             let ctx_request_handlers = self.request_handlers.clone();
             let ctx_request_finished_handlers = self.request_finished_handlers.clone();
             let ctx_request_failed_handlers = self.request_failed_handlers.clone();
+            let ctx_request_waiters = self.request_waiters.clone();
             tokio::spawn(async move {
                 let request: Request =
                     match connection.get_typed::<Request>(&request_guid_owned).await {
@@ -1446,6 +1623,13 @@ impl BrowserContext {
                     }
                 }
 
+                // Notify expect_event("request") waiters (only for "request" events)
+                if method == "request"
+                    && let Some(tx) = ctx_request_waiters.lock().unwrap().pop()
+                {
+                    let _ = tx.send(request.clone());
+                }
+
                 // Then dispatch to page-level handlers
                 if let Some(page_guid) = page_guid_owned {
                     let page: Page = match connection.get_typed::<Page>(&page_guid).await {
@@ -1477,6 +1661,7 @@ impl BrowserContext {
                 .and_then(|v| v.as_str())
                 .map(|v| v.to_owned());
             let ctx_response_handlers = self.response_handlers.clone();
+            let ctx_response_waiters = self.response_waiters.clone();
             tokio::spawn(async move {
                 let response: ResponseObject = match connection
                     .get_typed::<ResponseObject>(&response_guid_owned)
@@ -1492,6 +1677,11 @@ impl BrowserContext {
                     if let Err(e) = handler(response.clone()).await {
                         tracing::warn!("Context response handler error: {}", e);
                     }
+                }
+
+                // Notify expect_event("response") waiters
+                if let Some(tx) = ctx_response_waiters.lock().unwrap().pop() {
+                    let _ = tx.send(response.clone());
                 }
 
                 // Then dispatch to page-level handlers
@@ -1652,6 +1842,7 @@ impl ChannelOwner for BrowserContext {
 
                 let connection = self.connection();
                 let weberror_handlers = self.weberror_handlers.clone();
+                let weberror_waiters = self.weberror_waiters.clone();
 
                 tokio::spawn(async move {
                     // Resolve page (optional — may be None if page already closed)
@@ -1668,6 +1859,11 @@ impl ChannelOwner for BrowserContext {
                         if let Err(e) = handler(web_error.clone()).await {
                             tracing::warn!("Context weberror handler error: {}", e);
                         }
+                    }
+
+                    // Notify expect_event("weberror") waiters
+                    if let Some(tx) = weberror_waiters.lock().unwrap().pop() {
+                        let _ = tx.send(web_error);
                     }
 
                     // 2. Forward to page-level pageerror handlers
@@ -1934,6 +2130,7 @@ impl ChannelOwner for BrowserContext {
                     let connection = self.connection();
                     let worker_guid_owned = worker_guid.to_string();
                     let serviceworker_handlers = self.serviceworker_handlers.clone();
+                    let serviceworker_waiters = self.serviceworker_waiters.clone();
 
                     tokio::spawn(async move {
                         let worker: crate::protocol::Worker = match connection
@@ -1958,6 +2155,10 @@ impl ChannelOwner for BrowserContext {
                                     tracing::error!("Error in serviceworker handler: {}", e);
                                 }
                             });
+                        }
+                        // Notify expect_event("serviceworker") waiters
+                        if let Some(tx) = serviceworker_waiters.lock().unwrap().pop() {
+                            let _ = tx.send(worker);
                         }
                     });
                 }

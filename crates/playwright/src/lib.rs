@@ -235,6 +235,9 @@ pub use protocol::{
 // Re-export EventWaiter for use with expect_page() / expect_close()
 pub use protocol::EventWaiter;
 
+// Re-export EventValue for use with expect_event()
+pub use protocol::EventValue;
+
 // Re-export ConsoleMessage types
 pub use protocol::{ConsoleMessage, ConsoleMessageLocation};
 

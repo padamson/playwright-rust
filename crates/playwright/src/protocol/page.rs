@@ -247,6 +247,20 @@ pub struct Page {
     framenavigated_handlers: Arc<Mutex<Vec<FrameNavigatedHandler>>>,
     /// worker event handlers (fires when a web worker is created in the page)
     worker_handlers: Arc<Mutex<Vec<WorkerHandler>>>,
+    /// One-shot senders waiting for the next "close" event (expect_event("close"))
+    close_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<()>>>>,
+    /// One-shot senders waiting for the next "load" event (expect_event("load"))
+    load_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<()>>>>,
+    /// One-shot senders waiting for the next "crash" event (expect_event("crash"))
+    crash_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<()>>>>,
+    /// One-shot senders waiting for the next "pageerror" event (expect_event("pageerror"))
+    pageerror_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<String>>>>,
+    /// One-shot senders waiting for the next frame event (frameattached/detached/navigated)
+    frameattached_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
+    framedetached_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
+    framenavigated_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
+    /// One-shot senders waiting for the next "worker" event (expect_event("worker"))
+    worker_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Worker>>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -460,6 +474,14 @@ impl Page {
             framedetached_handlers: Arc::new(Mutex::new(Vec::new())),
             framenavigated_handlers: Arc::new(Mutex::new(Vec::new())),
             worker_handlers: Arc::new(Mutex::new(Vec::new())),
+            close_waiters: Arc::new(Mutex::new(Vec::new())),
+            load_waiters: Arc::new(Mutex::new(Vec::new())),
+            crash_waiters: Arc::new(Mutex::new(Vec::new())),
+            pageerror_waiters: Arc::new(Mutex::new(Vec::new())),
+            frameattached_waiters: Arc::new(Mutex::new(Vec::new())),
+            framedetached_waiters: Arc::new(Mutex::new(Vec::new())),
+            framenavigated_waiters: Arc::new(Mutex::new(Vec::new())),
+            worker_waiters: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -1791,6 +1813,285 @@ impl Page {
         ))
     }
 
+    /// Waits for the given event to fire and returns a typed `EventValue`.
+    ///
+    /// This is the generic version of the specific `expect_*` methods. It matches
+    /// the playwright-python / playwright-js `page.expect_event(event_name)` API.
+    ///
+    /// The waiter **must** be created before the action that triggers the event.
+    ///
+    /// # Supported event names
+    ///
+    /// `"request"`, `"response"`, `"popup"`, `"download"`, `"console"`,
+    /// `"filechooser"`, `"close"`, `"load"`, `"crash"`, `"pageerror"`,
+    /// `"frameattached"`, `"framedetached"`, `"framenavigated"`, `"worker"`
+    ///
+    /// # Arguments
+    ///
+    /// * `event` - Event name (case-sensitive, matches Playwright protocol names).
+    /// * `timeout` - Timeout in milliseconds. Defaults to 30 000 ms if `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::InvalidArgument`](crate::error::Error::InvalidArgument) for unknown event names.
+    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the event does not fire within the timeout.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    pub async fn expect_event(
+        &self,
+        event: &str,
+        timeout: Option<f64>,
+    ) -> Result<crate::protocol::EventWaiter<crate::protocol::EventValue>> {
+        use crate::protocol::EventValue;
+        use tokio::sync::oneshot;
+
+        let timeout_ms = timeout.or(Some(30_000.0));
+
+        match event {
+            "request" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<Request>();
+
+                let needs_subscription = {
+                    let handlers = self.request_handlers.lock().unwrap();
+                    let waiters = self.request_waiters.lock().unwrap();
+                    handlers.is_empty() && waiters.is_empty()
+                };
+                if needs_subscription {
+                    _ = self.channel().update_subscription("request", true).await;
+                }
+                self.request_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Request(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "response" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<ResponseObject>();
+
+                let needs_subscription = {
+                    let handlers = self.response_handlers.lock().unwrap();
+                    let waiters = self.response_waiters.lock().unwrap();
+                    handlers.is_empty() && waiters.is_empty()
+                };
+                if needs_subscription {
+                    _ = self.channel().update_subscription("response", true).await;
+                }
+                self.response_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Response(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "popup" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<Page>();
+                self.popup_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Page(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "download" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Download>();
+                self.download_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Download(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "console" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::ConsoleMessage>();
+
+                let needs_subscription = {
+                    let handlers = self.console_handlers.lock().unwrap();
+                    let waiters = self.console_waiters.lock().unwrap();
+                    handlers.is_empty() && waiters.is_empty()
+                };
+                if needs_subscription {
+                    _ = self.channel().update_subscription("console", true).await;
+                }
+                self.console_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::ConsoleMessage(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "filechooser" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::FileChooser>();
+
+                let needs_subscription = {
+                    let handlers = self.filechooser_handlers.lock().unwrap();
+                    let waiters = self.filechooser_waiters.lock().unwrap();
+                    handlers.is_empty() && waiters.is_empty()
+                };
+                if needs_subscription {
+                    _ = self
+                        .channel()
+                        .update_subscription("fileChooser", true)
+                        .await;
+                }
+                self.filechooser_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::FileChooser(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "close" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<()>();
+                self.close_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if inner_rx.await.is_ok() {
+                        let _ = tx.send(EventValue::Close);
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "load" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<()>();
+                self.load_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if inner_rx.await.is_ok() {
+                        let _ = tx.send(EventValue::Load);
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "crash" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<()>();
+                self.crash_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if inner_rx.await.is_ok() {
+                        let _ = tx.send(EventValue::Crash);
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "pageerror" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<String>();
+                self.pageerror_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(msg) = inner_rx.await {
+                        let _ = tx.send(EventValue::PageError(msg));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "frameattached" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
+                self.frameattached_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Frame(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "framedetached" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
+                self.framedetached_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Frame(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "framenavigated" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
+                self.framenavigated_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Frame(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            "worker" => {
+                let (tx, rx) = oneshot::channel::<EventValue>();
+                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Worker>();
+                self.worker_waiters.lock().unwrap().push(inner_tx);
+
+                tokio::spawn(async move {
+                    if let Ok(v) = inner_rx.await {
+                        let _ = tx.send(EventValue::Worker(v));
+                    }
+                });
+
+                Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
+            }
+
+            other => Err(Error::InvalidArgument(format!(
+                "Unknown event name '{}'. Supported: request, response, popup, download, \
+                 console, filechooser, close, load, crash, pageerror, \
+                 frameattached, framedetached, framenavigated, worker",
+                other
+            ))),
+        }
+    }
+
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
     where
@@ -2363,6 +2664,11 @@ impl Page {
                 tracing::warn!("Close handler error: {}", e);
             }
         }
+        // Notify expect_event("close") waiters
+        let waiters: Vec<_> = self.close_waiters.lock().unwrap().drain(..).collect();
+        for tx in waiters {
+            let _ = tx.send(());
+        }
     }
 
     async fn on_load_event(&self) {
@@ -2371,6 +2677,11 @@ impl Page {
             if let Err(e) = handler().await {
                 tracing::warn!("Load handler error: {}", e);
             }
+        }
+        // Notify expect_event("load") waiters
+        let waiters: Vec<_> = self.load_waiters.lock().unwrap().drain(..).collect();
+        for tx in waiters {
+            let _ = tx.send(());
         }
     }
 
@@ -2381,6 +2692,11 @@ impl Page {
                 tracing::warn!("Crash handler error: {}", e);
             }
         }
+        // Notify expect_event("crash") waiters
+        let waiters: Vec<_> = self.crash_waiters.lock().unwrap().drain(..).collect();
+        for tx in waiters {
+            let _ = tx.send(());
+        }
     }
 
     async fn on_pageerror_event(&self, message: String) {
@@ -2389,6 +2705,10 @@ impl Page {
             if let Err(e) = handler(message.clone()).await {
                 tracing::warn!("PageError handler error: {}", e);
             }
+        }
+        // Notify expect_event("pageerror") waiters
+        if let Some(tx) = self.pageerror_waiters.lock().unwrap().pop() {
+            let _ = tx.send(message);
         }
     }
 
@@ -2412,6 +2732,9 @@ impl Page {
                 tracing::warn!("FrameAttached handler error: {}", e);
             }
         }
+        if let Some(tx) = self.frameattached_waiters.lock().unwrap().pop() {
+            let _ = tx.send(frame);
+        }
     }
 
     async fn on_framedetached_event(&self, frame: crate::protocol::Frame) {
@@ -2421,6 +2744,9 @@ impl Page {
                 tracing::warn!("FrameDetached handler error: {}", e);
             }
         }
+        if let Some(tx) = self.framedetached_waiters.lock().unwrap().pop() {
+            let _ = tx.send(frame);
+        }
     }
 
     async fn on_framenavigated_event(&self, frame: crate::protocol::Frame) {
@@ -2429,6 +2755,9 @@ impl Page {
             if let Err(e) = handler(frame.clone()).await {
                 tracing::warn!("FrameNavigated handler error: {}", e);
             }
+        }
+        if let Some(tx) = self.framenavigated_waiters.lock().unwrap().pop() {
+            let _ = tx.send(frame);
         }
     }
 
@@ -3112,6 +3441,10 @@ impl ChannelOwner for Page {
                                     tracing::error!("Error in worker handler: {}", e);
                                 }
                             });
+                        }
+                        // Notify expect_event("worker") waiters
+                        if let Some(tx) = self_clone.worker_waiters.lock().unwrap().pop() {
+                            let _ = tx.send(worker);
                         }
                     });
                 }
