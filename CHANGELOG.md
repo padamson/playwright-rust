@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`expect_event()`** — generic event waiting on Page and BrowserContext, returning typed `EventValue` enum
+- **`playwright.request()`** — headless API testing without a browser (`get`, `post`, `put`, `delete`, `patch`, `head`, `fetch`, `APIResponse`)
 
 ## [0.11.0] - 2026-04-16
 

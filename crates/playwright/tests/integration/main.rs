@@ -10,6 +10,7 @@ mod common;
 mod test_server;
 
 mod actions;
+mod api_request;
 mod assertions;
 mod back_references;
 mod browser;

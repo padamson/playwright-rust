@@ -62,7 +62,9 @@ pub use action_options::{
     PressSequentiallyOptions, SelectOptions,
 };
 pub use android::Android;
-pub use api_request_context::APIRequestContext;
+pub use api_request_context::{
+    APIRequest, APIRequestContext, APIRequestContextOptions, APIResponse,
+};
 pub use binding_call::BindingCall;
 pub use browser::{Browser, StartTracingOptions};
 pub use browser_context::{

@@ -266,6 +266,34 @@ impl Playwright {
         &self.webkit
     }
 
+    /// Returns an `APIRequest` factory for creating standalone HTTP request contexts.
+    ///
+    /// Use this to perform HTTP requests outside of a browser page, suitable for
+    /// headless API testing.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let ctx = playwright.request().new_context(None).await?;
+    /// let response = ctx.get("https://httpbin.org/get", None).await?;
+    /// assert!(response.ok());
+    /// ctx.dispose().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-playwright#playwright-request>
+    pub fn request(&self) -> crate::protocol::api_request_context::APIRequest {
+        crate::protocol::api_request_context::APIRequest::new(
+            self.channel().clone(),
+            self.connection(),
+        )
+    }
+
     /// Returns the Selectors object for registering custom selector engines.
     ///
     /// The Selectors instance is shared across all browser contexts created on this

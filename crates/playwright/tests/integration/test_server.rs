@@ -12,7 +12,7 @@ use axum::{
     body::Body,
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     http::{HeaderMap, Response, StatusCode},
-    routing::get,
+    routing::{get, post},
 };
 use std::net::SocketAddr;
 use tokio::task::JoinHandle;
@@ -53,6 +53,7 @@ impl TestServer {
             .route("/drag_drop.html", get(drag_drop_page))
             .route("/wait_for.html", get(wait_for_page))
             .route("/api/data.json", get(json_data_endpoint))
+            .route("/api/echo", post(echo_post_endpoint))
             .route("/redirect", get(redirect_handler))
             .route("/iframe-test.html", get(iframe_test_page))
             .route("/iframe-content.html", get(iframe_content_page))
@@ -928,6 +929,15 @@ async fn inner_iframe_page() -> Response<Body> {
 </body>
 </html>"##,
         ))
+        .unwrap()
+}
+
+/// Echo back the POST body verbatim — used by API request tests.
+async fn echo_post_endpoint(body: axum::body::Bytes) -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/plain")
+        .body(Body::from(body.to_vec()))
         .unwrap()
 }
 

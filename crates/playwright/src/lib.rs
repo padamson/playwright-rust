@@ -253,6 +253,9 @@ pub use protocol::FileChooser;
 // Re-export routing types
 pub use protocol::{FetchOptions, FetchResponse, FulfillOptions, Route, UnrouteBehavior};
 
+// Re-export APIRequest public API
+pub use protocol::{APIRequest, APIRequestContext, APIRequestContextOptions, APIResponse};
+
 // Re-export launch and connection options
 pub use api::{ConnectOverCdpOptions, LaunchOptions};
 
