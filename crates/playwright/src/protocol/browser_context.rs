@@ -1820,7 +1820,7 @@ impl ChannelOwner for BrowserContext {
                 //   text: "rendered text",
                 //   location: { url: "...", lineNumber: N, columnNumber: N },
                 //   page: { guid: "page@..." },
-                //   args: [ ... ]   -- JSHandle refs, ignored (JSHandle not yet implemented)
+                //   args: [ { guid: "JSHandle@..." }, ... ]  -- resolved to Arc<JSHandle>
                 // }
                 let type_ = params
                     .get("type")
@@ -1853,12 +1853,27 @@ impl ChannelOwner for BrowserContext {
                     .and_then(|v| v.get("guid"))
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string());
+                // Collect arg GUIDs before spawning.
+                let arg_guids: Vec<String> = params
+                    .get("args")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| {
+                                v.get("guid")
+                                    .and_then(|g| g.as_str())
+                                    .map(|s| s.to_string())
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
 
                 let connection = self.connection();
                 let ctx_console_handlers = self.console_handlers.clone();
                 let ctx_console_waiters = self.console_waiters.clone();
 
                 tokio::spawn(async move {
+                    use crate::protocol::JSHandle;
                     use crate::protocol::console_message::{
                         ConsoleMessage, ConsoleMessageLocation,
                     };
@@ -1870,13 +1885,24 @@ impl ChannelOwner for BrowserContext {
                         None
                     };
 
+                    // Resolve JSHandle args from the connection registry.
+                    let args: Vec<std::sync::Arc<JSHandle>> = {
+                        let mut resolved = Vec::with_capacity(arg_guids.len());
+                        for guid in &arg_guids {
+                            if let Ok(handle) = connection.get_typed::<JSHandle>(guid).await {
+                                resolved.push(std::sync::Arc::new(handle));
+                            }
+                        }
+                        resolved
+                    };
+
                     let location = ConsoleMessageLocation {
                         url: loc_url,
                         line_number: loc_line,
                         column_number: loc_col,
                     };
 
-                    let msg = ConsoleMessage::new(type_, text, location, page.clone());
+                    let msg = ConsoleMessage::new(type_, text, location, page.clone(), args);
 
                     // Satisfy the first pending waiter (expect_console_message)
                     if let Some(tx) = ctx_console_waiters.lock().unwrap().pop() {

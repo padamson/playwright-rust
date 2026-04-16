@@ -9,6 +9,7 @@
 
 use crate::error::Result;
 use crate::protocol::BrowserType;
+use crate::protocol::device::DeviceDescriptor;
 use crate::protocol::selectors::Selectors;
 use crate::server::channel::Channel;
 use crate::server::channel_owner::{ChannelOwner, ChannelOwnerImpl, ParentOrConnection};
@@ -17,6 +18,7 @@ use crate::server::playwright_server::PlaywrightServer;
 use parking_lot::Mutex;
 use serde_json::Value;
 use std::any::Any;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Playwright is the root object that provides access to browser types.
@@ -73,6 +75,8 @@ pub struct Playwright {
     /// - Taking ownership during shutdown (Option::take)
     /// - Interior mutability (Mutex)
     server: Arc<Mutex<Option<PlaywrightServer>>>,
+    /// Device descriptors parsed from the initializer's `deviceDescriptors` array.
+    devices: HashMap<String, DeviceDescriptor>,
 }
 
 impl Playwright {
@@ -199,12 +203,51 @@ impl Playwright {
         // Selectors is a pure client-side coordinator stored in the connection.
         // No need to create or store it here; access it via self.connection().selectors().
 
+        // Parse deviceDescriptors from LocalUtils.
+        //
+        // The Playwright initializer has "utils": { "guid": "localUtils" }.
+        // LocalUtils's initializer has "deviceDescriptors": [ { "name": "...", "descriptor": { ... } }, ... ]
+        //
+        // We wrap the inner descriptor fields in a helper struct that matches the
+        // server-side shape: { name, descriptor: { userAgent, viewport, ... } }.
+        #[derive(serde::Deserialize)]
+        struct DeviceEntry {
+            name: String,
+            descriptor: DeviceDescriptor,
+        }
+
+        let local_utils_guid = initializer
+            .get("utils")
+            .and_then(|v| v.get("guid"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("localUtils");
+
+        let devices: HashMap<String, DeviceDescriptor> =
+            if let Ok(lu) = connection.get_object(local_utils_guid).await {
+                lu.initializer()
+                    .get("deviceDescriptors")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| {
+                                serde_json::from_value::<DeviceEntry>(v.clone())
+                                    .ok()
+                                    .map(|e| (e.name.clone(), e.descriptor))
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default()
+            } else {
+                HashMap::new()
+            };
+
         Ok(Self {
             base,
             chromium,
             firefox,
             webkit,
             server: Arc::new(Mutex::new(None)), // No server for protocol-created objects
+            devices,
         })
     }
 
@@ -245,6 +288,29 @@ impl Playwright {
     /// See: <https://playwright.dev/docs/api/class-playwright#playwright-selectors>
     pub fn selectors(&self) -> std::sync::Arc<Selectors> {
         self.connection().selectors()
+    }
+
+    /// Returns the device descriptors map for browser emulation.
+    ///
+    /// Each entry maps a device name (e.g., `"iPhone 13"`) to a [`DeviceDescriptor`]
+    /// containing user agent, viewport, and other emulation settings.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::protocol::Playwright;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let iphone = &playwright.devices()["iPhone 13"];
+    /// // Use iphone fields to configure BrowserContext...
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-playwright#playwright-devices>
+    pub fn devices(&self) -> &HashMap<String, DeviceDescriptor> {
+        &self.devices
     }
 
     /// Shuts down the Playwright server gracefully.

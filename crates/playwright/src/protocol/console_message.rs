@@ -30,11 +30,6 @@ pub struct ConsoleMessageLocation {
 /// [`Page`](crate::protocol::Page) (via `on_console`) and
 /// [`BrowserContext`](crate::protocol::BrowserContext) (via `on_console`).
 ///
-/// # Known Limitations
-///
-/// The `args` field (JSHandle references) is not yet supported because
-/// `JSHandle` is not implemented. The raw args from the event are ignored.
-///
 /// See: <https://playwright.dev/docs/api/class-consolemessage>
 #[derive(Clone, Debug)]
 pub struct ConsoleMessage {
@@ -46,6 +41,8 @@ pub struct ConsoleMessage {
     location: ConsoleMessageLocation,
     /// Back-reference to the page that produced this message.
     page: Option<crate::protocol::Page>,
+    /// The JSHandle arguments passed to the console method.
+    args: Vec<std::sync::Arc<crate::protocol::JSHandle>>,
 }
 
 impl ConsoleMessage {
@@ -58,12 +55,14 @@ impl ConsoleMessage {
         text: String,
         location: ConsoleMessageLocation,
         page: Option<crate::protocol::Page>,
+        args: Vec<std::sync::Arc<crate::protocol::JSHandle>>,
     ) -> Self {
         Self {
             type_,
             text,
             location,
             page,
+            args,
         }
     }
 
@@ -101,5 +100,48 @@ impl ConsoleMessage {
     /// See: <https://playwright.dev/docs/api/class-consolemessage#console-message-page>
     pub fn page(&self) -> Option<&crate::protocol::Page> {
         self.page.as_ref()
+    }
+
+    /// Returns the list of arguments passed to the console method.
+    ///
+    /// Each argument is a [`JSHandle`](crate::protocol::JSHandle) that can be
+    /// inspected via `json_value()`, `get_property()`, etc.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # use playwright_rs::protocol::Playwright;
+    /// # use std::time::Duration;
+    /// # use std::sync::{Arc, Mutex};
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let playwright = Playwright::launch().await?;
+    /// let browser = playwright.chromium().launch().await?;
+    /// let page = browser.new_page().await?;
+    ///
+    /// let captured = Arc::new(Mutex::new(None));
+    /// let cap = captured.clone();
+    /// page.on_console(move |msg| {
+    ///     let cap = cap.clone();
+    ///     async move {
+    ///         *cap.lock().unwrap() = Some(msg.args().to_vec());
+    ///         Ok(())
+    ///     }
+    /// }).await?;
+    ///
+    /// page.evaluate_expression("console.log('hello', 42)").await?;
+    /// tokio::time::sleep(Duration::from_millis(200)).await;
+    ///
+    /// let args = captured.lock().unwrap().take().unwrap();
+    /// assert_eq!(args.len(), 2);
+    /// let first = args[0].json_value().await?;
+    /// assert_eq!(first, serde_json::json!("hello"));
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-consolemessage#console-message-args>
+    pub fn args(&self) -> &[std::sync::Arc<crate::protocol::JSHandle>] {
+        &self.args
     }
 }

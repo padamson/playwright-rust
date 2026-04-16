@@ -122,3 +122,55 @@ async fn test_graceful_cleanup_on_drop() {
 
     tracing::info!("✅ Graceful cleanup verified - can create new instance after drop!");
 }
+
+/// Test that playwright.devices() returns a non-empty map.
+#[tokio::test]
+async fn test_playwright_devices_not_empty() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let devices = playwright.devices();
+    assert!(
+        !devices.is_empty(),
+        "devices() should return a non-empty map"
+    );
+}
+
+/// Test that a known device like "iPhone 13" exists with expected fields.
+#[tokio::test]
+async fn test_playwright_devices_iphone() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("Failed to launch Playwright");
+
+    let devices = playwright.devices();
+    let iphone = devices.get("iPhone 13");
+    assert!(iphone.is_some(), "devices() should contain 'iPhone 13'");
+
+    let iphone = iphone.unwrap();
+    assert!(
+        !iphone.user_agent.is_empty(),
+        "iPhone 13 user_agent should be non-empty"
+    );
+    assert!(
+        iphone.viewport.width > 0,
+        "iPhone 13 viewport width should be positive"
+    );
+    assert!(
+        iphone.viewport.height > 0,
+        "iPhone 13 viewport height should be positive"
+    );
+    assert!(
+        iphone.device_scale_factor > 0.0,
+        "iPhone 13 device_scale_factor should be positive"
+    );
+    assert!(iphone.is_mobile, "iPhone 13 should be mobile");
+    assert!(iphone.has_touch, "iPhone 13 should have touch");
+    assert_eq!(
+        iphone.default_browser_type, "webkit",
+        "iPhone 13 default browser should be webkit"
+    );
+}

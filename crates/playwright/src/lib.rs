@@ -238,6 +238,9 @@ pub use protocol::EventWaiter;
 // Re-export ConsoleMessage types
 pub use protocol::{ConsoleMessage, ConsoleMessageLocation};
 
+// Re-export device descriptor types
+pub use protocol::{DeviceDescriptor, DeviceViewport};
+
 // Re-export WebError
 pub use protocol::WebError;
 

@@ -7,7 +7,7 @@
 //
 // See: <https://playwright.dev/docs/api/class-consolemessage>
 
-use playwright_rs::protocol::Playwright;
+use playwright_rs::protocol::{JSHandle, Playwright};
 use playwright_rs::server::channel_owner::ChannelOwner;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -217,6 +217,57 @@ async fn test_context_on_console() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(text, "context console test");
 
     context.close().await?;
+    Ok(())
+}
+
+/// Test that ConsoleMessage::args() returns JSHandle values for each argument.
+///
+/// Evaluates `console.log("hello", 42)` and verifies args has 2 elements
+/// whose json_value() matches the original arguments.
+#[tokio::test]
+async fn test_console_message_args() -> Result<(), Box<dyn std::error::Error>> {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch().await?;
+    let browser = playwright.chromium().launch().await?;
+    let page = browser.new_page().await?;
+
+    let captured_args: Arc<Mutex<Option<Vec<Arc<JSHandle>>>>> = Arc::new(Mutex::new(None));
+    let cap_clone = captured_args.clone();
+
+    page.on_console(move |msg| {
+        let cap = cap_clone.clone();
+        async move {
+            *cap.lock().unwrap() = Some(msg.args().to_vec());
+            Ok(())
+        }
+    })
+    .await?;
+
+    let _ = page.goto("about:blank", None).await;
+    page.evaluate_expression("console.log('hello', 42)").await?;
+
+    tokio::time::sleep(Duration::from_millis(500)).await;
+
+    let args = captured_args.lock().unwrap().take();
+    assert!(args.is_some(), "on_console handler should have fired");
+    let args = args.unwrap();
+    assert_eq!(
+        args.len(),
+        2,
+        "console.log('hello', 42) should produce 2 args"
+    );
+
+    let first = args[0].json_value().await?;
+    assert_eq!(
+        first,
+        serde_json::json!("hello"),
+        "First arg should be 'hello'"
+    );
+
+    let second = args[1].json_value().await?;
+    assert_eq!(second, serde_json::json!(42), "Second arg should be 42");
+
+    browser.close().await?;
     Ok(())
 }
 

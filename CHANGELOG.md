@@ -9,64 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`WebSocket` class completed** — all methods and events fully implemented
-  - `is_closed()` — returns `true` once the `"close"` event has fired or the object is disposed; was previously a stub that always returned `false`
-  - `expect_close(timeout)` — one-shot `EventWaiter<()>` that resolves when the WebSocket closes; resolves via dispose path as well (handles page-close gracefully)
-  - `expect_frame_received(timeout)` — one-shot `EventWaiter<String>` that resolves with the next frame payload received from the server
-  - `expect_frame_sent(timeout)` — one-shot `EventWaiter<String>` that resolves with the next frame payload sent to the server
-  - `on_frame_sent`, `on_frame_received`, `on_error`, `on_close` — existing continuous handlers (unchanged)
-  - Dispose override: `is_closed` flag and close waiters are satisfied on `__dispose__` in addition to the explicit `"close"` event
-  - 5 new integration tests covering url, is_closed lifecycle, frame_received handler, expect_close waiter, and expect_frame_received API
-  - See: <https://playwright.dev/docs/api/class-websocket>
-
-- **`Worker` class** — represents a Web Worker or Service Worker
-  - `url()` — the URL of the worker script
-  - `evaluate(expression, arg)` — evaluates a JS expression in the worker context, returns deserialized result
-  - `evaluate_handle(expression)` — evaluates a JS expression in the worker context, returns `Arc<JSHandle>`
-  - Registered in the object factory for server-created `"Worker"` objects
-  - `Page::on_worker(handler)` — fires when a new Web Worker is created in the page
-  - `BrowserContext::on_serviceworker(handler)` — fires when a service worker is registered in the context
-  - See: <https://playwright.dev/docs/api/class-worker>
-
-- **`WebError` class** — represents an uncaught JavaScript exception from any page in a context
-  - `error()` — the error message of the uncaught exception
-  - `page()` — optional back-reference to the page that threw the error
-  - `BrowserContext::on_weberror(handler)` — context-level handler for uncaught JS exceptions
-  - Wired into existing `"pageError"` event dispatch alongside page-level `on_pageerror` handlers
-  - See: <https://playwright.dev/docs/api/class-weberror>
-
-- **`JSHandle` class** — represents an in-browser JavaScript object handle
-  - `json_value()` — returns the JSON-serializable value of the handle
-  - `get_property(name)` — returns a `JSHandle` for a named property
-  - `get_properties()` — returns a `HashMap<String, JSHandle>` of all enumerable own properties
-  - `evaluate(expr, arg)` — evaluates JS expression with the handle as the first argument
-  - `evaluate_handle(expr, arg)` — same but returns a new `JSHandle`
-  - `dispose()` — releases the handle and frees browser resources
-  - `as_element_type_name()` — returns the GUID if this handle is typed as an ElementHandle
-  - Registered in the object factory for server-created `JSHandle` objects
-  - `Frame::evaluate_handle_js()` — evaluates an expression and returns `Arc<JSHandle>`
-  - See: <https://playwright.dev/docs/api/class-jshandle>
-
-- **Browser methods** — `contexts()`, `browser_type()`, `on_disconnected(handler)`, `start_tracing(options)` / `stop_tracing()`, `new_browser_cdp_session()`
-- **Page event handlers** — `on_close`, `on_load`, `on_crash`, `on_pageerror`, `on_popup`, `on_frameattached`, `on_framedetached`, `on_framenavigated`
-- **Page expect methods** — `expect_popup`, `expect_download`, `expect_response`, `expect_request`, `expect_console_message` (all return `EventWaiter<T>`)
-- **`BrowserContext::expect_console_message(timeout)`** — returns `EventWaiter<ConsoleMessage>`
-
-- **`ConsoleMessage` class** — captures JavaScript console output (`console.log`, `console.error`, etc.)
-  - `type_()`, `text()`, `location()`, `page()` properties
-  - `ConsoleMessageLocation` with url, line_number, column_number
-  - `page.on_console(handler)` — page-level console event handler
-  - `context.on_console(handler)` — context-level handler (fires for all pages)
-  - Lazy subscription via `updateSubscription("console", true)`
-- **`FileChooser` class** — handle file upload dialogs triggered by `<input type="file">`
-  - `page()`, `element()`, `is_multiple()` properties
-  - `set_files(files)` — set files on the input element
-  - `page.on_filechooser(handler)` — event handler
-  - `page.expect_file_chooser(timeout)` — returns `EventWaiter<FileChooser>`
-- **`Selectors` class** — custom selector engines and test ID configuration
-  - `playwright.selectors().register(name, script)` — register custom selector engine
-  - `playwright.selectors().set_test_id_attribute(attr)` — change `get_by_test_id` attribute (default: `data-testid`)
-  - Auto-propagates to all active BrowserContexts and new contexts
+- **New classes**: `JSHandle`, `Worker`, `WebError`, `WebSocket` (completed), `ConsoleMessage`, `FileChooser`, `Selectors`
+- **`playwright.devices()`** — device descriptor map for browser emulation (`DeviceDescriptor`, `DeviceViewport`)
+- **`ConsoleMessage::args()`** — returns `&[Arc<JSHandle>]` for console method arguments
+- **Browser methods** — `contexts()`, `browser_type()`, `on_disconnected()`, `start_tracing()`/`stop_tracing()`, `new_browser_cdp_session()`
+- **Page event handlers** — `on_close`, `on_load`, `on_crash`, `on_pageerror`, `on_popup`, `on_frameattached`, `on_framedetached`, `on_framenavigated`, `on_worker`, `on_console`, `on_filechooser`
+- **Page expect methods** — `expect_popup`, `expect_download`, `expect_response`, `expect_request`, `expect_console_message`, `expect_file_chooser`
+- **BrowserContext events** — `on_console`, `on_weberror`, `on_serviceworker`, `on_dialog`, `expect_console_message`
 
 ### Breaking Changes
 
