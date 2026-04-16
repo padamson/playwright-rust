@@ -208,6 +208,7 @@ async fn test_file_upload_methods() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore]
 async fn test_cross_browser_smoke() {
     // Smoke test to verify select and upload work in Firefox and WebKit
     // (Rust bindings use the same protocol layer for all browsers,

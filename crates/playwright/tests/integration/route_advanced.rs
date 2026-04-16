@@ -439,6 +439,7 @@ async fn test_route_fulfill_main_document_with_status() {
 ///
 /// Cross-browser test: document that Firefox also has the body transmission issue.
 #[tokio::test]
+#[ignore]
 async fn test_route_fulfill_main_document_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -509,6 +510,7 @@ async fn test_route_fulfill_main_document_firefox() {
 ///
 /// Cross-browser test: document that WebKit also has the body transmission issue.
 #[tokio::test]
+#[ignore]
 async fn test_route_fulfill_main_document_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

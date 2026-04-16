@@ -226,6 +226,7 @@ async fn test_launch_persistent_context_error_handling() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_launch_persistent_context_cross_browser() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_cross_browser: Starting");

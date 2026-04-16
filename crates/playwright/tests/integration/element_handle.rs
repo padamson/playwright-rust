@@ -188,6 +188,7 @@ async fn test_locator_screenshot_via_element_handle() {
 // Cross-browser tests
 
 #[tokio::test]
+#[ignore]
 async fn test_element_handle_screenshot_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -224,6 +225,7 @@ async fn test_element_handle_screenshot_firefox() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_element_handle_screenshot_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

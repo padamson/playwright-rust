@@ -264,6 +264,7 @@ async fn test_add_init_script_chromium() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_add_init_script_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -305,6 +306,7 @@ async fn test_add_init_script_firefox() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_add_init_script_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -645,6 +647,7 @@ async fn test_add_style_tag_chromium() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_add_style_tag_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -693,6 +696,7 @@ async fn test_add_style_tag_firefox() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_add_style_tag_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

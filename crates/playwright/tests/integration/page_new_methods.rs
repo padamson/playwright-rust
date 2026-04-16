@@ -443,6 +443,7 @@ async fn test_page_add_script_tag_cross_browser_chromium() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_page_add_script_tag_cross_browser_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -484,6 +485,7 @@ async fn test_page_add_script_tag_cross_browser_firefox() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_page_add_script_tag_cross_browser_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

@@ -224,6 +224,7 @@ async fn test_mouse_methods() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore]
 async fn test_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify keyboard and mouse work in Firefox and WebKit

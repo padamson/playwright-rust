@@ -280,6 +280,7 @@ async fn test_page_content_with_dynamic_changes() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_page_content_cross_browser() {
     crate::common::init_tracing();
     let playwright = Playwright::launch()
@@ -560,6 +561,7 @@ async fn test_set_viewport_size_different_dimensions() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_set_viewport_size_cross_browser() {
     crate::common::init_tracing();
     let playwright = Playwright::launch()

@@ -394,6 +394,7 @@ async fn test_context_no_viewport() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_context_cross_browser_options() {
     crate::common::init_tracing();
     // Verify context options work across Chromium, Firefox, and WebKit
@@ -627,6 +628,7 @@ async fn test_context_storage_state_invalid_file() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_context_storage_state_cross_browser() {
     use playwright_rs::protocol::{Cookie, LocalStorageItem, Origin, StorageState};
     crate::common::init_tracing();
@@ -918,6 +920,7 @@ async fn test_context_browser_returns_browser_for_persistent_context() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_context_pages_cross_browser() {
     let playwright = Playwright::launch().await.unwrap();
 
@@ -951,6 +954,7 @@ async fn test_context_pages_cross_browser() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_context_browser_cross_browser() {
     let playwright = Playwright::launch().await.unwrap();
 

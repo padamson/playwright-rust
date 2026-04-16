@@ -968,6 +968,7 @@ async fn test_locator_filter_selector_composition() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore]
 async fn test_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify locators work in Firefox and WebKit

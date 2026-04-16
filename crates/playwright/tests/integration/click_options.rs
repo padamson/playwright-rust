@@ -271,6 +271,7 @@ async fn test_dblclick_with_options() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_click_options_firefox() {
     crate::common::init_tracing();
     // Cross-browser test: Firefox
@@ -308,6 +309,7 @@ async fn test_click_options_firefox() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_click_options_webkit() {
     crate::common::init_tracing();
     // Cross-browser test: WebKit

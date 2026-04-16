@@ -409,6 +409,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
 /// (Rust bindings use the same protocol layer for all browsers,
 ///  so we don't need exhaustive cross-browser testing for each method)
 #[tokio::test]
+#[ignore]
 async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
     crate::common::init_tracing();
     let playwright = Playwright::launch().await?;

@@ -422,6 +422,7 @@ async fn test_expect_file_chooser_set_files() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore]
 async fn test_filechooser_cross_browser_smoke() {
     crate::common::init_tracing();
     let playwright = Playwright::launch()

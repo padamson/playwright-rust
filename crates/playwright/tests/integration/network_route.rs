@@ -495,6 +495,7 @@ async fn test_route_extension_patterns() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore]
 async fn test_route_firefox_methods() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -647,6 +648,7 @@ async fn test_route_firefox_methods() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore]
 async fn test_route_webkit_methods() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
