@@ -1911,6 +1911,11 @@ impl Frame {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
     pub(crate) async fn locator_aria_snapshot(&self, selector: &str) -> Result<String> {
+        self.aria_snapshot_raw(selector, crate::DEFAULT_TIMEOUT_MS)
+            .await
+    }
+
+    pub(crate) async fn aria_snapshot_raw(&self, selector: &str, timeout: f64) -> Result<String> {
         #[derive(Deserialize)]
         struct AriaSnapshotResponse {
             snapshot: String,
@@ -1922,7 +1927,7 @@ impl Frame {
                 "ariaSnapshot",
                 serde_json::json!({
                     "selector": selector,
-                    "timeout": crate::DEFAULT_TIMEOUT_MS
+                    "timeout": timeout
                 }),
             )
             .await?;

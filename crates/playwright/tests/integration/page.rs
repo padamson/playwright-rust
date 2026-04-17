@@ -693,3 +693,65 @@ async fn test_set_viewport_size_with_responsive_content() {
     page.close().await.expect("Failed to close page");
     browser.close().await.expect("Failed to close browser");
 }
+
+// ============================================================================
+// page.accessibility and page.coverage
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_accessibility_snapshot() {
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    let html = "data:text/html,<html><body><h1>Hello</h1></body></html>";
+    page.goto(html, None).await.expect("Failed to navigate");
+
+    let accessibility = page.accessibility();
+    let snapshot = accessibility
+        .snapshot(None)
+        .await
+        .expect("Failed to get accessibility snapshot");
+
+    assert!(
+        !snapshot.is_null(),
+        "Accessibility snapshot should not be null"
+    );
+
+    let binding = snapshot.to_string();
+    let snapshot_str = snapshot.as_str().unwrap_or(&binding);
+    assert!(
+        snapshot_str.contains("heading")
+            || snapshot_str.contains("WebArea")
+            || snapshot_str.contains("- heading"),
+        "Snapshot should contain heading role, got: {}",
+        snapshot_str
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_page_coverage_js() {
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    let coverage = page.coverage();
+
+    coverage
+        .start_js_coverage(None)
+        .await
+        .expect("Failed to start JS coverage");
+
+    let html = "data:text/html,<html><head><script>function hello() { return 42; } hello();</script></head><body></body></html>";
+    page.goto(html, None).await.expect("Failed to navigate");
+
+    let entries = coverage
+        .stop_js_coverage()
+        .await
+        .expect("Failed to stop JS coverage");
+
+    assert!(
+        !entries.is_empty(),
+        "JS coverage should return at least one entry"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}

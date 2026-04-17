@@ -253,6 +253,13 @@ pub use protocol::WebError;
 // Re-export FileChooser
 pub use protocol::FileChooser;
 
+// Re-export Accessibility and Coverage types
+pub use protocol::{
+    Accessibility, AccessibilitySnapshotOptions, CSSCoverageEntry, Coverage, CoverageRange,
+    JSCoverageEntry, JSCoverageRange, JSFunctionCoverage, StartCSSCoverageOptions,
+    StartJSCoverageOptions,
+};
+
 // Re-export Video
 pub use protocol::Video;
 

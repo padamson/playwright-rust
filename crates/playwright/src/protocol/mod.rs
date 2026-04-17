@@ -11,6 +11,7 @@
 // - Objects are created by the object factory when server sends __create__ messages
 // - Objects communicate with the server via their Channel
 
+pub mod accessibility;
 pub mod action_options;
 pub mod android;
 pub mod api_request_context;
@@ -22,6 +23,7 @@ pub mod browser_type;
 pub mod cdp_session;
 pub mod click;
 pub mod console_message;
+pub mod coverage;
 pub mod device;
 pub mod dialog;
 pub mod download;
@@ -59,6 +61,7 @@ pub mod web_error;
 pub mod web_socket;
 pub mod worker;
 
+pub use accessibility::{Accessibility, AccessibilitySnapshotOptions};
 pub use action_options::{
     CheckOptions, FillOptions, HoverOptions, KeyboardOptions, MouseOptions, PressOptions,
     PressSequentiallyOptions, SelectOptions,
@@ -78,6 +81,10 @@ pub use browser_type::BrowserType;
 pub use cdp_session::CDPSession;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};
 pub use console_message::{ConsoleMessage, ConsoleMessageLocation};
+pub use coverage::{
+    CSSCoverageEntry, Coverage, CoverageRange, JSCoverageEntry, JSCoverageRange,
+    JSFunctionCoverage, StartCSSCoverageOptions, StartJSCoverageOptions,
+};
 pub use device::{DeviceDescriptor, DeviceViewport};
 pub use dialog::Dialog;
 pub use download::Download;

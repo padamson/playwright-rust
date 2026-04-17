@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ElementHandle::content_frame()`** — returns the `Frame` for an `<iframe>` element, or `None` if not an iframe (`contentFrame` RPC on ElementHandle channel)
 - **`ElementHandle::owner_frame()`** — returns the `Frame` that owns this element (`ownerFrame` RPC on ElementHandle channel)
 - **`ElementHandle::wait_for_element_state(state, timeout)`** — waits until the element reaches the given state (`"visible"`, `"hidden"`, `"stable"`, `"enabled"`, `"disabled"`, `"editable"`) (`waitForElementState` RPC on ElementHandle channel)
+- **`Accessibility` class** — `page.accessibility()` returns an `Accessibility` handle; `accessibility.snapshot(options)` returns the page's ARIA accessibility tree as a YAML string wrapped in `serde_json::Value`; implemented via `FrameAriaSnapshot` RPC (the modern Playwright equivalent — the legacy `accessibilitySnapshot` RPC was removed in current Playwright versions)
+- **`Coverage` class** — `page.coverage()` returns a `Coverage` handle (Chromium only); `start_js_coverage(options)` / `stop_js_coverage()` collect V8 JS coverage (`JSCoverageEntry` with `url`, `script_id`, `source`, `functions: Vec<JSFunctionCoverage>`); `start_css_coverage(options)` / `stop_css_coverage()` collect CSS coverage (`CSSCoverageEntry` with `url`, `text`, `ranges: Vec<CoverageRange>`); maps to `startJSCoverage` / `stopJSCoverage` / `startCSSCoverage` / `stopCSSCoverage` RPCs on the Page channel
 
 ## [0.11.0] - 2026-04-16
 

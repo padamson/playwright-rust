@@ -3397,6 +3397,117 @@ impl Page {
     pub fn viewport_size(&self) -> Option<Viewport> {
         self.viewport.read().ok()?.clone()
     }
+
+    /// Returns the `Accessibility` object for this page.
+    ///
+    /// Use `accessibility().snapshot()` to capture the current state of the
+    /// page's accessibility tree.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-accessibility>
+    pub fn accessibility(&self) -> crate::protocol::Accessibility {
+        crate::protocol::Accessibility::new(self.clone())
+    }
+
+    /// Returns the `Coverage` object for this page (Chromium only).
+    ///
+    /// Use `coverage().start_js_coverage()` / `stop_js_coverage()` and
+    /// `start_css_coverage()` / `stop_css_coverage()` to collect code coverage data.
+    ///
+    /// Coverage is only available in Chromium. Calling coverage methods on
+    /// Firefox or WebKit will return an error from the Playwright server.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-coverage>
+    pub fn coverage(&self) -> crate::protocol::Coverage {
+        crate::protocol::Coverage::new(self.clone())
+    }
+
+    // Internal accessibility method (called by Accessibility struct)
+    //
+    // The legacy `accessibilitySnapshot` RPC was removed in modern Playwright.
+    // We implement snapshot() using `FrameAriaSnapshot` on the main frame, which
+    // returns the ARIA accessibility tree as a YAML string (the current equivalent).
+    // The YAML string is returned as a JSON string Value for API compatibility.
+
+    pub(crate) async fn accessibility_snapshot(
+        &self,
+        _options: Option<crate::protocol::accessibility::AccessibilitySnapshotOptions>,
+    ) -> Result<serde_json::Value> {
+        let frame = self.main_frame().await?;
+        let timeout = self.default_timeout_ms();
+        let snapshot = frame.aria_snapshot_raw("body", timeout).await?;
+        Ok(serde_json::Value::String(snapshot))
+    }
+
+    // Internal coverage methods (called by Coverage struct)
+
+    pub(crate) async fn coverage_start_js(
+        &self,
+        options: Option<crate::protocol::coverage::StartJSCoverageOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({});
+
+        if let Some(opts) = options {
+            if let Some(v) = opts.reset_on_navigation {
+                params["resetOnNavigation"] = serde_json::json!(v);
+            }
+            if let Some(v) = opts.report_anonymous_scripts {
+                params["reportAnonymousScripts"] = serde_json::json!(v);
+            }
+        }
+
+        self.channel()
+            .send_no_result("startJSCoverage", params)
+            .await
+    }
+
+    pub(crate) async fn coverage_stop_js(
+        &self,
+    ) -> Result<Vec<crate::protocol::coverage::JSCoverageEntry>> {
+        #[derive(serde::Deserialize)]
+        struct StopJSCoverageResponse {
+            entries: Vec<crate::protocol::coverage::JSCoverageEntry>,
+        }
+
+        let response: StopJSCoverageResponse = self
+            .channel()
+            .send("stopJSCoverage", serde_json::json!({}))
+            .await?;
+
+        Ok(response.entries)
+    }
+
+    pub(crate) async fn coverage_start_css(
+        &self,
+        options: Option<crate::protocol::coverage::StartCSSCoverageOptions>,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({});
+
+        if let Some(opts) = options
+            && let Some(v) = opts.reset_on_navigation
+        {
+            params["resetOnNavigation"] = serde_json::json!(v);
+        }
+
+        self.channel()
+            .send_no_result("startCSSCoverage", params)
+            .await
+    }
+
+    pub(crate) async fn coverage_stop_css(
+        &self,
+    ) -> Result<Vec<crate::protocol::coverage::CSSCoverageEntry>> {
+        #[derive(serde::Deserialize)]
+        struct StopCSSCoverageResponse {
+            entries: Vec<crate::protocol::coverage::CSSCoverageEntry>,
+        }
+
+        let response: StopCSSCoverageResponse = self
+            .channel()
+            .send("stopCSSCoverage", serde_json::json!({}))
+            .await?;
+
+        Ok(response.entries)
+    }
 }
 
 impl ChannelOwner for Page {
