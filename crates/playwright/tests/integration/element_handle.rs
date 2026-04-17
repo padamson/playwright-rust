@@ -260,3 +260,84 @@ async fn test_element_handle_screenshot_webkit() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
+
+#[tokio::test]
+async fn test_element_handle_content_frame() {
+    let server = TestServer::start().await;
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/iframe-test.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let iframe_element = page
+        .query_selector("iframe#frame1")
+        .await
+        .expect("Failed to query selector")
+        .expect("iframe#frame1 should exist");
+
+    let frame = iframe_element
+        .content_frame()
+        .await
+        .expect("content_frame() failed");
+
+    assert!(
+        frame.is_some(),
+        "content_frame() should return a Frame for an iframe element"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_element_handle_owner_frame() {
+    let server = TestServer::start().await;
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/locators.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let element = page
+        .query_selector("h1")
+        .await
+        .expect("Failed to query selector")
+        .expect("h1 should exist");
+
+    let frame = element.owner_frame().await.expect("owner_frame() failed");
+
+    assert!(
+        frame.is_some(),
+        "owner_frame() should return a Frame for an element in the main frame"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_element_handle_wait_for_element_state() {
+    let server = TestServer::start().await;
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/locators.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let element = page
+        .query_selector("h1")
+        .await
+        .expect("Failed to query selector")
+        .expect("h1 should exist");
+
+    element
+        .wait_for_element_state("visible", None)
+        .await
+        .expect(
+            "wait_for_element_state('visible') should resolve immediately for a visible element",
+        );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}

@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Locator::describe(description)`** — returns a new Locator with a human-readable label appended to the selector (`internal:describe=...`) for cleaner trace/error output; client-side only
 - **`Locator::highlight()`** — highlights the matched element in the browser for visual debugging (`highlight` RPC on Frame)
 - **`Locator::content_frame()`** — returns a `FrameLocator` for the content of an `<iframe>` element; client-side only
+- **`ElementHandle::content_frame()`** — returns the `Frame` for an `<iframe>` element, or `None` if not an iframe (`contentFrame` RPC on ElementHandle channel)
+- **`ElementHandle::owner_frame()`** — returns the `Frame` that owns this element (`ownerFrame` RPC on ElementHandle channel)
+- **`ElementHandle::wait_for_element_state(state, timeout)`** — waits until the element reaches the given state (`"visible"`, `"hidden"`, `"stable"`, `"enabled"`, `"disabled"`, `"editable"`) (`waitForElementState` RPC on ElementHandle channel)
 
 ## [0.11.0] - 2026-04-16
 

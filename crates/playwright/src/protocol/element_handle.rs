@@ -187,6 +187,99 @@ impl ElementHandle {
             )
             .await
     }
+
+    /// Returns the `Frame` associated with this `<iframe>` element, or `None` if
+    /// the element is not an iframe.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-content-frame>
+    pub async fn content_frame(&self) -> Result<Option<crate::protocol::Frame>> {
+        use crate::server::connection::ConnectionExt;
+
+        #[derive(Deserialize)]
+        struct FrameRef {
+            guid: String,
+        }
+        #[derive(Deserialize)]
+        struct ContentFrameResponse {
+            frame: Option<FrameRef>,
+        }
+
+        let response: ContentFrameResponse = self
+            .base
+            .channel()
+            .send("contentFrame", serde_json::json!({}))
+            .await?;
+
+        match response.frame {
+            None => Ok(None),
+            Some(frame_ref) => {
+                let connection = self.base.connection();
+                let frame = connection
+                    .get_typed::<crate::protocol::Frame>(&frame_ref.guid)
+                    .await?;
+                Ok(Some(frame))
+            }
+        }
+    }
+
+    /// Returns the `Frame` that owns this element.
+    ///
+    /// Every element belongs to a frame (the main frame or a child iframe frame).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-owner-frame>
+    pub async fn owner_frame(&self) -> Result<Option<crate::protocol::Frame>> {
+        use crate::server::connection::ConnectionExt;
+
+        #[derive(Deserialize)]
+        struct FrameRef {
+            guid: String,
+        }
+        #[derive(Deserialize)]
+        struct OwnerFrameResponse {
+            frame: Option<FrameRef>,
+        }
+
+        let response: OwnerFrameResponse = self
+            .base
+            .channel()
+            .send("ownerFrame", serde_json::json!({}))
+            .await?;
+
+        match response.frame {
+            None => Ok(None),
+            Some(frame_ref) => {
+                let connection = self.base.connection();
+                let frame = connection
+                    .get_typed::<crate::protocol::Frame>(&frame_ref.guid)
+                    .await?;
+                Ok(Some(frame))
+            }
+        }
+    }
+
+    /// Waits until the element reaches the specified state.
+    ///
+    /// Valid states: `"visible"`, `"hidden"`, `"stable"`, `"enabled"`, `"disabled"`, `"editable"`.
+    ///
+    /// # Arguments
+    ///
+    /// * `state` — the element state to wait for
+    /// * `timeout` — optional timeout in milliseconds (defaults to [`DEFAULT_TIMEOUT_MS`](crate::DEFAULT_TIMEOUT_MS))
+    ///
+    /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-element-state>
+    pub async fn wait_for_element_state(&self, state: &str, timeout: Option<f64>) -> Result<()> {
+        let timeout_ms = timeout.unwrap_or(crate::DEFAULT_TIMEOUT_MS);
+        self.base
+            .channel()
+            .send_no_result(
+                "waitForElementState",
+                serde_json::json!({
+                    "state": state,
+                    "timeout": timeout_ms
+                }),
+            )
+            .await
+    }
 }
 
 impl ChannelOwner for ElementHandle {
