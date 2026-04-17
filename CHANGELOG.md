@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`page.page_errors()`** — returns all uncaught JS error messages accumulated since page creation (`Vec<String>`); populated automatically via `pageError` events
 - **`page.opener()`** — returns the page that opened this popup (`Option<Page>`), or `None` for non-popup pages; reads the opener GUID from the page initializer
 - **`Video` class** — `page.video()` returns `Some(Video)` when the context was created with `record_video`; `Video::path()` returns the recording path, `Video::save_as(path)` copies the file, `Video::delete()` removes it; all methods wait internally for the artifact (fired via `"video"` event on page close), so no manual sleep is required
+- **`page.request_gc()`** — forces garbage collection (Chromium only)
 - **`page.workers()`** — returns all active web workers in the page (`Vec<Worker>`); accumulated from `worker` events as workers are created
 - **`context.service_workers()`** — returns all active service workers in the browser context (`Vec<Worker>`); accumulated from `serviceWorker` events
 - **`expect_event()`** — generic event waiting on Page and BrowserContext, returning typed `EventValue` enum

@@ -3083,6 +3083,15 @@ impl Page {
             .await
     }
 
+    /// Forces garbage collection in the browser (Chromium only).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-request-gc>
+    pub async fn request_gc(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("requestGC", serde_json::json!({}))
+            .await
+    }
+
     /// Sets extra HTTP headers that will be sent with every request from this page.
     ///
     /// These headers are sent in addition to headers set on the browser context via
