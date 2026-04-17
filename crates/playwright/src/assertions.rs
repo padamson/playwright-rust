@@ -658,6 +658,39 @@ impl Expectation {
         }
     }
 
+    /// Asserts that the accessible subtree rooted at the locator matches the expected ARIA snapshot.
+    ///
+    /// The `expected` string is a YAML representation of the accessibility tree.
+    /// The Playwright server handles auto-retrying within the assertion timeout.
+    ///
+    /// # Example (in module-level doctest)
+    ///
+    /// ```ignore
+    /// expect(page.locator("body").await)
+    ///     .to_match_aria_snapshot("- heading \"Hello\" [level=1]\n- button \"Click me\"")
+    ///     .await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-match-aria-snapshot>
+    pub async fn to_match_aria_snapshot(self, expected: &str) -> Result<()> {
+        use crate::protocol::serialize_argument;
+
+        let selector = self.locator.selector().to_string();
+        let timeout_ms = self.timeout.as_millis() as f64;
+        let expected_value = serialize_argument(&serde_json::Value::String(expected.to_string()));
+
+        self.locator
+            .frame()
+            .frame_expect(
+                &selector,
+                "to.match.aria",
+                expected_value,
+                self.negate,
+                timeout_ms,
+            )
+            .await
+    }
+
     /// Asserts that a locator's screenshot matches a baseline image.
     ///
     /// On first run (no baseline file), saves the screenshot as the new baseline.

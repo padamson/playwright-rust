@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`expect_event()`** — generic event waiting on Page and BrowserContext, returning typed `EventValue` enum
 - **`playwright.request()`** — headless API testing without a browser (`get`, `post`, `put`, `delete`, `patch`, `head`, `fetch`, `APIResponse`)
+- **`to_match_aria_snapshot(expected)`** — ARIA accessibility tree assertion with auto-retry
 
 ## [0.11.0] - 2026-04-16
 

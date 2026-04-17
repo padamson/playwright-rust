@@ -2199,6 +2199,53 @@ impl Frame {
         }
     }
 
+    /// Calls the Playwright server's `expect` method on the Frame channel.
+    ///
+    /// Used for assertions that are auto-retried server-side (e.g. `to.match.aria`).
+    /// Returns `Ok(())` when the assertion passes, or an error containing the
+    /// server-supplied `errorMessage` when the assertion fails or times out.
+    pub(crate) async fn frame_expect(
+        &self,
+        selector: &str,
+        expression: &str,
+        expected_value: serde_json::Value,
+        is_not: bool,
+        timeout_ms: f64,
+    ) -> Result<()> {
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct ExpectResult {
+            matches: bool,
+            #[serde(default)]
+            timed_out: Option<bool>,
+            #[serde(default)]
+            error_message: Option<String>,
+        }
+
+        let params = serde_json::json!({
+            "selector": selector,
+            "expression": expression,
+            "expectedValue": expected_value,
+            "isNot": is_not,
+            "timeout": timeout_ms
+        });
+
+        let result: ExpectResult = self.channel().send("expect", params).await?;
+
+        if result.matches != is_not {
+            Ok(())
+        } else {
+            let msg = result
+                .error_message
+                .unwrap_or_else(|| format!("Assertion '{}' failed", expression));
+            if result.timed_out == Some(true) {
+                Err(crate::error::Error::AssertionTimeout(msg))
+            } else {
+                Err(crate::error::Error::AssertionFailed(msg))
+            }
+        }
+    }
+
     /// Adds a `<script>` tag into the frame with the desired content.
     ///
     /// # Arguments

@@ -114,6 +114,10 @@ pub enum Error {
     /// Assertion timeout (expect API)
     #[error("Assertion timeout: {0}")]
     AssertionTimeout(String),
+
+    /// Assertion failed (expect API, server returned mismatch without timeout)
+    #[error("Assertion failed: {0}")]
+    AssertionFailed(String),
     /// Object not found in registry (may have been closed/disposed)
     #[error("Object not found (may have been closed): {0}")]
     ObjectNotFound(String),

@@ -11,6 +11,7 @@ mod test_server;
 
 mod actions;
 mod api_request;
+mod aria_snapshot;
 mod assertions;
 mod back_references;
 mod browser;

@@ -545,6 +545,11 @@ impl Locator {
         &self.selector
     }
 
+    /// Returns the underlying frame for this locator (crate-internal use only).
+    pub(crate) fn frame(&self) -> &Arc<Frame> {
+        &self.frame
+    }
+
     /// Creates a [`FrameLocator`](crate::protocol::FrameLocator) scoped within this locator's subtree.
     ///
     /// The `selector` identifies an iframe element within the locator's scope.
