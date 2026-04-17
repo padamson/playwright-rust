@@ -271,6 +271,71 @@ async fn test_console_message_args() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Test that page.console_messages() accumulates messages in order.
+#[tokio::test]
+async fn test_page_console_messages() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let _ = page.goto("about:blank", None).await;
+    page.evaluate_expression("console.log('a')").await?;
+    page.evaluate_expression("console.log('b')").await?;
+
+    // Give events time to arrive
+    tokio::time::sleep(Duration::from_millis(500)).await;
+
+    let msgs = page.console_messages();
+    assert!(
+        msgs.len() >= 2,
+        "Expected at least 2 console messages, got {}",
+        msgs.len()
+    );
+    let texts: Vec<&str> = msgs.iter().map(|m| m.text()).collect();
+    assert!(
+        texts.contains(&"a"),
+        "console_messages() should contain 'a', got: {:?}",
+        texts
+    );
+    assert!(
+        texts.contains(&"b"),
+        "console_messages() should contain 'b', got: {:?}",
+        texts
+    );
+
+    browser.close().await?;
+    Ok(())
+}
+
+/// Test that page.page_errors() accumulates uncaught JS errors.
+#[tokio::test]
+async fn test_page_page_errors() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let _ = page.goto("about:blank", None).await;
+    // Trigger an uncaught error via setTimeout (async, escapes evaluate's try-catch)
+    page.evaluate::<(), ()>(
+        "() => { setTimeout(() => { throw new Error('test-uncaught'); }, 0); }",
+        None,
+    )
+    .await?;
+
+    // Give the error time to propagate
+    tokio::time::sleep(Duration::from_millis(500)).await;
+
+    let errors = page.page_errors();
+    assert!(
+        !errors.is_empty(),
+        "page_errors() should have at least one entry after a thrown error"
+    );
+    assert!(
+        errors.iter().any(|e| e.contains("test-uncaught")),
+        "page_errors() should contain 'test-uncaught', got: {:?}",
+        errors
+    );
+
+    browser.close().await?;
+    Ok(())
+}
+
 #[tokio::test]
 async fn test_context_expect_console_message() -> Result<(), Box<dyn std::error::Error>> {
     let (_pw, _browser, context) = crate::common::setup_context().await;

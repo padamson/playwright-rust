@@ -741,3 +741,41 @@ async fn test_page_expect_console_message_timeout() -> Result<(), Box<dyn std::e
     browser.close().await?;
     Ok(())
 }
+
+/// Test that popup.opener() returns the page that opened it.
+#[tokio::test]
+async fn test_page_opener() -> Result<(), Box<dyn std::error::Error>> {
+    use playwright_rs::server::channel_owner::ChannelOwner;
+
+    let (_pw, _browser, context) = crate::common::setup_context().await;
+    let page = context.new_page().await?;
+
+    // Set up waiter for popup
+    let popup_waiter = page.expect_popup(None).await?;
+
+    // Open a popup via window.open
+    page.evaluate::<(), ()>("() => { window.open('about:blank'); }", None)
+        .await?;
+
+    let popup = popup_waiter.wait().await?;
+
+    // The popup's opener should be the original page
+    let opener = popup.opener().await?;
+    assert!(opener.is_some(), "popup.opener() should return Some(page)");
+    let opener_page = opener.unwrap();
+    assert_eq!(
+        opener_page.guid(),
+        page.guid(),
+        "opener should be the page that opened the popup"
+    );
+
+    // A non-popup page should return None
+    let non_popup_opener = page.opener().await?;
+    assert!(
+        non_popup_opener.is_none(),
+        "non-popup page.opener() should return None"
+    );
+
+    context.close().await?;
+    Ok(())
+}

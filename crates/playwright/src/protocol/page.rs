@@ -261,6 +261,12 @@ pub struct Page {
     framenavigated_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
     /// One-shot senders waiting for the next "worker" event (expect_event("worker"))
     worker_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Worker>>>>,
+    /// Accumulated console messages received so far (appended by trigger_console_event)
+    console_messages_log: Arc<Mutex<Vec<crate::protocol::ConsoleMessage>>>,
+    /// Accumulated uncaught JS error messages received so far (appended by trigger_pageerror_event)
+    page_errors_log: Arc<Mutex<Vec<String>>>,
+    /// Active web workers tracked via "worker" events (appended on creation)
+    workers_list: Arc<Mutex<Vec<Worker>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -482,6 +488,9 @@ impl Page {
             framedetached_waiters: Arc::new(Mutex::new(Vec::new())),
             framenavigated_waiters: Arc::new(Mutex::new(Vec::new())),
             worker_waiters: Arc::new(Mutex::new(Vec::new())),
+            console_messages_log: Arc::new(Mutex::new(Vec::new())),
+            page_errors_log: Arc::new(Mutex::new(Vec::new())),
+            workers_list: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -567,6 +576,68 @@ impl Page {
     /// See: <https://playwright.dev/docs/api/class-page#page-is-closed>
     pub fn is_closed(&self) -> bool {
         self.is_closed.load(Ordering::Relaxed)
+    }
+
+    /// Returns all console messages received so far on this page.
+    ///
+    /// Messages are accumulated in order as they arrive via the `console` event.
+    /// Each call returns a snapshot; new messages arriving concurrently may or may not
+    /// be included depending on timing.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-console-messages>
+    pub fn console_messages(&self) -> Vec<crate::protocol::ConsoleMessage> {
+        self.console_messages_log.lock().unwrap().clone()
+    }
+
+    /// Returns all uncaught JavaScript error messages received so far on this page.
+    ///
+    /// Errors are accumulated in order as they arrive via the `pageError` event.
+    /// Each string is the `.message` field of the thrown `Error`.
+    pub fn page_errors(&self) -> Vec<String> {
+        self.page_errors_log.lock().unwrap().clone()
+    }
+
+    /// Returns the page that opened this popup, or `None` if this page was not opened
+    /// by another page.
+    ///
+    /// The opener is available from the page's initializer — it is the page that called
+    /// `window.open()` or triggered a link with `target="_blank"`. Returns `None` for
+    /// top-level pages that were not opened as popups.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if the opener page GUID is present in the initializer but the
+    /// object is not found in the connection registry.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-opener>
+    pub async fn opener(&self) -> Result<Option<Page>> {
+        // The opener guid is stored in the page initializer as {"opener": {"guid": "..."}}.
+        // It is set when the page is created as a popup; absent for non-popup pages.
+        let opener_guid = self
+            .base
+            .initializer()
+            .get("opener")
+            .and_then(|v| v.get("guid"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        match opener_guid {
+            None => Ok(None),
+            Some(guid) => {
+                let page = self.connection().get_typed::<Page>(&guid).await?;
+                Ok(Some(page))
+            }
+        }
+    }
+
+    /// Returns all active web workers belonging to this page.
+    ///
+    /// Workers are tracked as they are created (`worker` event) and this method
+    /// returns a snapshot of the current list.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-workers>
+    pub fn workers(&self) -> Vec<Worker> {
+        self.workers_list.lock().unwrap().clone()
     }
 
     /// Sets the default timeout for all operations on this page.
@@ -2609,6 +2680,8 @@ impl Page {
     }
 
     async fn on_console_event(&self, msg: crate::protocol::ConsoleMessage) {
+        // Accumulate message for console_messages() accessor
+        self.console_messages_log.lock().unwrap().push(msg.clone());
         // Notify the first expect_console_message() waiter (FIFO order)
         if let Some(tx) = self.console_waiters.lock().unwrap().pop() {
             let _ = tx.send(msg.clone());
@@ -2700,6 +2773,8 @@ impl Page {
     }
 
     async fn on_pageerror_event(&self, message: String) {
+        // Accumulate error for page_errors() accessor
+        self.page_errors_log.lock().unwrap().push(message.clone());
         let handlers = self.pageerror_handlers.lock().unwrap().clone();
         for handler in handlers {
             if let Err(e) = handler(message.clone()).await {
@@ -3432,6 +3507,9 @@ impl ChannelOwner for Page {
                                     return;
                                 }
                             };
+
+                        // Track the worker for workers() accessor
+                        self_clone.workers_list.lock().unwrap().push(worker.clone());
 
                         let handlers = self_clone.worker_handlers.lock().unwrap().clone();
                         for handler in handlers {

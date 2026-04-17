@@ -178,3 +178,66 @@ async fn test_context_on_serviceworker_handler_registered() {
 
     browser.close().await.expect("browser should close");
 }
+
+/// Test that page.workers() returns the active web workers in the page.
+#[tokio::test]
+async fn test_page_workers() {
+    let (_pw, browser, page) = setup().await;
+
+    // Initially no workers
+    assert!(
+        page.workers().is_empty(),
+        "page.workers() should be empty before creating any workers"
+    );
+
+    // Create a blob worker
+    page.evaluate::<(), serde_json::Value>(
+        r#"() => {
+            const blob = new Blob(['self.onmessage = () => {};'], {type: 'application/javascript'});
+            const url = URL.createObjectURL(blob);
+            new Worker(url);
+        }"#,
+        None,
+    )
+    .await
+    .expect("evaluate should create a worker");
+
+    // Wait for the worker event to arrive
+    let result = timeout(Duration::from_secs(5), async {
+        loop {
+            if !page.workers().is_empty() {
+                return true;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    })
+    .await;
+
+    assert!(result.is_ok(), "page.workers() should become non-empty");
+
+    let workers = page.workers();
+    assert_eq!(workers.len(), 1, "Should have exactly 1 worker");
+    assert!(
+        workers[0].url().starts_with("blob:"),
+        "worker URL should start with 'blob:', got: {}",
+        workers[0].url()
+    );
+
+    browser.close().await.expect("browser should close");
+}
+
+/// Test that context.service_workers() returns an empty vec when no service workers are registered.
+#[tokio::test]
+async fn test_context_service_workers_empty() {
+    // Full service worker tests require HTTPS + a real SW registration.
+    // Here we just verify the accessor returns an empty Vec in normal usage.
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    let sws = context.service_workers();
+    assert!(
+        sws.is_empty(),
+        "service_workers() should be empty when no SW is registered"
+    );
+
+    browser.close().await.expect("browser should close");
+}

@@ -205,6 +205,8 @@ pub struct BrowserContext {
     weberror_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::WebError>>>>,
     /// One-shot senders waiting for the next "serviceworker" event (expect_event("serviceworker"))
     serviceworker_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::Worker>>>>,
+    /// Active service workers tracked via "serviceWorker" events
+    service_workers_list: Arc<Mutex<Vec<crate::protocol::Worker>>>,
 }
 
 impl BrowserContext {
@@ -286,13 +288,16 @@ impl BrowserContext {
             response_waiters: Arc::new(Mutex::new(Vec::new())),
             weberror_waiters: Arc::new(Mutex::new(Vec::new())),
             serviceworker_waiters: Arc::new(Mutex::new(Vec::new())),
+            service_workers_list: Arc::new(Mutex::new(Vec::new())),
         };
 
-        // Enable dialog event subscription
-        // Dialog events need to be explicitly subscribed to via updateSubscription command
+        // Enable dialog and console event subscriptions eagerly.
+        // Console events must be subscribed to receive them without a registered handler,
+        // enabling the console_messages() and page_errors() passive accumulators on Page.
         let channel = context.channel().clone();
         tokio::spawn(async move {
             _ = channel.update_subscription("dialog", true).await;
+            _ = channel.update_subscription("console", true).await;
         });
 
         // Note: Selectors registration is done by the caller (e.g. Browser::new_context())
@@ -404,6 +409,19 @@ impl BrowserContext {
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-pages>
     pub fn pages(&self) -> Vec<Page> {
         self.pages.lock().unwrap().clone()
+    }
+
+    /// Returns all active service workers registered in this browser context.
+    ///
+    /// Service workers are accumulated as they are registered (`serviceWorker` event).
+    /// Each call returns a snapshot of the current list.
+    ///
+    /// Note: Testing service workers typically requires HTTPS. In plain HTTP or
+    /// `about:blank` contexts this list is empty.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-service-workers>
+    pub fn service_workers(&self) -> Vec<crate::protocol::Worker> {
+        self.service_workers_list.lock().unwrap().clone()
     }
 
     /// Returns the browser instance that owns this context.
@@ -2131,6 +2149,7 @@ impl ChannelOwner for BrowserContext {
                     let worker_guid_owned = worker_guid.to_string();
                     let serviceworker_handlers = self.serviceworker_handlers.clone();
                     let serviceworker_waiters = self.serviceworker_waiters.clone();
+                    let service_workers_list = self.service_workers_list.clone();
 
                     tokio::spawn(async move {
                         let worker: crate::protocol::Worker = match connection
@@ -2146,6 +2165,9 @@ impl ChannelOwner for BrowserContext {
                                 return;
                             }
                         };
+
+                        // Track for service_workers() accessor
+                        service_workers_list.lock().unwrap().push(worker.clone());
 
                         let handlers = serviceworker_handlers.lock().unwrap().clone();
                         for handler in handlers {

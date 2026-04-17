@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`page.console_messages()`** — returns all console messages accumulated since page creation (`Vec<ConsoleMessage>`); console subscription enabled by default on every BrowserContext so no handler registration required
+- **`page.page_errors()`** — returns all uncaught JS error messages accumulated since page creation (`Vec<String>`); populated automatically via `pageError` events
+- **`page.opener()`** — returns the page that opened this popup (`Option<Page>`), or `None` for non-popup pages; reads the opener GUID from the page initializer
+- **`page.workers()`** — returns all active web workers in the page (`Vec<Worker>`); accumulated from `worker` events as workers are created
+- **`context.service_workers()`** — returns all active service workers in the browser context (`Vec<Worker>`); accumulated from `serviceWorker` events
 - **`expect_event()`** — generic event waiting on Page and BrowserContext, returning typed `EventValue` enum
 - **`playwright.request()`** — headless API testing without a browser (`get`, `post`, `put`, `delete`, `patch`, `head`, `fetch`, `APIResponse`)
 - **`to_match_aria_snapshot(expected)`** — ARIA accessibility tree assertion with auto-retry
