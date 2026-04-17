@@ -1160,6 +1160,57 @@ impl Page {
             .await
     }
 
+    // Internal touchscreen method (called by Touchscreen struct)
+
+    pub(crate) async fn touchscreen_tap(&self, x: f64, y: f64) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "touchscreenTap",
+                serde_json::json!({
+                    "x": x,
+                    "y": y
+                }),
+            )
+            .await
+    }
+
+    /// Returns the touchscreen instance for low-level touch input simulation.
+    ///
+    /// Requires a touch-enabled browser context (`has_touch: true` in
+    /// [`BrowserContextOptions`](crate::protocol::browser_context::BrowserContext)).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-touchscreen>
+    pub fn touchscreen(&self) -> crate::protocol::Touchscreen {
+        crate::protocol::Touchscreen::new(self.clone())
+    }
+
+    /// Performs a drag from source selector to target selector.
+    ///
+    /// This is the page-level equivalent of `Locator::drag_to()`. It resolves
+    /// both selectors in the main frame and performs the drag.
+    ///
+    /// # Arguments
+    ///
+    /// * `source` - A CSS selector for the element to drag from
+    /// * `target` - A CSS selector for the element to drop onto
+    /// * `options` - Optional drag options (positions, force, timeout, trial)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if either selector does not resolve to an element, the
+    /// drag action times out, or the page has been closed.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-drag-and-drop>
+    pub async fn drag_and_drop(
+        &self,
+        source: &str,
+        target: &str,
+        options: Option<crate::protocol::DragToOptions>,
+    ) -> Result<()> {
+        let frame = self.main_frame().await?;
+        frame.locator_drag_to(source, target, options).await
+    }
+
     /// Reloads the current page.
     ///
     /// # Arguments

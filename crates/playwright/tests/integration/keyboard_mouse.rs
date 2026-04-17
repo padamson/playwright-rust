@@ -220,6 +220,68 @@ async fn test_mouse_methods() {
 }
 
 // ============================================================================
+// Touchscreen Tests
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_touchscreen_tap() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch()
+        .await
+        .expect("setup: failed to launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("setup: failed to launch Chromium");
+
+    let context = browser
+        .new_context_with_options(playwright_rs::protocol::BrowserContextOptions {
+            has_touch: Some(true),
+            ..Default::default()
+        })
+        .await
+        .expect("Failed to create context with touch");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    page.goto(
+        "data:text/html,<button id='btn' ontouchstart=\"this.textContent='tapped'\">Tap Me</button>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    // Get the button bounding box so we can tap its center
+    let button = page.locator("#btn").await;
+    let bbox = button
+        .bounding_box()
+        .await
+        .expect("Failed to get bounding box")
+        .expect("Button should have a bounding box");
+
+    let cx = bbox.x + bbox.width / 2.0;
+    let cy = bbox.y + bbox.height / 2.0;
+
+    page.touchscreen()
+        .tap(cx, cy)
+        .await
+        .expect("touchscreen.tap() should succeed");
+
+    let text = button
+        .text_content()
+        .await
+        .expect("Failed to get text content");
+    assert_eq!(
+        text,
+        Some("tapped".to_string()),
+        "Touch tap event should have fired"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+// ============================================================================
 // Cross-browser Smoke Test
 // ============================================================================
 

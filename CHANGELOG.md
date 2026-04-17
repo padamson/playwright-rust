@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Touchscreen` class** — `page.touchscreen()` returns a `Touchscreen` handle; `touchscreen.tap(x, y)` simulates a single touch event at viewport coordinates (`touchscreenTap` RPC on Page channel); requires `has_touch: true` in `BrowserContextOptions`
+- **`page.drag_and_drop(source, target, options)`** — performs drag and drop between two CSS selectors on the main frame; delegates to `Frame::locator_drag_to` (`dragAndDrop` RPC); accepts the same `DragToOptions` as `Locator::drag_to`
 - **`page.console_messages()`** — returns all console messages accumulated since page creation (`Vec<ConsoleMessage>`); console subscription enabled by default on every BrowserContext so no handler registration required
 - **`page.page_errors()`** — returns all uncaught JS error messages accumulated since page creation (`Vec<String>`); populated automatically via `pageError` events
 - **`page.opener()`** — returns the page that opened this popup (`Option<Page>`), or `None` for non-popup pages; reads the opener GUID from the page initializer

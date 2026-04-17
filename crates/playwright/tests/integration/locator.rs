@@ -1930,6 +1930,40 @@ async fn test_locator_drag_to_with_options() {
 }
 
 // ============================================================================
+// page.drag_and_drop() - Page-level drag and drop between selectors
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_drag_and_drop() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/drag_drop.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // page.drag_and_drop() uses selectors directly (no locator needed)
+    page.drag_and_drop("#source", "#target", None)
+        .await
+        .expect("drag_and_drop should succeed");
+
+    let result_text = page
+        .locator("#result")
+        .await
+        .text_content()
+        .await
+        .expect("Failed to get result text");
+    assert_eq!(
+        result_text,
+        Some("dropped".to_string()),
+        "Drop should have been triggered via page.drag_and_drop()"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+// ============================================================================
 // wait_for() - Locator wait for element state
 // ============================================================================
 

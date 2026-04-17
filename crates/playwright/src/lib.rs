@@ -194,6 +194,9 @@ pub use protocol::{
     Selectors,
 };
 
+// Re-export input device types
+pub use protocol::{Keyboard, Mouse, Touchscreen};
+
 // Re-export Request and related types
 pub use protocol::{Request, ResourceTiming};
 
