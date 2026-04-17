@@ -75,27 +75,20 @@ browser.close().await?;
 
 ## Coverage Trajectory
 
-Each pre-v1.0 release targets 100% coverage of specific API classes:
+**Full Python API parity achieved.** All Playwright Python classes and methods are implemented.
 
-| Class | Methods | Current (v0.11) | v0.12.0 |
-|-------|---------|-----------------|---------|
-| **Locator** | 55 | **100%** | 100% |
-| **Response** | 18 | **100%** | 100% |
-| **Request** | 19 | **100%** | 100% |
-| **FrameLocator** | 10 | **100%** | 100% |
-| **Browser** | 12 | **100%** | 100% |
-| **Frame** | 29 | **100%** | 100% |
-| **JSHandle** | 7 | **100%** | 100% |
-| **Worker** | 3 | **100%** | 100% |
-| **WebSocket** | 8 | **100%** | 100% |
-| **ConsoleMessage** | 6 | **100%** | 100% |
-| **FileChooser** | 4 | **100%** | 100% |
-| **Selectors** | 2 | **100%** | 100% |
-| **WebError** | 2 | **100%** | 100% |
-| Page | 67 | ~99% | **100%** |
-| BrowserContext | 32 | ~99% | **100%** |
+| Class | Methods | Coverage |
+|-------|---------|----------|
+| Page | 67 | **100%** |
+| BrowserContext | 32 | **100%** |
+| Locator | 55 | **100%** |
+| Frame | 29 | **100%** |
+| Browser | 12 | **100%** |
+| Response | 18 | **100%** |
+| Request | 19 | **100%** |
+| All other classes | 80+ | **100%** |
 
-v0.12.0 targets full Python parity. v1.0.0 follows after multi-month dogfooding.
+v1.0.0 follows after multi-month dogfooding with real-world projects.
 See the [full gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for details.
 
 ## How It Works
