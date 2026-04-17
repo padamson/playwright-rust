@@ -837,6 +837,21 @@ impl Page {
             .ok_or_else(|| Error::ProtocolError("Page parent is not a BrowserContext".to_string()))
     }
 
+    /// Returns the Clock object for this page's browser context.
+    ///
+    /// This is a convenience accessor that delegates to the parent context's clock.
+    /// All clock RPCs are sent on the BrowserContext channel regardless of whether
+    /// the Clock is obtained via `page.clock()` or `context.clock()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if the page's parent is not a BrowserContext.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-clock>
+    pub fn clock(&self) -> Result<crate::protocol::clock::Clock> {
+        Ok(self.context()?.clock())
+    }
+
     /// Returns the `Video` object associated with this page, if video recording is enabled.
     ///
     /// Returns `Some(Video)` when the browser context was created with the `record_video`

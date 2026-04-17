@@ -822,3 +822,93 @@ async fn test_page_coverage_js() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+// ============================================================================
+// Clock tests
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_clock_install_and_fast_forward() {
+    use playwright_rs::ClockInstallOptions;
+
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    let clock = page.clock().expect("Failed to get clock");
+
+    // Install fake timers then pause at a known epoch to get deterministic time
+    clock
+        .install(Some(ClockInstallOptions { time: Some(0) }))
+        .await
+        .expect("Failed to install clock");
+
+    clock
+        .pause_at(1_000_000)
+        .await
+        .expect("Failed to pause clock");
+
+    // Date.now() should now be exactly 1 000 000 ms
+    let now_str = page
+        .evaluate_value("Date.now()")
+        .await
+        .expect("Failed to evaluate Date.now()");
+    let now: u64 = now_str
+        .parse::<f64>()
+        .expect("Date.now() result is not a number") as u64;
+    assert_eq!(now, 1_000_000, "Date.now() should equal the paused time");
+
+    // Advance by 5 000 ms; fast_forward fires due timers and moves the clock
+    clock
+        .fast_forward(5_000)
+        .await
+        .expect("Failed to fast-forward clock");
+
+    let after_str = page
+        .evaluate_value("Date.now()")
+        .await
+        .expect("Failed to evaluate Date.now() after fast_forward");
+    let after: u64 = after_str
+        .parse::<f64>()
+        .expect("Date.now() result is not a number") as u64;
+    assert_eq!(
+        after, 1_005_000,
+        "Date.now() should reflect the fast-forwarded time"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_context_clock_matches_page_clock() {
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    let context = page.context().expect("Failed to get context");
+    let context_clock = context.clock();
+    let page_clock = page.clock().expect("Failed to get page clock");
+
+    // Both clocks share the same underlying BrowserContext channel; install via
+    // context_clock and verify the effect is visible via page_clock / evaluate.
+    context_clock
+        .set_fixed_time(9_999_999)
+        .await
+        .expect("Failed to set fixed time via context clock");
+
+    let now_str = page
+        .evaluate_value("Date.now()")
+        .await
+        .expect("Failed to evaluate Date.now()");
+    let now: u64 = now_str
+        .parse::<f64>()
+        .expect("Date.now() result is not a number") as u64;
+    assert_eq!(
+        now, 9_999_999,
+        "context.clock() and page.clock() should affect the same timeline"
+    );
+
+    // Calling page_clock.resume() after set_fixed_time should not error
+    page_clock
+        .resume()
+        .await
+        .expect("resume() should succeed after set_fixed_time");
+
+    browser.close().await.expect("Failed to close browser");
+}

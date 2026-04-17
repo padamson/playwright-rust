@@ -263,6 +263,9 @@ pub use protocol::{
     StartJSCoverageOptions,
 };
 
+// Re-export Clock types
+pub use protocol::{Clock, ClockInstallOptions};
+
 // Re-export Video
 pub use protocol::Video;
 

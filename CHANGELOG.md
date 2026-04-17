@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`context.clock()` / `page.clock()`** — Clock API for fake timer control in deterministic tests
+  - `Clock::install(options)` — install fake timers, optionally setting an initial epoch timestamp (`clockInstall` RPC on BrowserContext channel)
+  - `Clock::fast_forward(ticks)` — advance the clock by milliseconds, firing due timers (`clockFastForward` RPC with `ticksNumber`)
+  - `Clock::pause_at(time)` — jump to an epoch timestamp and pause; no timers fire until resumed (`clockPauseAt` RPC with `timeNumber`)
+  - `Clock::resume()` — resume the clock after `pause_at` (`clockResume` RPC)
+  - `Clock::set_fixed_time(time)` — freeze `Date.now()` at a fixed epoch without affecting timer scheduling (`clockSetFixedTime` RPC with `timeNumber`)
+  - `Clock::set_system_time(time)` — update system time without freezing the clock (`clockSetSystemTime` RPC with `timeNumber`)
+  - `ClockInstallOptions` — `time: Option<u64>` for setting the install epoch
+  - `page.clock()` delegates to the parent `BrowserContext::clock()` — all RPCs go on the context channel
+  - `Clock` and `ClockInstallOptions` exported from crate root
+  - See: <https://playwright.dev/docs/api/class-clock>
+
 - **`page.route_from_har(har_path, options)` / `context.route_from_har(har_path, options)`** — replays network requests from a HAR archive; uses client-side `HarRouter` pattern (calls `local_utils.har_open()` then `local_utils.har_lookup()` per request); accepts `RouteFromHarOptions` with `url` (glob filter), `not_found` (`"abort"` or `"fallback"`), `update`, `update_content`, and `update_mode` fields; maps to `harOpen`/`harLookup` RPCs on the `LocalUtils` channel
 - **`Touchscreen` class** — `page.touchscreen()` returns a `Touchscreen` handle; `touchscreen.tap(x, y)` simulates a single touch event at viewport coordinates (`touchscreenTap` RPC on Page channel); requires `has_touch: true` in `BrowserContextOptions`
 - **`page.drag_and_drop(source, target, options)`** — performs drag and drop between two CSS selectors on the main frame; delegates to `Frame::locator_drag_to` (`dragAndDrop` RPC); accepts the same `DragToOptions` as `Locator::drag_to`

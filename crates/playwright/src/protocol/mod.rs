@@ -22,6 +22,7 @@ pub mod browser_context;
 pub mod browser_type;
 pub mod cdp_session;
 pub mod click;
+pub mod clock;
 pub mod console_message;
 pub mod coverage;
 pub mod device;
@@ -81,6 +82,7 @@ pub use browser_context::{
 pub use browser_type::BrowserType;
 pub use cdp_session::CDPSession;
 pub use click::{ClickOptions, KeyboardModifier, MouseButton, Position};
+pub use clock::{Clock, ClockInstallOptions};
 pub use console_message::{ConsoleMessage, ConsoleMessageLocation};
 pub use coverage::{
     CSSCoverageEntry, Coverage, CoverageRange, JSCoverageEntry, JSCoverageRange,

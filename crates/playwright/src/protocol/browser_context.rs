@@ -532,6 +532,18 @@ impl BrowserContext {
         self.connection().get_typed::<Tracing>(guid).await
     }
 
+    /// Returns the Clock object for this browser context.
+    ///
+    /// The Clock object enables fake timer control — install fake timers,
+    /// fast-forward time, pause/resume, and set fixed or system time.
+    ///
+    /// `page.clock()` delegates to this method via the page's parent context.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-clock>
+    pub fn clock(&self) -> crate::protocol::clock::Clock {
+        crate::protocol::clock::Clock::new(self.channel().clone())
+    }
+
     /// Closes the browser context and all its pages.
     ///
     /// This is a graceful operation that sends a close command to the context
