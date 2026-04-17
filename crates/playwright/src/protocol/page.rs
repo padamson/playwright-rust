@@ -267,6 +267,10 @@ pub struct Page {
     page_errors_log: Arc<Mutex<Vec<String>>>,
     /// Active web workers tracked via "worker" events (appended on creation)
     workers_list: Arc<Mutex<Vec<Worker>>>,
+    /// Video object — Some when this page was created in a record_video context.
+    /// The inner Video is created eagerly on Page construction; the underlying
+    /// Artifact is wired up when the server fires the "video" event.
+    video: Option<crate::protocol::Video>,
 }
 
 /// Type alias for boxed route handler future
@@ -411,6 +415,15 @@ impl Page {
                 )
             })?);
 
+        // Check the parent BrowserContext's initializer for record_video before
+        // moving `parent` into ChannelOwnerImpl. The Page initializer itself does
+        // not carry video metadata — the Artifact arrives later via a "video" event.
+        let has_video = parent
+            .initializer()
+            .get("options")
+            .and_then(|opts| opts.get("recordVideo"))
+            .is_some();
+
         let base = ChannelOwnerImpl::new(
             ParentOrConnection::Parent(parent),
             type_name,
@@ -442,6 +455,12 @@ impl Page {
                 }
             });
         let viewport = Arc::new(RwLock::new(initial_viewport));
+
+        let video = if has_video {
+            Some(crate::protocol::Video::new())
+        } else {
+            None
+        };
 
         Ok(Self {
             base,
@@ -491,6 +510,7 @@ impl Page {
             console_messages_log: Arc::new(Mutex::new(Vec::new())),
             page_errors_log: Arc::new(Mutex::new(Vec::new())),
             workers_list: Arc::new(Mutex::new(Vec::new())),
+            video,
         })
     }
 
@@ -781,6 +801,22 @@ impl Page {
     pub fn context(&self) -> Result<crate::protocol::BrowserContext> {
         downcast_parent::<crate::protocol::BrowserContext>(self)
             .ok_or_else(|| Error::ProtocolError("Page parent is not a BrowserContext".to_string()))
+    }
+
+    /// Returns the `Video` object associated with this page, if video recording is enabled.
+    ///
+    /// Returns `Some(Video)` when the browser context was created with the `record_video`
+    /// option; returns `None` otherwise.
+    ///
+    /// The `Video` shell is created eagerly. The underlying recording artifact is wired
+    /// up when the Playwright server fires the internal `"video"` event (which typically
+    /// happens when the page is first navigated). Calling [`Video::save_as`] or
+    /// [`Video::path`] before the artifact arrives returns an error; close the page
+    /// first to guarantee the artifact is ready.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-video>
+    pub fn video(&self) -> Option<crate::protocol::Video> {
+        self.video.clone()
     }
 
     /// Pauses script execution.
@@ -3449,6 +3485,33 @@ impl ChannelOwner for Page {
 
                         // Call the route handler and wait for completion
                         self_clone.on_route_event(route).await;
+                    });
+                }
+            }
+            "video" => {
+                // Handle video event: delivered once recording starts.
+                // params: {artifact: {guid: "Artifact@..."}}
+                if let Some(artifact_guid) = params
+                    .get("artifact")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let artifact_guid_owned = artifact_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let artifact_arc = match connection.get_object(&artifact_guid_owned).await {
+                            Ok(obj) => obj,
+                            Err(e) => {
+                                tracing::warn!("Failed to get Artifact for video event: {}", e);
+                                return;
+                            }
+                        };
+
+                        if let Some(video) = &self_clone.video {
+                            video.set_artifact(artifact_arc);
+                        }
                     });
                 }
             }

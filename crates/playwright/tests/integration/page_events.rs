@@ -779,3 +779,73 @@ async fn test_page_opener() -> Result<(), Box<dyn std::error::Error>> {
     context.close().await?;
     Ok(())
 }
+
+// ============================================================================
+// Video
+// ============================================================================
+
+/// Test that page.video() returns Some when record_video is enabled and
+/// that save_as() copies the recording to a custom path after the page closes.
+#[tokio::test]
+async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
+    crate::common::init_tracing();
+    use playwright_rs::protocol::{BrowserContextOptions, Playwright, RecordVideo, Video};
+    use std::path::PathBuf;
+
+    let playwright = Playwright::launch().await?;
+    let browser = playwright.chromium().launch().await?;
+
+    let video_dir = std::env::temp_dir().join("playwright_video_test_dir");
+    std::fs::create_dir_all(&video_dir)?;
+
+    let options = BrowserContextOptions::builder()
+        .record_video(RecordVideo {
+            dir: video_dir.to_str().unwrap().to_string(),
+            size: None,
+        })
+        .build();
+
+    let context = browser.new_context_with_options(options).await?;
+    let page = context.new_page().await?;
+
+    let _ = page
+        .goto(
+            "data:text/html,<html><body><h1>Video Test</h1></body></html>",
+            None,
+        )
+        .await;
+
+    // Give the page time to render at least one frame
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
+    // page.video() must return Some when record_video is set
+    let video: Video = page
+        .video()
+        .expect("page.video() should return Some when record_video is enabled");
+
+    // Close the page so the recording is finalised
+    page.close().await?;
+
+    // Save video to a custom path
+    // (save_as() waits internally for the artifact to arrive)
+    let save_path: PathBuf = std::env::temp_dir().join("playwright_test_video.webm");
+    let _ = std::fs::remove_file(&save_path);
+
+    video.save_as(&save_path).await?;
+
+    assert!(
+        save_path.exists(),
+        "save_as() should create the video file at the given path"
+    );
+    assert!(
+        save_path.metadata()?.len() > 0,
+        "saved video file should be non-empty"
+    );
+
+    // Cleanup
+    let _ = std::fs::remove_file(&save_path);
+
+    context.close().await?;
+    browser.close().await?;
+    Ok(())
+}

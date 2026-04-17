@@ -253,6 +253,9 @@ pub use protocol::WebError;
 // Re-export FileChooser
 pub use protocol::FileChooser;
 
+// Re-export Video
+pub use protocol::Video;
+
 // Re-export routing types
 pub use protocol::{FetchOptions, FetchResponse, FulfillOptions, Route, UnrouteBehavior};
 
