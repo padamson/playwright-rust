@@ -271,6 +271,9 @@ pub struct Page {
     /// The inner Video is created eagerly on Page construction; the underlying
     /// Artifact is wired up when the server fires the "video" event.
     video: Option<crate::protocol::Video>,
+    /// Registered locator handlers: maps uid -> (selector, handler fn, times_remaining)
+    /// times_remaining is None when the handler should run indefinitely.
+    locator_handlers: Arc<Mutex<Vec<LocatorHandlerEntry>>>,
 }
 
 /// Type alias for boxed route handler future
@@ -384,6 +387,21 @@ type PageBindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> 
 /// Page-level binding callback: receives deserialized JS args, returns a JSON value
 type PageBindingCallback =
     Arc<dyn Fn(Vec<serde_json::Value>) -> PageBindingCallbackFuture + Send + Sync>;
+
+/// Type alias for boxed locator handler future
+type LocatorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Locator handler callback: receives the matching Locator
+type LocatorHandlerFn = Arc<dyn Fn(crate::protocol::Locator) -> LocatorHandlerFuture + Send + Sync>;
+
+/// Entry in the locator handler registry
+struct LocatorHandlerEntry {
+    uid: u32,
+    selector: String,
+    handler: LocatorHandlerFn,
+    /// Remaining invocations; `None` means unlimited.
+    times_remaining: Option<u32>,
+}
 
 impl Page {
     /// Creates a new Page from protocol initialization
@@ -511,6 +529,7 @@ impl Page {
             page_errors_log: Arc::new(Mutex::new(Vec::new())),
             workers_list: Arc::new(Mutex::new(Vec::new())),
             video,
+            locator_handlers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -2731,6 +2750,129 @@ impl Page {
         }
     }
 
+    /// Registers a handler function that runs whenever a locator matches an element on the page.
+    ///
+    /// This is useful for handling overlays (cookie banners, modals, permission dialogs)
+    /// that appear unexpectedly and need to be dismissed before test actions can proceed.
+    ///
+    /// When a matching element appears, Playwright sends a `locatorHandlerTriggered` event.
+    /// The handler is called with the matching `Locator`. After the handler completes,
+    /// Playwright is notified via `resolveLocatorHandler` so it can resume pending actions.
+    ///
+    /// # Arguments
+    ///
+    /// * `locator` - A locator identifying the overlay element to watch for
+    /// * `handler` - Async function called with the matching Locator when the element appears
+    /// * `options` - Optional settings (no_wait_after, times)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-add-locator-handler>
+    pub async fn add_locator_handler<F, Fut>(
+        &self,
+        locator: &crate::protocol::Locator,
+        handler: F,
+        options: Option<AddLocatorHandlerOptions>,
+    ) -> Result<()>
+    where
+        F: Fn(crate::protocol::Locator) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let selector = locator.selector().to_string();
+        let no_wait_after = options
+            .as_ref()
+            .and_then(|o| o.no_wait_after)
+            .unwrap_or(false);
+        let times = options.as_ref().and_then(|o| o.times);
+
+        // Send registerLocatorHandler RPC — returns {"uid": N}
+        let params = serde_json::json!({
+            "selector": selector,
+            "noWaitAfter": no_wait_after,
+        });
+        let result: Value = self
+            .channel()
+            .send("registerLocatorHandler", params)
+            .await?;
+
+        let uid = result
+            .get("uid")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as u32)
+            .ok_or_else(|| {
+                Error::ProtocolError("registerLocatorHandler response missing 'uid'".to_string())
+            })?;
+
+        let handler_fn: LocatorHandlerFn = Arc::new(
+            move |loc: crate::protocol::Locator| -> LocatorHandlerFuture { Box::pin(handler(loc)) },
+        );
+
+        self.locator_handlers
+            .lock()
+            .unwrap()
+            .push(LocatorHandlerEntry {
+                uid,
+                selector,
+                handler: handler_fn,
+                times_remaining: times,
+            });
+
+        Ok(())
+    }
+
+    /// Removes a previously registered locator handler.
+    ///
+    /// Sends `unregisterLocatorHandler` to the Playwright server using the uid
+    /// that was assigned when the handler was first registered.
+    ///
+    /// # Arguments
+    ///
+    /// * `locator` - The same locator that was passed to `add_locator_handler`
+    ///
+    /// # Errors
+    ///
+    /// Returns error if no handler for this locator is registered, or if
+    /// communication with the browser process fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-remove-locator-handler>
+    pub async fn remove_locator_handler(&self, locator: &crate::protocol::Locator) -> Result<()> {
+        let selector = locator.selector();
+
+        // Find the uid for this selector
+        let uid = {
+            let handlers = self.locator_handlers.lock().unwrap();
+            handlers
+                .iter()
+                .find(|e| e.selector == selector)
+                .map(|e| e.uid)
+        };
+
+        let uid = uid.ok_or_else(|| {
+            Error::ProtocolError(format!(
+                "No locator handler registered for selector '{}'",
+                selector
+            ))
+        })?;
+
+        // Send unregisterLocatorHandler RPC
+        self.channel()
+            .send_no_result(
+                "unregisterLocatorHandler",
+                serde_json::json!({ "uid": uid }),
+            )
+            .await?;
+
+        // Remove from local registry
+        self.locator_handlers
+            .lock()
+            .unwrap()
+            .retain(|e| e.uid != uid);
+
+        Ok(())
+    }
+
     /// Triggers dialog event (called by BrowserContext when dialog events arrive)
     ///
     /// Dialog events are sent to BrowserContext and forwarded to the associated Page.
@@ -3972,6 +4114,64 @@ impl ChannelOwner for Page {
                     });
                 }
             }
+            "locatorHandlerTriggered" => {
+                // Server fires this when a registered locator matches an element.
+                // params: {"uid": N}
+                if let Some(uid) = params.get("uid").and_then(|v| v.as_u64()).map(|v| v as u32) {
+                    let locator_handlers = self.locator_handlers.clone();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        // Look up handler and decrement times_remaining
+                        let (handler, selector, should_remove) = {
+                            let mut handlers = locator_handlers.lock().unwrap();
+                            let entry = handlers.iter_mut().find(|e| e.uid == uid);
+                            match entry {
+                                None => return,
+                                Some(e) => {
+                                    let handler = e.handler.clone();
+                                    let selector = e.selector.clone();
+                                    let remove = match e.times_remaining {
+                                        Some(1) => true,
+                                        Some(ref mut n) => {
+                                            *n -= 1;
+                                            false
+                                        }
+                                        None => false,
+                                    };
+                                    (handler, selector, remove)
+                                }
+                            }
+                        };
+
+                        // Build a Locator for the handler to receive
+                        let locator = self_clone.locator(&selector).await;
+
+                        // Run the handler
+                        if let Err(e) = handler(locator).await {
+                            tracing::warn!("locator handler error (uid={}): {}", uid, e);
+                        }
+
+                        // Send resolveLocatorHandler — remove=true if times exhausted
+                        let _ = self_clone
+                            .channel()
+                            .send_no_result(
+                                "resolveLocatorHandler",
+                                serde_json::json!({ "uid": uid, "remove": should_remove }),
+                            )
+                            .await;
+
+                        // Remove from local registry if one-shot
+                        if should_remove {
+                            self_clone
+                                .locator_handlers
+                                .lock()
+                                .unwrap()
+                                .retain(|e| e.uid != uid);
+                        }
+                    });
+                }
+            }
             _ => {
                 // Other events not yet handled
             }
@@ -4832,6 +5032,24 @@ impl std::fmt::Debug for Response {
             .field("ok", &self.ok)
             .finish_non_exhaustive()
     }
+}
+
+/// Options for `page.add_locator_handler()`.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-add-locator-handler>
+#[derive(Debug, Clone, Default)]
+pub struct AddLocatorHandlerOptions {
+    /// Whether to keep the page frozen after the handler has been called.
+    ///
+    /// When `false` (default), Playwright resumes normal page operation after
+    /// the handler completes. When `true`, the page stays paused.
+    pub no_wait_after: Option<bool>,
+
+    /// Maximum number of times to invoke this handler.
+    ///
+    /// Once exhausted, the handler is automatically unregistered.
+    /// `None` (default) means the handler runs indefinitely.
+    pub times: Option<u32>,
 }
 
 /// Shared helper: store timeout locally and notify the Playwright server.

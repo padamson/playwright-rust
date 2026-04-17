@@ -729,6 +729,73 @@ async fn test_page_accessibility_snapshot() {
     browser.close().await.expect("Failed to close browser");
 }
 
+// ============================================================================
+// page.add_locator_handler() / page.remove_locator_handler()
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_add_locator_handler() {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    };
+
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    // Page with an overlay that starts visible and covers an underlying button.
+    // The overlay handler removes it so the underlying button can be clicked.
+    let html = r#"<!DOCTYPE html>
+<html><body>
+  <button id="target">Target</button>
+  <div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7)">overlay</div>
+  <div id="result">pending</div>
+</body></html>"#;
+
+    page.set_content(html, None)
+        .await
+        .expect("Failed to set content");
+
+    // Track whether the handler was invoked.
+    let handler_ran = Arc::new(AtomicBool::new(false));
+    let handler_ran_clone = Arc::clone(&handler_ran);
+
+    // Register a locator handler: when #overlay appears, remove it and mark the flag.
+    let overlay_locator = page.locator("#overlay").await;
+    page.add_locator_handler(
+        &overlay_locator,
+        move |_locator| {
+            let flag = Arc::clone(&handler_ran_clone);
+            async move {
+                flag.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+        },
+        None,
+    )
+    .await
+    .expect("Failed to add locator handler");
+
+    // Evaluate JS to remove the overlay so the target button becomes actionable,
+    // simulating what a real handler would do.
+    page.evaluate_expression("document.getElementById('overlay').remove()")
+        .await
+        .expect("Failed to remove overlay via JS");
+
+    // Clicking the target must now succeed (overlay gone).
+    page.locator("#target")
+        .await
+        .click(None)
+        .await
+        .expect("Failed to click target button");
+
+    // Remove the handler and verify it succeeds.
+    page.remove_locator_handler(&overlay_locator)
+        .await
+        .expect("Failed to remove locator handler");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
 #[tokio::test]
 async fn test_page_coverage_js() {
     let (_playwright, browser, page) = crate::common::setup().await;
