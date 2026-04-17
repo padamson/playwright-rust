@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`expect_event()`** — generic event waiting on Page and BrowserContext, returning typed `EventValue` enum
 - **`playwright.request()`** — headless API testing without a browser (`get`, `post`, `put`, `delete`, `patch`, `head`, `fetch`, `APIResponse`)
 - **`to_match_aria_snapshot(expected)`** — ARIA accessibility tree assertion with auto-retry
+- **`Locator::aria_snapshot()`** — returns the ARIA accessibility tree as a YAML string (`ariaSnapshot` RPC on Frame)
+- **`Locator::describe(description)`** — returns a new Locator with a human-readable label appended to the selector (`internal:describe=...`) for cleaner trace/error output; client-side only
+- **`Locator::highlight()`** — highlights the matched element in the browser for visual debugging (`highlight` RPC on Frame)
+- **`Locator::content_frame()`** — returns a `FrameLocator` for the content of an `<iframe>` element; client-side only
 
 ## [0.11.0] - 2026-04-16
 

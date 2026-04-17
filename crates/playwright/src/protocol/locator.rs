@@ -1596,6 +1596,82 @@ impl Locator {
             ))
         })
     }
+
+    /// Returns the ARIA accessibility tree snapshot as a YAML string.
+    ///
+    /// The snapshot describes the accessible roles, names, and properties of the matched
+    /// element and its descendants. This is useful for writing stable accessibility assertions
+    /// that are independent of CSS classes or DOM structure.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The element is not found within the timeout
+    /// - The protocol call fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
+    pub async fn aria_snapshot(&self) -> Result<String> {
+        self.frame
+            .locator_aria_snapshot(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Returns a new Locator with an attached description for traces and error messages.
+    ///
+    /// The description does not affect element matching — it is purely informational,
+    /// appearing in trace viewer labels and error messages to make them more readable.
+    ///
+    /// Appends `>> internal:describe="description"` to the selector, matching
+    /// playwright-python's behavior exactly.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-describe>
+    pub fn describe(&self, description: &str) -> Locator {
+        let escaped =
+            serde_json::to_string(description).unwrap_or_else(|_| format!("\"{}\"", description));
+        Locator::new(
+            Arc::clone(&self.frame),
+            format!("{} >> internal:describe={}", self.selector, escaped),
+            self.page.clone(),
+        )
+    }
+
+    /// Highlights the matched element in the browser for visual debugging.
+    ///
+    /// Draws a colored overlay over the element for a short period. This is a
+    /// debugging tool and has no effect on test assertions or element state.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The element is not found within the timeout
+    /// - The protocol call fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-highlight>
+    pub async fn highlight(&self) -> Result<()> {
+        self.frame
+            .locator_highlight(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
+    /// Returns a [`FrameLocator`](crate::protocol::FrameLocator) for the content of an
+    /// `<iframe>` element matched by this locator.
+    ///
+    /// This is a client-side operation — it creates a `FrameLocator` scoped to the matched
+    /// iframe element, allowing you to interact with elements inside the iframe using the
+    /// standard `FrameLocator` API.
+    ///
+    /// Equivalent to `page.frame_locator(selector)`, but starting from an existing `Locator`.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-content-frame>
+    pub fn content_frame(&self) -> crate::protocol::FrameLocator {
+        crate::protocol::FrameLocator::new(
+            Arc::clone(&self.frame),
+            self.selector.clone(),
+            self.page.clone(),
+        )
+    }
 }
 
 impl std::fmt::Debug for Locator {

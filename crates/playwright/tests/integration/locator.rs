@@ -2203,3 +2203,76 @@ async fn test_locator_page_property() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
+
+#[tokio::test]
+async fn test_locator_aria_snapshot() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content("<h1>Hello</h1><button>Click me</button>", None)
+        .await
+        .expect("Failed to set content");
+
+    let body = page.locator("body").await;
+    let snapshot = body
+        .aria_snapshot()
+        .await
+        .expect("aria_snapshot should succeed");
+
+    assert!(snapshot.contains("heading") || snapshot.contains("Hello"));
+    assert!(snapshot.contains("button") || snapshot.contains("Click me"));
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_locator_describe() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content("<button>Submit</button>", None)
+        .await
+        .expect("Failed to set content");
+
+    let described = page.locator("button").await.describe("submit button");
+    assert!(described.selector().contains("internal:describe"));
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_locator_highlight() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content("<h1>Highlight me</h1>", None)
+        .await
+        .expect("Failed to set content");
+
+    page.locator("h1")
+        .await
+        .highlight()
+        .await
+        .expect("highlight should succeed");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_locator_content_frame() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content(
+        "<iframe id='myframe' srcdoc='<h1>Inside Frame</h1>'></iframe>",
+        None,
+    )
+    .await
+    .expect("Failed to set content");
+
+    let frame = page.locator("iframe#myframe").await.content_frame();
+    let text = frame
+        .locator("h1")
+        .text_content()
+        .await
+        .expect("should read iframe");
+    assert_eq!(text, Some("Inside Frame".to_string()));
+
+    browser.close().await.expect("Failed to close browser");
+}

@@ -1904,6 +1904,49 @@ impl Frame {
             .await
     }
 
+    /// Returns the ARIA accessibility tree snapshot for the element matching the selector.
+    ///
+    /// The snapshot is returned as a YAML-formatted string describing the accessible roles,
+    /// names, and properties of the element and its descendants.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
+    pub(crate) async fn locator_aria_snapshot(&self, selector: &str) -> Result<String> {
+        #[derive(Deserialize)]
+        struct AriaSnapshotResponse {
+            snapshot: String,
+        }
+
+        let response: AriaSnapshotResponse = self
+            .channel()
+            .send(
+                "ariaSnapshot",
+                serde_json::json!({
+                    "selector": selector,
+                    "timeout": crate::DEFAULT_TIMEOUT_MS
+                }),
+            )
+            .await?;
+
+        Ok(response.snapshot)
+    }
+
+    /// Highlights the element matching the selector in the browser (debug tool).
+    ///
+    /// Draws a colored overlay over the matched element for a short period.
+    /// This is a visual debugging tool and does not affect test assertions.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-highlight>
+    pub(crate) async fn locator_highlight(&self, selector: &str) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "highlight",
+                serde_json::json!({
+                    "selector": selector
+                }),
+            )
+            .await
+    }
+
     /// Evaluates JavaScript expression in the frame context (without return value).
     ///
     /// This is used internally by Page.evaluate().
