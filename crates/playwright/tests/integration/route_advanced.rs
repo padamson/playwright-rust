@@ -11,7 +11,7 @@
 // TDD approach: Tests written FIRST, then implementation
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::{ContinueOptions, FulfillOptions, Playwright};
+use playwright_rs::protocol::{ContinueOptions, FulfillOptions, Playwright, RouteFromHarOptions};
 use std::collections::HashMap;
 
 #[tokio::test]
@@ -648,5 +648,175 @@ async fn test_route_fulfill_fetch_still_works() {
     );
 
     browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_page_route_from_har() {
+    let (playwright, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+
+    let har_path = std::env::temp_dir().join("test_route_from_har.har");
+    let har_url = format!("{}/api/har-test", server.url());
+    let har_content = serde_json::json!({
+        "log": {
+            "version": "1.2",
+            "creator": { "name": "playwright-rust-test", "version": "0.0.0" },
+            "entries": [
+                {
+                    "startedDateTime": "2024-01-01T00:00:00.000Z",
+                    "time": 1,
+                    "request": {
+                        "method": "GET",
+                        "url": har_url,
+                        "httpVersion": "HTTP/1.1",
+                        "headers": [],
+                        "queryString": [],
+                        "cookies": [],
+                        "headersSize": -1,
+                        "bodySize": -1
+                    },
+                    "response": {
+                        "status": 200,
+                        "statusText": "OK",
+                        "httpVersion": "HTTP/1.1",
+                        "headers": [
+                            { "name": "content-type", "value": "application/json" }
+                        ],
+                        "cookies": [],
+                        "content": {
+                            "size": 17,
+                            "mimeType": "application/json",
+                            "text": "{\"mocked\":true}"
+                        },
+                        "redirectURL": "",
+                        "headersSize": -1,
+                        "bodySize": 17
+                    },
+                    "cache": {},
+                    "timings": { "send": 0, "wait": 1, "receive": 0 }
+                }
+            ]
+        }
+    });
+    std::fs::write(&har_path, har_content.to_string()).expect("Failed to write HAR file");
+
+    let options = RouteFromHarOptions {
+        url: Some(format!("{}/api/har-test", server.url())),
+        not_found: Some("abort".to_string()),
+        update: None,
+        update_content: None,
+        update_mode: None,
+    };
+
+    page.route_from_har(har_path.to_str().unwrap(), Some(options))
+        .await
+        .expect("route_from_har should succeed");
+
+    page.goto(&format!("{}/", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let har_url = format!("{}/api/har-test", server.url());
+    let fetch_result = page
+        .evaluate_value(&format!("fetch('{har_url}').then(r => r.status)"))
+        .await
+        .expect("Failed to evaluate fetch");
+
+    assert_eq!(
+        fetch_result, "200",
+        "HAR-mocked response should return status 200"
+    );
+
+    std::fs::remove_file(&har_path).ok();
+    browser.close().await.expect("Failed to close browser");
+    let _ = playwright;
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_context_route_from_har() {
+    let server = TestServer::start().await;
+    let (playwright, browser, context) = crate::common::setup_context().await;
+
+    let har_path = std::env::temp_dir().join("test_context_route_from_har.har");
+    let har_url = format!("{}/api/har-test", server.url());
+    let har_content = serde_json::json!({
+        "log": {
+            "version": "1.2",
+            "creator": { "name": "playwright-rust-test", "version": "0.0.0" },
+            "entries": [
+                {
+                    "startedDateTime": "2024-01-01T00:00:00.000Z",
+                    "time": 1,
+                    "request": {
+                        "method": "GET",
+                        "url": har_url,
+                        "httpVersion": "HTTP/1.1",
+                        "headers": [],
+                        "queryString": [],
+                        "cookies": [],
+                        "headersSize": -1,
+                        "bodySize": -1
+                    },
+                    "response": {
+                        "status": 200,
+                        "statusText": "OK",
+                        "httpVersion": "HTTP/1.1",
+                        "headers": [
+                            { "name": "content-type", "value": "application/json" }
+                        ],
+                        "cookies": [],
+                        "content": {
+                            "size": 17,
+                            "mimeType": "application/json",
+                            "text": "{\"mocked\":true}"
+                        },
+                        "redirectURL": "",
+                        "headersSize": -1,
+                        "bodySize": 17
+                    },
+                    "cache": {},
+                    "timings": { "send": 0, "wait": 1, "receive": 0 }
+                }
+            ]
+        }
+    });
+    std::fs::write(&har_path, har_content.to_string()).expect("Failed to write HAR file");
+
+    let options = RouteFromHarOptions {
+        url: Some(format!("{}/api/har-test", server.url())),
+        not_found: Some("fallback".to_string()),
+        update: None,
+        update_content: None,
+        update_mode: None,
+    };
+
+    context
+        .route_from_har(har_path.to_str().unwrap(), Some(options))
+        .await
+        .expect("context.route_from_har should succeed");
+
+    let page = context.new_page().await.expect("Failed to create page");
+
+    page.goto(&format!("{}/", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    let har_url = format!("{}/api/har-test", server.url());
+    let fetch_result = page
+        .evaluate_value(&format!("fetch('{har_url}').then(r => r.status)"))
+        .await
+        .expect("Failed to evaluate fetch");
+
+    assert_eq!(
+        fetch_result, "200",
+        "HAR-mocked context response should return status 200"
+    );
+
+    std::fs::remove_file(&har_path).ok();
+    context.close().await.expect("Failed to close context");
+    browser.close().await.expect("Failed to close browser");
+    let _ = playwright;
     server.shutdown();
 }

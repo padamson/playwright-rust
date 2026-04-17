@@ -5,7 +5,7 @@
 // cache, and local storage.
 
 use crate::api::launch_options::IgnoreDefaultArgs;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::protocol::api_request_context::APIRequestContext;
 use crate::protocol::cdp_session::CDPSession;
 use crate::protocol::event_waiter::EventWaiter;
@@ -890,6 +890,155 @@ impl BrowserContext {
     pub async fn unroute_all(&self, _behavior: Option<UnrouteBehavior>) -> Result<()> {
         self.route_handlers.lock().unwrap().clear();
         self.enable_network_interception().await
+    }
+
+    /// Replays network requests from a HAR file recorded previously.
+    ///
+    /// Requests matching `options.url` (or all requests if omitted) will be
+    /// served from the archive for every page in this context.  Unmatched
+    /// requests are either aborted or passed through depending on
+    /// `options.not_found` (`"abort"` is the default).
+    ///
+    /// # Arguments
+    ///
+    /// * `har_path` - Path to the `.har` file on disk
+    /// * `options` - Optional settings (url filter, not_found policy, update mode)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `har_path` does not exist or cannot be read by the Playwright server
+    /// - The Playwright server fails to open the archive
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-route-from-har>
+    pub async fn route_from_har(
+        &self,
+        har_path: &str,
+        options: Option<crate::protocol::RouteFromHarOptions>,
+    ) -> Result<()> {
+        let opts = options.unwrap_or_default();
+        let not_found = opts.not_found.unwrap_or_else(|| "abort".to_string());
+        let url_filter = opts.url.clone();
+
+        let abs_path = std::path::Path::new(har_path).canonicalize().map_err(|e| {
+            Error::InvalidPath(format!(
+                "route_from_har: cannot resolve '{}': {}",
+                har_path, e
+            ))
+        })?;
+        let abs_str = abs_path.to_string_lossy().into_owned();
+
+        let connection = self.connection();
+        let local_utils = {
+            let all = connection.all_objects_sync();
+            all.into_iter()
+                .find(|o| o.type_name() == "LocalUtils")
+                .and_then(|o| {
+                    o.as_any()
+                        .downcast_ref::<crate::protocol::LocalUtils>()
+                        .cloned()
+                })
+                .ok_or_else(|| {
+                    Error::ProtocolError(
+                        "route_from_har: LocalUtils not found in connection registry".to_string(),
+                    )
+                })?
+        };
+
+        let har_id = local_utils.har_open(&abs_str).await?;
+
+        let pattern = url_filter.unwrap_or_else(|| "**/*".to_string());
+
+        let har_id_clone = har_id.clone();
+        let local_utils_clone = local_utils.clone();
+        let not_found_clone = not_found.clone();
+
+        self.route(&pattern, move |route| {
+            let har_id = har_id_clone.clone();
+            let local_utils = local_utils_clone.clone();
+            let not_found = not_found_clone.clone();
+            async move {
+                let request = route.request();
+                let req_url = request.url().to_string();
+                let req_method = request.method().to_string();
+
+                let headers: Vec<serde_json::Value> = request
+                    .headers()
+                    .iter()
+                    .map(|(k, v)| serde_json::json!({"name": k, "value": v}))
+                    .collect();
+
+                let lookup = local_utils
+                    .har_lookup(
+                        &har_id,
+                        &req_url,
+                        &req_method,
+                        headers,
+                        None,
+                        request.is_navigation_request(),
+                    )
+                    .await;
+
+                match lookup {
+                    Err(e) => {
+                        tracing::warn!("har_lookup error for {}: {}", req_url, e);
+                        route.continue_(None).await
+                    }
+                    Ok(result) => match result.action.as_str() {
+                        "redirect" => {
+                            let redirect_url = result.redirect_url.unwrap_or_default();
+                            let opts = crate::protocol::ContinueOptions::builder()
+                                .url(redirect_url)
+                                .build();
+                            route.continue_(Some(opts)).await
+                        }
+                        "fulfill" => {
+                            let status = result.status.unwrap_or(200);
+
+                            let body_bytes = result.body.as_deref().map(|b64| {
+                                use base64::Engine;
+                                base64::engine::general_purpose::STANDARD
+                                    .decode(b64)
+                                    .unwrap_or_default()
+                            });
+
+                            let mut headers_map = std::collections::HashMap::new();
+                            if let Some(raw_headers) = result.headers {
+                                for h in raw_headers {
+                                    if let (Some(name), Some(value)) = (
+                                        h.get("name").and_then(|v| v.as_str()),
+                                        h.get("value").and_then(|v| v.as_str()),
+                                    ) {
+                                        headers_map.insert(name.to_string(), value.to_string());
+                                    }
+                                }
+                            }
+
+                            let mut builder =
+                                crate::protocol::FulfillOptions::builder().status(status);
+
+                            if !headers_map.is_empty() {
+                                builder = builder.headers(headers_map);
+                            }
+
+                            if let Some(body) = body_bytes {
+                                builder = builder.body(body);
+                            }
+
+                            route.fulfill(Some(builder.build())).await
+                        }
+                        _ => {
+                            if not_found == "fallback" {
+                                route.fallback(None).await
+                            } else {
+                                route.abort(None).await
+                            }
+                        }
+                    },
+                }
+            }
+        })
+        .await
     }
 
     /// Adds a listener for the `page` event.

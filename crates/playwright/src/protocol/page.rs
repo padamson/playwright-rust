@@ -1606,6 +1606,166 @@ impl Page {
         self.enable_network_interception().await
     }
 
+    /// Replays network requests from a HAR file recorded previously.
+    ///
+    /// Requests matching `options.url` (or all requests if omitted) will be
+    /// served from the archive instead of hitting the network.  Unmatched
+    /// requests are either aborted or passed through depending on
+    /// `options.not_found` (`"abort"` is the default).
+    ///
+    /// # Arguments
+    ///
+    /// * `har_path` - Path to the `.har` file on disk
+    /// * `options` - Optional settings (url filter, not_found policy, update mode)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `har_path` does not exist or cannot be read by the Playwright server
+    /// - The Playwright server fails to open the archive
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-route-from-har>
+    pub async fn route_from_har(
+        &self,
+        har_path: &str,
+        options: Option<RouteFromHarOptions>,
+    ) -> Result<()> {
+        let opts = options.unwrap_or_default();
+        let not_found = opts.not_found.unwrap_or_else(|| "abort".to_string());
+        let url_filter = opts.url.clone();
+
+        // Resolve to an absolute path so the Playwright server can open it
+        // regardless of its working directory.
+        let abs_path = std::path::Path::new(har_path).canonicalize().map_err(|e| {
+            Error::InvalidPath(format!(
+                "route_from_har: cannot resolve '{}': {}",
+                har_path, e
+            ))
+        })?;
+        let abs_str = abs_path.to_string_lossy().into_owned();
+
+        // Locate LocalUtils in the connection object registry by type name.
+        // The Playwright server registers it with a guid like "localUtils@1"
+        // so we scan all objects for the one with type_name "LocalUtils".
+        let connection = self.connection();
+        let local_utils = {
+            let all = connection.all_objects_sync();
+            all.into_iter()
+                .find(|o| o.type_name() == "LocalUtils")
+                .and_then(|o| {
+                    o.as_any()
+                        .downcast_ref::<crate::protocol::LocalUtils>()
+                        .cloned()
+                })
+                .ok_or_else(|| {
+                    Error::ProtocolError(
+                        "route_from_har: LocalUtils not found in connection registry".to_string(),
+                    )
+                })?
+        };
+
+        // Open the HAR archive on the server side.
+        let har_id = local_utils.har_open(&abs_str).await?;
+
+        // Determine the URL pattern to intercept.
+        let pattern = url_filter.clone().unwrap_or_else(|| "**/*".to_string());
+
+        // Register a route handler that performs HAR lookup for each request.
+        let har_id_clone = har_id.clone();
+        let local_utils_clone = local_utils.clone();
+        let not_found_clone = not_found.clone();
+
+        self.route(&pattern, move |route| {
+            let har_id = har_id_clone.clone();
+            let local_utils = local_utils_clone.clone();
+            let not_found = not_found_clone.clone();
+            async move {
+                let request = route.request();
+                let req_url = request.url().to_string();
+                let req_method = request.method().to_string();
+
+                // Build headers array as [{name, value}]
+                let headers: Vec<serde_json::Value> = request
+                    .headers()
+                    .iter()
+                    .map(|(k, v)| serde_json::json!({"name": k, "value": v}))
+                    .collect();
+
+                let lookup = local_utils
+                    .har_lookup(
+                        &har_id,
+                        &req_url,
+                        &req_method,
+                        headers,
+                        None,
+                        request.is_navigation_request(),
+                    )
+                    .await;
+
+                match lookup {
+                    Err(e) => {
+                        tracing::warn!("har_lookup error for {}: {}", req_url, e);
+                        route.continue_(None).await
+                    }
+                    Ok(result) => match result.action.as_str() {
+                        "redirect" => {
+                            let redirect_url = result.redirect_url.unwrap_or_default();
+                            let opts = crate::protocol::ContinueOptions::builder()
+                                .url(redirect_url)
+                                .build();
+                            route.continue_(Some(opts)).await
+                        }
+                        "fulfill" => {
+                            let status = result.status.unwrap_or(200);
+
+                            // Decode base64 body if present
+                            let body_bytes = result.body.as_deref().map(|b64| {
+                                base64::engine::general_purpose::STANDARD
+                                    .decode(b64)
+                                    .unwrap_or_default()
+                            });
+
+                            // Build headers map
+                            let mut headers_map = std::collections::HashMap::new();
+                            if let Some(raw_headers) = result.headers {
+                                for h in raw_headers {
+                                    if let (Some(name), Some(value)) = (
+                                        h.get("name").and_then(|v| v.as_str()),
+                                        h.get("value").and_then(|v| v.as_str()),
+                                    ) {
+                                        headers_map.insert(name.to_string(), value.to_string());
+                                    }
+                                }
+                            }
+
+                            let mut builder =
+                                crate::protocol::FulfillOptions::builder().status(status);
+
+                            if !headers_map.is_empty() {
+                                builder = builder.headers(headers_map);
+                            }
+
+                            if let Some(body) = body_bytes {
+                                builder = builder.body(body);
+                            }
+
+                            route.fulfill(Some(builder.build())).await
+                        }
+                        _ => {
+                            // "fallback" or "error" or unknown
+                            if not_found == "fallback" {
+                                route.fallback(None).await
+                            } else {
+                                route.abort(None).await
+                            }
+                        }
+                    },
+                }
+            }
+        })
+        .await
+    }
+
     /// Handles a route event from the protocol
     ///
     /// Called by on_event when a "route" event is received.
@@ -5032,6 +5192,38 @@ impl std::fmt::Debug for Response {
             .field("ok", &self.ok)
             .finish_non_exhaustive()
     }
+}
+
+/// Options for `page.route_from_har()` and `context.route_from_har()`.
+///
+/// See: <https://playwright.dev/docs/api/class-page#page-route-from-har>
+#[derive(Debug, Clone, Default)]
+pub struct RouteFromHarOptions {
+    /// URL glob pattern — only requests matching this pattern are served from
+    /// the HAR file.  All requests are intercepted when omitted.
+    pub url: Option<String>,
+
+    /// Policy for requests not found in the HAR file.
+    ///
+    /// - `"abort"` (default) — terminate the request with a network error.
+    /// - `"fallback"` — pass the request through to the next handler (or network).
+    pub not_found: Option<String>,
+
+    /// When `true`, record new network activity into the HAR file instead of
+    /// replaying existing entries.  Defaults to `false`.
+    pub update: Option<bool>,
+
+    /// Content storage strategy used when `update` is `true`.
+    ///
+    /// - `"embed"` (default) — inline base64-encoded content in the HAR.
+    /// - `"attach"` — store content as separate files alongside the HAR.
+    pub update_content: Option<String>,
+
+    /// Recording detail level used when `update` is `true`.
+    ///
+    /// - `"minimal"` (default) — omit timing, cookies, and security info.
+    /// - `"full"` — record everything.
+    pub update_mode: Option<String>,
 }
 
 /// Options for `page.add_locator_handler()`.
