@@ -250,6 +250,9 @@ pub use protocol::{DeviceDescriptor, DeviceViewport};
 // Re-export WebError
 pub use protocol::WebError;
 
+// Re-export WebSocketRoute
+pub use protocol::{WebSocketRoute, WebSocketRouteCloseOptions};
+
 // Re-export FileChooser
 pub use protocol::FileChooser;
 

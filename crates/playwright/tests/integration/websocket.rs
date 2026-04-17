@@ -215,3 +215,80 @@ async fn test_websocket_expect_frame_received_api() {
     browser.close().await.unwrap();
     server.shutdown();
 }
+
+#[tokio::test]
+async fn test_page_route_web_socket() {
+    let (_pw, browser, page) = common::setup().await;
+    let server = TestServer::start().await;
+
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let handler_called = Arc::new(AtomicBool::new(false));
+    let handler_called_clone = handler_called.clone();
+
+    let ws_url = server.url().replace("http://", "ws://") + "/ws";
+
+    page.route_web_socket(&ws_url, move |route| {
+        let called = handler_called_clone.clone();
+        Box::pin(async move {
+            called.store(true, Ordering::Release);
+            route.connect_to_server().await?;
+            Ok(())
+        })
+    })
+    .await
+    .unwrap();
+
+    page.goto(&format!("{}/websocket.html", server.url()), None)
+        .await
+        .unwrap();
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
+
+    assert!(
+        handler_called.load(Ordering::Acquire),
+        "WebSocket route handler should have been called"
+    );
+
+    browser.close().await.unwrap();
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_context_route_web_socket() {
+    let (_pw, browser, context) = common::setup_context().await;
+    let server = TestServer::start().await;
+    let page = context.new_page().await.unwrap();
+
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let handler_called = Arc::new(AtomicBool::new(false));
+    let handler_called_clone = handler_called.clone();
+
+    let ws_url = server.url().replace("http://", "ws://") + "/ws";
+
+    context
+        .route_web_socket(&ws_url, move |route| {
+            let called = handler_called_clone.clone();
+            Box::pin(async move {
+                called.store(true, Ordering::Release);
+                route.connect_to_server().await?;
+                Ok(())
+            })
+        })
+        .await
+        .unwrap();
+
+    page.goto(&format!("{}/websocket.html", server.url()), None)
+        .await
+        .unwrap();
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
+
+    assert!(
+        handler_called.load(Ordering::Acquire),
+        "Context WebSocket route handler should have been called"
+    );
+
+    context.close().await.unwrap();
+    browser.close().await.unwrap();
+    server.shutdown();
+}

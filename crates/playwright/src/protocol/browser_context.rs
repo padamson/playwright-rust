@@ -145,11 +145,21 @@ type ServiceWorkerHandler =
 /// Binding callback: receives deserialized JS args, returns a JSON value
 type BindingCallback = Arc<dyn Fn(Vec<serde_json::Value>) -> BindingCallbackFuture + Send + Sync>;
 
+/// Type alias for boxed WebSocketRoute handler future
+type WsRouteHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
 /// Storage for a single route handler
 #[derive(Clone)]
 struct RouteHandlerEntry {
     pattern: String,
     handler: Arc<dyn Fn(Route) -> RouteHandlerFuture + Send + Sync>,
+}
+
+/// Storage for a single WebSocket route handler entry
+#[derive(Clone)]
+struct ContextWsRouteHandlerEntry {
+    pattern: String,
+    handler: Arc<dyn Fn(crate::protocol::WebSocketRoute) -> WsRouteHandlerFuture + Send + Sync>,
 }
 
 #[derive(Clone)]
@@ -207,6 +217,8 @@ pub struct BrowserContext {
     serviceworker_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::Worker>>>>,
     /// Active service workers tracked via "serviceWorker" events
     service_workers_list: Arc<Mutex<Vec<crate::protocol::Worker>>>,
+    /// WebSocketRoute handlers for route_web_socket()
+    ws_route_handlers: Arc<Mutex<Vec<ContextWsRouteHandlerEntry>>>,
 }
 
 impl BrowserContext {
@@ -289,6 +301,7 @@ impl BrowserContext {
             weberror_waiters: Arc::new(Mutex::new(Vec::new())),
             serviceworker_waiters: Arc::new(Mutex::new(Vec::new())),
             service_workers_list: Arc::new(Mutex::new(Vec::new())),
+            ws_route_handlers: Arc::new(Mutex::new(Vec::new())),
         };
 
         // Enable dialog and console event subscriptions eagerly.
@@ -1661,6 +1674,64 @@ impl BrowserContext {
         }
     }
 
+    /// Intercepts WebSocket connections matching the given URL pattern for all pages in this context.
+    ///
+    /// When a WebSocket connection from any page in this context matches `url`,
+    /// the `handler` is called with a [`WebSocketRoute`](crate::protocol::WebSocketRoute) object.
+    /// The handler must call [`connect_to_server`](crate::protocol::WebSocketRoute::connect_to_server)
+    /// to forward the connection to the real server, or
+    /// [`close`](crate::protocol::WebSocketRoute::close) to terminate it.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` — URL glob pattern (e.g. `"ws://**"` or `"wss://example.com/ws"`).
+    /// * `handler` — Async closure receiving a `WebSocketRoute`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the RPC call to enable interception fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-route-web-socket>
+    pub async fn route_web_socket<F, Fut>(&self, url: &str, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::WebSocketRoute) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |route: crate::protocol::WebSocketRoute| -> WsRouteHandlerFuture {
+                Box::pin(handler(route))
+            },
+        );
+
+        self.ws_route_handlers
+            .lock()
+            .unwrap()
+            .push(ContextWsRouteHandlerEntry {
+                pattern: url.to_string(),
+                handler,
+            });
+
+        self.enable_ws_interception().await
+    }
+
+    /// Updates WebSocket interception patterns for this context.
+    async fn enable_ws_interception(&self) -> Result<()> {
+        let patterns: Vec<serde_json::Value> = self
+            .ws_route_handlers
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|entry| serde_json::json!({ "glob": entry.pattern }))
+            .collect();
+
+        self.channel()
+            .send_no_result(
+                "setWebSocketInterceptionPatterns",
+                serde_json::json!({ "patterns": patterns }),
+            )
+            .await
+    }
+
     /// Updates network interception patterns for this context
     async fn enable_network_interception(&self) -> Result<()> {
         let patterns: Vec<serde_json::Value> = self
@@ -2330,6 +2401,50 @@ impl ChannelOwner for BrowserContext {
                         // Notify expect_event("serviceworker") waiters
                         if let Some(tx) = serviceworker_waiters.lock().unwrap().pop() {
                             let _ = tx.send(worker);
+                        }
+                    });
+                }
+            }
+            "webSocketRoute" => {
+                // A WebSocket matched a route_web_socket pattern on the context.
+                // Event format: {webSocketRoute: {guid: "WebSocketRoute@..."}}
+                if let Some(wsr_guid) = params
+                    .get("webSocketRoute")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let wsr_guid_owned = wsr_guid.to_string();
+                    let ws_route_handlers = self.ws_route_handlers.clone();
+
+                    tokio::spawn(async move {
+                        let route: crate::protocol::WebSocketRoute = match connection
+                            .get_typed::<crate::protocol::WebSocketRoute>(&wsr_guid_owned)
+                            .await
+                        {
+                            Ok(r) => r,
+                            Err(e) => {
+                                tracing::warn!("Failed to get WebSocketRoute object: {}", e);
+                                return;
+                            }
+                        };
+
+                        let url = route.url().to_string();
+                        let handlers = ws_route_handlers.lock().unwrap().clone();
+                        for entry in handlers.iter().rev() {
+                            if crate::protocol::route::matches_pattern(&entry.pattern, &url) {
+                                let handler = entry.handler.clone();
+                                let route_clone = route.clone();
+                                tokio::spawn(async move {
+                                    if let Err(e) = handler(route_clone).await {
+                                        tracing::error!(
+                                            "Error in context webSocketRoute handler: {}",
+                                            e
+                                        );
+                                    }
+                                });
+                                break;
+                            }
                         }
                     });
                 }

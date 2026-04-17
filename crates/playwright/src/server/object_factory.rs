@@ -16,7 +16,7 @@ use crate::error::{Error, Result};
 use crate::protocol::{
     APIRequestContext, Android, BindingCall, Browser, BrowserContext, BrowserType, CDPSession,
     Dialog, Electron, Frame, JSHandle, LocalUtils, Page, Playwright, Request, ResponseObject,
-    Route, Tracing, WebSocket, Worker, artifact::Artifact,
+    Route, Tracing, WebSocket, WebSocketRoute, Worker, artifact::Artifact,
 };
 use crate::server::channel_owner::{ChannelOwner, ParentOrConnection};
 use crate::server::connection::ConnectionExt;
@@ -375,6 +375,25 @@ pub async fn create_object(
             };
 
             Arc::new(Worker::new(parent_owner, type_name, guid, initializer)?)
+        }
+
+        "WebSocketRoute" => {
+            // WebSocketRoute — created when a WebSocket matches a route_web_socket pattern
+            let parent_owner = match parent {
+                ParentOrConnection::Parent(p) => p,
+                ParentOrConnection::Connection(_) => {
+                    return Err(Error::ProtocolError(
+                        "WebSocketRoute must have a parent object".to_string(),
+                    ));
+                }
+            };
+
+            Arc::new(WebSocketRoute::new(
+                parent_owner,
+                type_name,
+                guid,
+                initializer,
+            )?)
         }
 
         _ => {

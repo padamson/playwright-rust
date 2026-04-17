@@ -59,6 +59,7 @@ pub mod video;
 pub mod wait_for;
 pub mod web_error;
 pub mod web_socket;
+pub mod web_socket_route;
 pub mod worker;
 
 pub use accessibility::{Accessibility, AccessibilitySnapshotOptions};
@@ -128,4 +129,5 @@ pub use video::Video;
 pub use wait_for::{WaitForOptions, WaitForOptionsBuilder, WaitForState};
 pub use web_error::WebError;
 pub use web_socket::WebSocket;
+pub use web_socket_route::{WebSocketRoute, WebSocketRouteCloseOptions};
 pub use worker::Worker;

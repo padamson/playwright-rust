@@ -200,6 +200,8 @@ pub struct Page {
     response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
     /// WebSocket event handlers
     websocket_handlers: Arc<Mutex<Vec<WebSocketHandler>>>,
+    /// WebSocketRoute handlers for route_web_socket()
+    ws_route_handlers: Arc<Mutex<Vec<WsRouteHandlerEntry>>>,
     /// Current viewport size (None when no_viewport is set).
     /// Updated by set_viewport_size().
     viewport: Arc<RwLock<Option<Viewport>>>,
@@ -293,6 +295,17 @@ type ResponseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// Type alias for boxed websocket handler future
 type WebSocketHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Type alias for boxed WebSocketRoute handler future
+type WebSocketRouteHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Storage for a single WebSocket route handler entry
+#[derive(Clone)]
+struct WsRouteHandlerEntry {
+    pattern: String,
+    handler:
+        Arc<dyn Fn(crate::protocol::WebSocketRoute) -> WebSocketRouteHandlerFuture + Send + Sync>,
+}
 
 /// Storage for a single route handler
 #[derive(Clone)]
@@ -459,6 +472,7 @@ impl Page {
         let download_handlers = Arc::new(Mutex::new(Vec::new()));
         let dialog_handlers = Arc::new(Mutex::new(Vec::new()));
         let websocket_handlers = Arc::new(Mutex::new(Vec::new()));
+        let ws_route_handlers = Arc::new(Mutex::new(Vec::new()));
 
         // Initialize cached main frame as empty (will be populated on first access)
         let cached_main_frame = Arc::new(Mutex::new(None));
@@ -493,6 +507,7 @@ impl Page {
             request_failed_handlers: Default::default(),
             response_handlers: Default::default(),
             websocket_handlers,
+            ws_route_handlers,
             viewport,
             is_closed: Arc::new(AtomicBool::new(false)),
             default_timeout_ms: Arc::new(AtomicU64::new(crate::DEFAULT_TIMEOUT_MS.to_bits())),
@@ -1764,6 +1779,64 @@ impl Page {
             }
         })
         .await
+    }
+
+    /// Intercepts WebSocket connections matching the given URL pattern.
+    ///
+    /// When a WebSocket connection from the page matches `url`, the `handler`
+    /// is called with a [`WebSocketRoute`](crate::protocol::WebSocketRoute) object.
+    /// The handler must call [`connect_to_server`](crate::protocol::WebSocketRoute::connect_to_server)
+    /// to forward the connection to the real server, or
+    /// [`close`](crate::protocol::WebSocketRoute::close) to terminate it.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` — URL glob pattern (e.g. `"ws://**"` or `"wss://example.com/ws"`).
+    /// * `handler` — Async closure receiving a `WebSocketRoute`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the RPC call to enable interception fails.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-route-web-socket>
+    pub async fn route_web_socket<F, Fut>(&self, url: &str, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::WebSocketRoute) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler = Arc::new(
+            move |route: crate::protocol::WebSocketRoute| -> WebSocketRouteHandlerFuture {
+                Box::pin(handler(route))
+            },
+        );
+
+        self.ws_route_handlers
+            .lock()
+            .unwrap()
+            .push(WsRouteHandlerEntry {
+                pattern: url.to_string(),
+                handler,
+            });
+
+        self.enable_ws_interception().await
+    }
+
+    /// Updates WebSocket interception patterns for this page.
+    async fn enable_ws_interception(&self) -> Result<()> {
+        let patterns: Vec<serde_json::Value> = self
+            .ws_route_handlers
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|entry| serde_json::json!({ "glob": entry.pattern }))
+            .collect();
+
+        self.channel()
+            .send_no_result(
+                "setWebSocketInterceptionPatterns",
+                serde_json::json!({ "patterns": patterns }),
+            )
+            .await
     }
 
     /// Handles a route event from the protocol
@@ -4018,6 +4091,47 @@ impl ChannelOwner for Page {
                                     tracing::error!("Error in websocket handler: {}", e);
                                 }
                             });
+                        }
+                    });
+                }
+            }
+            "webSocketRoute" => {
+                // A WebSocket matched a route_web_socket pattern.
+                // Event format: {webSocketRoute: {guid: "WebSocketRoute@..."}}
+                if let Some(wsr_guid) = params
+                    .get("webSocketRoute")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let wsr_guid_owned = wsr_guid.to_string();
+                    let self_clone = self.clone();
+
+                    tokio::spawn(async move {
+                        let route: crate::protocol::WebSocketRoute = match connection
+                            .get_typed::<crate::protocol::WebSocketRoute>(&wsr_guid_owned)
+                            .await
+                        {
+                            Ok(r) => r,
+                            Err(e) => {
+                                tracing::warn!("Failed to get WebSocketRoute object: {}", e);
+                                return;
+                            }
+                        };
+
+                        let url = route.url().to_string();
+                        let handlers = self_clone.ws_route_handlers.lock().unwrap().clone();
+                        for entry in handlers.iter().rev() {
+                            if crate::protocol::route::matches_pattern(&entry.pattern, &url) {
+                                let handler = entry.handler.clone();
+                                let route_clone = route.clone();
+                                tokio::spawn(async move {
+                                    if let Err(e) = handler(route_clone).await {
+                                        tracing::error!("Error in webSocketRoute handler: {}", e);
+                                    }
+                                });
+                                break;
+                            }
                         }
                     });
                 }
