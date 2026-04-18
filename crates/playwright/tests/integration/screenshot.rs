@@ -16,17 +16,8 @@ use playwright_rs::protocol::screenshot::{ScreenshotClip, ScreenshotOptions, Scr
 
 #[tokio::test]
 async fn test_page_screenshot_returns_bytes() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -48,17 +39,8 @@ async fn test_page_screenshot_returns_bytes() {
 
 #[tokio::test]
 async fn test_page_screenshot_saves_to_file() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -92,17 +74,8 @@ async fn test_page_screenshot_saves_to_file() {
 
 #[tokio::test]
 async fn test_page_screenshot_full_page() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -125,17 +98,8 @@ async fn test_page_screenshot_full_page() {
 
 #[tokio::test]
 async fn test_locator_screenshot() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -239,18 +203,9 @@ async fn test_screenshot_webkit() {
 
 #[tokio::test]
 async fn test_screenshot_all_page_options() {
-    crate::common::init_tracing();
     // Combined test: All page screenshot options in one browser session
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -328,18 +283,9 @@ async fn test_screenshot_all_page_options() {
 
 #[tokio::test]
 async fn test_screenshot_element_and_locator_with_options() {
-    crate::common::init_tracing();
     // Combined test: Element and locator screenshots with options
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await

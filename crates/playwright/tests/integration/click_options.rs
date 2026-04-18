@@ -19,18 +19,8 @@ use playwright_rs::protocol::click::{ClickOptions, KeyboardModifier, MouseButton
 
 #[tokio::test]
 async fn test_click_with_button_options() {
-    crate::common::init_tracing();
-    // Combined test: All button options in one browser session
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/click_options.html", server.url()), None)
         .await
@@ -88,17 +78,8 @@ async fn test_click_with_button_options() {
 
 #[tokio::test]
 async fn test_click_with_modifiers() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/click_options.html", server.url()), None)
         .await
@@ -127,17 +108,8 @@ async fn test_click_with_modifiers() {
 
 #[tokio::test]
 async fn test_click_with_position() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/click_options.html", server.url()), None)
         .await
@@ -166,17 +138,8 @@ async fn test_click_with_position() {
 
 #[tokio::test]
 async fn test_click_with_force() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/click_options.html", server.url()), None)
         .await
@@ -201,17 +164,8 @@ async fn test_click_with_force() {
 
 #[tokio::test]
 async fn test_click_with_trial() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/click_options.html", server.url()), None)
         .await
@@ -239,17 +193,8 @@ async fn test_click_with_trial() {
 
 #[tokio::test]
 async fn test_dblclick_with_options() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/click_options.html", server.url()), None)
         .await

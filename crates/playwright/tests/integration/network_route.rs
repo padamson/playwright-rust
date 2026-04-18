@@ -15,17 +15,8 @@ use std::sync::{Arc, Mutex};
 
 #[tokio::test]
 async fn test_route_abort_blocks_fetch() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route to abort image requests
     page.route("**/*.png", |route| async move { route.abort(None).await })
@@ -56,17 +47,8 @@ async fn test_route_abort_blocks_fetch() {
 
 #[tokio::test]
 async fn test_route_continue_allows_fetch() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route that continues all requests
     page.route("**/*", |route| async move { route.continue_(None).await })
@@ -91,17 +73,8 @@ async fn test_route_continue_allows_fetch() {
 
 #[tokio::test]
 async fn test_route_conditional_abort() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Conditionally abort based on URL
     page.route("**/*", |route| async move {
@@ -154,17 +127,8 @@ async fn test_route_conditional_abort() {
 
 #[tokio::test]
 async fn test_route_pattern_specificity() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up multiple routes with different patterns
     page.route("**/*.css", |route| async move { route.abort(None).await })
@@ -228,17 +192,8 @@ async fn test_route_pattern_specificity() {
 
 #[tokio::test]
 async fn test_route_pattern_matching_wildcard() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Track which handlers were called
     let png_called = Arc::new(Mutex::new(false));
@@ -307,17 +262,8 @@ async fn test_route_pattern_matching_wildcard() {
 
 #[tokio::test]
 async fn test_route_pattern_priority() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Track handler calls
     let first_called = Arc::new(Mutex::new(0));
@@ -373,17 +319,8 @@ async fn test_route_pattern_priority() {
 
 #[tokio::test]
 async fn test_route_conditional_matching() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Test: Handler can inspect URL and conditionally abort
     let abort_count = Arc::new(Mutex::new(0));
@@ -429,17 +366,8 @@ async fn test_route_conditional_matching() {
 
 #[tokio::test]
 async fn test_route_extension_patterns() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Test file extension glob patterns
     let html_called = Arc::new(Mutex::new(false));

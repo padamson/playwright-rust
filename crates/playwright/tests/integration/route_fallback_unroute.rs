@@ -1,22 +1,12 @@
 // Integration tests for route.fallback() and page.unroute/unroute_all
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
 
 #[tokio::test]
 async fn test_route_fallback_basic() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route that calls fallback (should send request through to network)
     page.route("**/*", |route| async move { route.fallback(None).await })
@@ -41,17 +31,8 @@ async fn test_route_fallback_basic() {
 
 #[tokio::test]
 async fn test_route_fallback_handler_chaining() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let handler_order = Arc::new(Mutex::new(Vec::<String>::new()));
 
@@ -100,17 +81,8 @@ async fn test_route_fallback_handler_chaining() {
 
 #[tokio::test]
 async fn test_page_unroute_removes_handler() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route to abort all image requests
     page.route("**/*.png", |route| async move { route.abort(None).await })
@@ -161,17 +133,8 @@ async fn test_page_unroute_removes_handler() {
 
 #[tokio::test]
 async fn test_page_unroute_all_clears_all() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up multiple abort routes
     page.route("**/*.png", |route| async move { route.abort(None).await })

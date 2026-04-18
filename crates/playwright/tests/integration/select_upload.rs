@@ -25,17 +25,8 @@ use std::io::Write;
 
 #[tokio::test]
 async fn test_select_option_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/select.html", server.url()), None)
         .await
@@ -82,17 +73,8 @@ async fn test_select_option_methods() {
 
 #[tokio::test]
 async fn test_select_multiple_options() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/select.html", server.url()), None)
         .await
@@ -127,17 +109,8 @@ async fn test_select_multiple_options() {
 
 #[tokio::test]
 async fn test_file_upload_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/upload.html", server.url()), None)
         .await

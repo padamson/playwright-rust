@@ -10,21 +10,12 @@
 // See: <https://playwright.dev/docs/api/class-jshandle>
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::{JSHandle, Playwright};
+use playwright_rs::protocol::JSHandle;
 
 #[tokio::test]
 async fn test_jshandle_json_value() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -49,17 +40,8 @@ async fn test_jshandle_json_value() {
 
 #[tokio::test]
 async fn test_jshandle_get_property() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -90,17 +72,8 @@ async fn test_jshandle_get_property() {
 
 #[tokio::test]
 async fn test_jshandle_evaluate() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -126,17 +99,8 @@ async fn test_jshandle_evaluate() {
 
 #[tokio::test]
 async fn test_jshandle_dispose() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -157,17 +121,8 @@ async fn test_jshandle_dispose() {
 
 #[tokio::test]
 async fn test_jshandle_primitive_value() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -194,17 +149,8 @@ async fn test_jshandle_primitive_value() {
 
 #[tokio::test]
 async fn test_jshandle_get_properties() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await

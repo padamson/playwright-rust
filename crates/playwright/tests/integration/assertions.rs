@@ -23,17 +23,8 @@ use playwright_rs::{expect, protocol::Playwright};
 
 #[tokio::test]
 async fn test_to_be_visible_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/button.html", server.url()), None)
         .await
@@ -137,17 +128,8 @@ async fn test_to_be_visible_assertions() {
 
 #[tokio::test]
 async fn test_to_be_hidden_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/button.html", server.url()), None)
         .await
@@ -308,17 +290,8 @@ async fn test_cross_browser_smoke() {
 
 #[tokio::test]
 async fn test_button_state_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     // Test 1: to_be_enabled() with existing button
     page.goto(&format!("{}/button.html", server.url()), None)
@@ -394,17 +367,8 @@ async fn test_button_state_assertions() {
 
 #[tokio::test]
 async fn test_checkbox_state_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -481,17 +445,8 @@ async fn test_checkbox_state_assertions() {
 
 #[tokio::test]
 async fn test_editable_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -545,17 +500,8 @@ async fn test_editable_assertions() {
 
 #[tokio::test]
 async fn test_focus_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -713,17 +659,8 @@ async fn test_state_assertions_cross_browser_smoke() {
 
 #[tokio::test]
 async fn test_to_have_text_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/text.html", server.url()), None)
         .await
@@ -800,17 +737,8 @@ async fn test_to_have_text_assertions() {
 
 #[tokio::test]
 async fn test_to_contain_text_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/text.html", server.url()), None)
         .await
@@ -846,17 +774,8 @@ async fn test_to_contain_text_assertions() {
 
 #[tokio::test]
 async fn test_to_have_value_assertions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/text.html", server.url()), None)
         .await
@@ -985,17 +904,7 @@ async fn test_text_assertions_cross_browser_smoke() {
 
 #[tokio::test]
 async fn test_to_have_screenshot_creates_baseline() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(
         "<h1 style='color:red;font-family:monospace'>Hello Screenshot</h1>",
@@ -1026,17 +935,7 @@ async fn test_to_have_screenshot_creates_baseline() {
 
 #[tokio::test]
 async fn test_to_have_screenshot_matches_baseline() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(
         "<div id='test' style='width:100px;height:100px;background:blue;font-family:monospace'>Test</div>",
@@ -1069,17 +968,7 @@ async fn test_to_have_screenshot_matches_baseline() {
 
 #[tokio::test]
 async fn test_to_have_screenshot_detects_difference() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Create baseline with blue background
     page.set_content(
@@ -1126,17 +1015,7 @@ async fn test_to_have_screenshot_detects_difference() {
 
 #[tokio::test]
 async fn test_to_have_screenshot_max_diff_pixels() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Create baseline
     page.set_content(
@@ -1176,17 +1055,7 @@ async fn test_to_have_screenshot_max_diff_pixels() {
 
 #[tokio::test]
 async fn test_to_have_screenshot_update_snapshots() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Create baseline with blue
     page.set_content(
@@ -1230,17 +1099,7 @@ async fn test_to_have_screenshot_update_snapshots() {
 
 #[tokio::test]
 async fn test_to_have_screenshot_animations_disabled() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Page with CSS animation
     page.set_content(
@@ -1281,17 +1140,7 @@ async fn test_to_have_screenshot_animations_disabled() {
 
 #[tokio::test]
 async fn test_expect_page_to_have_screenshot() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(
         "<body style='margin:0;background:white;font-family:monospace'><h1>Page Screenshot</h1></body>",

@@ -7,7 +7,7 @@
 //
 // See: <https://playwright.dev/docs/api/class-consolemessage>
 
-use playwright_rs::protocol::{JSHandle, Playwright};
+use playwright_rs::protocol::JSHandle;
 use playwright_rs::server::channel_owner::ChannelOwner;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -19,10 +19,7 @@ use std::time::Duration;
 /// Test that page.on_console fires for console.log with type "log" and correct text.
 #[tokio::test]
 async fn test_page_on_console_log() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured = Arc::new(Mutex::new(None));
     let captured_clone = captured.clone();
@@ -54,10 +51,7 @@ async fn test_page_on_console_log() -> Result<(), Box<dyn std::error::Error>> {
 /// Test that page.on_console fires for console.error with type "error".
 #[tokio::test]
 async fn test_page_on_console_error() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured_type = Arc::new(Mutex::new(None));
     let captured_clone = captured_type.clone();
@@ -94,10 +88,7 @@ async fn test_page_on_console_error() -> Result<(), Box<dyn std::error::Error>> 
 /// Test that ConsoleMessageLocation has url and line_number populated.
 #[tokio::test]
 async fn test_page_on_console_location() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured_url = Arc::new(Mutex::new(None));
     let captured_line = Arc::new(Mutex::new(None));
@@ -138,10 +129,7 @@ async fn test_page_on_console_location() -> Result<(), Box<dyn std::error::Error
 /// Test that msg.page() returns a back-reference to the originating page.
 #[tokio::test]
 async fn test_console_message_page_back_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let page_guid_captured = Arc::new(Mutex::new(None));
     let cap_clone = page_guid_captured.clone();
@@ -182,10 +170,7 @@ async fn test_console_message_page_back_reference() -> Result<(), Box<dyn std::e
 /// Test that context.on_console fires for console events from any page in the context.
 #[tokio::test]
 async fn test_context_on_console() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let context = browser.new_context().await?;
+    let (_pw, _browser, context) = crate::common::setup_context().await;
     let page = context.new_page().await?;
 
     let captured = Arc::new(Mutex::new(None));
@@ -226,10 +211,7 @@ async fn test_context_on_console() -> Result<(), Box<dyn std::error::Error>> {
 /// whose json_value() matches the original arguments.
 #[tokio::test]
 async fn test_console_message_args() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured_args: Arc<Mutex<Option<Vec<Arc<JSHandle>>>>> = Arc::new(Mutex::new(None));
     let cap_clone = captured_args.clone();

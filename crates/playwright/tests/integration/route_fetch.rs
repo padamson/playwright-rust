@@ -1,22 +1,12 @@
 // Integration tests for route.fetch() via APIRequestContext
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
 
 #[tokio::test]
 async fn test_route_fetch_basic() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let fetch_status = Arc::new(Mutex::new(0u16));
     let status_clone = fetch_status.clone();
@@ -54,17 +44,8 @@ async fn test_route_fetch_basic() {
 
 #[tokio::test]
 async fn test_route_fetch_response_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let response_ok = Arc::new(Mutex::new(false));
     let has_body = Arc::new(Mutex::new(false));
@@ -109,20 +90,8 @@ async fn test_route_fetch_response_methods() {
 
 #[tokio::test]
 async fn test_route_fetch_with_context_route() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     let fetch_status = Arc::new(Mutex::new(0u16));
     let status_clone = fetch_status.clone();

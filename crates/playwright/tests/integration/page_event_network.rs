@@ -4,30 +4,17 @@
 
 use std::sync::Arc;
 
-use playwright_rs::protocol::Playwright;
 use tokio::sync::Mutex;
 
 use crate::test_server::TestServer;
 
 #[tokio::test]
 async fn test_page_support_network_events() {
-    crate::common::init_tracing();
-
     let server = TestServer::start().await;
 
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let events = Arc::new(Mutex::new(vec![]));
-
-    let page = browser.new_page().await.expect("Failed to create page");
     let events2 = events.clone();
     page.on_request(move |request| {
         let events = events2.clone();
@@ -104,23 +91,11 @@ async fn test_page_support_network_events() {
 
 #[tokio::test]
 async fn test_for_iframes() {
-    crate::common::init_tracing();
-
     let server = TestServer::start().await;
 
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let events = Arc::new(Mutex::new(vec![]));
-
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let events2 = events.clone();
     page.on_request(move |request| {
@@ -179,21 +154,9 @@ async fn test_for_iframes() {
 
 #[tokio::test]
 async fn test_request_failed_event() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let events = Arc::new(Mutex::new(vec![]));
-
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let events2 = events.clone();
     page.on_request_failed(move |request| {

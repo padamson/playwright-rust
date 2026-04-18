@@ -4,7 +4,6 @@
 // including get_by_* methods, composition (first/last/nth), owner, and nesting.
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 
 // ============================================================================
 // Core: Page::frame_locator() + locator()
@@ -13,11 +12,8 @@ use playwright_rs::protocol::Playwright;
 /// Basic FrameLocator: click a button inside an iframe
 #[tokio::test]
 async fn test_frame_locator_click_button() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -38,11 +34,8 @@ async fn test_frame_locator_click_button() -> Result<(), Box<dyn std::error::Err
 /// FrameLocator reads text from inside iframe
 #[tokio::test]
 async fn test_frame_locator_text_content() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -63,11 +56,8 @@ async fn test_frame_locator_text_content() -> Result<(), Box<dyn std::error::Err
 /// get_by_text inside iframe
 #[tokio::test]
 async fn test_frame_locator_get_by_text() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -85,11 +75,8 @@ async fn test_frame_locator_get_by_text() -> Result<(), Box<dyn std::error::Erro
 /// get_by_label inside iframe
 #[tokio::test]
 async fn test_frame_locator_get_by_label() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -108,11 +95,8 @@ async fn test_frame_locator_get_by_label() -> Result<(), Box<dyn std::error::Err
 /// get_by_test_id inside iframe
 #[tokio::test]
 async fn test_frame_locator_get_by_test_id() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -134,11 +118,8 @@ async fn test_frame_locator_get_by_test_id() -> Result<(), Box<dyn std::error::E
 /// Nested frame_locator: iframe within iframe
 #[tokio::test]
 async fn test_frame_locator_nested() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/nested-iframe.html", server.url()), None)
         .await?;
@@ -163,11 +144,8 @@ async fn test_frame_locator_nested() -> Result<(), Box<dyn std::error::Error>> {
 /// owner() returns a Locator for the iframe element itself
 #[tokio::test]
 async fn test_frame_locator_owner() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -189,11 +167,8 @@ async fn test_frame_locator_owner() -> Result<(), Box<dyn std::error::Error>> {
 /// frame_locator() from a Locator (scoped)
 #[tokio::test]
 async fn test_locator_frame_locator() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;

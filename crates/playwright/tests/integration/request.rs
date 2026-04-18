@@ -8,7 +8,6 @@
 
 use std::sync::Arc;
 
-use playwright_rs::protocol::Playwright;
 use tokio::sync::Mutex;
 
 use crate::test_server::TestServer;
@@ -20,18 +19,8 @@ use crate::test_server::TestServer;
 /// Test that request.headers() returns a HashMap with standard headers including "host".
 #[tokio::test]
 async fn test_request_headers() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
 
@@ -92,18 +81,8 @@ async fn test_request_headers() {
 /// Test that request.post_data() returns None for GET requests.
 #[tokio::test]
 async fn test_request_post_data_get() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
@@ -144,18 +123,8 @@ async fn test_request_post_data_get() {
 /// Test that request.post_data() returns data for POST requests made via fetch().
 #[tokio::test]
 async fn test_request_post_data_post() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate first so we have a page context
     page.goto(&server.url(), None)
@@ -214,18 +183,8 @@ async fn test_request_post_data_post() {
 /// Test that request.post_data_buffer() returns bytes for POST requests.
 #[tokio::test]
 async fn test_request_post_data_buffer() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&server.url(), None)
         .await
@@ -278,18 +237,8 @@ async fn test_request_post_data_buffer() {
 /// Test that request.post_data_json() parses JSON post data.
 #[tokio::test]
 async fn test_request_post_data_json() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&server.url(), None)
         .await
@@ -353,18 +302,8 @@ async fn test_request_post_data_json() {
 /// Test that request.failure() returns None for successful requests.
 #[tokio::test]
 async fn test_request_failure_none_for_success() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
@@ -404,17 +343,7 @@ async fn test_request_failure_none_for_success() {
 /// Test that request.failure() returns Some(error_text) for failed requests.
 #[tokio::test]
 async fn test_request_failure_text() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
@@ -457,18 +386,8 @@ async fn test_request_failure_text() {
 /// Test that request.headers_array() returns all headers as name-value pairs.
 #[tokio::test]
 async fn test_request_headers_array() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
@@ -526,18 +445,8 @@ async fn test_request_headers_array() {
 /// Test that request.all_headers() returns a HashMap with lowercased header keys.
 #[tokio::test]
 async fn test_request_all_headers() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
@@ -588,18 +497,8 @@ async fn test_request_all_headers() {
 /// Test that request.header_value() returns the correct value for a known header.
 #[tokio::test]
 async fn test_request_header_value() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
@@ -663,18 +562,8 @@ async fn test_request_header_value() {
 /// Test that request.timing() returns a ResourceTiming with plausible values.
 #[tokio::test]
 async fn test_request_timing() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();

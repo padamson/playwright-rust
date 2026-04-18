@@ -6,7 +6,7 @@
 // - expect_page(&page).to_have_url(expected) / to_have_url_regex(pattern)
 
 use crate::test_server::TestServer;
-use playwright_rs::{expect_page, protocol::Playwright};
+use playwright_rs::expect_page;
 
 // ============================================================================
 // to_have_title(): match, negation, regex — single browser session
@@ -14,11 +14,8 @@ use playwright_rs::{expect_page, protocol::Playwright};
 
 #[tokio::test]
 async fn test_to_have_title() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&server.url(), None).await?;
 
@@ -42,11 +39,8 @@ async fn test_to_have_title() -> Result<(), Box<dyn std::error::Error>> {
 /// Verify to_have_title times out when the title doesn't match.
 #[tokio::test]
 async fn test_to_have_title_mismatch() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&server.url(), None).await?;
 
@@ -68,11 +62,8 @@ async fn test_to_have_title_mismatch() -> Result<(), Box<dyn std::error::Error>>
 
 #[tokio::test]
 async fn test_to_have_url() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let url = server.url();
     page.goto(&url, None).await?;
@@ -93,11 +84,8 @@ async fn test_to_have_url() -> Result<(), Box<dyn std::error::Error>> {
 /// Verify to_have_url times out when the URL doesn't match.
 #[tokio::test]
 async fn test_to_have_url_mismatch() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&server.url(), None).await?;
 

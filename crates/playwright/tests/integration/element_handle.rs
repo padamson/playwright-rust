@@ -14,17 +14,8 @@ use playwright_rs::protocol::Playwright;
 
 #[tokio::test]
 async fn test_query_selector_returns_element_handle() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -44,17 +35,8 @@ async fn test_query_selector_returns_element_handle() {
 
 #[tokio::test]
 async fn test_query_selector_returns_none_when_not_found() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -77,17 +59,8 @@ async fn test_query_selector_returns_none_when_not_found() {
 
 #[tokio::test]
 async fn test_query_selector_all_returns_multiple() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -108,17 +81,8 @@ async fn test_query_selector_all_returns_multiple() {
 
 #[tokio::test]
 async fn test_element_handle_screenshot() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await
@@ -150,17 +114,8 @@ async fn test_element_handle_screenshot() {
 
 #[tokio::test]
 async fn test_locator_screenshot_via_element_handle() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locators.html", server.url()), None)
         .await

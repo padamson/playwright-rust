@@ -15,17 +15,8 @@ use playwright_rs::protocol::Playwright;
 
 #[tokio::test]
 async fn test_check_unchecked_checkbox() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -54,17 +45,8 @@ async fn test_check_unchecked_checkbox() {
 
 #[tokio::test]
 async fn test_check_is_idempotent() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -92,17 +74,8 @@ async fn test_check_is_idempotent() {
 
 #[tokio::test]
 async fn test_uncheck_checked_checkbox() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -130,17 +103,8 @@ async fn test_uncheck_checked_checkbox() {
 
 #[tokio::test]
 async fn test_uncheck_is_idempotent() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -168,17 +132,8 @@ async fn test_uncheck_is_idempotent() {
 
 #[tokio::test]
 async fn test_check_radio_button() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -204,17 +159,8 @@ async fn test_check_radio_button() {
 
 #[tokio::test]
 async fn test_hover() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/hover.html", server.url()), None)
         .await
@@ -329,17 +275,8 @@ async fn test_hover_webkit() {
 
 #[tokio::test]
 async fn test_set_checked_true_on_checkbox() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -371,17 +308,8 @@ async fn test_set_checked_true_on_checkbox() {
 
 #[tokio::test]
 async fn test_set_checked_false_on_checkbox() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -414,17 +342,8 @@ async fn test_set_checked_false_on_checkbox() {
 
 #[tokio::test]
 async fn test_set_checked_idempotent() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -465,17 +384,8 @@ async fn test_set_checked_idempotent() {
 
 #[tokio::test]
 async fn test_set_checked_on_radio_button() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await
@@ -520,17 +430,8 @@ async fn test_set_checked_on_radio_button() {
 
 #[tokio::test]
 async fn test_set_checked_with_options() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/checkbox.html", server.url()), None)
         .await

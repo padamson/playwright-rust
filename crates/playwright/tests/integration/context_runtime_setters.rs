@@ -25,19 +25,7 @@ use playwright_rs::protocol::{
 
 #[tokio::test]
 async fn test_context_cookies_retrieve() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add a cookie via add_cookies
     let cookie = Cookie {
@@ -71,19 +59,7 @@ async fn test_context_cookies_retrieve() {
 
 #[tokio::test]
 async fn test_context_cookies_with_url_filter() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add cookies for two different domains
     let cookie1 = Cookie {
@@ -131,19 +107,7 @@ async fn test_context_cookies_with_url_filter() {
 
 #[tokio::test]
 async fn test_context_cookies_empty_initially() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // New context should have no cookies
     let cookies = context.cookies(None).await.expect("Failed to get cookies");
@@ -159,19 +123,7 @@ async fn test_context_cookies_empty_initially() {
 
 #[tokio::test]
 async fn test_context_clear_cookies_all() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add some cookies
     let cookies = vec![
@@ -224,19 +176,7 @@ async fn test_context_clear_cookies_all() {
 
 #[tokio::test]
 async fn test_context_clear_cookies_with_name_filter() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add two cookies
     let cookies = vec![
@@ -294,20 +234,8 @@ async fn test_context_clear_cookies_with_name_filter() {
 
 #[tokio::test]
 async fn test_context_set_extra_http_headers() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let page = context.new_page().await.expect("Failed to create page");
 
     // Set a custom header on the context
@@ -350,20 +278,8 @@ async fn test_context_set_extra_http_headers() {
 
 #[tokio::test]
 async fn test_context_set_extra_http_headers_multiple() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let page = context.new_page().await.expect("Failed to create page");
 
     // Set multiple custom headers
@@ -406,19 +322,7 @@ async fn test_context_set_extra_http_headers_multiple() {
 
 #[tokio::test]
 async fn test_context_grant_permissions() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Grant geolocation permission - should not error
     context
@@ -432,19 +336,7 @@ async fn test_context_grant_permissions() {
 
 #[tokio::test]
 async fn test_context_grant_permissions_with_origin() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Grant geolocation permission for a specific origin
     let options = GrantPermissionsOptions {
@@ -461,19 +353,7 @@ async fn test_context_grant_permissions_with_origin() {
 
 #[tokio::test]
 async fn test_context_grant_and_clear_permissions() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Grant notifications permission
     context
@@ -493,19 +373,7 @@ async fn test_context_grant_and_clear_permissions() {
 
 #[tokio::test]
 async fn test_context_grant_multiple_permissions() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Grant multiple permissions at once
     context
@@ -523,21 +391,9 @@ async fn test_context_grant_multiple_permissions() {
 
 #[tokio::test]
 async fn test_context_set_geolocation() {
-    crate::common::init_tracing();
     // Geolocation requires a secure context. localhost is treated as secure by Chromium.
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Must grant permission before location can be read
     context
@@ -584,19 +440,7 @@ async fn test_context_set_geolocation() {
 
 #[tokio::test]
 async fn test_context_set_geolocation_clear() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Set geolocation first
     context
@@ -624,19 +468,7 @@ async fn test_context_set_geolocation_clear() {
 
 #[tokio::test]
 async fn test_context_set_offline_blocks_navigation() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let page = context.new_page().await.expect("Failed to create page");
 
     // Set context offline
@@ -655,20 +487,8 @@ async fn test_context_set_offline_blocks_navigation() {
 
 #[tokio::test]
 async fn test_context_set_offline_then_online() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let page = context.new_page().await.expect("Failed to create page");
 
     // Set offline
@@ -699,19 +519,7 @@ async fn test_context_set_offline_then_online() {
 
 #[tokio::test]
 async fn test_page_bring_to_front() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Create two pages
     let page1 = context.new_page().await.expect("Failed to create page 1");

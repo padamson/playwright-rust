@@ -23,18 +23,7 @@ use std::time::Duration;
 
 #[tokio::test]
 async fn test_page_navigation_methods() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Test 1: Basic goto navigation
     let response = page
@@ -141,19 +130,7 @@ async fn test_page_navigation_methods() {
 
 #[tokio::test]
 async fn test_multiple_pages_independent_urls() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    // Create two pages
-    let page1 = browser.new_page().await.expect("Failed to create page 1");
+    let (_pw, browser, page1) = crate::common::setup().await;
     let page2 = browser.new_page().await.expect("Failed to create page 2");
 
     // Initially both at about:blank
@@ -287,17 +264,8 @@ async fn test_cross_browser_smoke() {
 
 #[tokio::test]
 async fn test_navigation_error_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Test 1: goto() timeout error with non-routable IP
     let options = GotoOptions::new().timeout(Duration::from_millis(100));
@@ -358,17 +326,8 @@ async fn test_navigation_error_methods() {
 
 #[tokio::test]
 async fn test_wait_until_options() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Test 1: wait_until Load
     let options = GotoOptions::new().wait_until(WaitUntil::Load);
@@ -522,22 +481,10 @@ async fn test_navigation_errors_cross_browser_smoke() {
 /// Test that page.url() returns URL with hash after anchor navigation
 #[tokio::test]
 async fn test_url_includes_hash_after_anchor_click() {
-    crate::common::init_tracing();
-
     let server = TestServer::start().await;
     let base_url = server.url();
 
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to test page with anchors
     let url = format!("{}/anchors.html", base_url);
@@ -595,22 +542,10 @@ async fn test_url_includes_hash_after_anchor_click() {
 /// Test that page.url() reflects JavaScript location.hash changes
 #[tokio::test]
 async fn test_url_includes_hash_after_js_navigation() {
-    crate::common::init_tracing();
-
     let server = TestServer::start().await;
     let base_url = server.url();
 
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to test page
     let url = format!("{}/anchors.html", base_url);
@@ -708,19 +643,7 @@ async fn test_url_hash_cross_browser() {
 
 #[tokio::test]
 async fn test_page_go_back_no_history() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // go_back on fresh page should return None
     let result = page.go_back(None).await.expect("go_back should not error");
@@ -746,22 +669,10 @@ async fn test_page_go_back_no_history() {
 /// Test that workaround using evaluate_value still works
 #[tokio::test]
 async fn test_url_workaround_with_evaluate() {
-    crate::common::init_tracing();
-
     let server = TestServer::start().await;
     let base_url = server.url();
 
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to test page
     let url = format!("{}/anchors.html", base_url);

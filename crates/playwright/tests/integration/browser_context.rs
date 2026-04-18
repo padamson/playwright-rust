@@ -7,46 +7,19 @@ use std::env;
 
 #[tokio::test]
 async fn test_new_context() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
-    let chromium = playwright.chromium();
-    let browser = chromium.launch().await.expect("Failed to launch browser");
-
-    // Create a new context
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
-
-    // Verify context was created
     tracing::info!("✓ Context created");
 
-    // Cleanup
     context.close().await.expect("Failed to close context");
     browser.close().await.expect("Failed to close browser");
 }
 
 #[tokio::test]
 async fn test_multiple_contexts() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
+    let (_pw, browser, context1) = crate::common::setup_context().await;
 
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    // Create multiple contexts
-    let context1 = browser
-        .new_context()
-        .await
-        .expect("Failed to create context 1");
+    // Create a second context
     let context2 = browser
         .new_context()
         .await
@@ -763,9 +736,7 @@ async fn test_context_storage_state_empty() {
 
 #[tokio::test]
 async fn test_context_pages_empty_initially() {
-    let playwright = Playwright::launch().await.unwrap();
-    let browser = playwright.chromium().launch().await.unwrap();
-    let context = browser.new_context().await.unwrap();
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Initially, context should have no pages
     let pages = context.pages();
@@ -777,9 +748,7 @@ async fn test_context_pages_empty_initially() {
 
 #[tokio::test]
 async fn test_context_pages_includes_new_page() {
-    let playwright = Playwright::launch().await.unwrap();
-    let browser = playwright.chromium().launch().await.unwrap();
-    let context = browser.new_context().await.unwrap();
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Create a page
     let page1 = context.new_page().await.unwrap();
@@ -853,9 +822,7 @@ async fn test_context_pages_includes_initial_app_mode_page() {
 
 #[tokio::test]
 async fn test_context_browser_returns_browser_for_regular_context() {
-    let playwright = Playwright::launch().await.unwrap();
-    let browser = playwright.chromium().launch().await.unwrap();
-    let context = browser.new_context().await.unwrap();
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Regular context should return the browser
     let context_browser = context.browser();

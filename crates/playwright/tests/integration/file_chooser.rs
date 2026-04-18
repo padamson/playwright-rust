@@ -54,16 +54,7 @@ fn single_chooser_html() -> &'static str {
 
 #[tokio::test]
 async fn test_on_filechooser_single_fires() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(single_chooser_html(), None)
         .await
@@ -114,16 +105,7 @@ async fn test_on_filechooser_single_fires() {
 
 #[tokio::test]
 async fn test_on_filechooser_multiple_flag() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(single_chooser_html(), None)
         .await
@@ -166,16 +148,7 @@ async fn test_on_filechooser_multiple_flag() {
 
 #[tokio::test]
 async fn test_filechooser_set_files() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(single_chooser_html(), None)
         .await
@@ -251,16 +224,7 @@ async fn test_filechooser_set_files() {
 
 #[tokio::test]
 async fn test_filechooser_page_back_reference() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(single_chooser_html(), None)
         .await
@@ -307,16 +271,7 @@ async fn test_filechooser_page_back_reference() {
 
 #[tokio::test]
 async fn test_expect_file_chooser() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(single_chooser_html(), None)
         .await
@@ -350,16 +305,7 @@ async fn test_expect_file_chooser() {
 
 #[tokio::test]
 async fn test_expect_file_chooser_set_files() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.set_content(single_chooser_html(), None)
         .await

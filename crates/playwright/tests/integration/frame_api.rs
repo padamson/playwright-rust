@@ -14,7 +14,6 @@
 // - frame.child_frames() - returns child frame list
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 use playwright_rs::server::channel_owner::ChannelOwner;
 
 // ============================================================================
@@ -24,11 +23,8 @@ use playwright_rs::server::channel_owner::ChannelOwner;
 /// Main frame locator: create a locator and use it to click a button
 #[tokio::test]
 async fn test_frame_locator() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/button.html", server.url()), None)
         .await?;
@@ -53,11 +49,8 @@ async fn test_frame_locator() -> Result<(), Box<dyn std::error::Error>> {
 /// Main frame get_by_text: find element by text content
 #[tokio::test]
 async fn test_frame_get_by_text() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/button.html", server.url()), None)
         .await?;
@@ -83,10 +76,7 @@ async fn test_frame_get_by_text() -> Result<(), Box<dyn std::error::Error>> {
 /// Main frame name should be an empty string
 #[tokio::test]
 async fn test_frame_name() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let frame = page.main_frame().await?;
 
@@ -104,10 +94,7 @@ async fn test_frame_name() -> Result<(), Box<dyn std::error::Error>> {
 /// frame.page() returns the owning Page
 #[tokio::test]
 async fn test_frame_page() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let frame = page.main_frame().await?;
 
@@ -127,10 +114,7 @@ async fn test_frame_page() -> Result<(), Box<dyn std::error::Error>> {
 /// Main frame is_detached() returns false
 #[tokio::test]
 async fn test_frame_is_detached() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let frame = page.main_frame().await?;
 
@@ -148,10 +132,7 @@ async fn test_frame_is_detached() -> Result<(), Box<dyn std::error::Error>> {
 /// Main frame has no parent frame
 #[tokio::test]
 async fn test_frame_parent_frame() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let frame = page.main_frame().await?;
 
@@ -173,10 +154,7 @@ async fn test_frame_parent_frame() -> Result<(), Box<dyn std::error::Error>> {
 /// frame.evaluate_handle() evaluates a JS expression and returns a JSHandle/ElementHandle
 #[tokio::test]
 async fn test_frame_evaluate_handle() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<html><body><h1>Hello</h1></body></html>",
@@ -208,10 +186,7 @@ async fn test_frame_evaluate_handle() -> Result<(), Box<dyn std::error::Error>> 
 /// Main frame has no child frames on a simple page
 #[tokio::test]
 async fn test_frame_child_frames_empty_on_simple_page() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<html><body><p>No iframes here</p></body></html>",
@@ -236,11 +211,8 @@ async fn test_frame_child_frames_empty_on_simple_page() -> Result<(), Box<dyn st
 /// Main frame child_frames() returns child frames when iframes are present
 #[tokio::test]
 async fn test_frame_child_frames_with_iframes() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // iframe-test.html has 2 iframes (/iframe-content.html and /iframe-content2.html)
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
@@ -284,11 +256,8 @@ async fn test_frame_child_frames_with_iframes() -> Result<(), Box<dyn std::error
 /// Child frames have parent_frame() pointing back to main frame
 #[tokio::test(flavor = "multi_thread")]
 async fn test_frame_child_frames_parent_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
@@ -318,11 +287,8 @@ async fn test_frame_child_frames_parent_reference() -> Result<(), Box<dyn std::e
 /// Frame get_by_* methods work on main frame
 #[tokio::test]
 async fn test_frame_get_by_methods() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to a page with various elements
     page.goto(

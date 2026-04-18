@@ -27,17 +27,8 @@ use playwright_rs::protocol::Playwright;
 
 #[tokio::test]
 async fn test_keyboard_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/keyboard_mouse.html", server.url()), None)
         .await
@@ -152,17 +143,8 @@ async fn test_keyboard_methods() {
 
 #[tokio::test]
 async fn test_mouse_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/keyboard_mouse.html", server.url()), None)
         .await

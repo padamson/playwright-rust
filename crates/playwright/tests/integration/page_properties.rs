@@ -10,7 +10,6 @@
 // Red stage: these will not compile until the API is added.
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 
 // ============================================================================
 // page.set_default_timeout()
@@ -22,17 +21,8 @@ use playwright_rs::protocol::Playwright;
 /// This should fail with a timeout error much sooner than the default 30 s.
 #[tokio::test]
 async fn test_page_set_default_timeout() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -71,16 +61,7 @@ async fn test_page_set_default_timeout() {
 /// respond (a port with nothing listening).
 #[tokio::test]
 async fn test_page_set_default_navigation_timeout() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set a 100 ms navigation timeout
     page.set_default_navigation_timeout(100.0).await;
@@ -108,20 +89,8 @@ async fn test_page_set_default_navigation_timeout() {
 /// Test that context-level set_default_timeout propagates to pages in the context.
 #[tokio::test]
 async fn test_context_set_default_timeout() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Set a 1 ms timeout at the context level
     context.set_default_timeout(1.0).await;
@@ -159,19 +128,7 @@ async fn test_context_set_default_timeout() {
 /// Test that context-level set_default_navigation_timeout causes navigation to fail fast.
 #[tokio::test]
 async fn test_context_set_default_navigation_timeout() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Set a 100 ms navigation timeout at context level
     context.set_default_navigation_timeout(100.0).await;
@@ -200,16 +157,7 @@ async fn test_context_set_default_navigation_timeout() {
 /// Test that is_closed() returns false on an open page and true after close().
 #[tokio::test]
 async fn test_page_is_closed() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Page should not be closed initially
     assert!(!page.is_closed(), "Newly created page should not be closed");
@@ -230,17 +178,8 @@ async fn test_page_is_closed() {
 /// Test that frames() returns at least the main frame.
 #[tokio::test]
 async fn test_page_frames() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let url = format!("{}/", server.url());
     page.goto(&url, None).await.expect("Failed to navigate");

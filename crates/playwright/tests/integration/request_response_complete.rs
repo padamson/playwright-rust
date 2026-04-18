@@ -8,7 +8,6 @@
 // - request.sizes()
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -19,11 +18,8 @@ use std::time::Duration;
 /// Verify security_details (None for HTTP), server_addr, and finished on a single response.
 #[tokio::test]
 async fn test_response_server_info() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let response = page
         .goto(&server.url(), None)
@@ -60,11 +56,8 @@ async fn test_response_server_info() -> Result<(), Box<dyn std::error::Error>> {
 /// B.redirected_from should be A, and A.redirected_to should be B.
 #[tokio::test]
 async fn test_request_redirect_chain() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let redirect_url = format!("{}/redirect", server.url());
     let response = page
@@ -105,11 +98,8 @@ async fn test_request_redirect_chain() -> Result<(), Box<dyn std::error::Error>>
 /// Verify request.response() and request.sizes() on a finished request.
 #[tokio::test]
 async fn test_request_response_and_sizes() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Capture a finished navigation request
     let captured_request = Arc::new(Mutex::new(None));

@@ -12,22 +12,8 @@ use playwright_rs::protocol::{AddStyleTagOptions, Playwright};
 
 #[tokio::test]
 async fn test_add_init_script_on_context() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add init script to context - will apply to all pages
     context
@@ -78,22 +64,8 @@ async fn test_add_init_script_on_context() {
 
 #[tokio::test]
 async fn test_add_init_script_multiple_pages() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add init script at context level
     context
@@ -168,19 +140,8 @@ async fn test_add_init_script_multiple_pages() {
 
 #[tokio::test]
 async fn test_add_init_script_on_page() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Add init script directly to page
     page.add_init_script(
@@ -224,19 +185,8 @@ async fn test_add_init_script_on_page() {
 
 #[tokio::test]
 async fn test_add_init_script_chromium() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.add_init_script("window.browserType = 'chromium';")
         .await
@@ -361,19 +311,8 @@ async fn test_add_init_script_webkit() {
 
 #[tokio::test]
 async fn test_add_style_tag_with_content() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/input.html", server.url()), None)
         .await
@@ -418,19 +357,8 @@ async fn test_add_style_tag_with_content() {
 
 #[tokio::test]
 async fn test_add_style_tag_multiple_styles() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/input.html", server.url()), None)
         .await
@@ -500,19 +428,8 @@ async fn test_add_style_tag_multiple_styles() {
 
 #[tokio::test]
 async fn test_add_style_tag_after_navigation() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/input.html", server.url()), None)
         .await
@@ -568,18 +485,7 @@ async fn test_add_style_tag_after_navigation() {
 
 #[tokio::test]
 async fn test_add_style_tag_error_no_options() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Try to add style tag with no content, url, or path
     let result = page
@@ -602,19 +508,8 @@ async fn test_add_style_tag_error_no_options() {
 
 #[tokio::test]
 async fn test_add_style_tag_chromium() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/input.html", server.url()), None)
         .await

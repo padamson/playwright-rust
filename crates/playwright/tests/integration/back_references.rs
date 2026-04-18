@@ -10,7 +10,6 @@
 // Also verifies Response struct field encapsulation (private fields, accessor methods).
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -21,11 +20,8 @@ use std::time::Duration;
 /// Verify Response field encapsulation plus response.request() and response.frame()
 #[tokio::test]
 async fn test_response_accessors_and_back_references() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
 
     let response = page
         .goto(&server.url(), None)
@@ -64,10 +60,7 @@ async fn test_response_accessors_and_back_references() -> Result<(), Box<dyn std
 /// Verify dialog.page() returns the Page that owns the dialog
 #[tokio::test]
 async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let page_url_from_dialog = Arc::new(Mutex::new(None));
     let url_clone = page_url_from_dialog.clone();
@@ -114,10 +107,7 @@ async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Err
 /// Verify download.page() returns the Page that triggered the download
 #[tokio::test]
 async fn test_download_page_back_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let page_url_from_download = Arc::new(Mutex::new(None));
     let url_clone = page_url_from_download.clone();
@@ -165,11 +155,8 @@ async fn test_download_page_back_reference() -> Result<(), Box<dyn std::error::E
 /// Verify request.frame() returns the Frame that initiated the request
 #[tokio::test]
 async fn test_request_frame_back_reference() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
 
     let has_frame = Arc::new(Mutex::new(false));
     let has_frame_clone = has_frame.clone();

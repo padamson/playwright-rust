@@ -210,13 +210,7 @@ async fn test_launch_all_three_browsers() {
 
 #[tokio::test]
 async fn test_browser_close() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let chromium = playwright.chromium();
-    let browser = chromium.launch().await.expect("Failed to launch Chromium");
+    let (_pw, browser, _page) = crate::common::setup().await;
 
     // Verify browser is open
     assert_eq!(browser.name(), "chromium");
@@ -257,14 +251,7 @@ async fn test_close_multiple_browsers() {
 
 #[tokio::test]
 async fn test_browser_is_connected() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let chromium = playwright.chromium();
-
-    // Launch browser
-    let browser = chromium.launch().await.expect("Failed to launch browser");
+    let (_pw, browser, _page) = crate::common::setup().await;
 
     // Should be connected initially
     assert!(
@@ -360,15 +347,7 @@ async fn test_browser_contexts() {
 /// - Executable path is non-empty
 #[tokio::test]
 async fn test_browser_type_property() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch Chromium");
+    let (_pw, browser, _page) = crate::common::setup().await;
 
     let bt = browser.browser_type();
     assert_eq!(
@@ -391,18 +370,10 @@ async fn test_browser_type_property() {
 /// - is_connected() returns false after disconnect
 #[tokio::test]
 async fn test_browser_on_disconnected() {
-    crate::common::init_tracing();
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch Chromium");
+    let (_pw, browser, _page) = crate::common::setup().await;
 
     let fired = Arc::new(AtomicBool::new(false));
     let fired_clone = Arc::clone(&fired);
@@ -439,15 +410,7 @@ async fn test_browser_on_disconnected() {
 /// Note: CDP tracing is Chromium-only.
 #[tokio::test]
 async fn test_browser_tracing() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch Chromium");
+    let (_pw, browser, _page) = crate::common::setup().await;
 
     // Start tracing with screenshots enabled
     use playwright_rs::protocol::StartTracingOptions;

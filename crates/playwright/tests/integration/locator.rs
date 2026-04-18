@@ -22,17 +22,8 @@ use playwright_rs::protocol::Playwright;
 
 #[tokio::test]
 async fn test_locator_query_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -71,17 +62,8 @@ async fn test_locator_query_methods() {
 
 #[tokio::test]
 async fn test_locator_chaining_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -136,17 +118,8 @@ async fn test_locator_chaining_methods() {
 
 #[tokio::test]
 async fn test_locator_state_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -225,17 +198,8 @@ async fn test_locator_state_methods() {
 
 #[tokio::test]
 async fn test_get_by_text() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -301,17 +265,8 @@ async fn test_get_by_text() {
 
 #[tokio::test]
 async fn test_get_by_locator_methods() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -407,17 +362,8 @@ async fn test_get_by_locator_methods() {
 
 #[tokio::test]
 async fn test_get_by_role() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -560,17 +506,8 @@ async fn test_get_by_role() {
 
 #[tokio::test]
 async fn test_locator_all_multiple_elements() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -598,17 +535,8 @@ async fn test_locator_all_multiple_elements() {
 
 #[tokio::test]
 async fn test_locator_all_empty_selector() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -633,17 +561,8 @@ async fn test_locator_all_empty_selector() {
 
 #[tokio::test]
 async fn test_locator_error_includes_selector() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -683,17 +602,8 @@ async fn test_locator_error_includes_selector() {
 
 #[tokio::test]
 async fn test_locator_filter_has_text() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -726,17 +636,8 @@ async fn test_locator_filter_has_text() {
 
 #[tokio::test]
 async fn test_locator_filter_has_not_text() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -760,17 +661,8 @@ async fn test_locator_filter_has_not_text() {
 
 #[tokio::test]
 async fn test_locator_filter_has_child_locator() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -794,17 +686,8 @@ async fn test_locator_filter_has_child_locator() {
 
 #[tokio::test]
 async fn test_locator_filter_has_not_child_locator() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -828,17 +711,8 @@ async fn test_locator_filter_has_not_child_locator() {
 
 #[tokio::test]
 async fn test_locator_and() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -862,17 +736,8 @@ async fn test_locator_and() {
 
 #[tokio::test]
 async fn test_locator_or() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -897,17 +762,8 @@ async fn test_locator_or() {
 
 #[tokio::test]
 async fn test_locator_filter_chain() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/filter.html", server.url()), None)
         .await
@@ -1032,17 +888,8 @@ async fn test_cross_browser_smoke() {
 
 #[tokio::test]
 async fn test_locator_focus_and_blur() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/focus_blur.html", server.url()), None)
         .await
@@ -1102,17 +949,8 @@ async fn test_locator_focus_and_blur() {
 
 #[tokio::test]
 async fn test_locator_press_sequentially() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/focus_blur.html", server.url()), None)
         .await
@@ -1138,17 +976,8 @@ async fn test_locator_press_sequentially() {
 
 #[tokio::test]
 async fn test_locator_press_sequentially_with_delay() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/focus_blur.html", server.url()), None)
         .await
@@ -1181,17 +1010,8 @@ async fn test_locator_press_sequentially_with_delay() {
 
 #[tokio::test]
 async fn test_locator_all_inner_texts() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/all_texts.html", server.url()), None)
         .await
@@ -1221,17 +1041,8 @@ async fn test_locator_all_inner_texts() {
 
 #[tokio::test]
 async fn test_locator_all_text_contents() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/all_texts.html", server.url()), None)
         .await
@@ -1261,17 +1072,8 @@ async fn test_locator_all_text_contents() {
 
 #[tokio::test]
 async fn test_locator_all_texts_empty_when_no_match() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/all_texts.html", server.url()), None)
         .await
@@ -1308,16 +1110,7 @@ async fn test_locator_all_texts_empty_when_no_match() {
 /// Test that dispatch_event fires a click event on a button and the handler runs.
 #[tokio::test]
 async fn test_locator_dispatch_event() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to a page with a button whose text changes on click
     page.goto(
@@ -1355,16 +1148,7 @@ async fn test_locator_dispatch_event() {
 /// like `bubbles` affect event propagation.
 #[tokio::test]
 async fn test_locator_dispatch_event_with_init() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Page listens for a mousemove event and records the clientX from eventInit
     page.goto(
@@ -1404,16 +1188,7 @@ async fn test_locator_dispatch_event_with_init() {
 /// Test that bounding_box returns reasonable dimensions for a visible element.
 #[tokio::test]
 async fn test_locator_bounding_box() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // A styled, visible div with known dimensions
     page.goto(
@@ -1456,16 +1231,7 @@ async fn test_locator_bounding_box() {
 /// Test that bounding_box returns None for a hidden (display:none) element.
 #[tokio::test]
 async fn test_locator_bounding_box_hidden() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<div id='hidden' style='display:none'>hidden</div>",
@@ -1491,16 +1257,7 @@ async fn test_locator_bounding_box_hidden() {
 /// Test that scroll_into_view_if_needed scrolls an off-screen element into view.
 #[tokio::test]
 async fn test_locator_scroll_into_view_if_needed() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Create a page taller than the viewport with a target element far below
     page.goto(
@@ -1640,17 +1397,8 @@ async fn test_locator_tap_with_options() {
 
 #[tokio::test]
 async fn test_locator_evaluate() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -1670,17 +1418,8 @@ async fn test_locator_evaluate() {
 
 #[tokio::test]
 async fn test_locator_evaluate_with_arg() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/locator.html", server.url()), None)
         .await
@@ -1700,16 +1439,7 @@ async fn test_locator_evaluate_with_arg() {
 
 #[tokio::test]
 async fn test_locator_evaluate_returns_number() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<div id='box' style='width:200px;height:100px;'></div>",
@@ -1736,17 +1466,8 @@ async fn test_locator_evaluate_returns_number() {
 
 #[tokio::test]
 async fn test_locator_evaluate_all() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/all_texts.html", server.url()), None)
         .await
@@ -1767,16 +1488,7 @@ async fn test_locator_evaluate_all() {
 
 #[tokio::test]
 async fn test_locator_evaluate_all_with_arg() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<li class='item'>One</li><li class='item'>Two</li><li class='item'>Three</li>",
@@ -1802,16 +1514,7 @@ async fn test_locator_evaluate_all_with_arg() {
 
 #[tokio::test]
 async fn test_locator_evaluate_all_returns_count() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<span class='x'></span><span class='x'></span><span class='x'></span>",
@@ -1837,17 +1540,8 @@ async fn test_locator_evaluate_all_returns_count() {
 
 #[tokio::test]
 async fn test_locator_drag_to() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/drag_drop.html", server.url()), None)
         .await
@@ -1881,17 +1575,8 @@ async fn test_locator_drag_to() {
 
 #[tokio::test]
 async fn test_locator_drag_to_with_options() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/drag_drop.html", server.url()), None)
         .await
@@ -1969,17 +1654,8 @@ async fn test_page_drag_and_drop() {
 
 #[tokio::test]
 async fn test_locator_wait_for_visible() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/wait_for.html", server.url()), None)
         .await
@@ -2018,17 +1694,8 @@ async fn test_locator_wait_for_visible() {
 
 #[tokio::test]
 async fn test_locator_wait_for_hidden() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/wait_for.html", server.url()), None)
         .await
@@ -2067,17 +1734,8 @@ async fn test_locator_wait_for_hidden() {
 
 #[tokio::test]
 async fn test_locator_wait_for_attached() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/wait_for.html", server.url()), None)
         .await
@@ -2114,17 +1772,8 @@ async fn test_locator_wait_for_attached() {
 
 #[tokio::test]
 async fn test_locator_wait_for_detached() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/wait_for.html", server.url()), None)
         .await
@@ -2161,17 +1810,8 @@ async fn test_locator_wait_for_detached() {
 
 #[tokio::test]
 async fn test_locator_wait_for_default_state() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/wait_for.html", server.url()), None)
         .await
@@ -2201,17 +1841,8 @@ async fn test_locator_wait_for_default_state() {
 /// See: <https://playwright.dev/docs/api/class-locator#locator-page>
 #[tokio::test]
 async fn test_locator_page_property() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let url = format!("{}/locator.html", server.url());
     page.goto(&url, None).await.expect("Failed to navigate");

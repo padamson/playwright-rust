@@ -6,18 +6,7 @@ use playwright_rs::protocol::{Playwright, Viewport};
 
 #[tokio::test]
 async fn test_context_new_page() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let chromium = playwright.chromium();
-    let browser = chromium.launch().await.expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Create a new page
     let page = context.new_page().await.expect("Failed to create page");
@@ -36,19 +25,7 @@ async fn test_context_new_page() {
 
 #[tokio::test]
 async fn test_browser_new_page_convenience() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    // Create page directly from browser (creates default context)
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     tracing::info!("✓ Page created via browser.new_page()");
 
@@ -62,21 +39,7 @@ async fn test_browser_new_page_convenience() {
 
 #[tokio::test]
 async fn test_multiple_pages_in_context() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Create multiple pages
     let page1 = context.new_page().await.expect("Failed to create page 1");
@@ -97,18 +60,7 @@ async fn test_multiple_pages_in_context() {
 
 #[tokio::test]
 async fn test_page_close() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Close page
     page.close().await.expect("Failed to close page");
@@ -130,18 +82,7 @@ async fn test_page_close() {
 
 #[tokio::test]
 async fn test_page_content_basic() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to a page with known HTML content
     let html = r#"<!DOCTYPE html>
@@ -198,18 +139,7 @@ async fn test_page_content_basic() {
 
 #[tokio::test]
 async fn test_page_content_empty_page() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Get content of about:blank
     let content = page.content().await.expect("Failed to get page content");
@@ -228,18 +158,7 @@ async fn test_page_content_empty_page() {
 
 #[tokio::test]
 async fn test_page_content_with_dynamic_changes() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to a simple page
     let html = r#"<!DOCTYPE html>
@@ -361,18 +280,7 @@ async fn test_page_content_cross_browser() {
 
 #[tokio::test]
 async fn test_page_set_content() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set content and verify
     page.set_content("<h1>Hello</h1><p>World</p>", None)
@@ -418,18 +326,7 @@ async fn test_page_set_content() {
 
 #[tokio::test]
 async fn test_set_viewport_size_basic() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Navigate to a test page
     page.goto(
@@ -496,18 +393,7 @@ async fn test_set_viewport_size_basic() {
 
 #[tokio::test]
 async fn test_set_viewport_size_different_dimensions() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(
         "data:text/html,<html><body><h1>Test</h1></body></html>",
@@ -623,18 +509,7 @@ async fn test_set_viewport_size_cross_browser() {
 
 #[tokio::test]
 async fn test_set_viewport_size_with_responsive_content() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Create a simple responsive page that uses JavaScript to detect viewport
     let html = r#"<!DOCTYPE html><html><head></head><body><script>window.getViewportCategory=function(){return window.innerWidth<=768?'mobile':'desktop';};</script></body></html>"#;

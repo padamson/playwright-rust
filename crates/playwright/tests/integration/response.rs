@@ -2,11 +2,8 @@
 //
 // Tests for Response.body(), text(), json(), all_headers(),
 // header_value(), and headers_array() methods.
-//
-// TDD approach: tests written first, implementation follows.
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 
 // ============================================================================
 // Response body access tests
@@ -15,18 +12,8 @@ use playwright_rs::protocol::Playwright;
 /// Test that response.body() returns non-empty bytes for a page navigation.
 #[tokio::test]
 async fn test_response_body() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let response = page
         .goto(&server.url(), None)
@@ -44,18 +31,8 @@ async fn test_response_body() {
 /// Test that response.text() returns the HTML content as a string.
 #[tokio::test]
 async fn test_response_text() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let response = page
         .goto(&server.url(), None)
@@ -77,18 +54,8 @@ async fn test_response_text() {
 /// Test that response.json() parses a JSON endpoint response correctly.
 #[tokio::test]
 async fn test_response_json() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     // Navigate to the JSON endpoint served by TestServer
     let json_url = format!("{}/api/data.json", server.url());
@@ -117,18 +84,8 @@ async fn test_response_json() {
 /// Test that response.header_value() returns the content-type header.
 #[tokio::test]
 async fn test_response_header_value() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let response = page
         .goto(&server.url(), None)
@@ -166,18 +123,8 @@ async fn test_response_header_value() {
 /// Test that response.headers_array() returns all headers as name-value pairs.
 #[tokio::test]
 async fn test_response_headers_array() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let response = page
         .goto(&server.url(), None)
@@ -216,18 +163,8 @@ async fn test_response_headers_array() {
 /// Test that response.all_headers() returns a HashMap with headers merged (lowercased keys).
 #[tokio::test]
 async fn test_response_all_headers() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     let response = page
         .goto(&server.url(), None)

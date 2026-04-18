@@ -16,17 +16,8 @@ use std::collections::HashMap;
 
 #[tokio::test]
 async fn test_route_continue_with_headers() {
-    crate::common::init_tracing();
     // Test modifying headers when continuing a route
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler that modifies headers
     page.route("**/*", |route| async move {
@@ -50,17 +41,8 @@ async fn test_route_continue_with_headers() {
 
 #[tokio::test]
 async fn test_route_continue_with_method() {
-    crate::common::init_tracing();
     // Test changing HTTP method when continuing a route
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler that changes GET to POST
     page.route("**/*", |route| async move {
@@ -93,17 +75,8 @@ async fn test_route_continue_with_method() {
 
 #[tokio::test]
 async fn test_route_continue_with_post_data() {
-    crate::common::init_tracing();
     // Test adding POST data when continuing a route
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler that adds POST data
     page.route("**/*", |route| async move {
@@ -126,17 +99,8 @@ async fn test_route_continue_with_post_data() {
 
 #[tokio::test]
 async fn test_route_continue_with_post_data_bytes() {
-    crate::common::init_tracing();
     // Test adding POST data as bytes when continuing a route
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler that adds binary POST data
     page.route("**/*", |route| async move {
@@ -159,17 +123,8 @@ async fn test_route_continue_with_post_data_bytes() {
 
 #[tokio::test]
 async fn test_route_continue_with_url() {
-    crate::common::init_tracing();
     // Test changing URL when continuing a route (same protocol)
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler that redirects to different URL (same protocol)
     page.route("**/original", |route| async move {
@@ -192,17 +147,8 @@ async fn test_route_continue_with_url() {
 
 #[tokio::test]
 async fn test_route_continue_with_combined_overrides() {
-    crate::common::init_tracing();
     // Test multiple overrides combined
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler with multiple modifications
     page.route("**/*", |route| async move {
@@ -231,17 +177,8 @@ async fn test_route_continue_with_combined_overrides() {
 
 #[tokio::test]
 async fn test_route_continue_no_overrides() {
-    crate::common::init_tracing();
     // Test that continue without overrides still works
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set up route handler that continues without modification
     page.route("**/*", |route| async move { route.continue_(None).await })
@@ -277,17 +214,8 @@ async fn test_route_continue_no_overrides() {
 /// fixed the issue and we should update our documentation.
 #[tokio::test]
 async fn test_route_fulfill_main_document() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Custom HTML that SHOULD be returned but won't be due to Playwright bug
     let custom_html = r#"<!DOCTYPE html>
@@ -369,17 +297,8 @@ async fn test_route_fulfill_main_document() {
 /// Verify that status codes are correctly transmitted even though body isn't.
 #[tokio::test]
 async fn test_route_fulfill_main_document_with_status() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let html_404 = "<html><body><h1>Page Not Found</h1></body></html>";
 
@@ -584,17 +503,8 @@ async fn test_route_fulfill_main_document_webkit() {
 /// what works and what doesn't in the current Playwright version.
 #[tokio::test]
 async fn test_route_fulfill_fetch_still_works() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.route("**/api/*", |route| async move {
         let options = FulfillOptions::builder()

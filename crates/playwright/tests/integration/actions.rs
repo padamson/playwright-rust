@@ -26,17 +26,8 @@ use playwright_rs::protocol::{GotoOptions, MouseButton, Playwright, Position};
 
 #[tokio::test]
 async fn test_click_actions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     // Test 1: Single click button changes its text
     page.goto(&format!("{}/button.html", server.url()), None)
@@ -70,17 +61,8 @@ async fn test_click_actions() {
 
 #[tokio::test]
 async fn test_fill_and_clear_actions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/form.html", server.url()), None)
         .await
@@ -149,17 +131,8 @@ async fn test_fill_and_clear_actions() {
 
 #[tokio::test]
 async fn test_keyboard_actions() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     page.goto(&format!("{}/keyboard.html", server.url()), None)
         .await
@@ -293,17 +266,8 @@ async fn test_cross_browser_smoke() {
 
 #[tokio::test]
 async fn test_action_options_methods() {
-    crate::common::init_tracing();
+    let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
 
     // Test 1: Fill with force option
     page.goto(&format!("{}/input.html", server.url()), None)

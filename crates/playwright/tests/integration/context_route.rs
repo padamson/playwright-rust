@@ -1,24 +1,11 @@
 // Integration tests for context.route(), context.unroute(), context.unroute_all()
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 
 #[tokio::test]
 async fn test_context_route_abort_blocks_request() {
-    crate::common::init_tracing();
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     // Set up context-level route to abort image requests
     context
@@ -56,20 +43,8 @@ async fn test_context_route_abort_blocks_request() {
 
 #[tokio::test]
 async fn test_context_route_applies_to_all_pages() {
-    crate::common::init_tracing();
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     // Set up context-level route
     context
@@ -129,20 +104,8 @@ async fn test_context_route_applies_to_all_pages() {
 
 #[tokio::test]
 async fn test_context_unroute_removes_handler() {
-    crate::common::init_tracing();
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     // Set up context-level route
     context
@@ -198,20 +161,8 @@ async fn test_context_unroute_removes_handler() {
 
 #[tokio::test]
 async fn test_context_unroute_all() {
-    crate::common::init_tracing();
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     // Set up multiple context-level routes
     context

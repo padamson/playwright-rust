@@ -27,10 +27,7 @@ use std::time::Duration;
 /// 3. Download can be saved to disk
 #[tokio::test]
 async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Test 1: Basic download event handling
     let download_captured = Arc::new(Mutex::new(None));
@@ -143,10 +140,7 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
 /// 4. Dialog can be accepted
 #[tokio::test]
 async fn test_dialog_alert_methods() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-    let browser = playwright.chromium().launch().await?;
-    let page = browser.new_page().await?;
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let dialog_info = Arc::new(Mutex::new(None));
     let dialog_info_clone = dialog_info.clone();
@@ -206,12 +200,7 @@ async fn test_dialog_alert_methods() -> Result<(), Box<dyn std::error::Error>> {
 /// 4. Dialog can be dismissed (returns false)
 #[tokio::test]
 async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-
-    // Test 1: Confirm accept
-    let browser1 = playwright.chromium().launch().await?;
-    let page1 = browser1.new_page().await?;
+    let (pw, browser1, page1) = crate::common::setup().await;
 
     let dialog_info = Arc::new(Mutex::new(None));
     let dialog_info_clone = dialog_info.clone();
@@ -257,7 +246,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
     browser1.close().await?;
 
     // Test 2: Confirm dismiss (needs separate browser to avoid handler conflicts)
-    let browser2 = playwright.chromium().launch().await?;
+    let browser2 = pw.chromium().launch().await?;
     let page2 = browser2.new_page().await?;
 
     page2
@@ -306,12 +295,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
 /// 5. Prompt can be dismissed (returns null)
 #[tokio::test]
 async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch().await?;
-
-    // Test 1: Prompt with custom input
-    let browser1 = playwright.chromium().launch().await?;
-    let page1 = browser1.new_page().await?;
+    let (pw, browser1, page1) = crate::common::setup().await;
 
     let dialog_data = Arc::new(Mutex::new(None));
     let dialog_data_clone = dialog_data.clone();
@@ -367,7 +351,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
     browser1.close().await?;
 
     // Test 2: Prompt dismiss (needs separate browser to avoid handler conflicts)
-    let browser2 = playwright.chromium().launch().await?;
+    let browser2 = pw.chromium().launch().await?;
     let page2 = browser2.new_page().await?;
 
     page2

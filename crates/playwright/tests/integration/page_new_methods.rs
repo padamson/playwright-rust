@@ -17,17 +17,8 @@ use playwright_rs::protocol::{
 
 #[tokio::test]
 async fn test_page_set_extra_http_headers() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Set a custom header on the page
     let mut headers = std::collections::HashMap::new();
@@ -67,17 +58,8 @@ async fn test_page_set_extra_http_headers() {
 
 #[tokio::test]
 async fn test_page_set_extra_http_headers_multiple() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     let mut headers = std::collections::HashMap::new();
     headers.insert("x-page-alpha".to_string(), "alpha-val".to_string());
@@ -116,17 +98,8 @@ async fn test_page_set_extra_http_headers_multiple() {
 
 #[tokio::test]
 async fn test_page_emulate_media_print() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -158,17 +131,8 @@ async fn test_page_emulate_media_print() {
 
 #[tokio::test]
 async fn test_page_emulate_media_color_scheme_dark() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -202,16 +166,7 @@ async fn test_page_emulate_media_color_scheme_dark() {
 
 #[tokio::test]
 async fn test_page_emulate_media_none() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Calling emulate_media with None options should work without error
     page.emulate_media(None)
@@ -227,18 +182,9 @@ async fn test_page_emulate_media_none() {
 
 #[tokio::test]
 async fn test_page_pdf_basic() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
     // PDF only works in Chromium
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -260,17 +206,8 @@ async fn test_page_pdf_basic() {
 
 #[tokio::test]
 async fn test_page_pdf_with_options() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -305,17 +242,8 @@ async fn test_page_pdf_with_options() {
 
 #[tokio::test]
 async fn test_page_add_script_tag_with_content() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/input.html", server.url()), None)
         .await
@@ -352,16 +280,7 @@ async fn test_page_add_script_tag_with_content() {
 
 #[tokio::test]
 async fn test_page_add_script_tag_error_no_options() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Should fail with no options (no url, path, or content)
     let result = page
@@ -383,16 +302,7 @@ async fn test_page_add_script_tag_error_no_options() {
 
 #[tokio::test]
 async fn test_page_add_script_tag_none_options() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     // Passing None should also fail (no content to inject)
     let result = page.add_script_tag(None).await;
@@ -403,17 +313,8 @@ async fn test_page_add_script_tag_none_options() {
 
 #[tokio::test]
 async fn test_page_add_script_tag_cross_browser_chromium() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/input.html", server.url()), None)
         .await

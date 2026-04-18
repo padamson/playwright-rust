@@ -1,19 +1,10 @@
-use playwright_rs::protocol::{Cookie, Playwright};
+use playwright_rs::protocol::Cookie;
 
 // use tempfile::TempDir; (removed unused)
 
 #[tokio::test]
 async fn test_storage_state_retrieve() {
-    crate::common::init_tracing();
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let chromium = playwright.chromium();
-    let browser = chromium.launch().await.expect("Failed to launch browser");
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let page = context.new_page().await.expect("Failed to create page");
 
     // 1. Set up initial state (cookies and local storage)

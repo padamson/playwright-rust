@@ -3,7 +3,6 @@
 // Tests JavaScript evaluation with return values
 
 use crate::test_server::TestServer;
-use playwright_rs::protocol::Playwright;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -19,17 +18,8 @@ struct ObjectResult {
 
 #[tokio::test]
 async fn test_evaluate_arithmetic() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -48,17 +38,8 @@ async fn test_evaluate_arithmetic() {
 
 #[tokio::test]
 async fn test_evaluate_string() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -77,17 +58,8 @@ async fn test_evaluate_string() {
 
 #[tokio::test]
 async fn test_evaluate_boolean() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -112,17 +84,8 @@ async fn test_evaluate_boolean() {
 
 #[tokio::test]
 async fn test_evaluate_fetch_result() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -149,17 +112,8 @@ async fn test_evaluate_fetch_result() {
 
 #[tokio::test]
 async fn test_evaluate_with_argument() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -180,17 +134,8 @@ async fn test_evaluate_with_argument() {
 
 #[tokio::test]
 async fn test_evaluate_with_string_argument() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -211,17 +156,8 @@ async fn test_evaluate_with_string_argument() {
 
 #[tokio::test]
 async fn test_evaluate_with_object_argument() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -242,17 +178,8 @@ async fn test_evaluate_with_object_argument() {
 
 #[tokio::test]
 async fn test_evaluate_without_argument() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -272,17 +199,8 @@ async fn test_evaluate_without_argument() {
 
 #[tokio::test]
 async fn test_evaluate_expression_no_return() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -298,17 +216,8 @@ async fn test_evaluate_expression_no_return() {
 
 #[tokio::test]
 async fn test_evaluate_with_array_argument() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
@@ -329,17 +238,8 @@ async fn test_evaluate_with_array_argument() {
 
 #[tokio::test]
 async fn test_evaluate_with_boolean_argument() {
-    crate::common::init_tracing();
     let server = TestServer::start().await;
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-    let page = browser.new_page().await.expect("Failed to create page");
+    let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await

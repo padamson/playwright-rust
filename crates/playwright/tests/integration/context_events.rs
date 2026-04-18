@@ -5,8 +5,6 @@
 
 use std::sync::{Arc, Mutex};
 
-use playwright_rs::protocol::Playwright;
-
 use crate::test_server::TestServer;
 
 // ---------------------------------------------------------------------------
@@ -15,22 +13,7 @@ use crate::test_server::TestServer;
 
 #[tokio::test]
 async fn test_context_on_page() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     let fired_pages: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let fired_pages2 = fired_pages.clone();
@@ -71,22 +54,7 @@ async fn test_context_on_page() {
 
 #[tokio::test]
 async fn test_context_on_close() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     let closed = Arc::new(Mutex::new(false));
     let closed2 = closed.clone();
@@ -121,24 +89,8 @@ async fn test_context_on_close() {
 
 #[tokio::test]
 async fn test_context_on_request() {
-    crate::common::init_tracing();
-
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     let requests: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let requests2 = requests.clone();
@@ -187,24 +139,8 @@ async fn test_context_on_request() {
 
 #[tokio::test]
 async fn test_context_on_response() {
-    crate::common::init_tracing();
-
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     let responses: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let responses2 = responses.clone();
@@ -254,24 +190,8 @@ async fn test_context_on_response() {
 
 #[tokio::test]
 async fn test_context_on_request_finished() {
-    crate::common::init_tracing();
-
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     let finished: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let finished2 = finished.clone();
@@ -318,22 +238,7 @@ async fn test_context_on_request_finished() {
 
 #[tokio::test]
 async fn test_context_on_request_failed() {
-    crate::common::init_tracing();
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     let failed: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let failed2 = failed.clone();
@@ -383,24 +288,8 @@ async fn test_context_on_request_failed() {
 
 #[tokio::test]
 async fn test_context_and_page_handlers_both_fire() {
-    crate::common::init_tracing();
-
+    let (_pw, browser, context) = crate::common::setup_context().await;
     let server = TestServer::start().await;
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
 
     let ctx_events: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let page_events: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
@@ -563,22 +452,7 @@ async fn test_context_expect_close() {
 /// from any page in that context.
 #[tokio::test]
 async fn test_context_on_dialog() {
-    crate::common::init_tracing();
-
-    let playwright = playwright_rs::protocol::Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    let context = browser
-        .new_context()
-        .await
-        .expect("Failed to create context");
+    let (_pw, browser, context) = crate::common::setup_context().await;
 
     let dialog_messages: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let dialog_messages2 = dialog_messages.clone();
