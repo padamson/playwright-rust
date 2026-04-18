@@ -178,7 +178,7 @@ jobs:
 
       - name: Generate SLSA provenance attestation
         if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
         continue-on-error: true  # Don't fail release if attestation fails
