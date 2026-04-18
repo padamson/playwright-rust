@@ -74,6 +74,8 @@ exclude_re = [
     "Locator::drag_to",
     "Locator::with_timeout",
     "Locator::wait_for",
+    "Locator::aria_snapshot",
+    "Locator::highlight",
     "Locator::selector",
     "Locator::wrap_error",
     "impl std::fmt::Debug for Locator",
