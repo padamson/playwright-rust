@@ -1,16 +1,3 @@
-// Copyright 2026 Paul Adamson
-// Licensed under the Apache License, Version 2.0
-//
-// Integration tests for download and dialog event handling
-//
-// Tests download events (page.on_download) and dialog events (page.on_dialog)
-// for alert, confirm, and prompt dialog types.
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~55% (11 tests → 5 tests)
-
 use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;

@@ -1,11 +1,5 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
-//
-// Integration tests for Request/Response completion methods:
-// - response.security_details(), server_addr(), finished()
-// - request.redirected_from / redirected_to
-// - request.response()
-// - request.sizes()
 
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};

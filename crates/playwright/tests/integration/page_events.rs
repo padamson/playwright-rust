@@ -1,9 +1,8 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
-// Integration tests for Page on_* event handlers:
-//   on_close, on_load, on_crash, on_pageerror, on_popup,
-//   on_frameattached, on_framedetached, on_framenavigated
+// Covers on_close, on_load, on_crash, on_pageerror, on_popup,
+// on_frameattached, on_framedetached, on_framenavigated.
 //
 // See: <https://playwright.dev/docs/api/class-page>
 

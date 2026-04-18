@@ -1,15 +1,3 @@
-// Integration tests for screenshot functionality
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - page.screenshot() with default options
-// - page.screenshot() saves to file
-// - page.screenshot() returns bytes
-// - page.screenshot() with full_page option
-// - page.screenshot() with type (png/jpeg)
-// - locator.screenshot() captures element
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 use playwright_rs::protocol::screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
@@ -183,23 +171,6 @@ async fn test_screenshot_webkit() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
-
-// ============================================================================
-// Merged from: screenshot_options_test.rs
-// ============================================================================
-
-// Integration tests for Screenshot Options (Phase 4, Slice 2)
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - JPEG format with quality option
-// - Full-page screenshots
-// - Clip region screenshots
-// - PNG vs JPEG format differences
-// - Cross-browser compatibility
-//
-// Note: Tests are combined where possible to reduce browser launches and improve speed
 
 #[tokio::test]
 async fn test_screenshot_all_page_options() {

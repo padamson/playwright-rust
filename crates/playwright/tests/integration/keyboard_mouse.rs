@@ -1,23 +1,3 @@
-// Integration tests for keyboard and mouse low-level APIs
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - keyboard.down() and keyboard.up()
-// - keyboard.press() with single keys and combinations
-// - keyboard.type_text() for typing text
-// - keyboard.insert_text() for paste-like insertion
-// - mouse.move() to coordinates
-// - mouse.click() at coordinates
-// - mouse.dblclick() at coordinates
-// - mouse.down() and mouse.up()
-// - mouse.wheel() for scrolling
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~75% (12 tests → 3 tests)
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 

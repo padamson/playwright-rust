@@ -1,9 +1,3 @@
-// Integration tests for to_match_aria_snapshot() on LocatorAssertions
-//
-// Tests cover:
-// - Basic ARIA snapshot matching (heading + button)
-// - Negation: .not().to_match_aria_snapshot() for non-matching snapshots
-
 use playwright_rs::expect;
 
 #[tokio::test]

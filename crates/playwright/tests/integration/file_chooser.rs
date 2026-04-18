@@ -1,20 +1,3 @@
-// Integration tests for FileChooser event handling
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - on_filechooser() handler fires when file input is clicked
-// - FileChooser.is_multiple() returns correct value
-// - FileChooser.set_files() sets files on the input
-// - FileChooser.page() returns the correct back-reference
-// - expect_file_chooser() waiter resolves on file chooser event
-//
-// FileChooser is NOT a ChannelOwner — it's a plain struct constructed from
-// event params (element GUID + isMultiple). The "fileChooser" event is sent
-// on the Page channel.
-//
-// See: <https://playwright.dev/docs/api/class-filechooser>
-
 use playwright_rs::protocol::{FileChooser, Playwright};
 use std::fs;
 use std::io::Write;

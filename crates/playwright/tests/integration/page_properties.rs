@@ -1,14 +1,3 @@
-// Integration tests for Page/BrowserContext timeout infrastructure and properties:
-//   - page.set_default_timeout()
-//   - page.set_default_navigation_timeout()
-//   - context.set_default_timeout()
-//   - context.set_default_navigation_timeout()
-//   - page.is_closed()
-//   - page.frames()
-//
-// TDD: Tests written FIRST before any implementation.
-// Red stage: these will not compile until the API is added.
-
 use crate::test_server::TestServer;
 
 // ============================================================================

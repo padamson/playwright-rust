@@ -1,10 +1,6 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
-// Integration tests for ConsoleMessage and on_console event handlers
-//
-// Tests page.on_console() and context.on_console() event handling.
-//
 // See: <https://playwright.dev/docs/api/class-consolemessage>
 
 use playwright_rs::protocol::JSHandle;

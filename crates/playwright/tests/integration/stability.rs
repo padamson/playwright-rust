@@ -1,20 +1,3 @@
-// Integration tests for Memory Leak Detection (Phase 6, Slice 7)
-//
-// Following TDD: Write tests first (Red), then implement fixes (Green), then refactor
-//
-// Tests cover:
-// - Memory leak detection with repeated browser launch/close cycles
-// - Memory leak detection with repeated page creation/destruction
-// - Memory leak detection with repeated context creation/destruction
-// - Process memory tracking over time
-// - Resource exhaustion resistance
-//
-// Success Criteria:
-// - 100+ browser cycles without memory growth
-// - 50+ page/context cycles without leaks
-// - Consistent memory usage patterns
-// - No OOM (Out of Memory) errors
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{ClickOptions, GotoOptions, Playwright};
 use std::process::Command;
@@ -375,27 +358,6 @@ async fn test_rapid_browser_creation() {
 
     tracing::info!("\n✓ Rapid browser creation handled successfully");
 }
-
-// ============================================================================
-// Merged from: stability_resource_cleanup_test.rs
-// ============================================================================
-
-// Integration tests for Resource Cleanup (Phase 6, Slice 7)
-//
-// Following TDD: Write tests first (Red), then implement fixes (Green), then refactor
-//
-// Tests cover:
-// - File descriptor cleanup after browser shutdown
-// - Process cleanup (no zombie processes)
-// - Multiple Playwright server launch/shutdown cycles
-// - Child process termination verification
-// - Resource limit stress testing
-//
-// Success Criteria:
-// - All file descriptors closed after shutdown
-// - No zombie processes after operations
-// - Clean server lifecycle management
-// - Process tree fully cleaned up
 
 // ============================================================================
 // Helper: Count Open File Descriptors (Unix only)
@@ -854,29 +816,6 @@ async fn test_resource_limit_stress() {
 }
 
 // ============================================================================
-// Merged from: stability_error_quality_test.rs
-// ============================================================================
-
-// Integration tests for Error Message Quality (Phase 6, Slice 7)
-//
-// Following TDD: Write tests first (Red), then implement fixes (Green), then refactor
-//
-// Tests cover:
-// - Error messages include helpful context
-// - Error messages suggest solutions
-// - Error messages include what operation was being attempted
-// - Error messages include relevant identifiers (selectors, URLs, etc.)
-// - Network error messages are descriptive
-// - Timeout error messages include duration
-// - Element not found errors include selector
-//
-// Success Criteria:
-// - All error messages are actionable
-// - Errors include "what was attempted" context
-// - Errors include "what went wrong" details
-// - Errors suggest next steps when applicable
-
-// ============================================================================
 // Error Quality Test: Element Not Found
 // ============================================================================
 
@@ -1235,29 +1174,6 @@ async fn test_error_quality_audit() {
 
     tracing::info!("\n✓ Error quality audit documented");
 }
-
-// ============================================================================
-// Merged from: stability_shutdown_recovery_test.rs
-// ============================================================================
-
-// Integration tests for Graceful Shutdown and Error Recovery (Phase 6, Slice 7)
-//
-// Following TDD: Write tests first (Red), then implement fixes (Green), then refactor
-//
-// Tests cover:
-// - Graceful shutdown on Drop
-// - SIGTERM handling (Unix only)
-// - SIGINT handling (Unix only)
-// - Network error recovery
-// - Browser crash handling
-// - Connection loss recovery
-// - Timeout recovery
-//
-// Success Criteria:
-// - Clean shutdown on Drop
-// - Proper SIGTERM/SIGINT handling
-// - Graceful error recovery
-// - No resource leaks on error paths
 
 // ============================================================================
 // Graceful Shutdown Test: Drop Cleanup

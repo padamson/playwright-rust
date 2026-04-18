@@ -1,14 +1,3 @@
-// JSHandle — in-browser JavaScript value handle
-// It is returned by frame.evaluate_handle_js() and jshandle.get_property().
-//
-// Tests cover:
-// - json_value() returns the JSON-serializable value of the handle
-// - get_property() returns a JSHandle for a named property
-// - evaluate() evaluates JS with the handle as argument
-// - dispose() releases the handle without error
-//
-// See: <https://playwright.dev/docs/api/class-jshandle>
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::JSHandle;
 

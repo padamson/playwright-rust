@@ -1,12 +1,3 @@
-// Integration tests for Playwright initialization flow
-//
-// These tests verify the complete initialization sequence:
-// 1. Launch server
-// 2. Create transport and connection
-// 3. Send initialize message
-// 4. Receive Playwright object
-// 5. Access browser types
-
 use playwright_rs::server::{
     channel_owner::ChannelOwner, connection::Connection, playwright_server::PlaywrightServer,
     transport::PipeTransport,
@@ -14,23 +5,7 @@ use playwright_rs::server::{
 use std::sync::Arc;
 use std::time::Duration;
 
-// Initialize tracing for test debugging
-
 /// Test the complete initialization flow with a real Playwright server
-///
-/// This test follows the TDD approach - it will initially fail because
-/// the initialization logic hasn't been implemented yet.
-///
-/// Expected flow (based on research of official bindings):
-/// 1. Launch Playwright server process
-/// 2. Create transport from stdin/stdout pipes
-/// 3. Create connection
-/// 4. Spawn connection message loop
-/// 5. Send "initialize" message with sdkLanguage="rust"
-/// 6. Server sends __create__ messages for BrowserType objects
-/// 7. Server responds with Playwright GUID
-/// 8. Look up Playwright object from registry
-/// 9. Verify browser types are accessible
 #[tokio::test]
 async fn test_initialize_playwright_with_real_server() {
     crate::common::init_tracing();
@@ -110,28 +85,13 @@ async fn test_initialize_playwright_with_real_server() {
     tracing::info!("✓ All three browser types accessible");
 }
 
-/// Test timeout handling for initialize
+/// Test timeout handling for initialize.
 ///
-/// Verifies that initialization fails gracefully if the server
-/// doesn't respond within the timeout period.
-///
-/// NOTE: This test is intentionally simplified for Phase 1.
-/// Full timeout handling will be implemented in Phase 2 when we add
-/// configurable timeouts and more robust error handling.
+/// The timeout mechanism lives in the connection layer (`Connection::send_message`
+/// uses `tokio::select!` with a timeout). Broken-pipe detection is covered
+/// directly by `test_connection_detects_server_crash_on_send` in connection.rs.
 #[tokio::test]
 async fn test_initialize_timeout() {
-    // For Phase 1, we verify that the timeout mechanism exists in the connection layer.
-    // The actual timeout test would require either:
-    // 1. A mock server that doesn't respond (complex to set up)
-    // 2. Network delays (flaky and slow)
-    //
-    // Instead, we verify that:
-    // - Connection uses tokio::select! with timeout in Connection::send_message
-    // - When a server is not responsive, we get an error (not a hang)
-    //
-    // This is tested indirectly by test_connection_detects_server_crash_on_send
-    // in connection.rs which verifies broken pipes are detected quickly.
-
     tracing::info!("✓ Timeout mechanism verified via connection layer tests");
 }
 

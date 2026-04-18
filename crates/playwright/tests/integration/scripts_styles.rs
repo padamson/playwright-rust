@@ -1,12 +1,3 @@
-// Integration tests for add_init_script functionality
-//
-// Tests cover:
-// - BrowserContext.add_init_script() - scripts applied to all pages in context
-// - Page.add_init_script() - scripts applied to specific page
-// - Multiple pages inheriting context scripts
-// - Script execution before page scripts
-// - Cross-browser compatibility
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{AddStyleTagOptions, Playwright};
 
@@ -296,18 +287,6 @@ async fn test_add_init_script_webkit() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
-
-// ============================================================================
-// Merged from: add_style_tag_test.rs
-// ============================================================================
-
-// Integration tests for add_style_tag functionality
-//
-// Tests cover:
-// - Page.add_style_tag() with inline content - CSS injection and verification
-// - Multiple style tags - sequential CSS injection
-// - Style tag with URL parameter
-// - Error cases - invalid options
 
 #[tokio::test]
 async fn test_add_style_tag_with_content() {

@@ -1,8 +1,5 @@
-// Integration tests for install_browsers() and install_browsers_with_deps() public API
-//
-// Browser installation is expensive and destructive (modifies system state),
-// so these tests are lightweight and verify the infrastructure works without
-// actually installing browsers.
+// Browser installation is expensive and destructive (modifies system state), so
+// these tests verify the infrastructure works without actually installing browsers.
 
 use playwright_rs::{install_browsers, install_browsers_with_deps};
 

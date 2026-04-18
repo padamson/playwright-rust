@@ -1,14 +1,3 @@
-// Comprehensive integration tests for Network Routing (Phase 5, Slice 4c)
-//
-// These tests use evaluate_value() to verify routing behavior end-to-end
-//
-// Tests cover:
-// - route.abort() actually blocks requests
-// - route.continue() allows requests through
-// - Error codes are properly applied
-// - Request access in handlers
-// - Conditional routing logic
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
@@ -183,12 +172,8 @@ async fn test_route_pattern_specificity() {
 // Cross-browser route tests are in network_route_cross_browser_test.rs
 
 // ============================================================================
-// Merged from: network_route_pattern_test.rs
+// Glob pattern matching for route handlers
 // ============================================================================
-
-// Pattern matching tests for Network Routing (Phase 5, Slice 4b)
-//
-// Tests glob pattern matching for route handlers
 
 #[tokio::test]
 async fn test_route_pattern_matching_wildcard() {
@@ -399,24 +384,6 @@ async fn test_route_extension_patterns() {
         "Extension/path pattern should work"
     );
 }
-
-// ============================================================================
-// Merged from: network_route_cross_browser_test.rs
-// ============================================================================
-
-// Cross-browser integration tests for Network Routing (Phase 5, Slice 4c)
-//
-// Tests routing works across all browsers (Chromium, Firefox, WebKit)
-//
-// Tests cover:
-// - route.abort() in Firefox and WebKit
-// - route.continue() in Firefox and WebKit
-// - Pattern matching across browsers
-// - Request access in route handlers
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Expected speedup: ~75% (8 tests → 2 tests)
 
 // ============================================================================
 // Firefox Routing Methods

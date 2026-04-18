@@ -1,7 +1,3 @@
-// Integration tests for Page
-//
-// These tests verify that we can create pages and manage them.
-
 use playwright_rs::protocol::{Playwright, Viewport};
 
 #[tokio::test]
@@ -72,13 +68,9 @@ async fn test_page_close() {
 }
 
 // ============================================================================
-// Merged from: page_content_test.rs
-// ============================================================================
-
-// Integration tests for page.content()
-//
-// Tests the page.content() method which retrieves the full HTML content of the page.
+// page.content()
 // See: https://playwright.dev/docs/api/class-page#page-content
+// ============================================================================
 
 #[tokio::test]
 async fn test_page_content_basic() {

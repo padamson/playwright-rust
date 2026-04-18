@@ -1,14 +1,3 @@
-// Integration tests for ElementHandle functionality
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - page.query_selector() returns ElementHandle
-// - page.query_selector() returns None when not found
-// - page.query_selector_all() returns multiple ElementHandles
-// - ElementHandle.screenshot() captures element screenshot
-// - locator.screenshot() delegates to ElementHandle
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 

@@ -1,15 +1,3 @@
-// Integration tests for checkbox and hover interactions
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - check() on unchecked checkbox
-// - check() is idempotent (already checked)
-// - uncheck() on checked checkbox
-// - uncheck() is idempotent (already unchecked)
-// - check() on radio button
-// - hover() triggers CSS :hover state
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 
@@ -258,20 +246,6 @@ async fn test_hover_webkit() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
-
-// ============================================================================
-// Merged from: set_checked_test.rs
-// ============================================================================
-
-// Integration tests for Locator.set_checked() convenience method
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - set_checked(true) calls check()
-// - set_checked(false) calls uncheck()
-// - Works with checkboxes and radio buttons
-// - Cross-browser compatibility
 
 #[tokio::test]
 async fn test_set_checked_true_on_checkbox() {

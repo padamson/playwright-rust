@@ -1,11 +1,3 @@
-// Integration tests for PipeTransport with real Playwright server
-//
-// These tests verify that the transport layer works correctly with an actual
-// Playwright server process, not just mock pipes.
-//
-// Note: Browser-specific testing (Chromium/Firefox/WebKit) is deferred to
-// Slice 4 (Browser API) when we implement browser launch functionality.
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 use playwright_rs::server::{playwright_server::PlaywrightServer, transport::PipeTransport};
@@ -54,9 +46,6 @@ async fn test_transport_with_real_server() {
     // 1. The message sends without error
     // 2. We receive *something* back
     // 3. The transport doesn't crash
-
-    // For now, just verify we can create the transport and it's connected
-    // Actual protocol interaction testing deferred to Slice 3
 
     // Clean up
     drop(rx);
@@ -116,7 +105,6 @@ async fn test_send_message_to_real_server() {
     });
 
     // For now, we just verify sending doesn't error
-    // Full request/response verification requires Connection layer (Slice 3)
 
     // Clean up
     server.kill().await.expect("Failed to kill server");
@@ -165,10 +153,6 @@ async fn test_transport_handles_server_crash() {
         }
     }
 }
-
-// ============================================================================
-// Merged from: transport_chunked_reading.rs
-// ============================================================================
 
 // Tests for chunked message reading in transport layer
 //
@@ -452,14 +436,6 @@ async fn test_odd_sized_messages() {
     drop(rx);
     let _ = read_task.await;
 }
-
-// ============================================================================
-// Merged from: transport_websocket_test.rs
-// ============================================================================
-
-// Integration tests for WebSocket event handling
-//
-// Following TDD: Write tests first (Red), then implement (Green)
 
 // Ideally we reuse the existing test_server.rs in tests/
 

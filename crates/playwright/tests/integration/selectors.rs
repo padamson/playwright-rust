@@ -1,8 +1,6 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
-// Integration tests for Selectors
-//
 // Reference:
 // - Python: playwright-python/playwright/_impl/_selectors.py
 // - Docs: https://playwright.dev/docs/api/class-selectors

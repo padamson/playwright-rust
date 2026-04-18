@@ -1,18 +1,3 @@
-// Integration tests for Frame public API methods
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - frame.locator() - create a locator scoped to a frame
-// - frame.get_by_text() / get_by_label() / get_by_placeholder() / get_by_alt_text()
-// - frame.get_by_title() / get_by_test_id() / get_by_role()
-// - frame.name() - name of the frame (empty string for main frame)
-// - frame.page() - returns the owning Page
-// - frame.is_detached() - false for attached frames
-// - frame.parent_frame() - None for main frame
-// - frame.evaluate_handle() - evaluates JS and returns a handle to the result
-// - frame.child_frames() - returns child frame list
-
 use crate::test_server::TestServer;
 use playwright_rs::server::channel_owner::ChannelOwner;
 

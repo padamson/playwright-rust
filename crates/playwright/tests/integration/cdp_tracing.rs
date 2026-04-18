@@ -1,16 +1,4 @@
-// Integration tests for CDPSession and Tracing (Chromium-only features)
-//
-// CDPSession tests verify:
-// - Creating a CDP session for a page
-// - Sending CDP commands and getting results
-//
-// Tracing tests verify:
-// - Starting tracing on a context
-// - Stopping tracing on a context
-// - Starting tracing with options (name, screenshots, snapshots)
-//
-// NOTE: All tests in this file are Chromium-only.
-// CDP is not available in Firefox or WebKit.
+// CDPSession and Tracing — Chromium-only (CDP is not available in Firefox/WebKit).
 
 // ============================================================================
 // CDPSession Tests

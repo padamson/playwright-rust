@@ -1,6 +1,3 @@
-// Integration tests for BrowserContext-level event handlers
-//
-// These tests verify that context-level event handlers fire for events
 // across all pages in the context.
 
 use std::sync::{Arc, Mutex};

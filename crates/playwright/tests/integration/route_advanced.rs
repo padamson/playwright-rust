@@ -1,15 +1,3 @@
-// Route Continue Overrides Tests
-//
-// Tests for Route.continue() with modifications (headers, method, postData, url)
-//
-// These tests verify that:
-// 1. Headers can be modified when continuing a route
-// 2. HTTP method can be changed (GET → POST, etc.)
-// 3. POST data can be added or modified
-// 4. URL can be changed (same protocol)
-//
-// TDD approach: Tests written FIRST, then implementation
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{ContinueOptions, FulfillOptions, Playwright, RouteFromHarOptions};
 use std::collections::HashMap;
@@ -194,16 +182,14 @@ async fn test_route_continue_no_overrides() {
 }
 
 // ============================================================================
-// Merged from: route_main_document_test.rs
+// route.fulfill() with main document navigation
 // ============================================================================
-
-// Test for route.fulfill() with main document navigation (Phase 6, Slice 3)
 //
-// IMPORTANT: These tests document a KNOWN PLAYWRIGHT SERVER LIMITATION (1.49.0 - 1.58.2)
-// The route.fulfill() method does not transmit response body content to the browser.
+// IMPORTANT: These tests document a KNOWN PLAYWRIGHT SERVER LIMITATION (1.49.0 - 1.58.2):
+// route.fulfill() does not transmit response body content to the browser.
 //
-// These are "reverse canary tests" - they expect the BROKEN behavior.
-// When Playwright fixes this issue, these tests will FAIL, alerting us to update our code.
+// These are "reverse canary tests" — they expect the BROKEN behavior. When
+// Playwright fixes this, these tests will FAIL, alerting us to update our code.
 //
 // TODO: Periodically test with newer Playwright versions for fix.
 

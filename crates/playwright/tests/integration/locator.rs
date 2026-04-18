@@ -1,18 +1,3 @@
-// Integration tests for Locator functionality
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - Locator creation (page.locator)
-// - Locator chaining (first, last, nth, locator)
-// - Query methods (count, text_content, inner_text, inner_html, get_attribute)
-// - State queries (is_visible, is_enabled, is_checked, is_editable)
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~64% (11 tests → 4 tests)
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 

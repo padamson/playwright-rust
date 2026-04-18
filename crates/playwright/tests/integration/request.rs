@@ -1,11 +1,3 @@
-// Integration tests for Request properties and methods
-//
-// Tests for Request.headers(), post_data(), post_data_buffer(),
-// post_data_json(), failure(), all_headers(), header_value(),
-// headers_array(), and timing() methods.
-//
-// TDD approach: tests written first, implementation follows.
-
 use std::sync::Arc;
 
 use tokio::sync::Mutex;

@@ -1,19 +1,3 @@
-// Integration tests for Assertions (Phase 5, Slice 1)
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - expect().to_be_visible() - auto-retry until visible
-// - expect().to_be_hidden() - auto-retry until hidden
-// - expect().not().to_be_visible() - negation support
-// - Timeout behavior
-// - Cross-browser compatibility
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~73% (11 tests → 3 tests)
-
 use crate::test_server::TestServer;
 use playwright_rs::{expect, protocol::Playwright};
 
@@ -262,27 +246,6 @@ async fn test_cross_browser_smoke() {
     webkit.close().await.expect("Failed to close WebKit");
     server.shutdown();
 }
-
-// ============================================================================
-// Merged from: state_assertions_test.rs
-// ============================================================================
-
-// Integration tests for State Assertions (Phase 5, Slice 3)
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - expect().to_be_enabled() / to_be_disabled()
-// - expect().to_be_checked() / to_be_unchecked()
-// - expect().to_be_editable()
-// - expect().to_be_focused()
-// - Auto-retry behavior
-// - Cross-browser compatibility
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~70% (85s → 25s for comprehensive coverage)
 
 // ============================================================================
 // Button State Assertions (enabled/disabled)
@@ -631,27 +594,6 @@ async fn test_state_assertions_cross_browser_smoke() {
     webkit.close().await.expect("Failed to close WebKit");
     server.shutdown();
 }
-
-// ============================================================================
-// Merged from: text_assertions_test.rs
-// ============================================================================
-
-// Integration tests for Text Assertions (Phase 5, Slice 2)
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - expect().to_have_text() - exact text match
-// - expect().to_contain_text() - substring match
-// - expect().to_have_value() - input value match
-// - Regex pattern support for all
-// - Auto-retry behavior
-// - Cross-browser compatibility
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~73% (15 tests → 4 tests)
 
 // ============================================================================
 // to_have_text() Assertions

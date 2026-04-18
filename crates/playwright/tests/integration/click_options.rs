@@ -1,18 +1,3 @@
-// Integration tests for Click Options (Phase 4, Slice 4)
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - Click with button option (left, right, middle)
-// - Click with modifiers (Shift, Control, etc.)
-// - Click with position option
-// - Click with force option
-// - Click with trial option (dry-run)
-// - Double-click with click_count
-// - Cross-browser compatibility
-//
-// Note: Tests are combined where possible to reduce browser launches
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 use playwright_rs::protocol::click::{ClickOptions, KeyboardModifier, MouseButton, Position};

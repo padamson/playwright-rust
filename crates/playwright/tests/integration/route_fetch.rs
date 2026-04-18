@@ -1,5 +1,3 @@
-// Integration tests for route.fetch() via APIRequestContext
-
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};
 

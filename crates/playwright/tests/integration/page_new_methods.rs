@@ -1,11 +1,3 @@
-// Integration tests for new Page methods:
-//   - page.set_extra_http_headers()
-//   - page.emulate_media()
-//   - page.pdf()
-//   - page.add_script_tag()
-//
-// TDD: Tests written FIRST before any implementation.
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{
     AddScriptTagOptions, ColorScheme, EmulateMediaOptions, Media, Playwright,

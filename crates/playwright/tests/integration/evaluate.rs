@@ -1,7 +1,3 @@
-// Integration tests for Page.evaluate_value() (Phase 5, Slice 4c)
-//
-// Tests JavaScript evaluation with return values
-
 use crate::test_server::TestServer;
 use serde::{Deserialize, Serialize};
 

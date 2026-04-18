@@ -1,8 +1,3 @@
-// Integration tests for FrameLocator
-//
-// Tests frame_locator() on Page, Locator, and FrameLocator,
-// including get_by_* methods, composition (first/last/nth), owner, and nesting.
-
 use crate::test_server::TestServer;
 
 // ============================================================================

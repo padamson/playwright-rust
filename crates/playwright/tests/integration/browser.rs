@@ -1,23 +1,7 @@
-// Integration tests for Browser object creation
-//
-// Phase 2 Slice 1: Test that Browser objects can be created from server __create__ messages
-//
-// These tests verify that:
-// 1. Browser objects are registered in the object factory
-// 2. Browser initializer parsing works correctly (version, name fields)
-// 3. Browser objects can be retrieved from the connection registry
-
 use playwright_rs::api::LaunchOptions;
 use playwright_rs::protocol::Playwright;
 
 /// Test that a Browser object is created when the server sends a Browser __create__ message
-///
-/// Verifies the complete flow:
-/// - Browser is added to object_factory.rs ✅
-/// - Browser::new() parses initializer correctly ✅
-/// - BrowserType::launch() is implemented (Slice 3) ✅
-///
-/// This test verifies the end-to-end Browser creation flow.
 #[tokio::test]
 async fn test_browser_object_creation_via_launch() {
     crate::common::init_tracing();
@@ -50,8 +34,6 @@ async fn test_browser_object_creation_via_launch() {
 
     // Cleanup
     browser.close().await.expect("Failed to close browser");
-
-    tracing::info!("✅ Slice 4 complete: Browser can be launched, used, and closed");
 }
 
 /// Test that Browser object has correct structure
@@ -79,12 +61,8 @@ fn test_browser_type_exists() {
 }
 
 // ============================================================================
-// Merged from: browser_launch_integration.rs
+// BrowserType::launch()
 // ============================================================================
-
-// Integration tests for BrowserType::launch()
-//
-// These tests verify that we can launch real browsers using the Playwright server.
 
 #[tokio::test]
 async fn test_launch_chromium() {

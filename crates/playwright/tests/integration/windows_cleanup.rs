@@ -1,8 +1,8 @@
-// Windows-specific cleanup tests
+// Windows-specific cleanup tests.
 //
-// These tests verify that stdio pipes and processes clean up properly on Windows
-// without hanging. This addresses the Phase 1 deferred issue where integration tests
-// would hang on Windows due to stdio pipe cleanup problems.
+// Verify that stdio pipes and processes clean up properly on Windows without
+// hanging (previously integration tests would hang on Windows due to stdio
+// pipe cleanup problems).
 
 use playwright_rs::server::{playwright_server::PlaywrightServer, transport::PipeTransport};
 use std::time::Duration;

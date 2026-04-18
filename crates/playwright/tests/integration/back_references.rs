@@ -1,13 +1,9 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
 //
-// Integration tests for back-reference properties:
-// - dialog.page()
-// - download.page()
-// - response.request(), response.frame()
-// - request.frame()
-//
-// Also verifies Response struct field encapsulation (private fields, accessor methods).
+// Covers back-reference properties: dialog.page(), download.page(),
+// response.request(), response.frame(), request.frame().
+// Also verifies Response struct field encapsulation.
 
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};

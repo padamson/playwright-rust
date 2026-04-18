@@ -1,19 +1,3 @@
-// Integration tests for select and file upload interactions
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - select_option() with value/label/index
-// - select_option() for multiple selections
-// - set_input_files() with single file
-// - set_input_files() with multiple files
-// - set_input_files() for clearing files
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~69% (13 tests → 4 tests)
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{Playwright, SelectOption};
 use std::fs;

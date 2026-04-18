@@ -1,5 +1,3 @@
-// Integration tests for context.route(), context.unroute(), context.unroute_all()
-
 use crate::test_server::TestServer;
 
 #[tokio::test]

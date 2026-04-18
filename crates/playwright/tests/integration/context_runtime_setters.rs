@@ -1,18 +1,3 @@
-// Integration tests for BrowserContext runtime setter methods and Page methods.
-//
-// Tests cover:
-// - context.cookies() - retrieve cookies
-// - context.clear_cookies() - clear cookies with optional filters
-// - context.set_extra_http_headers() - set headers sent with every request
-// - context.grant_permissions() - grant browser permissions
-// - context.clear_permissions() - clear all permissions
-// - context.set_geolocation() - set or clear geolocation
-// - context.set_offline() - toggle offline mode at runtime
-// - page.bring_to_front() - bring page to front
-// - page.viewport_size() - get current viewport dimensions
-//
-// TDD approach: Tests written FIRST, then implementation.
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{
     BrowserContextOptions, ClearCookiesOptions, Cookie, Geolocation, GrantPermissionsOptions,

@@ -1,18 +1,3 @@
-// Integration tests for Locator actions
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - Click actions (single, double)
-// - Fill actions (input, textarea)
-// - Clear actions
-// - Press actions (keyboard)
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~50% (8 tests → 4 tests)
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::action_options::{
     CheckOptions, FillOptions, HoverOptions, KeyboardOptions, MouseOptions, PressOptions,
@@ -236,29 +221,6 @@ async fn test_cross_browser_smoke() {
     webkit.close().await.expect("Failed to close WebKit");
     server.shutdown();
 }
-
-// ============================================================================
-// Merged from: action_options_test.rs
-// ============================================================================
-
-// Integration tests for Action Options (Phase 4, Slice 5)
-//
-// Following TDD: Write tests first (Red), then implement (Green)
-//
-// Tests cover:
-// - Fill options (force, timeout)
-// - Press options (delay, timeout)
-// - Check options (force, position, timeout, trial)
-// - Hover options (force, modifiers, position, timeout, trial)
-// - Select options (force, timeout)
-// - Keyboard options (delay)
-// - Mouse options (button, click_count, delay, steps)
-// - Cross-browser compatibility
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~78% (9 tests → 2 tests)
 
 // ============================================================================
 // Action Options Methods

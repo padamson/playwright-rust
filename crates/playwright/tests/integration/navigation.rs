@@ -1,18 +1,3 @@
-// Integration tests for Page navigation
-//
-// These tests verify that page navigation works correctly.
-// Following TDD approach: Write tests first, then implement.
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~67% (9 tests → 3 tests)
-//
-// TODO: Refactor to use test_server.rs instead of external URLs
-// Currently using example.com and rust-lang.org (fragile, requires network)
-// Should use local test server with custom HTML for deterministic testing
-// See locator_test.rs for refactored example using test_server
-
 use crate::test_server::TestServer;
 use playwright_rs::protocol::{GotoOptions, Playwright, WaitUntil};
 use std::time::Duration;
@@ -239,26 +224,6 @@ async fn test_cross_browser_smoke() {
 }
 
 // ============================================================================
-// Merged from: navigation_errors_test.rs
-// ============================================================================
-
-// Integration tests for Navigation Error Handling (Phase 4, Slice 3)
-//
-// Following TDD: Write tests first (Red), then verify behavior (Green)
-//
-// Tests cover:
-// - goto() timeout errors
-// - reload() timeout errors
-// - wait_until option behavior
-// - Descriptive error messages
-// - Cross-browser compatibility
-//
-// Performance Optimization (Phase 6):
-// - Combined related tests to minimize browser launches
-// - Removed redundant cross-browser tests (Rust bindings use same protocol for all browsers)
-// - Expected speedup: ~67% (9 tests → 3 tests)
-
-// ============================================================================
 // Navigation Error Methods
 // ============================================================================
 
@@ -468,10 +433,6 @@ async fn test_navigation_errors_cross_browser_smoke() {
 
     webkit.close().await.expect("Failed to close WebKit");
 }
-
-// ============================================================================
-// Merged from: page_url_hash_navigation_test.rs
-// ============================================================================
 
 // Test for page.url() hash navigation behavior (Issue #26)
 //

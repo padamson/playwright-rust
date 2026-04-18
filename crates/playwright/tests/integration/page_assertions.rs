@@ -1,9 +1,5 @@
 // Copyright 2026 Paul Adamson
 // Licensed under the Apache License, Version 2.0
-//
-// Integration tests for Page-level assertions:
-// - expect_page(&page).to_have_title(expected) / to_have_title_regex(pattern)
-// - expect_page(&page).to_have_url(expected) / to_have_url_regex(pattern)
 
 use crate::test_server::TestServer;
 use playwright_rs::expect_page;

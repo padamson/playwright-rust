@@ -1,8 +1,3 @@
-// Integration tests for Response body access and properties
-//
-// Tests for Response.body(), text(), json(), all_headers(),
-// header_value(), and headers_array() methods.
-
 use crate::test_server::TestServer;
 
 // ============================================================================

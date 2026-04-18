@@ -1,5 +1,3 @@
-// Integration tests for expose_function and expose_binding
-//
 // Tests for:
 // - BrowserContext::expose_function  (context-level, all pages get the binding)
 // - BrowserContext::expose_binding   (same but with needsHandle: true)

@@ -1,13 +1,3 @@
-// Integration tests for Connection layer with real Playwright server
-//
-// These tests verify that the Connection layer can:
-// - Establish connection to real Playwright server
-// - Spawn transport and connection message loops
-// - Handle protocol initialization messages from server
-//
-// Note: Full protocol request/response testing will be implemented in Slice 4
-// (Object Factory) when we can handle the initialization sequence and send requests.
-
 use futures_util::{SinkExt, StreamExt};
 use playwright_rs::protocol::Playwright;
 use playwright_rs::server::channel_owner::ChannelOwner;
@@ -159,7 +149,7 @@ async fn test_connection_detects_server_crash_on_send() {
     // closes the stdout pipe. This is tested separately in the transport layer.
 }
 
-/// Test concurrent requests (deferred to Phase 2 Slice 5+)
+/// Test concurrent requests
 ///
 /// This test will verify that multiple concurrent requests can be sent
 /// and responses are correctly correlated, even when they arrive out of order.
@@ -260,16 +250,6 @@ async fn test_error_response_from_server() {
     //
     // Note: This is deferred for time, not technical reasons
 }
-
-// ============================================================================
-// Merged from: connect_over_cdp_test.rs
-// ============================================================================
-
-// Integration tests for BrowserType::connect_over_cdp()
-//
-// Tests cover:
-// - Chromium-only enforcement (Firefox/WebKit should fail)
-// - Real CDP connection to a Chrome instance with remote debugging
 
 /// Test that connect_over_cdp fails for Firefox (Chromium-only)
 #[tokio::test]
@@ -486,10 +466,6 @@ async fn test_connect_over_cdp_real_chrome() {
     playwright.shutdown().await.ok();
     let _ = chrome_process.kill().await;
 }
-
-// ============================================================================
-// Merged from: browser_type_connect_test.rs
-// ============================================================================
 
 #[tokio::test]
 async fn test_browser_type_connect() {
@@ -713,15 +689,11 @@ async fn test_browser_type_connect() {
 }
 
 // ============================================================================
-// Merged from: remote_connection_test.rs
+// Remote browser connection via WebSocket
+//
+// Verifies `BrowserType::connect()` against a real Playwright browser server
+// (`chromium.launchServer()`) — critical for CI/CD container environments.
 // ============================================================================
-
-// Integration tests for remote browser connection via WebSocket
-//
-// These tests verify that `BrowserType::connect()` works with a real
-// Playwright browser server created via `chromium.launchServer()`.
-//
-// This is critical for CI/CD environments where browsers run in containers.
 
 /// Start a Playwright browser server using launchServer() and return the ws endpoint
 ///

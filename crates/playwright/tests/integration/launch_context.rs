@@ -1,10 +1,3 @@
-// Integration tests for BrowserType::launch_persistent_context()
-//
-// These tests verify persistent browser context launch with user data directory.
-// Tests include: basic launch, app mode, storage persistence, and cross-browser compatibility.
-//
-// See: https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context
-
 use crate::test_server::TestServer;
 use playwright_rs::api::IgnoreDefaultArgs;
 use playwright_rs::protocol::{BrowserContextOptions, Playwright, Viewport};

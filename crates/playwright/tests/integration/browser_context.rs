@@ -1,7 +1,3 @@
-// Integration tests for BrowserContext
-//
-// These tests verify that we can create browser contexts and manage them.
-
 use playwright_rs::protocol::{BrowserContextOptions, Geolocation, Playwright, Viewport};
 use std::env;
 
@@ -32,24 +28,6 @@ async fn test_multiple_contexts() {
     context2.close().await.expect("Failed to close context 2");
     browser.close().await.expect("Failed to close browser");
 }
-
-// ============================================================================
-// Merged from: browser_context_options_test.rs
-// ============================================================================
-
-// BrowserContext Options Tests
-//
-// Tests for BrowserContext creation with various options (viewport, user agent, locale, etc.)
-//
-// These tests verify that:
-// 1. Basic context options work (viewport, user agent, locale)
-// 2. Geolocation options work correctly
-// 3. Mobile emulation works (isMobile, hasTouch)
-// 4. JavaScript disable/enable works
-// 5. Offline mode works
-// 6. Multiple options can be combined
-//
-// TDD approach: Tests written FIRST, then implementation
 
 #[tokio::test]
 async fn test_context_with_viewport() {
@@ -719,10 +697,6 @@ async fn test_context_storage_state_empty() {
     context.close().await.expect("Failed to close context");
     browser.close().await.expect("Failed to close browser");
 }
-
-// ============================================================================
-// Merged from: browser_context_pages_test.rs
-// ============================================================================
 
 // Tests for BrowserContext.pages() and BrowserContext.browser() methods
 //

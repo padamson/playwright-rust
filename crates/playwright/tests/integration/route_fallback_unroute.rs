@@ -1,5 +1,3 @@
-// Integration tests for route.fallback() and page.unroute/unroute_all
-
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};
 

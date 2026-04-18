@@ -1,7 +1,3 @@
-// Integration tests for Page
-//
-// These tests verify that we can subscribe page network events pages.
-
 use std::sync::Arc;
 
 use tokio::sync::Mutex;
