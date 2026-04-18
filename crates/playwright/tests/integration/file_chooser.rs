@@ -1,7 +1,6 @@
-use playwright_rs::protocol::{FileChooser, Playwright};
+use playwright_rs::protocol::Playwright;
 use std::fs;
 use std::io::Write;
-use std::sync::{Arc, Mutex};
 
 // ============================================================================
 // Helper: HTML for file chooser tests
@@ -43,39 +42,21 @@ async fn test_on_filechooser_single_fires() {
         .await
         .expect("Failed to set content");
 
-    // Track whether handler fired and capture is_multiple
-    let fired = Arc::new(Mutex::new(false));
-    let is_multiple_captured = Arc::new(Mutex::new(None::<bool>));
+    let waiter = page
+        .expect_file_chooser(Some(5000.0))
+        .await
+        .expect("Failed to create waiter");
 
-    let fired_clone = fired.clone();
-    let is_multiple_clone = is_multiple_captured.clone();
-
-    page.on_filechooser(move |chooser: FileChooser| {
-        let fired_inner = fired_clone.clone();
-        let is_multiple_inner = is_multiple_clone.clone();
-        async move {
-            *fired_inner.lock().unwrap() = true;
-            *is_multiple_inner.lock().unwrap() = Some(chooser.is_multiple());
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to register filechooser handler");
-
-    // Click the single file input to trigger the file chooser
     page.locator("#single-file")
         .await
         .click(None)
         .await
         .expect("Failed to click file input");
 
-    // Give the async handler time to fire
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    let chooser = waiter.wait().await.expect("FileChooser event did not fire");
 
-    assert!(*fired.lock().unwrap(), "FileChooser handler did not fire");
-    assert_eq!(
-        *is_multiple_captured.lock().unwrap(),
-        Some(false),
+    assert!(
+        !chooser.is_multiple(),
         "Expected is_multiple=false for single file input"
     );
 
@@ -94,31 +75,21 @@ async fn test_on_filechooser_multiple_flag() {
         .await
         .expect("Failed to set content");
 
-    let is_multiple_captured = Arc::new(Mutex::new(None::<bool>));
-    let is_multiple_clone = is_multiple_captured.clone();
+    let waiter = page
+        .expect_file_chooser(Some(5000.0))
+        .await
+        .expect("Failed to create waiter");
 
-    page.on_filechooser(move |chooser: FileChooser| {
-        let is_multiple_inner = is_multiple_clone.clone();
-        async move {
-            *is_multiple_inner.lock().unwrap() = Some(chooser.is_multiple());
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to register filechooser handler");
-
-    // Click the multiple-file input
     page.locator("#multi-file")
         .await
         .click(None)
         .await
         .expect("Failed to click multi-file input");
 
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    let chooser = waiter.wait().await.expect("FileChooser event did not fire");
 
-    assert_eq!(
-        *is_multiple_captured.lock().unwrap(),
-        Some(true),
+    assert!(
+        chooser.is_multiple(),
         "Expected is_multiple=true for multiple file input"
     );
 
@@ -146,55 +117,30 @@ async fn test_filechooser_set_files() {
             .expect("Failed to write");
     }
 
-    let test_file_clone = test_file.clone();
-    let set_files_result = Arc::new(Mutex::new(None::<Result<(), String>>));
-    let result_clone = set_files_result.clone();
+    let waiter = page
+        .expect_file_chooser(Some(5000.0))
+        .await
+        .expect("Failed to create waiter");
 
-    page.on_filechooser(move |chooser: FileChooser| {
-        let file = test_file_clone.clone();
-        let result = result_clone.clone();
-        async move {
-            let r = chooser.set_files(&[file]).await;
-            *result.lock().unwrap() = Some(r.map_err(|e| e.to_string()));
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to register handler");
-
-    // Click the single file input
     page.locator("#single-file")
         .await
         .click(None)
         .await
         .expect("Failed to click");
 
-    // Wait for handler to complete
-    tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+    let chooser = waiter.wait().await.expect("FileChooser event did not fire");
 
-    // Check set_files returned Ok
-    let result = set_files_result.lock().unwrap().clone();
-    assert!(
-        result.is_some(),
-        "set_files was not called (handler did not fire)"
-    );
-    assert!(result.unwrap().is_ok(), "set_files returned an error");
+    chooser
+        .set_files(std::slice::from_ref(&test_file))
+        .await
+        .expect("set_files returned an error");
 
-    // Verify the file info div shows the filename
-    let info_text = page
-        .locator("#file-info")
+    // Auto-retry text assertion until the JS change handler updates the DOM
+    let info = page.locator("#file-info").await;
+    playwright_rs::expect(info.clone())
+        .to_contain_text("playwright_fc_test.txt")
         .await
-        .text_content()
-        .await
-        .expect("Failed to get text content");
-    assert!(
-        info_text
-            .as_deref()
-            .unwrap_or("")
-            .contains("playwright_fc_test.txt"),
-        "Expected file name in #file-info, got: {:?}",
-        info_text
-    );
+        .expect("DOM #file-info did not update with uploaded filename");
 
     // Cleanup
     let _ = fs::remove_file(&test_file);
@@ -213,23 +159,10 @@ async fn test_filechooser_page_back_reference() {
         .await
         .expect("Failed to set content");
 
-    // Navigate to a recognizable URL via set_content
-    // (page URL will be "about:blank" after set_content since it doesn't navigate)
-    // We just verify chooser.page() returns a Page (non-panicking clone)
-    let page_guid_captured = Arc::new(Mutex::new(None::<String>));
-    let captured_clone = page_guid_captured.clone();
-
-    page.on_filechooser(move |chooser: FileChooser| {
-        let captured = captured_clone.clone();
-        async move {
-            // Access the page — just verify it doesn't panic
-            let _p = chooser.page();
-            *captured.lock().unwrap() = Some("ok".to_string());
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to register handler");
+    let waiter = page
+        .expect_file_chooser(Some(5000.0))
+        .await
+        .expect("Failed to create waiter");
 
     page.locator("#single-file")
         .await
@@ -237,13 +170,10 @@ async fn test_filechooser_page_back_reference() {
         .await
         .expect("Failed to click");
 
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    let chooser = waiter.wait().await.expect("FileChooser event did not fire");
 
-    assert_eq!(
-        *page_guid_captured.lock().unwrap(),
-        Some("ok".to_string()),
-        "Handler did not fire or chooser.page() panicked"
-    );
+    // Access the page — just verify it doesn't panic
+    let _p = chooser.page();
 
     browser.close().await.expect("Failed to close browser");
 }
@@ -324,22 +254,12 @@ async fn test_expect_file_chooser_set_files() {
         .await
         .expect("set_files failed");
 
-    // Verify file name appears in the page
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-    let info_text = page
-        .locator("#file-info")
+    // Auto-retry text assertion until the JS change handler updates the DOM
+    let info = page.locator("#file-info").await;
+    playwright_rs::expect(info.clone())
+        .to_contain_text("playwright_expect_fc_test.txt")
         .await
-        .text_content()
-        .await
-        .expect("Failed to get text content");
-    assert!(
-        info_text
-            .as_deref()
-            .unwrap_or("")
-            .contains("playwright_expect_fc_test.txt"),
-        "Expected file name in #file-info, got: {:?}",
-        info_text
-    );
+        .expect("DOM #file-info did not update with uploaded filename");
 
     // Cleanup
     let _ = fs::remove_file(&test_file);

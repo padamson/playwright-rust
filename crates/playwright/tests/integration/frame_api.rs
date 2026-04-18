@@ -200,13 +200,17 @@ async fn test_frame_child_frames_with_iframes() -> Result<(), Box<dyn std::error
     let (_pw, browser, page) = crate::common::setup().await;
 
     // iframe-test.html has 2 iframes (/iframe-content.html and /iframe-content2.html)
+    // Set up waiter for frameattached before navigating so both iframes are tracked
+    let frame_waiter = page.expect_event("frameattached", Some(5000.0)).await?;
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
+    frame_waiter
+        .wait()
+        .await
+        .expect("frameattached did not fire");
 
-    // Wait for iframes to load
+    // Wait for iframes to fully load
     page.wait_for_load_state(None).await?;
-    // Give iframes extra time to fully initialize as Frame objects in the protocol
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
     let frame = page.main_frame().await?;
     let children = frame.child_frames();
@@ -244,11 +248,15 @@ async fn test_frame_child_frames_parent_reference() -> Result<(), Box<dyn std::e
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
+    let frame_waiter = page.expect_event("frameattached", Some(5000.0)).await?;
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
+    frame_waiter
+        .wait()
+        .await
+        .expect("frameattached did not fire");
 
     page.wait_for_load_state(None).await?;
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
     let frame = page.main_frame().await?;
     let children = frame.child_frames();

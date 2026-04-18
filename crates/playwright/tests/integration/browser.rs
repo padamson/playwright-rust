@@ -350,17 +350,22 @@ async fn test_browser_type_property() {
 async fn test_browser_on_disconnected() {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, Ordering};
+    use tokio::sync::Notify;
 
     let (_pw, browser, _page) = crate::common::setup().await;
 
     let fired = Arc::new(AtomicBool::new(false));
     let fired_clone = Arc::clone(&fired);
+    let notify = Arc::new(Notify::new());
+    let notify_clone = notify.clone();
 
     browser
         .on_disconnected(move || {
             let f = Arc::clone(&fired_clone);
+            let n = notify_clone.clone();
             async move {
                 f.store(true, Ordering::SeqCst);
+                n.notify_one();
                 Ok(())
             }
         })
@@ -370,8 +375,9 @@ async fn test_browser_on_disconnected() {
     // Close the browser — this should trigger the disconnected event
     browser.close().await.expect("Failed to close browser");
 
-    // Give event loop time to dispatch
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    tokio::time::timeout(std::time::Duration::from_secs(5), notify.notified())
+        .await
+        .expect("on_disconnected handler did not fire");
 
     assert!(
         fired.load(Ordering::SeqCst),

@@ -242,8 +242,6 @@ async fn test_page_add_script_tag_with_content() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
     // Add a script tag that sets a window variable
     page.add_script_tag(Some(
         AddScriptTagOptions::builder()
@@ -252,8 +250,6 @@ async fn test_page_add_script_tag_with_content() {
     ))
     .await
     .expect("Failed to add script tag");
-
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
     let value = page
         .evaluate_value("window.scriptTagExecuted")
@@ -312,8 +308,6 @@ async fn test_page_add_script_tag_cross_browser_chromium() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
     page.add_script_tag(Some(
         AddScriptTagOptions::builder()
             .content("window.chromiumScriptRan = true;")
@@ -321,8 +315,6 @@ async fn test_page_add_script_tag_cross_browser_chromium() {
     ))
     .await
     .expect("Failed to add script tag in Chromium");
-
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
     let value = page
         .evaluate_value("window.chromiumScriptRan")
@@ -354,8 +346,6 @@ async fn test_page_add_script_tag_cross_browser_firefox() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
     page.add_script_tag(Some(
         AddScriptTagOptions::builder()
             .content("window.firefoxScriptRan = true;")
@@ -363,8 +353,6 @@ async fn test_page_add_script_tag_cross_browser_firefox() {
     ))
     .await
     .expect("Failed to add script tag in Firefox");
-
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
     let value = page
         .evaluate_value("window.firefoxScriptRan")
@@ -396,8 +384,6 @@ async fn test_page_add_script_tag_cross_browser_webkit() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
     page.add_script_tag(Some(
         AddScriptTagOptions::builder()
             .content("window.webkitScriptRan = true;")
@@ -405,8 +391,6 @@ async fn test_page_add_script_tag_cross_browser_webkit() {
     ))
     .await
     .expect("Failed to add script tag in WebKit");
-
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
     let value = page
         .evaluate_value("window.webkitScriptRan")

@@ -6,7 +6,6 @@
 use playwright_rs::protocol::JSHandle;
 use playwright_rs::server::channel_owner::ChannelOwner;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
 // ============================================================================
 // Page-level on_console tests
@@ -30,9 +29,9 @@ async fn test_page_on_console_log() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.log('hello')").await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("console event did not fire");
 
     let result = captured.lock().unwrap().take();
     assert!(result.is_some(), "on_console handler should have fired");
@@ -62,9 +61,9 @@ async fn test_page_on_console_error() -> Result<(), Box<dyn std::error::Error>> 
     .await?;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.error('oops')").await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("console event did not fire");
 
     let result = captured_type.lock().unwrap().take();
     assert!(
@@ -104,10 +103,10 @@ async fn test_page_on_console_location() -> Result<(), Box<dyn std::error::Error
     .await?;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.log('location test')")
         .await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("console event did not fire");
 
     let url = captured_url.lock().unwrap().take();
     let line = captured_line.lock().unwrap().take();
@@ -142,10 +141,10 @@ async fn test_console_message_page_back_reference() -> Result<(), Box<dyn std::e
     .await?;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.log('back ref test')")
         .await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("console event did not fire");
 
     let result = page_guid_captured.lock().unwrap().take();
     assert!(result.is_some(), "msg.page() should return Some(page)");
@@ -183,10 +182,10 @@ async fn test_context_on_console() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = context.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.log('context console test')")
         .await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("console event did not fire");
 
     let result = captured.lock().unwrap().take();
     assert!(
@@ -222,9 +221,9 @@ async fn test_console_message_args() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.log('hello', 42)").await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("console event did not fire");
 
     let args = captured_args.lock().unwrap().take();
     assert!(args.is_some(), "on_console handler should have fired");
@@ -255,11 +254,18 @@ async fn test_page_console_messages() -> Result<(), Box<dyn std::error::Error>> 
     let (_pw, browser, page) = crate::common::setup().await;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter_a = page.expect_console_message(Some(5000.0)).await?;
+    let waiter_b = page.expect_console_message(Some(5000.0)).await?;
     page.evaluate_expression("console.log('a')").await?;
     page.evaluate_expression("console.log('b')").await?;
-
-    // Give events time to arrive
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter_a
+        .wait()
+        .await
+        .expect("first console event did not fire");
+    waiter_b
+        .wait()
+        .await
+        .expect("second console event did not fire");
 
     let msgs = page.console_messages();
     assert!(
@@ -289,15 +295,14 @@ async fn test_page_page_errors() -> Result<(), Box<dyn std::error::Error>> {
     let (_pw, browser, page) = crate::common::setup().await;
 
     let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_event("pageerror", Some(5000.0)).await?;
     // Trigger an uncaught error via setTimeout (async, escapes evaluate's try-catch)
     page.evaluate::<(), ()>(
         "() => { setTimeout(() => { throw new Error('test-uncaught'); }, 0); }",
         None,
     )
     .await?;
-
-    // Give the error time to propagate
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("pageerror event did not fire");
 
     let errors = page.page_errors();
     assert!(

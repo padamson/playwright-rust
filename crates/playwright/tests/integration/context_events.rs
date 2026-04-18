@@ -1,8 +1,17 @@
 // across all pages in the context.
 
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tokio::sync::Notify;
 
 use crate::test_server::TestServer;
+
+/// Helper: await a Notify with a timeout, failing the test on timeout.
+async fn notified_or_timeout(notify: &Notify, ms: u64, what: &str) {
+    tokio::time::timeout(Duration::from_millis(ms), notify.notified())
+        .await
+        .unwrap_or_else(|_| panic!("timed out waiting for {what}"));
+}
 
 // ---------------------------------------------------------------------------
 // on_page
@@ -26,11 +35,16 @@ async fn test_context_on_page() {
         .await
         .expect("Failed to register on_page handler");
 
-    // Creating a new page should trigger the handler
+    // Set up waiter before the action so the handler is guaranteed to run
+    // before the waiter resolves (dispatch awaits all handlers, then notifies).
+    let waiter = context
+        .expect_event("page", Some(5000.0))
+        .await
+        .expect("Failed to create page event waiter");
+
     let _page = context.new_page().await.expect("Failed to create page");
 
-    // Give the async event a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("page event did not fire");
 
     {
         let pages = fired_pages.lock().unwrap();
@@ -67,10 +81,14 @@ async fn test_context_on_close() {
         .await
         .expect("Failed to register on_close handler");
 
+    let waiter = context
+        .expect_event("close", Some(5000.0))
+        .await
+        .expect("Failed to create close event waiter");
+
     context.close().await.expect("Failed to close context");
 
-    // Give the async event a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("close event did not fire");
 
     assert!(
         *closed.lock().unwrap(),
@@ -106,12 +124,17 @@ async fn test_context_on_request() {
         .expect("Failed to register on_request handler");
 
     let page = context.new_page().await.expect("Failed to create page");
+
+    let waiter = context
+        .expect_event("request", Some(5000.0))
+        .await
+        .expect("Failed to create request event waiter");
+
     page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
-    // Give the async event a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("request event did not fire");
 
     {
         let reqs = requests.lock().unwrap();
@@ -157,12 +180,17 @@ async fn test_context_on_response() {
         .expect("Failed to register on_response handler");
 
     let page = context.new_page().await.expect("Failed to create page");
+
+    let waiter = context
+        .expect_event("response", Some(5000.0))
+        .await
+        .expect("Failed to create response event waiter");
+
     page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
-    // Give the async event a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("response event did not fire");
 
     {
         let resps = responses.lock().unwrap();
@@ -192,12 +220,16 @@ async fn test_context_on_request_finished() {
 
     let finished: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let finished2 = finished.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     context
         .on_request_finished(move |request| {
             let fin = finished2.clone();
+            let n = notify2.clone();
             async move {
                 fin.lock().unwrap().push(format!("DONE {}", request.url()));
+                n.notify_one();
                 Ok(())
             }
         })
@@ -209,8 +241,7 @@ async fn test_context_on_request_finished() {
         .await
         .expect("Failed to navigate");
 
-    // Give the async event a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    notified_or_timeout(&notify, 5000, "on_request_finished").await;
 
     {
         let fin = finished.lock().unwrap();
@@ -239,14 +270,18 @@ async fn test_context_on_request_failed() {
 
     let failed: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let failed2 = failed.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     context
         .on_request_failed(move |request| {
             let f = failed2.clone();
+            let n = notify2.clone();
             async move {
                 f.lock()
                     .unwrap()
                     .push(format!("FAIL {} {}", request.method(), request.url()));
+                n.notify_one();
                 Ok(())
             }
         })
@@ -259,8 +294,7 @@ async fn test_context_on_request_failed() {
     let result = page.goto("http://localhost:1", None).await;
     assert!(result.is_err(), "Navigation to bad port should fail");
 
-    // Give the async event a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    notified_or_timeout(&notify, 5000, "on_request_failed").await;
 
     {
         let f = failed.lock().unwrap();
@@ -316,12 +350,17 @@ async fn test_context_and_page_handlers_both_fire() {
     .await
     .expect("Failed to register page on_request handler");
 
+    // Waiter fires after all handlers have completed
+    let waiter = context
+        .expect_event("request", Some(5000.0))
+        .await
+        .expect("Failed to create request event waiter");
+
     page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
-    // Give the async events a moment to fire
-    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    waiter.wait().await.expect("request event did not fire");
 
     {
         let ctx = ctx_events.lock().unwrap();
@@ -453,13 +492,18 @@ async fn test_context_on_dialog() {
 
     let dialog_messages: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
     let dialog_messages2 = dialog_messages.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     context
         .on_dialog(move |dialog| {
             let msgs = dialog_messages2.clone();
+            let n = notify2.clone();
             async move {
                 msgs.lock().unwrap().push(dialog.message().to_string());
-                dialog.accept(None).await
+                let result = dialog.accept(None).await;
+                n.notify_one();
+                result
             }
         })
         .await
@@ -482,7 +526,7 @@ async fn test_context_on_dialog() {
     let locator = page.locator("button").await;
     locator.click(None).await.expect("click should succeed");
 
-    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+    notified_or_timeout(&notify, 5000, "on_dialog").await;
 
     {
         let msgs = dialog_messages.lock().unwrap();

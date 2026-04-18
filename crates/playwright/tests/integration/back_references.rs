@@ -8,6 +8,7 @@
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::sync::Notify;
 
 // ============================================================================
 // Response accessors, request(), and frame() — single browser session
@@ -61,13 +62,19 @@ async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Err
     let page_url_from_dialog = Arc::new(Mutex::new(None));
     let url_clone = page_url_from_dialog.clone();
 
+    let dialog_notify = Arc::new(Notify::new());
+    let dialog_notify2 = dialog_notify.clone();
+
     page.on_dialog(move |dialog| {
         let url_capture = url_clone.clone();
+        let notify = dialog_notify2.clone();
         async move {
             if let Some(dialog_page) = dialog.page() {
                 *url_capture.lock().unwrap() = Some(dialog_page.url().to_string());
             }
-            dialog.accept(None).await
+            let result = dialog.accept(None).await;
+            notify.notify_one();
+            result
         }
     })
     .await?;
@@ -87,7 +94,9 @@ async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Err
     let locator = page.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    tokio::time::timeout(Duration::from_millis(5000), dialog_notify.notified())
+        .await
+        .expect("on_dialog did not fire");
 
     let url = page_url_from_dialog.lock().unwrap().take();
     assert_eq!(url, Some("about:blank".to_string()));
@@ -132,10 +141,15 @@ async fn test_download_page_back_reference() -> Result<(), Box<dyn std::error::E
     )
     .await?;
 
+    let download_waiter = page.expect_event("download", Some(5000.0)).await?;
+
     let locator = page.locator("#dl").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    download_waiter
+        .wait()
+        .await
+        .expect("download event did not fire");
 
     let url = page_url_from_download.lock().unwrap().take();
     assert_eq!(url, Some("about:blank".to_string()));
@@ -157,12 +171,17 @@ async fn test_request_frame_back_reference() -> Result<(), Box<dyn std::error::E
     let has_frame = Arc::new(Mutex::new(false));
     let has_frame_clone = has_frame.clone();
 
+    let request_notify = Arc::new(Notify::new());
+    let request_notify2 = request_notify.clone();
+
     page.on_request(move |request| {
         let flag = has_frame_clone.clone();
+        let notify = request_notify2.clone();
         async move {
             if request.frame().is_some() {
                 *flag.lock().unwrap() = true;
             }
+            notify.notify_one();
             Ok(())
         }
     })
@@ -170,7 +189,9 @@ async fn test_request_frame_back_reference() -> Result<(), Box<dyn std::error::E
 
     let _ = page.goto(&server.url(), None).await;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    tokio::time::timeout(Duration::from_millis(5000), request_notify.notified())
+        .await
+        .expect("on_request did not fire");
 
     assert!(
         *has_frame.lock().unwrap(),

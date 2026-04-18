@@ -1,6 +1,18 @@
 use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::sync::Notify;
+
+// ============================================================================
+// Helper
+// ============================================================================
+
+/// Await a `Notify` with a timeout, failing the test on expiry.
+async fn notified_or_timeout(notify: &Notify, ms: u64, what: &str) {
+    tokio::time::timeout(Duration::from_millis(ms), notify.notified())
+        .await
+        .unwrap_or_else(|_| panic!("timed out waiting for {what}"));
+}
 
 // ============================================================================
 // Download Methods
@@ -44,9 +56,9 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let locator = page.locator("#download-link").await;
+    let waiter = page.expect_download(Some(5000.0)).await?;
     locator.click(None).await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("download event did not fire");
 
     let download_opt = download_captured.lock().unwrap().take();
     assert!(download_opt.is_some(), "Download event should have fired");
@@ -89,9 +101,9 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let locator = page.locator("#dl").await;
+    let waiter2 = page.expect_download(Some(5000.0)).await?;
     locator.click(None).await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter2.wait().await.expect("download event did not fire");
 
     let download_opt = download_captured2.lock().unwrap().take();
     assert!(download_opt.is_some());
@@ -131,14 +143,19 @@ async fn test_dialog_alert_methods() -> Result<(), Box<dyn std::error::Error>> {
 
     let dialog_info = Arc::new(Mutex::new(None));
     let dialog_info_clone = dialog_info.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     page.on_dialog(move |dialog| {
         let info = dialog_info_clone.clone();
+        let n = notify2.clone();
         async move {
             let type_ = dialog.type_().to_string();
             let message = dialog.message().to_string();
             *info.lock().unwrap() = Some((type_, message));
-            dialog.accept(None).await
+            let result = dialog.accept(None).await;
+            n.notify_one();
+            result
         }
     })
     .await?;
@@ -158,7 +175,7 @@ async fn test_dialog_alert_methods() -> Result<(), Box<dyn std::error::Error>> {
     let locator = page.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "alert dialog").await;
 
     let info_opt = dialog_info.lock().unwrap().take();
     assert!(info_opt.is_some(), "Dialog event should have fired");
@@ -191,13 +208,18 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
 
     let dialog_info = Arc::new(Mutex::new(None));
     let dialog_info_clone = dialog_info.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     page1
         .on_dialog(move |dialog| {
             let info = dialog_info_clone.clone();
+            let n = notify2.clone();
             async move {
                 *info.lock().unwrap() = Some(dialog.type_().to_string());
-                dialog.accept(None).await
+                let result = dialog.accept(None).await;
+                n.notify_one();
+                result
             }
         })
         .await?;
@@ -218,7 +240,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
     let locator = page1.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "confirm dialog").await;
 
     let dialog_type = dialog_info.lock().unwrap().take();
     assert_eq!(
@@ -236,8 +258,18 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
     let browser2 = pw.chromium().launch().await?;
     let page2 = browser2.new_page().await?;
 
+    let notify3 = Arc::new(Notify::new());
+    let notify4 = notify3.clone();
+
     page2
-        .on_dialog(move |dialog| async move { dialog.dismiss().await })
+        .on_dialog(move |dialog| {
+            let n = notify4.clone();
+            async move {
+                let result = dialog.dismiss().await;
+                n.notify_one();
+                result
+            }
+        })
         .await?;
 
     let _ = page2.goto("about:blank", None).await;
@@ -256,7 +288,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
     let locator = page2.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify3, 5000, "confirm dismiss dialog").await;
 
     let result = page2.evaluate_value("window.confirmResult").await?;
     assert_eq!(
@@ -286,16 +318,21 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
 
     let dialog_data = Arc::new(Mutex::new(None));
     let dialog_data_clone = dialog_data.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     page1
         .on_dialog(move |dialog| {
             let data = dialog_data_clone.clone();
+            let n = notify2.clone();
             async move {
                 let type_ = dialog.type_().to_string();
                 let message = dialog.message().to_string();
                 let default = dialog.default_value().to_string();
                 *data.lock().unwrap() = Some((type_, message, default));
-                dialog.accept(Some("Custom Input")).await
+                let result = dialog.accept(Some("Custom Input")).await;
+                n.notify_one();
+                result
             }
         })
         .await?;
@@ -316,7 +353,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
     let locator = page1.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "prompt dialog").await;
 
     let data_opt = dialog_data.lock().unwrap().take();
     assert!(data_opt.is_some(), "Dialog event should have fired");
@@ -341,8 +378,18 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
     let browser2 = pw.chromium().launch().await?;
     let page2 = browser2.new_page().await?;
 
+    let notify3 = Arc::new(Notify::new());
+    let notify4 = notify3.clone();
+
     page2
-        .on_dialog(move |dialog| async move { dialog.dismiss().await })
+        .on_dialog(move |dialog| {
+            let n = notify4.clone();
+            async move {
+                let result = dialog.dismiss().await;
+                n.notify_one();
+                result
+            }
+        })
         .await?;
 
     let _ = page2.goto("about:blank", None).await;
@@ -361,7 +408,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
     let locator = page2.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify3, 5000, "prompt dismiss dialog").await;
 
     let result = page2.evaluate_value("window.promptResult").await?;
     assert_eq!(result, "null", "prompt() should return null when dismissed");
@@ -391,13 +438,18 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
 
     let dialog_handled = Arc::new(Mutex::new(false));
     let dialog_handled_clone = dialog_handled.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     firefox_page
         .on_dialog(move |dialog| {
             let handled = dialog_handled_clone.clone();
+            let n = notify2.clone();
             async move {
                 *handled.lock().unwrap() = true;
-                dialog.accept(None).await
+                let result = dialog.accept(None).await;
+                n.notify_one();
+                result
             }
         })
         .await?;
@@ -418,7 +470,7 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
     let locator = firefox_page.locator("button").await;
     locator.click(None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "Firefox dialog").await;
 
     assert!(
         *dialog_handled.lock().unwrap(),
@@ -460,9 +512,12 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let locator = webkit_page.locator("#dl").await;
+    let waiter = webkit_page.expect_download(Some(5000.0)).await?;
     locator.click(None).await?;
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter
+        .wait()
+        .await
+        .expect("WebKit download event did not fire");
 
     assert!(
         *download_captured.lock().unwrap(),

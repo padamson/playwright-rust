@@ -3,7 +3,14 @@
 
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+
+use tokio::sync::Notify;
+
+async fn notified_or_timeout(notify: &Notify, ms: u64, what: &str) {
+    tokio::time::timeout(std::time::Duration::from_millis(ms), notify.notified())
+        .await
+        .unwrap_or_else(|_| panic!("timed out waiting for {what}"));
+}
 
 // ============================================================================
 // Response server info: security_details, server_addr, finished
@@ -98,12 +105,16 @@ async fn test_request_response_and_sizes() -> Result<(), Box<dyn std::error::Err
     // Capture a finished navigation request
     let captured_request = Arc::new(Mutex::new(None));
     let req_clone = captured_request.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
 
     page.on_request_finished(move |request| {
         let capture = req_clone.clone();
+        let n = notify2.clone();
         async move {
             if request.is_navigation_request() {
                 *capture.lock().unwrap() = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -112,7 +123,7 @@ async fn test_request_response_and_sizes() -> Result<(), Box<dyn std::error::Err
 
     let _ = page.goto(&server.url(), None).await?;
 
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "request_finished handler").await;
 
     let request = captured_request
         .lock()

@@ -1,8 +1,16 @@
 use std::sync::Arc;
+use std::time::Duration;
 
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, Notify};
 
 use crate::test_server::TestServer;
+
+/// Helper: await a Notify with a timeout, failing the test on timeout.
+async fn notified_or_timeout(notify: &Notify, ms: u64, what: &str) {
+    tokio::time::timeout(Duration::from_millis(ms), notify.notified())
+        .await
+        .unwrap_or_else(|_| panic!("timed out waiting for {what}"));
+}
 
 // ============================================================================
 // Local read tests (no RPC needed)
@@ -27,12 +35,16 @@ async fn test_request_headers() {
     .await
     .expect("Failed to set request handler");
 
+    let waiter = page
+        .expect_event("request", Some(5000.0))
+        .await
+        .expect("Failed to create request event waiter");
+
     page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
-    // Give handler a moment to fire (it's async via tokio::spawn in BrowserContext)
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("request event did not fire");
 
     let guard = captured.lock().await;
     let request = guard.as_ref().expect("Should have captured a request");
@@ -91,11 +103,16 @@ async fn test_request_post_data_get() {
     .await
     .expect("Failed to set request handler");
 
+    let waiter = page
+        .expect_event("request", Some(5000.0))
+        .await
+        .expect("Failed to create request event waiter");
+
     page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("request event did not fire");
 
     let guard = captured.lock().await;
     let request = guard.as_ref().expect("Should have captured a request");
@@ -125,11 +142,15 @@ async fn test_request_post_data_post() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.method() == "POST" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -154,7 +175,7 @@ async fn test_request_post_data_post() {
         .await
         .expect("fetch should succeed");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "POST request handler").await;
 
     let guard = captured.lock().await;
     let request = guard.as_ref().expect("Should have captured a POST request");
@@ -184,11 +205,15 @@ async fn test_request_post_data_buffer() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.method() == "POST" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -212,7 +237,7 @@ async fn test_request_post_data_buffer() {
         .await
         .expect("fetch should succeed");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "POST request handler").await;
 
     let guard = captured.lock().await;
     let request = guard.as_ref().expect("Should have captured a POST request");
@@ -238,11 +263,15 @@ async fn test_request_post_data_json() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.method() == "POST" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -266,7 +295,7 @@ async fn test_request_post_data_json() {
         .await
         .expect("fetch should succeed");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+    notified_or_timeout(&notify, 5000, "POST request handler").await;
 
     let guard = captured.lock().await;
     let request = guard.as_ref().expect("Should have captured a POST request");
@@ -311,11 +340,16 @@ async fn test_request_failure_none_for_success() {
     .await
     .expect("Failed to set request handler");
 
+    let waiter = page
+        .expect_event("request", Some(5000.0))
+        .await
+        .expect("Failed to create request event waiter");
+
     page.goto(&server.url(), None)
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    waiter.wait().await.expect("request event did not fire");
 
     let guard = captured.lock().await;
     let request = guard.as_ref().expect("Should have captured a request");
@@ -339,10 +373,14 @@ async fn test_request_failure_text() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request_failed(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             *captured.lock().await = Some(request);
+            n.notify_one();
             Ok(())
         }
     })
@@ -352,7 +390,7 @@ async fn test_request_failure_text() {
     // Navigate to an invalid address to trigger failure
     let _ = page.goto("http://localhost:1", None).await;
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    notified_or_timeout(&notify, 5000, "request_failed handler").await;
 
     let guard = captured.lock().await;
     let request = guard
@@ -383,11 +421,15 @@ async fn test_request_headers_array() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request_finished(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.resource_type() == "document" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -399,7 +441,7 @@ async fn test_request_headers_array() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    notified_or_timeout(&notify, 5000, "request_finished handler").await;
 
     let guard = captured.lock().await;
     let request = guard
@@ -442,11 +484,15 @@ async fn test_request_all_headers() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request_finished(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.resource_type() == "document" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -458,7 +504,7 @@ async fn test_request_all_headers() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    notified_or_timeout(&notify, 5000, "request_finished handler").await;
 
     let guard = captured.lock().await;
     let request = guard
@@ -494,11 +540,15 @@ async fn test_request_header_value() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request_finished(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.resource_type() == "document" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -510,7 +560,7 @@ async fn test_request_header_value() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    notified_or_timeout(&notify, 5000, "request_finished handler").await;
 
     let guard = captured.lock().await;
     let request = guard
@@ -559,11 +609,15 @@ async fn test_request_timing() {
 
     let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
     page.on_request_finished(move |request| {
         let captured = captured2.clone();
+        let n = notify2.clone();
         async move {
             if request.resource_type() == "document" {
                 *captured.lock().await = Some(request);
+                n.notify_one();
             }
             Ok(())
         }
@@ -575,7 +629,7 @@ async fn test_request_timing() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    notified_or_timeout(&notify, 5000, "request_finished handler").await;
 
     let guard = captured.lock().await;
     let request = guard

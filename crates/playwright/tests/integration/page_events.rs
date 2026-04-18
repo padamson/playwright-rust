@@ -8,7 +8,6 @@
 
 use crate::test_server::TestServer;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
 // ============================================================================
 // on_close
@@ -31,10 +30,11 @@ async fn test_page_on_close() -> Result<(), Box<dyn std::error::Error>> {
     })
     .await?;
 
+    let waiter = page.expect_event("close", Some(5000.0)).await?;
+
     page.close().await?;
 
-    // Give the event loop time to dispatch the close event
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    waiter.wait().await.expect("close event did not fire");
 
     assert!(
         *fired.lock().unwrap(),
@@ -64,8 +64,11 @@ async fn test_page_on_close_multiple_handlers() -> Result<(), Box<dyn std::error
         .await?;
     }
 
+    let waiter = page.expect_event("close", Some(5000.0)).await?;
+
     page.close().await?;
-    tokio::time::sleep(Duration::from_millis(300)).await;
+
+    waiter.wait().await.expect("close event did not fire");
 
     assert_eq!(
         *count.lock().unwrap(),
@@ -99,10 +102,11 @@ async fn test_page_on_load() -> Result<(), Box<dyn std::error::Error>> {
     })
     .await?;
 
+    let waiter = page.expect_event("load", Some(5000.0)).await?;
+
     page.goto(&server.url(), None).await?;
 
-    // Give the event loop time to dispatch the load event
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("load event did not fire");
 
     assert!(
         *fired.lock().unwrap(),
@@ -132,12 +136,20 @@ async fn test_page_on_load_multiple_navigations() -> Result<(), Box<dyn std::err
     })
     .await?;
 
+    let waiter1 = page.expect_event("load", Some(5000.0)).await?;
     page.goto(&server.url(), None).await?;
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    waiter1
+        .wait()
+        .await
+        .expect("load event (1st navigation) did not fire");
 
+    let waiter2 = page.expect_event("load", Some(5000.0)).await?;
     page.goto(&format!("{}/button.html", server.url()), None)
         .await?;
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    waiter2
+        .wait()
+        .await
+        .expect("load event (2nd navigation) did not fire");
 
     let n = *count.lock().unwrap();
     assert!(n >= 2, "on_load should fire for each navigation, got {}", n);
@@ -172,13 +184,15 @@ async fn test_page_on_pageerror() -> Result<(), Box<dyn std::error::Error>> {
     let _ = page.goto("about:blank", None).await;
 
     // Throw an uncaught error from a script that runs outside evaluate's promise chain
+    let waiter = page.expect_event("pageerror", Some(5000.0)).await?;
+
     page.evaluate::<(), ()>(
         "() => { setTimeout(() => { throw new Error('test-pageerror'); }, 0); }",
         None,
     )
     .await?;
 
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("pageerror event did not fire");
 
     let result = message.lock().unwrap().clone();
     assert!(
@@ -214,13 +228,15 @@ async fn test_page_on_pageerror_message_is_string() -> Result<(), Box<dyn std::e
 
     let _ = page.goto("about:blank", None).await;
 
+    let waiter = page.expect_event("pageerror", Some(5000.0)).await?;
+
     page.evaluate::<(), ()>(
         "() => { setTimeout(() => { throw new TypeError('type-error-test'); }, 0); }",
         None,
     )
     .await?;
 
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter.wait().await.expect("pageerror event did not fire");
 
     let result = message.lock().unwrap().clone();
     assert!(result.is_some(), "on_pageerror should have fired");
@@ -263,11 +279,13 @@ async fn test_page_on_popup() -> Result<(), Box<dyn std::error::Error>> {
 
     let _ = page.goto("about:blank", None).await;
 
+    let waiter = page.expect_event("popup", Some(5000.0)).await?;
+
     // Open a popup
     page.evaluate::<(), ()>("() => { window.open('about:blank'); }", None)
         .await?;
 
-    tokio::time::sleep(Duration::from_millis(800)).await;
+    waiter.wait().await.expect("popup event did not fire");
 
     assert!(
         *popup_received.lock().unwrap(),
@@ -298,10 +316,13 @@ async fn test_page_on_popup_receives_page() -> Result<(), Box<dyn std::error::Er
     .await?;
 
     let _ = page.goto("about:blank", None).await;
+
+    let waiter = page.expect_event("popup", Some(5000.0)).await?;
+
     page.evaluate::<(), ()>("() => { window.open('about:blank'); }", None)
         .await?;
 
-    tokio::time::sleep(Duration::from_millis(800)).await;
+    waiter.wait().await.expect("popup event did not fire");
 
     let guid = popup_guid.lock().unwrap().clone();
     assert!(guid.is_some(), "Popup page guid should be set");
@@ -337,11 +358,16 @@ async fn test_page_on_frameattached() -> Result<(), Box<dyn std::error::Error>> 
     })
     .await?;
 
+    let waiter = page.expect_event("frameattached", Some(5000.0)).await?;
+
     // Navigate to a page with an iframe — this attaches a frame
     page.goto(&format!("{}/frame.html", server.url()), None)
         .await?;
 
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    waiter
+        .wait()
+        .await
+        .expect("frameattached event did not fire");
 
     assert!(
         *fired.lock().unwrap(),
@@ -374,11 +400,16 @@ async fn test_page_on_framedetached() -> Result<(), Box<dyn std::error::Error>> 
     // Load a page with a frame, then navigate away to detach it
     page.goto(&format!("{}/frame.html", server.url()), None)
         .await?;
-    tokio::time::sleep(Duration::from_millis(300)).await;
+
+    let waiter = page.expect_event("framedetached", Some(5000.0)).await?;
 
     // Navigate away — this detaches the iframe
     page.goto(&server.url(), None).await?;
-    tokio::time::sleep(Duration::from_millis(500)).await;
+
+    waiter
+        .wait()
+        .await
+        .expect("framedetached event did not fire");
 
     assert!(
         *fired.lock().unwrap(),
@@ -408,9 +439,15 @@ async fn test_page_on_framenavigated() -> Result<(), Box<dyn std::error::Error>>
     })
     .await?;
 
+    let waiter = page.expect_event("framenavigated", Some(5000.0)).await?;
+
     // Navigate the page — the main frame navigates
     page.goto(&server.url(), None).await?;
-    tokio::time::sleep(Duration::from_millis(300)).await;
+
+    waiter
+        .wait()
+        .await
+        .expect("framenavigated event did not fire");
 
     let n = *count.lock().unwrap();
     assert!(
@@ -814,7 +851,7 @@ async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await;
 
-    // Give the page time to render at least one frame
+    // Intentional delay: give the page time to render at least one video frame before closing
     tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
     // page.video() must return Some when record_video is set

@@ -457,10 +457,15 @@ async fn test_url_includes_hash_after_anchor_click() {
 
     // Click anchor link to navigate to #section1
     let anchor = page.locator("#link-to-section1").await;
+    let nav_waiter = page
+        .expect_event("framenavigated", Some(5000.0))
+        .await
+        .expect("Failed to create framenavigated waiter");
     anchor.click(None).await.expect("Failed to click anchor");
-
-    // Wait a bit for navigation to settle
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    nav_waiter
+        .wait()
+        .await
+        .expect("framenavigated did not fire after anchor click");
 
     // Verify URL now includes the hash
     let expected_url = format!("{}#section1", url);
@@ -475,13 +480,18 @@ async fn test_url_includes_hash_after_anchor_click() {
 
     // Click another anchor to navigate to #section2
     let anchor2 = page.locator("#link-to-section2").await;
+    let nav_waiter2 = page
+        .expect_event("framenavigated", Some(5000.0))
+        .await
+        .expect("Failed to create framenavigated waiter");
     anchor2
         .click(None)
         .await
         .expect("Failed to click second anchor");
-
-    // Wait a bit for navigation to settle
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    nav_waiter2
+        .wait()
+        .await
+        .expect("framenavigated did not fire after second anchor click");
 
     // Verify URL updated to new hash
     let expected_url2 = format!("{}#section2", url);
@@ -516,12 +526,17 @@ async fn test_url_includes_hash_after_js_navigation() {
     assert_eq!(page.url(), url);
 
     // Use JavaScript to change the hash
+    let nav_waiter = page
+        .expect_event("framenavigated", Some(5000.0))
+        .await
+        .expect("Failed to create framenavigated waiter");
     page.evaluate_expression("window.location.hash = '#js-section'")
         .await
         .expect("Failed to execute JavaScript");
-
-    // Wait a bit for navigation to settle
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    nav_waiter
+        .wait()
+        .await
+        .expect("framenavigated did not fire after JS hash change");
 
     // Verify URL includes the hash set via JavaScript
     let expected_url = format!("{}#js-section", url);
@@ -573,10 +588,15 @@ async fn test_url_hash_cross_browser() {
 
         // Click anchor link
         let anchor = page.locator("#link-to-section1").await;
+        let nav_waiter = page
+            .expect_event("framenavigated", Some(5000.0))
+            .await
+            .expect("Failed to create framenavigated waiter");
         anchor.click(None).await.expect("Failed to click anchor");
-
-        // Wait for navigation
-        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        nav_waiter
+            .wait()
+            .await
+            .expect("framenavigated did not fire after anchor click");
 
         // Verify URL includes hash on this browser
         let expected_url = format!("{}#section1", url);
@@ -641,10 +661,15 @@ async fn test_url_workaround_with_evaluate() {
 
     // Click anchor link
     let anchor = page.locator("#link-to-section1").await;
+    let nav_waiter = page
+        .expect_event("framenavigated", Some(5000.0))
+        .await
+        .expect("Failed to create framenavigated waiter");
     anchor.click(None).await.expect("Failed to click anchor");
-
-    // Wait for navigation
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    nav_waiter
+        .wait()
+        .await
+        .expect("framenavigated did not fire after anchor click");
 
     // Workaround: Use evaluate_value to get current URL
     let url_via_evaluate = page

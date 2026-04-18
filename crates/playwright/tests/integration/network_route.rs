@@ -1,6 +1,15 @@
 use crate::test_server::TestServer;
 use playwright_rs::protocol::Playwright;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tokio::sync::Notify;
+
+/// Helper: await a Notify with a timeout, failing the test on timeout.
+async fn notified_or_timeout(notify: &Notify, ms: u64, what: &str) {
+    tokio::time::timeout(Duration::from_millis(ms), notify.notified())
+        .await
+        .unwrap_or_else(|_| panic!("timed out waiting for {what}"));
+}
 
 #[tokio::test]
 async fn test_route_abort_blocks_fetch() {
@@ -189,14 +198,20 @@ async fn test_route_pattern_matching_wildcard() {
     let js_called_clone = js_called.clone();
     let all_called_clone = all_called.clone();
 
+    // Notify fires when the wildcard handler runs (covers the HTML navigation request)
+    let notify = Arc::new(Notify::new());
+    let notify_clone = notify.clone();
+
     // Register handlers for different patterns
     // Note: Last registered wins, so order matters
 
     // Handler for all requests (should NOT be called if more specific handler matches)
     page.route("**/*", move |route| {
         let all_called = all_called_clone.clone();
+        let n = notify_clone.clone();
         async move {
             *all_called.lock().unwrap() = true;
+            n.notify_one();
             route.continue_(None).await
         }
     })
@@ -230,8 +245,7 @@ async fn test_route_pattern_matching_wildcard() {
         .await
         .expect("Failed to navigate");
 
-    // Small delay to allow route handlers to process
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    notified_or_timeout(&notify, 5000, "wildcard route handler").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -257,6 +271,10 @@ async fn test_route_pattern_priority() {
     let first_called_clone = first_called.clone();
     let second_called_clone = second_called.clone();
 
+    // Notify fires when the second (last-registered) handler runs
+    let notify = Arc::new(Notify::new());
+    let notify_clone = notify.clone();
+
     // Register first handler
     page.route("**/*", move |route| {
         let first_called = first_called_clone.clone();
@@ -271,8 +289,10 @@ async fn test_route_pattern_priority() {
     // Register second handler with same pattern (should win due to last-registered-wins)
     page.route("**/*", move |route| {
         let second_called = second_called_clone.clone();
+        let n = notify_clone.clone();
         async move {
             *second_called.lock().unwrap() += 1;
+            n.notify_one();
             route.continue_(None).await
         }
     })
@@ -284,8 +304,7 @@ async fn test_route_pattern_priority() {
         .await
         .expect("Failed to navigate");
 
-    // Small delay
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    notified_or_timeout(&notify, 5000, "second route handler").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -314,9 +333,13 @@ async fn test_route_conditional_matching() {
     let abort_count_clone = abort_count.clone();
     let continue_count_clone = continue_count.clone();
 
+    let notify = Arc::new(Notify::new());
+    let notify_clone = notify.clone();
+
     page.route("**/*", move |route| {
         let abort_count = abort_count_clone.clone();
         let continue_count = continue_count_clone.clone();
+        let n = notify_clone.clone();
         async move {
             let request = route.request();
             let url = request.url();
@@ -326,6 +349,7 @@ async fn test_route_conditional_matching() {
                 route.abort(None).await
             } else {
                 *continue_count.lock().unwrap() += 1;
+                n.notify_one();
                 route.continue_(None).await
             }
         }
@@ -338,7 +362,7 @@ async fn test_route_conditional_matching() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    notified_or_timeout(&notify, 5000, "conditional route continue handler").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -358,12 +382,17 @@ async fn test_route_extension_patterns() {
     let html_called = Arc::new(Mutex::new(false));
     let html_called_clone = html_called.clone();
 
+    let notify = Arc::new(Notify::new());
+    let notify_clone = notify.clone();
+
     // Pattern: match .html files (but server returns / without extension)
     // So use a pattern that matches URLs ending with /
     page.route("**/", move |route| {
         let html_called = html_called_clone.clone();
+        let n = notify_clone.clone();
         async move {
             *html_called.lock().unwrap() = true;
+            n.notify_one();
             route.continue_(None).await
         }
     })
@@ -374,7 +403,7 @@ async fn test_route_extension_patterns() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    notified_or_timeout(&notify, 5000, "extension pattern route handler").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -408,12 +437,16 @@ async fn test_route_firefox_methods() {
 
     let aborted = Arc::new(Mutex::new(false));
     let aborted_clone = aborted.clone();
+    let notify1 = Arc::new(Notify::new());
+    let notify1_clone = notify1.clone();
 
     page1
         .route("**/*.png", move |route| {
             let aborted = aborted_clone.clone();
+            let n = notify1_clone.clone();
             async move {
                 *aborted.lock().unwrap() = true;
+                n.notify_one();
                 route.abort(None).await
             }
         })
@@ -425,7 +458,10 @@ async fn test_route_firefox_methods() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    // Only wait on notify if the server page actually includes a PNG; otherwise
+    // the navigate completing is sufficient proof of Firefox routing working.
+    // Use a short timeout and treat expiry as "no PNG on this page" (not a failure).
+    let _ = tokio::time::timeout(Duration::from_millis(500), notify1.notified()).await;
 
     tracing::info!("✓ Route abort works in Firefox");
 
@@ -515,10 +551,16 @@ async fn test_route_firefox_methods() {
 
     // Test 4: Error codes in Firefox
     let page4 = browser.new_page().await.expect("Failed to create page");
+    let notify4 = Arc::new(Notify::new());
+    let notify4_clone = notify4.clone();
 
     page4
-        .route("**/data.json", |route| async move {
-            route.abort(Some("accessdenied")).await
+        .route("**/data.json", move |route| {
+            let n = notify4_clone.clone();
+            async move {
+                n.notify_one();
+                route.abort(Some("accessdenied")).await
+            }
         })
         .await
         .expect("Failed to set up route");
@@ -528,7 +570,8 @@ async fn test_route_firefox_methods() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    // Only wait if the page actually requests data.json; treat expiry as "not requested".
+    let _ = tokio::time::timeout(Duration::from_millis(500), notify4.notified()).await;
 
     tracing::info!("✓ Error codes work in Firefox");
 
@@ -561,12 +604,16 @@ async fn test_route_webkit_methods() {
 
     let aborted = Arc::new(Mutex::new(false));
     let aborted_clone = aborted.clone();
+    let notify1 = Arc::new(Notify::new());
+    let notify1_clone = notify1.clone();
 
     page1
         .route("**/*.png", move |route| {
             let aborted = aborted_clone.clone();
+            let n = notify1_clone.clone();
             async move {
                 *aborted.lock().unwrap() = true;
+                n.notify_one();
                 route.abort(None).await
             }
         })
@@ -578,7 +625,8 @@ async fn test_route_webkit_methods() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    // Only wait if the page includes a PNG; treat expiry as "no PNG" (not a failure).
+    let _ = tokio::time::timeout(Duration::from_millis(500), notify1.notified()).await;
 
     tracing::info!("✓ Route abort works in WebKit");
 
@@ -669,11 +717,14 @@ async fn test_route_webkit_methods() {
     let allowed_count = Arc::new(Mutex::new(0));
     let blocked_clone = blocked_count.clone();
     let allowed_clone = allowed_count.clone();
+    let notify4 = Arc::new(Notify::new());
+    let notify4_clone = notify4.clone();
 
     page4
         .route("**/*", move |route| {
             let blocked = blocked_clone.clone();
             let allowed = allowed_clone.clone();
+            let n = notify4_clone.clone();
             async move {
                 let request = route.request();
                 if request.url().contains("block-me") {
@@ -681,6 +732,7 @@ async fn test_route_webkit_methods() {
                     route.abort(None).await
                 } else {
                     *allowed.lock().unwrap() += 1;
+                    n.notify_one();
                     route.continue_(None).await
                 }
             }
@@ -693,7 +745,7 @@ async fn test_route_webkit_methods() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    notified_or_timeout(&notify4, 5000, "WebKit conditional route handler").await;
 
     assert!(
         *allowed_count.lock().unwrap() > 0,

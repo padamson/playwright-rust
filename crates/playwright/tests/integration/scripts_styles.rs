@@ -25,9 +25,8 @@ async fn test_add_init_script_on_context() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    // Wait for page to be fully loaded and script to execute
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-
+    // goto() waits for the "load" event; init scripts run at document creation
+    // time, so they are guaranteed to have executed before goto() returns.
     let initialized = page
         .evaluate_value("window.playwrightInitialized")
         .await
@@ -77,8 +76,8 @@ async fn test_add_init_script_multiple_pages() {
         .expect("Failed to navigate page 1")
         .expect("Expected a response");
 
-    // Wait for script to execute
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+    // goto() waits for "load"; init scripts run before document scripts, so
+    // they are complete by the time goto() returns.
 
     // Create second page
     let page2 = context.new_page().await.expect("Failed to create page 2");
@@ -87,9 +86,6 @@ async fn test_add_init_script_multiple_pages() {
         .await
         .expect("Failed to navigate page 2")
         .expect("Expected a response");
-
-    // Wait for script to execute
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
 
     // Both pages should have the same init script values
     let counter1 = page1
@@ -150,9 +146,8 @@ async fn test_add_init_script_on_page() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    // Wait for page to be fully loaded and script to execute
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-
+    // goto() waits for "load"; init scripts run at document creation time,
+    // so they are complete by the time goto() returns.
     let initialized = page
         .evaluate_value("window.pageInitialized")
         .await
@@ -187,8 +182,8 @@ async fn test_add_init_script_chromium() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // goto() waits for "load"; init scripts run at document creation time,
+    // so they are complete by the time goto() returns.
     let browser_type = page
         .evaluate_value("window.browserType")
         .await
@@ -229,8 +224,8 @@ async fn test_add_init_script_firefox() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // goto() waits for "load"; init scripts run at document creation time,
+    // so they are complete by the time goto() returns.
     let browser_type = page
         .evaluate_value("window.browserType")
         .await
@@ -271,8 +266,8 @@ async fn test_add_init_script_webkit() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // goto() waits for "load"; init scripts run at document creation time,
+    // so they are complete by the time goto() returns.
     let browser_type = page
         .evaluate_value("window.browserType")
         .await
@@ -298,8 +293,7 @@ async fn test_add_style_tag_with_content() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    // Wait for page to be fully loaded
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    // goto() already waits for the "load" event; no extra delay needed.
 
     // Inject CSS to change background color
     page.add_style_tag(
@@ -316,9 +310,8 @@ async fn test_add_style_tag_with_content() {
     .await
     .expect("Failed to add style tag");
 
-    // Give browser time to apply styles
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // add_style_tag() is a synchronous RPC call; the browser inserts and
+    // applies the stylesheet before the call returns, so no delay is needed.
     let bg_color = page
         .evaluate_value("window.getComputedStyle(document.body).backgroundColor")
         .await
@@ -344,8 +337,7 @@ async fn test_add_style_tag_multiple_styles() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    // Wait for page to be fully loaded
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    // goto() already waits for the "load" event; no extra delay needed.
 
     // Add first style tag
     page.add_style_tag(
@@ -377,9 +369,8 @@ async fn test_add_style_tag_multiple_styles() {
     .await
     .expect("Failed to add second style tag");
 
-    // Give browser time to apply styles
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // add_style_tag() is a synchronous RPC call; styles are applied before it
+    // returns, so no delay is needed before querying computed styles.
     let font_size = page
         .evaluate_value("window.getComputedStyle(document.body).fontSize")
         .await
@@ -415,8 +406,7 @@ async fn test_add_style_tag_after_navigation() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    // Wait for page to be fully loaded
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    // goto() already waits for the "load" event; no extra delay needed.
 
     // Add style tag after navigation
     page.add_style_tag(
@@ -434,9 +424,8 @@ async fn test_add_style_tag_after_navigation() {
     .await
     .expect("Failed to add style tag");
 
-    // Give browser time to apply styles
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // add_style_tag() is a synchronous RPC call; styles are applied before it
+    // returns, so no delay is needed before querying computed styles.
     let margin = page
         .evaluate_value("window.getComputedStyle(document.body).margin")
         .await
@@ -494,8 +483,7 @@ async fn test_add_style_tag_chromium() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // goto() already waits for the "load" event; no extra delay needed.
     page.add_style_tag(
         AddStyleTagOptions::builder()
             .content("body { background-color: blue !important; }")
@@ -504,8 +492,8 @@ async fn test_add_style_tag_chromium() {
     .await
     .expect("Failed to add style tag");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-
+    // add_style_tag() is a synchronous RPC call; styles are applied before it
+    // returns, so no delay is needed before querying computed styles.
     let bg_color = page
         .evaluate_value("window.getComputedStyle(document.body).backgroundColor")
         .await
@@ -541,8 +529,7 @@ async fn test_add_style_tag_firefox() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // goto() already waits for the "load" event; no extra delay needed.
     page.add_style_tag(
         AddStyleTagOptions::builder()
             .content("body { background-color: green !important; }")
@@ -551,8 +538,8 @@ async fn test_add_style_tag_firefox() {
     .await
     .expect("Failed to add style tag");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-
+    // add_style_tag() is a synchronous RPC call; styles are applied before it
+    // returns, so no delay is needed before querying computed styles.
     let bg_color = page
         .evaluate_value("window.getComputedStyle(document.body).backgroundColor")
         .await
@@ -590,8 +577,7 @@ async fn test_add_style_tag_webkit() {
         .await
         .expect("Failed to navigate");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
+    // goto() already waits for the "load" event; no extra delay needed.
     page.add_style_tag(
         AddStyleTagOptions::builder()
             .content("body { background-color: yellow !important; }")
@@ -600,8 +586,8 @@ async fn test_add_style_tag_webkit() {
     .await
     .expect("Failed to add style tag");
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-
+    // add_style_tag() is a synchronous RPC call; styles are applied before it
+    // returns, so no delay is needed before querying computed styles.
     let bg_color = page
         .evaluate_value("window.getComputedStyle(document.body).backgroundColor")
         .await
