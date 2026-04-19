@@ -21,7 +21,7 @@ pub struct DeviceViewport {
 /// Use with `BrowserContext::new_context()` options to emulate a specific device,
 /// matching the behavior of `playwright.devices["iPhone 13"]` in Python/JS.
 ///
-/// Device descriptors are accessed by name from [`Playwright::devices`].
+/// Device descriptors are accessed by name from [`crate::protocol::Playwright::devices`].
 /// The name is the map key, not a field of the descriptor itself.
 ///
 /// # Example

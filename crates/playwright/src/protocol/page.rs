@@ -859,8 +859,8 @@ impl Page {
     ///
     /// The `Video` shell is created eagerly. The underlying recording artifact is wired
     /// up when the Playwright server fires the internal `"video"` event (which typically
-    /// happens when the page is first navigated). Calling [`Video::save_as`] or
-    /// [`Video::path`] before the artifact arrives returns an error; close the page
+    /// happens when the page is first navigated). Calling [`crate::protocol::Video::save_as`] or
+    /// [`crate::protocol::Video::path`] before the artifact arrives returns an error; close the page
     /// first to guarantee the artifact is ready.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-video>
@@ -2034,7 +2034,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the file chooser
+    /// Returns [`crate::error::Error::Timeout`] if the file chooser
     /// does not open within the timeout.
     ///
     /// # Example
@@ -2084,7 +2084,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no popup
+    /// Returns [`crate::error::Error::Timeout`] if no popup
     /// opens within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
@@ -2111,7 +2111,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no download
+    /// Returns [`crate::error::Error::Timeout`] if no download
     /// starts within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
@@ -2138,7 +2138,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no response
+    /// Returns [`crate::error::Error::Timeout`] if no response
     /// arrives within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
@@ -2175,7 +2175,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no request
+    /// Returns [`crate::error::Error::Timeout`] if no request
     /// is issued within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
@@ -2212,7 +2212,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no console
+    /// Returns [`crate::error::Error::Timeout`] if no console
     /// message is produced within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
@@ -2258,8 +2258,8 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::InvalidArgument`](crate::error::Error::InvalidArgument) for unknown event names.
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the event does not fire within the timeout.
+    /// Returns [`crate::error::Error::InvalidArgument`] for unknown event names.
+    /// Returns [`crate::error::Error::Timeout`] if the event does not fire within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
     pub async fn expect_event(

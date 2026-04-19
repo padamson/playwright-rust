@@ -1,8 +1,8 @@
 //! WebSocketRoute protocol object — represents an intercepted WebSocket connection.
 //!
 //! `WebSocketRoute` is created by the Playwright server when a WebSocket connection
-//! matches a pattern registered via [`Page::route_web_socket`] or
-//! [`BrowserContext::route_web_socket`].
+//! matches a pattern registered via [`crate::protocol::Page::route_web_socket`] or
+//! [`crate::protocol::BrowserContext::route_web_socket`].
 //!
 //! # Example
 //!
@@ -43,7 +43,7 @@ use std::sync::{Arc, Mutex};
 /// Represents an intercepted WebSocket connection.
 ///
 /// `WebSocketRoute` is passed to handlers registered via
-/// [`Page::route_web_socket`] or [`BrowserContext::route_web_socket`].
+/// [`crate::protocol::Page::route_web_socket`] or [`crate::protocol::BrowserContext::route_web_socket`].
 /// The handler must call [`connect_to_server`](WebSocketRoute::connect_to_server)
 /// to forward the connection to the real server, or [`close`](WebSocketRoute::close)
 /// to terminate it.

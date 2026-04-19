@@ -47,7 +47,7 @@ use tokio::sync::oneshot;
 /// Represents a WebSocket connection initiated by a page.
 ///
 /// `WebSocket` objects are created by the Playwright server when the page
-/// opens a WebSocket connection. Use [`Page::on_websocket`] to receive
+/// opens a WebSocket connection. Use [`crate::protocol::Page::on_websocket`] to receive
 /// `WebSocket` objects.
 ///
 /// See: <https://playwright.dev/docs/api/class-websocket>

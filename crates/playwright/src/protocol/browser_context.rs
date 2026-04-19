@@ -1457,7 +1457,7 @@ impl BrowserContext {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if no page is created within the timeout.
+    /// Returns [`crate::error::Error::Timeout`] if no page is created within the timeout.
     ///
     /// # Example
     ///
@@ -1487,7 +1487,7 @@ impl BrowserContext {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the context is not closed within the timeout.
+    /// Returns [`crate::error::Error::Timeout`] if the context is not closed within the timeout.
     ///
     /// # Example
     ///
@@ -1541,8 +1541,8 @@ impl BrowserContext {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::InvalidArgument`](crate::error::Error::InvalidArgument) for unknown event names.
-    /// Returns [`Error::Timeout`](crate::error::Error::Timeout) if the event does not fire within the timeout.
+    /// Returns [`crate::error::Error::InvalidArgument`] for unknown event names.
+    /// Returns [`crate::error::Error::Timeout`] if the event does not fire within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
     pub async fn expect_event(
