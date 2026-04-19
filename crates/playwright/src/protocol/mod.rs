@@ -75,9 +75,9 @@ pub use api_request_context::{
 pub use binding_call::BindingCall;
 pub use browser::{Browser, StartTracingOptions};
 pub use browser_context::{
-    BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder, ClearCookiesOptions,
-    Cookie, Geolocation, GrantPermissionsOptions, LocalStorageItem, Origin, RecordHar, RecordVideo,
-    StorageState, Viewport,
+    AcceptDownloads, BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder,
+    ClearCookiesOptions, Cookie, Geolocation, GrantPermissionsOptions, LocalStorageItem, Origin,
+    RecordHar, RecordVideo, StorageState, Viewport,
 };
 pub use browser_type::BrowserType;
 pub use cdp_session::CDPSession;

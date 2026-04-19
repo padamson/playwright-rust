@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`page.add_locator_handler()` / `page.remove_locator_handler()`** — registers an async handler that Playwright calls whenever a matching element appears and blocks an actionability check (e.g. cookie banners, permission dialogs); accepts `AddLocatorHandlerOptions` with `no_wait_after` and `times`; maps to `registerLocatorHandler` / `resolveLocatorHandler` / `unregisterLocatorHandler` RPCs; handler receives the matching `Locator` as argument
 - **`page.route_web_socket(url, handler)` / `context.route_web_socket(url, handler)`** — intercepts WebSocket connections matching a URL glob pattern; handler receives a `WebSocketRoute` object with `connect_to_server()`, `close(options)`, `send(message)`, `on_message(handler)`, and `on_close(handler)`; maps to `setWebSocketInterceptionPatterns` RPC with `webSocketRoute` events; `WebSocketRoute` and `WebSocketRouteCloseOptions` exported from crate root
 
+### Breaking Changes
+
+- **`BrowserContextOptions::accept_downloads` type changed** (closes #49) — field type is now `Option<AcceptDownloads>` instead of `Option<bool>`, matching the protocol's three-state `"accept"`/`"deny"`/`"internal"` string. The builder method accepts `impl Into<AcceptDownloads>`, so `bool` callers still work (`true` → `Accept`, `false` → `Deny`). Direct struct-literal construction or field pattern-matching must migrate.
+
 ## [0.11.0] - 2026-04-16
 
 ### Added

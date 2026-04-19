@@ -2638,6 +2638,28 @@ pub struct RecordVideo {
 
 /// Options for creating a new browser context.
 ///
+/// Controls how downloads are handled in a [`BrowserContext`].
+///
+/// See the `accept_downloads` field of [`BrowserContextOptions`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum AcceptDownloads {
+    /// Allow and capture downloads via the `download` event.
+    #[serde(rename = "accept")]
+    Accept,
+    /// Block downloads.
+    #[serde(rename = "deny")]
+    Deny,
+    /// Let the browser handle downloads natively without routing through Playwright.
+    #[serde(rename = "internal")]
+    Internal,
+}
+
+impl From<bool> for AcceptDownloads {
+    fn from(value: bool) -> Self {
+        if value { Self::Accept } else { Self::Deny }
+    }
+}
+
 /// Allows customizing viewport, user agent, locale, timezone, geolocation,
 /// permissions, and other browser context settings.
 ///
@@ -2702,9 +2724,9 @@ pub struct BrowserContextOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub offline: Option<bool>,
 
-    /// Whether to automatically download attachments
+    /// How to handle downloads. See [`AcceptDownloads`] for options.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub accept_downloads: Option<bool>,
+    pub accept_downloads: Option<AcceptDownloads>,
 
     /// Whether to bypass Content-Security-Policy
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2838,7 +2860,7 @@ pub struct BrowserContextOptionsBuilder {
     is_mobile: Option<bool>,
     javascript_enabled: Option<bool>,
     offline: Option<bool>,
-    accept_downloads: Option<bool>,
+    accept_downloads: Option<AcceptDownloads>,
     bypass_csp: Option<bool>,
     ignore_https_errors: Option<bool>,
     device_scale_factor: Option<f64>,
@@ -2970,9 +2992,10 @@ impl BrowserContextOptionsBuilder {
         self
     }
 
-    /// Sets whether to automatically download attachments
-    pub fn accept_downloads(mut self, accept_downloads: bool) -> Self {
-        self.accept_downloads = Some(accept_downloads);
+    /// Sets how to handle downloads. Accepts `AcceptDownloads` or `bool`
+    /// (`true` → `Accept`, `false` → `Deny`).
+    pub fn accept_downloads(mut self, accept_downloads: impl Into<AcceptDownloads>) -> Self {
+        self.accept_downloads = Some(accept_downloads.into());
         self
     }
 
@@ -3312,5 +3335,33 @@ mod tests {
 
         let value = serde_json::to_value(&options).unwrap();
         assert!(value.get("ignoreDefaultArgs").is_none());
+    }
+
+    #[test]
+    fn test_accept_downloads_serializes_as_protocol_string() {
+        for (variant, expected) in [
+            (AcceptDownloads::Accept, "accept"),
+            (AcceptDownloads::Deny, "deny"),
+            (AcceptDownloads::Internal, "internal"),
+        ] {
+            let options = BrowserContextOptions::builder()
+                .accept_downloads(variant)
+                .build();
+            let value = serde_json::to_value(&options).unwrap();
+            assert_eq!(value["acceptDownloads"], serde_json::json!(expected));
+        }
+    }
+
+    #[test]
+    fn test_accept_downloads_bool_compatibility() {
+        let opts = BrowserContextOptions::builder()
+            .accept_downloads(true)
+            .build();
+        assert_eq!(opts.accept_downloads, Some(AcceptDownloads::Accept));
+
+        let opts = BrowserContextOptions::builder()
+            .accept_downloads(false)
+            .build();
+        assert_eq!(opts.accept_downloads, Some(AcceptDownloads::Deny));
     }
 }
