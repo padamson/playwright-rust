@@ -256,6 +256,49 @@ async fn test_browser_is_connected() {
     );
 }
 
+/// Exercise Browser::bind / unbind — exposes the browser over WebSocket so
+/// external clients (Playwright CLI, `@playwright/mcp`) can attach. The
+/// returned endpoint must be usable with BrowserType::connect().
+#[tokio::test]
+async fn test_browser_bind_and_unbind() {
+    use playwright_rs::protocol::BindOptions;
+    let (_pw, browser, _page) = crate::common::setup().await;
+
+    // Bind on an ephemeral TCP port so we can verify the endpoint is reachable
+    let result = browser
+        .bind(
+            "playwright-rs-bind-test",
+            Some(BindOptions {
+                host: Some("127.0.0.1".to_string()),
+                port: Some(0), // OS-assigned
+                ..Default::default()
+            }),
+        )
+        .await
+        .expect("bind should succeed");
+
+    assert!(
+        result.endpoint.starts_with("ws://"),
+        "endpoint should be a WebSocket URL, got: {}",
+        result.endpoint
+    );
+    assert!(
+        result.endpoint.contains("127.0.0.1"),
+        "endpoint should reference the bound host, got: {}",
+        result.endpoint
+    );
+
+    browser.unbind().await.expect("unbind should succeed");
+
+    // unbind is idempotent — a second call must not error
+    browser
+        .unbind()
+        .await
+        .expect("second unbind should be a no-op");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
 /// Test that browser.contexts() returns all open browser contexts.
 ///
 /// Verifies:

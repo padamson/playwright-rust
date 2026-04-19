@@ -73,7 +73,7 @@ pub use api_request_context::{
     APIRequest, APIRequestContext, APIRequestContextOptions, APIResponse,
 };
 pub use binding_call::BindingCall;
-pub use browser::{Browser, StartTracingOptions};
+pub use browser::{BindOptions, BindResult, Browser, StartTracingOptions};
 pub use browser_context::{
     AcceptDownloads, BrowserContext, BrowserContextOptions, BrowserContextOptionsBuilder,
     ClearCookiesOptions, Cookie, Geolocation, GrantPermissionsOptions, LocalStorageItem, Origin,

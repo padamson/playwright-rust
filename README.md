@@ -75,7 +75,7 @@ browser.close().await?;
 
 ## Coverage Trajectory
 
-**Full Python API parity achieved.** All Playwright Python classes and methods are implemented.
+**Full Python API parity + agent integration.** All Playwright Python classes and methods are implemented, plus `Browser::bind()` / `Browser::unbind()` (Playwright 1.59) for exposing a Rust-launched browser to external clients like `@playwright/mcp`, the Playwright CLI, or third-party agent tooling.
 
 | Class | Methods | Coverage |
 |-------|---------|----------|

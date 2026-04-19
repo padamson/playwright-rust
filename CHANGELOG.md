@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ConsoleMessage::timestamp()`** — epoch milliseconds (`f64`) when the message was emitted
 - **`Response::http_version()`** — HTTP version string (e.g. `"HTTP/1.1"`, `"HTTP/2.0"`) via the `httpVersion` RPC added in Playwright 1.59
 - **`Request::existing_response()`** — synchronous `Option<Response>` for the already-received response, complementing the async `response()` getter
+- **`browser.bind(title, options)` / `browser.unbind()`** — expose a playwright-rs-launched browser over WebSocket so external clients (`@playwright/mcp`, Playwright CLI, agent tooling) can attach via `BrowserType::connect()`; `BindOptions` has `host`/`port`/`workspace_dir`/`metadata`; maps to `startServer` / `stopServer` RPCs (Playwright 1.59+)
 - **Playwright driver upgraded to 1.59.1** (from 1.58.2) — required for `Response::http_version()` and picks up current Chromium/Firefox/WebKit binaries
 
 ### Breaking Changes

@@ -23,6 +23,36 @@ type DisconnectedHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>
 /// Type alias for a registered disconnected event handler.
 type DisconnectedHandler = Arc<dyn Fn() -> DisconnectedHandlerFuture + Send + Sync>;
 
+/// Options for `Browser::bind()`.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-bind>
+#[derive(Debug, Default, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BindOptions {
+    /// Working directory for the server, used by CLI tooling and MCP clients.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace_dir: Option<String>,
+    /// Arbitrary JSON metadata the server attaches to the bound session.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<serde_json::Value>,
+    /// Host to listen on (e.g. `"127.0.0.1"`). When unset and `port` is also
+    /// unset, the server listens on a local pipe rather than a TCP port.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+    /// Port to listen on. Pass `0` to request an OS-assigned port.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+}
+
+/// Result of `Browser::bind()` — the endpoint other clients can connect to.
+#[derive(Debug, Clone, Deserialize)]
+pub struct BindResult {
+    /// WebSocket URL (e.g. `"ws://127.0.0.1:PORT/GUID"`) or pipe endpoint
+    /// that an MCP client, `playwright-cli`, or third-party agent tool can
+    /// attach to with `BrowserType::connect()`.
+    pub endpoint: String,
+}
+
 /// Options for `Browser::start_tracing()`.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-start-tracing>
@@ -404,6 +434,45 @@ impl Browser {
         let handler = Arc::new(move || -> DisconnectedHandlerFuture { Box::pin(handler()) });
         self.disconnected_handlers.lock().unwrap().push(handler);
         Ok(())
+    }
+
+    /// Exposes this browser over a local WebSocket or pipe endpoint so external
+    /// clients (Playwright CLI, `@playwright/mcp`, other agent tooling) can
+    /// attach to it.
+    ///
+    /// The returned [`BindResult::endpoint`] is a connect string consumable by
+    /// `BrowserType::connect()` from any Playwright language binding.
+    ///
+    /// # Arguments
+    ///
+    /// * `title` — human-readable label for the session (shown in dashboards).
+    /// * `options` — optional host/port, workspace directory, or metadata.
+    ///   Pass `None` to listen on a local pipe.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if a server is already bound to this browser, or if the
+    /// requested host/port is unavailable.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-bind>
+    pub async fn bind(&self, title: &str, options: Option<BindOptions>) -> Result<BindResult> {
+        let mut params = serde_json::to_value(options.unwrap_or_default())
+            .unwrap_or_else(|_| serde_json::json!({}));
+        params["title"] = serde_json::json!(title);
+        let result: BindResult = self.channel().send("startServer", params).await?;
+        Ok(result)
+    }
+
+    /// Stops the server previously started by [`Self::bind`], disconnecting
+    /// any clients attached to it.
+    ///
+    /// Calling `unbind()` when no server is bound is a no-op.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browser#browser-unbind>
+    pub async fn unbind(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("stopServer", serde_json::json!({}))
+            .await
     }
 
     /// Starts CDP tracing on this browser (Chromium only).
