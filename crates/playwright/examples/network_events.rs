@@ -54,13 +54,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     println!("Navigating to example.com...\n");
+    // Set up a deterministic waiter so we know event handlers have fired
+    // before we inspect the response (preferred over sleeps).
+    let waiter = page.expect_event("response", Some(10_000.0)).await?;
     let response = page
         .goto("https://example.com", None)
         .await?
         .expect("Expected a response");
-
-    // Small delay to let async event dispatching complete
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    waiter.wait().await?;
 
     // --- Response body access ---
 
@@ -122,16 +123,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n=== Request -> Response & Sizes ===\n");
 
-    // Use on_request_finished to get a request, then navigate back to its response
+    // Use on_request_finished to capture a request. Since expect_event does not
+    // cover "request_finished", signal the handler via tokio::sync::Notify for
+    // a deterministic wait.
     let page2 = browser.new_page().await?;
     let captured = std::sync::Arc::new(std::sync::Mutex::new(None));
     let captured_clone = captured.clone();
+    let notify = std::sync::Arc::new(tokio::sync::Notify::new());
+    let notify_clone = notify.clone();
     page2
         .on_request_finished(move |req| {
             let cap = captured_clone.clone();
+            let n = notify_clone.clone();
             async move {
                 if req.is_navigation_request() {
                     *cap.lock().unwrap() = Some(req);
+                    n.notify_one();
                 }
                 Ok(())
             }
@@ -139,7 +146,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     page2.goto("https://example.com", None).await?;
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    tokio::time::timeout(std::time::Duration::from_secs(10), notify.notified())
+        .await
+        .expect("request_finished handler did not fire");
 
     let captured_req = captured.lock().unwrap().take();
     if let Some(req) = captured_req {
