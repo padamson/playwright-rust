@@ -4,7 +4,7 @@
 
 **Architecture:** JSON-RPC communication with Playwright Node.js server (same as all official bindings)
 
-**Status:** Version 0.8.0 complete (2025-12-30)
+**Status:** Version 0.12.0 complete (2026-04-19)
 
 ---
 
@@ -24,9 +24,9 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.7.2** - Community Features & Fixes complete - 2025-12-24
 - ✅ **v0.8.0** - Typed Evaluate API complete - 2025-12-30
 - ✅ **v0.8.1** - Persistent Contexts & App Mode complete - 2026-01-04
-- 🚧 **v0.8.x** - Remote Connection & API Polish
-- 📋 **v1.0.0** - Real-World Validation & Final Polish
-- 🔮 **v1.1.0** - WebSocket Support
+- ✅ **v0.8.x through v0.12.0** - Full Python API parity + agent integration complete (2026-04-19)
+- 🚧 **v1.0.0** - Real-World Validation & Final Polish
+- 🔮 **v1.1.0** - Future enhancements
 
 ---
 
@@ -172,13 +172,13 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 **Goal:** Implement typed evaluate API and continue real-world integration features.
 
-**Status:** 🚧 In Progress - See [v0.8-real-world-integration.md](./implementation-plans/v0.8-real-world-integration.md)
+**Status:** ✅ Complete through v0.12.0 - See [v0.8-real-world-integration.md](./implementation-plans/v0.8-real-world-integration.md)
 
 **Milestones:**
 - ✅ v0.8.0: Typed Evaluate API (2025-12-30) - Community contribution by @douglasob
 - ✅ v0.8.1: Persistent Contexts & App Mode (2026-01-04) - Addressed Issue #9 (App Mode)
 - ✅ v0.8.2: Remote Connection (BrowserType::connect)
-- 📋 v0.8.x: Full implementation of Android, Electron, Tracing, APIRequestContext, LocalUtils (currently stubs)
+- ✅ v0.8.x: Full implementation of Android, Electron, Tracing, APIRequestContext, LocalUtils
 - ✅ v0.8.2: Critical Feature Gaps (WebSocket Events, Locator Audit)
 - ✅ v0.8.2: API Polish
 
@@ -196,7 +196,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 
 **Goal:** Real-world testing in t2t, incorporate user feedback, final polish before v1.0.0.
 
-**Status:** 🚀 In Progress - See [v1.0-real-world-validation.md](./implementation-plans/v1.0-real-world-validation.md)
+**Status:** 🚧 Next milestone - See [v1.0-real-world-validation.md](./implementation-plans/v1.0-real-world-validation.md)
 
 **Milestones by Slice:**
 - Slice 0: Single-crate architecture consolidation (Completed in v0.7)
@@ -306,4 +306,4 @@ Implementation plans are created when the previous version is ~80% complete, all
 
 ---
 
-**Last Updated:** 2026-01-19
+**Last Updated:** 2026-04-19

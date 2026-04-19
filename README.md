@@ -8,7 +8,7 @@
 
 > Rust language bindings for [Microsoft Playwright](https://playwright.dev) — the industry standard for cross-browser end-to-end testing.
 
-**Status:** Pre-1.0, API stabilizing. See [coverage trajectory](#coverage-trajectory) for the path to v1.0.
+**Status:** Pre-1.0, API stabilizing. See [coverage](#coverage) for the path to v1.0.
 
 ## 🎯 Why playwright-rust?
 
@@ -73,23 +73,18 @@ browser.close().await?;
 </td></tr>
 </table>
 
-## Coverage Trajectory
+## Coverage
 
-**Full Python API parity + agent integration.** All Playwright Python classes and methods are implemented, plus `Browser::bind()` / `Browser::unbind()` (Playwright 1.59) for exposing a Rust-launched browser to external clients like `@playwright/mcp`, the Playwright CLI, or third-party agent tooling.
+**Full Python API parity + agent integration.** All Playwright Python
+classes and methods are implemented, plus `Browser::bind()` /
+`Browser::unbind()` (Playwright 1.59) for exposing a Rust-launched browser
+to external clients like `@playwright/mcp`, the Playwright CLI, or
+third-party agent tooling.
 
-| Class | Methods | Coverage |
-|-------|---------|----------|
-| Page | 67 | **100%** |
-| BrowserContext | 32 | **100%** |
-| Locator | 55 | **100%** |
-| Frame | 29 | **100%** |
-| Browser | 12 | **100%** |
-| Response | 18 | **100%** |
-| Request | 19 | **100%** |
-| All other classes | 80+ | **100%** |
-
-v1.0.0 follows after multi-month dogfooding with real-world projects.
-See the [full gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for details.
+The remaining path to v1.0 is multi-month dogfooding, API polish, and
+performance tuning rather than new surface area. See the
+[v1.0 gap analysis](docs/implementation-plans/v1.0-gap-analysis.md) for
+the detailed state of each class.
 
 ## How It Works
 
@@ -138,7 +133,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.11"  # Auto-updates to latest 0.11.x
+playwright-rs = "0.12"  # Auto-updates to latest 0.12.x
 tokio = { version = "1", features = ["full"] }
 ```
 

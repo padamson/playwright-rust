@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-04-19
+
 ### Added
 
 - **`context.set_storage_state(state)`** — replaces cookies and localStorage on an existing context without recreation (implemented client-side: clear cookies, add new cookies, restore per-origin localStorage via JS evaluation)
 - **`context.is_closed()`** — returns `true` after `close()` or a server-initiated "close" event
-
 - **`context.clock()` / `page.clock()`** — Clock API for fake timer control in deterministic tests
   - `Clock::install(options)` — install fake timers, optionally setting an initial epoch timestamp (`clockInstall` RPC on BrowserContext channel)
   - `Clock::fast_forward(ticks)` — advance the clock by milliseconds, firing due timers (`clockFastForward` RPC with `ticksNumber`)
@@ -611,7 +612,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/padamson/playwright-rust/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/padamson/playwright-rust/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/padamson/playwright-rust/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/padamson/playwright-rust/compare/v0.8.7...v0.9.0
