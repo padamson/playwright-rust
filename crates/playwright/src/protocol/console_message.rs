@@ -43,6 +43,8 @@ pub struct ConsoleMessage {
     page: Option<crate::protocol::Page>,
     /// The JSHandle arguments passed to the console method.
     args: Vec<std::sync::Arc<crate::protocol::JSHandle>>,
+    /// The timestamp when the console message was emitted (milliseconds since Unix epoch).
+    timestamp: f64,
 }
 
 impl ConsoleMessage {
@@ -56,6 +58,7 @@ impl ConsoleMessage {
         location: ConsoleMessageLocation,
         page: Option<crate::protocol::Page>,
         args: Vec<std::sync::Arc<crate::protocol::JSHandle>>,
+        timestamp: f64,
     ) -> Self {
         Self {
             type_,
@@ -63,6 +66,7 @@ impl ConsoleMessage {
             location,
             page,
             args,
+            timestamp,
         }
     }
 
@@ -100,6 +104,17 @@ impl ConsoleMessage {
     /// See: <https://playwright.dev/docs/api/class-consolemessage#console-message-page>
     pub fn page(&self) -> Option<&crate::protocol::Page> {
         self.page.as_ref()
+    }
+
+    /// Returns the timestamp when this console message was emitted.
+    ///
+    /// The value is the number of milliseconds since the Unix epoch (January 1, 1970 UTC),
+    /// as a floating-point number. This matches the value sent by the Playwright server
+    /// in the `"console"` event payload.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-consolemessage#console-message-timestamp>
+    pub fn timestamp(&self) -> f64 {
+        self.timestamp
     }
 
     /// Returns the list of arguments passed to the console method.

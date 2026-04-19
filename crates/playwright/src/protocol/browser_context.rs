@@ -21,6 +21,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
 
@@ -219,6 +220,9 @@ pub struct BrowserContext {
     service_workers_list: Arc<Mutex<Vec<crate::protocol::Worker>>>,
     /// WebSocketRoute handlers for route_web_socket()
     ws_route_handlers: Arc<Mutex<Vec<ContextWsRouteHandlerEntry>>>,
+    /// Whether this context has been closed.
+    /// Set to true when close() is called or a "close" event is received.
+    is_closed: Arc<AtomicBool>,
 }
 
 impl BrowserContext {
@@ -302,6 +306,7 @@ impl BrowserContext {
             serviceworker_waiters: Arc::new(Mutex::new(Vec::new())),
             service_workers_list: Arc::new(Mutex::new(Vec::new())),
             ws_route_handlers: Arc::new(Mutex::new(Vec::new())),
+            is_closed: Arc::new(AtomicBool::new(false)),
         };
 
         // Enable dialog and console event subscriptions eagerly.
@@ -562,9 +567,13 @@ impl BrowserContext {
         selectors.remove_context(self.channel());
 
         // Send close RPC to server
-        self.channel()
+        let result = self
+            .channel()
             .send_no_result("close", serde_json::json!({}))
-            .await
+            .await;
+        // Mark as closed regardless of error (best-effort)
+        self.is_closed.store(true, Ordering::Relaxed);
+        result
     }
 
     /// Sets the default timeout for all operations in this browser context.
@@ -653,6 +662,90 @@ impl BrowserContext {
             .send("storageState", serde_json::json!({}))
             .await?;
         Ok(response)
+    }
+
+    /// Sets storage state (cookies and local storage) for this browser context in-place.
+    ///
+    /// Clears all existing cookies, then adds cookies from `state.cookies`. For each
+    /// origin in `state.origins`, a temporary page is opened to that origin and its
+    /// `localStorage` is restored via JS evaluation, then the page is closed.
+    ///
+    /// This mirrors `browserContext.setStorageState()` from the JS/Python Playwright
+    /// APIs. It is useful for restoring authentication state without recreating the
+    /// context.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use playwright_rs::protocol::{Cookie, StorageState};
+    ///
+    /// // Restore session cookie
+    /// let state = StorageState {
+    ///     cookies: vec![Cookie {
+    ///         name: "session".to_string(),
+    ///         value: "token123".to_string(),
+    ///         domain: "example.com".to_string(),
+    ///         path: "/".to_string(),
+    ///         expires: -1.0,
+    ///         http_only: true,
+    ///         secure: true,
+    ///         same_site: Some("Lax".to_string()),
+    ///     }],
+    ///     origins: vec![],
+    /// };
+    /// context.set_storage_state(state).await?;
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-storage-state>
+    pub async fn set_storage_state(&self, state: StorageState) -> Result<()> {
+        // Step 1: Clear all existing cookies
+        self.clear_cookies(None).await?;
+
+        // Step 2: Add cookies from the new state
+        if !state.cookies.is_empty() {
+            self.add_cookies(&state.cookies).await?;
+        }
+
+        // Step 3: Restore localStorage for each origin via a temporary page
+        if !state.origins.is_empty() {
+            let page = self.new_page().await?;
+            let result: Result<()> = async {
+                for origin in &state.origins {
+                    // Navigate the page to the origin so localStorage is in scope
+                    let _ = page.goto(&origin.origin, None).await;
+
+                    // Restore localStorage entries using JS evaluation
+                    if !origin.local_storage.is_empty() {
+                        let items_json = serde_json::to_string(&origin.local_storage)
+                            .map_err(|e| Error::ProtocolError(format!("Failed to serialize localStorage items: {}", e)))?;
+                        let items_value: serde_json::Value = serde_json::from_str(&items_json)
+                            .map_err(|e| Error::ProtocolError(format!("Failed to parse localStorage items: {}", e)))?;
+                        let script = "items => { localStorage.clear(); for (const {name, value} of items) localStorage.setItem(name, value); }";
+                        page.evaluate::<serde_json::Value, ()>(script, Some(&items_value)).await?;
+                    }
+                }
+                Ok(())
+            }
+            .await;
+            page.close().await?;
+            result?;
+        }
+
+        Ok(())
+    }
+
+    /// Returns whether this browser context has been closed.
+    ///
+    /// Returns `true` after [`close()`] has been called on this context, or after the
+    /// context receives a close event from the server (e.g. when the browser is closed).
+    ///
+    /// Note: this reflects eventual state. If the context was closed by a server-initiated
+    /// event, `is_closed()` becomes `true` only after the "close" event has been received
+    /// and processed.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-is-closed>
+    pub fn is_closed(&self) -> bool {
+        self.is_closed.load(Ordering::Relaxed)
     }
 
     /// Adds cookies into this browser context.
@@ -1995,7 +2088,8 @@ impl ChannelOwner for BrowserContext {
             }
             "response" => self.dispatch_response_event(method, params),
             "close" => {
-                // BrowserContext close event — fire registered close handlers
+                // BrowserContext close event — mark as closed and fire registered close handlers
+                self.is_closed.store(true, Ordering::Relaxed);
                 let close_handlers = self.close_handlers.clone();
                 let close_waiters = self.close_waiters.clone();
                 tokio::spawn(async move {
@@ -2267,6 +2361,7 @@ impl ChannelOwner for BrowserContext {
                 //   location: { url: "...", lineNumber: N, columnNumber: N },
                 //   page: { guid: "page@..." },
                 //   args: [ { guid: "JSHandle@..." }, ... ]  -- resolved to Arc<JSHandle>
+                //   timestamp: <f64 milliseconds since Unix epoch>
                 // }
                 let type_ = params
                     .get("type")
@@ -2313,6 +2408,10 @@ impl ChannelOwner for BrowserContext {
                             .collect()
                     })
                     .unwrap_or_default();
+                let timestamp = params
+                    .get("timestamp")
+                    .and_then(|v| v.as_f64())
+                    .unwrap_or(0.0);
 
                 let connection = self.connection();
                 let ctx_console_handlers = self.console_handlers.clone();
@@ -2348,7 +2447,8 @@ impl ChannelOwner for BrowserContext {
                         column_number: loc_col,
                     };
 
-                    let msg = ConsoleMessage::new(type_, text, location, page.clone(), args);
+                    let msg =
+                        ConsoleMessage::new(type_, text, location, page.clone(), args, timestamp);
 
                     // Satisfy the first pending waiter (expect_console_message)
                     if let Some(tx) = ctx_console_waiters.lock().unwrap().pop() {

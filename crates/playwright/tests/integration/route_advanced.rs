@@ -185,7 +185,7 @@ async fn test_route_continue_no_overrides() {
 // route.fulfill() with main document navigation
 // ============================================================================
 //
-// IMPORTANT: These tests document a KNOWN PLAYWRIGHT SERVER LIMITATION (1.49.0 - 1.58.2):
+// IMPORTANT: These tests document a KNOWN PLAYWRIGHT SERVER LIMITATION (1.49.0 - 1.59.1):
 // route.fulfill() does not transmit response body content to the browser.
 //
 // These are "reverse canary tests" — they expect the BROKEN behavior. When
@@ -195,7 +195,7 @@ async fn test_route_continue_no_overrides() {
 
 /// Test: route.fulfill() body content is NOT transmitted (Playwright limitation)
 ///
-/// This test documents that Playwright 1.49.0-1.58.2 doesn't transmit fulfilled
+/// This test documents that Playwright 1.49.0-1.59.1 doesn't transmit fulfilled
 /// response bodies to the browser. When this test fails, it means Playwright has
 /// fixed the issue and we should update our documentation.
 #[tokio::test]

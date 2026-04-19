@@ -4,7 +4,7 @@
 [![docs.rs](https://docs.rs/playwright-rs/badge.svg)](https://docs.rs/playwright-rs)
 [![CI](https://github.com/padamson/playwright-rust/actions/workflows/test.yml/badge.svg)](https://github.com/padamson/playwright-rust/actions/workflows/test.yml)
 [![License](https://img.shields.io/crates/l/playwright-rs)](LICENSE)
-[![Playwright](https://img.shields.io/badge/Playwright-1.58.2-45ba4b)](https://playwright.dev)
+[![Playwright](https://img.shields.io/badge/Playwright-1.59.1-45ba4b)](https://playwright.dev)
 
 > Rust language bindings for [Microsoft Playwright](https://playwright.dev) — the industry standard for cross-browser end-to-end testing.
 
@@ -150,17 +150,17 @@ Browsers must be installed before use. Install once, then run tests as many time
 
 ```bash
 # Install all browsers
-npx playwright@1.58.2 install
+npx playwright@1.59.1 install
 
 # Or install specific browsers
-npx playwright@1.58.2 install chromium firefox webkit
+npx playwright@1.59.1 install chromium firefox webkit
 ```
 
 **In CI/CD:** Add this to your GitHub Actions workflow:
 
 ```yaml
 - name: Install Playwright Browsers
-  run: npx playwright@1.58.2 install chromium firefox webkit --with-deps
+  run: npx playwright@1.59.1 install chromium firefox webkit --with-deps
 ```
 
 **Programmatic installation:** For setup scripts, Docker images, or tools built on playwright-rs, you can install browsers from Rust code:
@@ -172,7 +172,7 @@ install_browsers(None).await?;                          // all browsers
 install_browsers(Some(&["chromium"])).await?;            // specific browsers
 ```
 
-**Why version matters:** The library bundles Playwright driver **1.58.2**. Each release expects specific browser builds. Using the matching version ensures compatible browsers.
+**Why version matters:** The library bundles Playwright driver **1.59.1**. Each release expects specific browser builds. Using the matching version ensures compatible browsers.
 
 **What happens if I don't install browsers?** You'll get a helpful error message with the correct install command when trying to launch a browser.
 
@@ -205,7 +205,7 @@ After building, install browsers as described in [Browser Installation](#browser
 
 ```bash
 cargo build
-npx playwright@1.58.2 install chromium firefox webkit
+npx playwright@1.59.1 install chromium firefox webkit
 ```
 
 The build script automatically downloads the Playwright driver to `drivers/` (gitignored). CI handles browser installation automatically - see `.github/workflows/test.yml`.

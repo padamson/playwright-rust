@@ -279,6 +279,69 @@ async fn test_request_post_data_methods() {
     server.shutdown();
 }
 
+/// Test that request.existing_response() returns None initially and Some after the response event.
+#[tokio::test]
+async fn test_request_existing_response() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let captured_request: Arc<Mutex<Option<playwright_rs::protocol::Request>>> =
+        Arc::new(Mutex::new(None));
+    let captured_request2 = captured_request.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
+
+    // Capture the navigation request at request time (before response)
+    page.on_request(move |request| {
+        let captured = captured_request2.clone();
+        let n = notify2.clone();
+        async move {
+            if request.is_navigation_request() {
+                // At request time, existing_response() must return None
+                let existing = request.existing_response();
+                assert!(
+                    existing.is_none(),
+                    "existing_response() should be None before response fires"
+                );
+                *captured.lock().await = Some(request);
+                n.notify_one();
+            }
+            Ok(())
+        }
+    })
+    .await
+    .expect("Failed to set request handler");
+
+    let waiter = page
+        .expect_event("response", Some(5000.0))
+        .await
+        .expect("Failed to create response event waiter");
+
+    page.goto(&server.url(), None)
+        .await
+        .expect("Failed to navigate");
+
+    // Wait for the request event first
+    notified_or_timeout(&notify, 5000, "navigation request handler").await;
+
+    // Wait for the response event to fire
+    waiter.wait().await.expect("response event did not fire");
+
+    // After response event, existing_response() should return Some
+    let guard = captured_request.lock().await;
+    let request = guard.as_ref().expect("Should have captured a request");
+    let existing = request.existing_response();
+    assert!(
+        existing.is_some(),
+        "existing_response() should be Some after the response event fires"
+    );
+    let resp = existing.unwrap();
+    assert_eq!(resp.status(), 200, "Response status should be 200");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
 // ============================================================================
 // RPC-based tests
 // ============================================================================

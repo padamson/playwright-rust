@@ -895,6 +895,21 @@ async fn test_context_pages_cross_browser() {
 }
 
 #[tokio::test]
+async fn test_browser_context_is_closed() {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+    assert!(
+        !context.is_closed(),
+        "Newly created context should not be closed"
+    );
+    context.close().await.expect("Failed to close context");
+    assert!(
+        context.is_closed(),
+        "Context should be closed after close()"
+    );
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
 #[ignore]
 async fn test_context_browser_cross_browser() {
     let playwright = Playwright::launch().await.unwrap();

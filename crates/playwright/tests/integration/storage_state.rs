@@ -1,6 +1,4 @@
-use playwright_rs::protocol::Cookie;
-
-// use tempfile::TempDir; (removed unused)
+use playwright_rs::protocol::{Cookie, StorageState};
 
 #[tokio::test]
 async fn test_storage_state_retrieve() {
@@ -57,6 +55,120 @@ async fn test_storage_state_retrieve() {
         assert!(item.is_some(), "Local storage item not found");
         assert_eq!(item.unwrap().value, "my_value");
     }
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_set_storage_state() {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    let state = StorageState {
+        cookies: vec![Cookie {
+            name: "session".to_string(),
+            value: "abc123".to_string(),
+            domain: "localhost".to_string(),
+            path: "/".to_string(),
+            expires: -1.0,
+            http_only: false,
+            secure: false,
+            same_site: None,
+        }],
+        origins: vec![],
+    };
+    context
+        .set_storage_state(state)
+        .await
+        .expect("set_storage_state should succeed");
+
+    let state = context
+        .storage_state()
+        .await
+        .expect("storage_state should succeed");
+    assert!(
+        state
+            .cookies
+            .iter()
+            .any(|c| c.name == "session" && c.value == "abc123"),
+        "Expected cookie 'session=abc123' to be present after set_storage_state"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_set_storage_state_replaces_existing() {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    // Add an initial cookie via add_cookies
+    context
+        .add_cookies(&[Cookie {
+            name: "old_cookie".to_string(),
+            value: "old_value".to_string(),
+            domain: "example.com".to_string(),
+            path: "/".to_string(),
+            expires: -1.0,
+            http_only: false,
+            secure: false,
+            same_site: None,
+        }])
+        .await
+        .expect("add_cookies should succeed");
+
+    // Now replace the storage state with a new one (different domain)
+    let new_state = StorageState {
+        cookies: vec![Cookie {
+            name: "new_cookie".to_string(),
+            value: "new_value".to_string(),
+            domain: "example.com".to_string(),
+            path: "/".to_string(),
+            expires: -1.0,
+            http_only: false,
+            secure: false,
+            same_site: None,
+        }],
+        origins: vec![],
+    };
+    context
+        .set_storage_state(new_state)
+        .await
+        .expect("set_storage_state should succeed");
+
+    let state = context
+        .storage_state()
+        .await
+        .expect("storage_state should succeed");
+    assert!(
+        state
+            .cookies
+            .iter()
+            .any(|c| c.name == "new_cookie" && c.value == "new_value"),
+        "Expected 'new_cookie' after set_storage_state"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_set_storage_state_with_origins() {
+    use playwright_rs::protocol::{LocalStorageItem, Origin};
+
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    let state = StorageState {
+        cookies: vec![],
+        origins: vec![Origin {
+            origin: "https://example.com".to_string(),
+            local_storage: vec![LocalStorageItem {
+                name: "key1".to_string(),
+                value: "value1".to_string(),
+            }],
+        }],
+    };
+    context
+        .set_storage_state(state)
+        .await
+        .expect("set_storage_state with origins should succeed");
 
     browser.close().await.expect("Failed to close browser");
 }

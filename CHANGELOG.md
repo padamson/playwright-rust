@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`context.set_storage_state(state)`** — replaces cookies and localStorage on an existing context without recreation (implemented client-side: clear cookies, add new cookies, restore per-origin localStorage via JS evaluation)
+- **`context.is_closed()`** — returns `true` after `close()` or a server-initiated "close" event
+
 - **`context.clock()` / `page.clock()`** — Clock API for fake timer control in deterministic tests
   - `Clock::install(options)` — install fake timers, optionally setting an initial epoch timestamp (`clockInstall` RPC on BrowserContext channel)
   - `Clock::fast_forward(ticks)` — advance the clock by milliseconds, firing due timers (`clockFastForward` RPC with `ticksNumber`)
@@ -45,10 +48,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Coverage` class** — `page.coverage()` returns a `Coverage` handle (Chromium only); `start_js_coverage(options)` / `stop_js_coverage()` collect V8 JS coverage (`JSCoverageEntry` with `url`, `script_id`, `source`, `functions: Vec<JSFunctionCoverage>`); `start_css_coverage(options)` / `stop_css_coverage()` collect CSS coverage (`CSSCoverageEntry` with `url`, `text`, `ranges: Vec<CoverageRange>`); maps to `startJSCoverage` / `stopJSCoverage` / `startCSSCoverage` / `stopCSSCoverage` RPCs on the Page channel
 - **`page.add_locator_handler()` / `page.remove_locator_handler()`** — registers an async handler that Playwright calls whenever a matching element appears and blocks an actionability check (e.g. cookie banners, permission dialogs); accepts `AddLocatorHandlerOptions` with `no_wait_after` and `times`; maps to `registerLocatorHandler` / `resolveLocatorHandler` / `unregisterLocatorHandler` RPCs; handler receives the matching `Locator` as argument
 - **`page.route_web_socket(url, handler)` / `context.route_web_socket(url, handler)`** — intercepts WebSocket connections matching a URL glob pattern; handler receives a `WebSocketRoute` object with `connect_to_server()`, `close(options)`, `send(message)`, `on_message(handler)`, and `on_close(handler)`; maps to `setWebSocketInterceptionPatterns` RPC with `webSocketRoute` events; `WebSocketRoute` and `WebSocketRouteCloseOptions` exported from crate root
+- **`ConsoleMessage::timestamp()`** — epoch milliseconds (`f64`) when the message was emitted
+- **`Response::http_version()`** — HTTP version string (e.g. `"HTTP/1.1"`, `"HTTP/2.0"`) via the `httpVersion` RPC added in Playwright 1.59
+- **`Request::existing_response()`** — synchronous `Option<Response>` for the already-received response, complementing the async `response()` getter
+- **Playwright driver upgraded to 1.59.1** (from 1.58.2) — required for `Response::http_version()` and picks up current Chromium/Firefox/WebKit binaries
 
 ### Breaking Changes
 
 - **`BrowserContextOptions::accept_downloads` type changed** (closes #49) — field type is now `Option<AcceptDownloads>` instead of `Option<bool>`, matching the protocol's three-state `"accept"`/`"deny"`/`"internal"` string. The builder method accepts `impl Into<AcceptDownloads>`, so `bool` callers still work (`true` → `Accept`, `false` → `Deny`). Direct struct-literal construction or field pattern-matching must migrate.
+- **macOS 14 WebKit no longer supported** — Playwright 1.59 dropped macOS 14 ("Sonoma") support for WebKit. Users on macOS 14 must upgrade to macOS 15+ or pin to `playwright-rs = "0.11"` (which ships driver 1.58.2). Chromium and Firefox are unaffected on macOS 14.
 
 ## [0.11.0] - 2026-04-16
 

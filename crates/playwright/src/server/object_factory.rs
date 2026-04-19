@@ -226,12 +226,58 @@ pub async fn create_object(
                 }
             };
 
-            Arc::new(ResponseObject::new(
-                parent_owner,
+            let response_obj = Arc::new(ResponseObject::new(
+                parent_owner.clone(),
                 type_name,
                 guid,
-                initializer,
-            )?)
+                initializer.clone(),
+            )?);
+
+            // Mirror the JS implementation: Response constructor sets this._request._response = this.
+            // Downcast the parent to Request and store the back-reference so that
+            // request.existing_response() returns Some immediately after the Response is created.
+            if let Some(parent_request) = parent_owner
+                .as_any()
+                .downcast_ref::<crate::protocol::Request>()
+            {
+                let status = initializer
+                    .get("status")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0) as u16;
+                let headers = initializer
+                    .get("headers")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|h| {
+                                let name = h.get("name")?.as_str()?;
+                                let value = h.get("value")?.as_str()?;
+                                Some((name.to_string(), value.to_string()))
+                            })
+                            .collect::<std::collections::HashMap<_, _>>()
+                    })
+                    .unwrap_or_default();
+                let high_level_response = crate::protocol::page::Response::new(
+                    initializer
+                        .get("url")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    status,
+                    initializer
+                        .get("statusText")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    headers,
+                    Some(
+                        response_obj.clone() as Arc<dyn crate::server::channel_owner::ChannelOwner>
+                    ),
+                );
+                parent_request.set_response(high_level_response);
+            }
+
+            response_obj
         }
 
         "ElementHandle" => {

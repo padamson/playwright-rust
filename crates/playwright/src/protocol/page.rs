@@ -271,7 +271,7 @@ pub struct Page {
     workers_list: Arc<Mutex<Vec<Worker>>>,
     /// Video object — Some when this page was created in a record_video context.
     /// The inner Video is created eagerly on Page construction; the underlying
-    /// Artifact is wired up when the server fires the "video" event.
+    /// Artifact GUID is read from the Page initializer and resolved asynchronously.
     video: Option<crate::protocol::Video>,
     /// Registered locator handlers: maps uid -> (selector, handler fn, times_remaining)
     /// times_remaining is None when the handler should run indefinitely.
@@ -447,13 +447,19 @@ impl Page {
             })?);
 
         // Check the parent BrowserContext's initializer for record_video before
-        // moving `parent` into ChannelOwnerImpl. The Page initializer itself does
-        // not carry video metadata — the Artifact arrives later via a "video" event.
+        // moving `parent` into ChannelOwnerImpl. The Playwright server delivers
+        // the video artifact GUID directly in the Page initializer's "video" field.
         let has_video = parent
             .initializer()
             .get("options")
             .and_then(|opts| opts.get("recordVideo"))
             .is_some();
+
+        let video_artifact_guid: Option<String> = initializer
+            .get("video")
+            .and_then(|v| v.get("guid"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
 
         let base = ChannelOwnerImpl::new(
             ParentOrConnection::Parent(parent),
@@ -489,7 +495,23 @@ impl Page {
         let viewport = Arc::new(RwLock::new(initial_viewport));
 
         let video = if has_video {
-            Some(crate::protocol::Video::new())
+            let v = crate::protocol::Video::new();
+            // Resolve the artifact from the initializer-provided GUID.
+            if let Some(artifact_guid) = video_artifact_guid {
+                let connection = base.connection();
+                let v_clone = v.clone();
+                tokio::spawn(async move {
+                    match connection.get_object(&artifact_guid).await {
+                        Ok(artifact_arc) => v_clone.set_artifact(artifact_arc),
+                        Err(e) => tracing::warn!(
+                            "Failed to resolve video artifact {} from initializer: {}",
+                            artifact_guid,
+                            e
+                        ),
+                    }
+                });
+            }
+            Some(v)
         } else {
             None
         };
@@ -3998,33 +4020,6 @@ impl ChannelOwner for Page {
                     });
                 }
             }
-            "video" => {
-                // Handle video event: delivered once recording starts.
-                // params: {artifact: {guid: "Artifact@..."}}
-                if let Some(artifact_guid) = params
-                    .get("artifact")
-                    .and_then(|v| v.get("guid"))
-                    .and_then(|v| v.as_str())
-                {
-                    let connection = self.connection();
-                    let artifact_guid_owned = artifact_guid.to_string();
-                    let self_clone = self.clone();
-
-                    tokio::spawn(async move {
-                        let artifact_arc = match connection.get_object(&artifact_guid_owned).await {
-                            Ok(obj) => obj,
-                            Err(e) => {
-                                tracing::warn!("Failed to get Artifact for video event: {}", e);
-                                return;
-                            }
-                        };
-
-                        if let Some(video) = &self_clone.video {
-                            video.set_artifact(artifact_arc);
-                        }
-                    });
-                }
-            }
             "download" => {
                 // Handle download event
                 // Event params: {url, suggestedFilename, artifact: {guid: "..."}}
@@ -5170,6 +5165,21 @@ impl Response {
         // For responses from goto/reload, the response is already complete.
         // TODO: For on_response handlers, implement proper waiting via requestFinished event.
         Ok(())
+    }
+
+    /// Returns the HTTP version used by this response (e.g. `"HTTP/1.1"` or `"HTTP/2.0"`).
+    ///
+    /// Makes an RPC call to the Playwright server.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No backing protocol object is available (edge case)
+    /// - The RPC call to the server fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-http-version>
+    pub async fn http_version(&self) -> crate::error::Result<String> {
+        self.response_object()?.http_version().await
     }
 
     /// Returns the response body as raw bytes.

@@ -241,6 +241,26 @@ impl ResponseObject {
         })
     }
 
+    /// Returns the HTTP version used by this response (e.g. `"HTTP/1.1"` or `"HTTP/2.0"`).
+    ///
+    /// Sends a `"httpVersion"` RPC call to the Playwright server.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-response#response-http-version>
+    pub async fn http_version(&self) -> Result<String> {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        struct HttpVersionResponse {
+            value: String,
+        }
+
+        let result: HttpVersionResponse = self
+            .channel()
+            .send("httpVersion", serde_json::json!({}))
+            .await?;
+        Ok(result.value)
+    }
+
     /// Returns the raw response headers as name-value pairs (preserving duplicates).
     ///
     /// Sends a `"rawResponseHeaders"` RPC call to the Playwright server.

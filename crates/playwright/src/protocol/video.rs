@@ -17,11 +17,11 @@ use std::sync::{Arc, Mutex};
 /// `Browser::new_context_with_options()`. Each page in the context receives
 /// its own `Video` object accessible via `page.video()`.
 ///
-/// The underlying recording is backed by an Artifact that the Playwright server
-/// delivers via a `"video"` event on the page channel. Methods that access the
-/// file wait for the artifact to become ready before acting. In practice the
-/// artifact arrives shortly after the page is closed, so closing the page before
-/// calling `path()` or `save_as()` is the recommended pattern.
+/// The underlying recording is backed by an `Artifact` whose GUID is provided
+/// in the `Page` initializer. Methods that access the file wait for the
+/// artifact to become ready before acting — in practice this happens almost
+/// immediately, but calling `path()` or `save_as()` before the page is closed
+/// may return an error if the artifact hasn't finished writing.
 ///
 /// See: <https://playwright.dev/docs/api/class-video>
 #[derive(Clone)]
@@ -49,7 +49,7 @@ impl Video {
         }
     }
 
-    /// Called by the page's `on_event("video")` handler once the artifact arrives.
+    /// Called once the artifact GUID has been resolved via the connection.
     pub(crate) fn set_artifact(&self, artifact: Arc<dyn ChannelOwner>) {
         let mut guard = self.inner.artifact.lock().unwrap();
         *guard = Some(artifact);

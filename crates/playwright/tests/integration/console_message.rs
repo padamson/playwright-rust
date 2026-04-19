@@ -319,6 +319,52 @@ async fn test_page_page_errors() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Test that ConsoleMessage::timestamp() returns a valid wall-clock timestamp.
+///
+/// Asserts that the timestamp is positive and within 60 seconds of the current time.
+#[tokio::test]
+async fn test_console_message_timestamp() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let captured_ts: Arc<Mutex<Option<f64>>> = Arc::new(Mutex::new(None));
+    let cap_clone = captured_ts.clone();
+
+    page.on_console(move |msg| {
+        let cap = cap_clone.clone();
+        async move {
+            *cap.lock().unwrap() = Some(msg.timestamp());
+            Ok(())
+        }
+    })
+    .await?;
+
+    let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_console_message(Some(5000.0)).await?;
+    page.evaluate_expression("console.log('timestamp test')")
+        .await?;
+    waiter.wait().await.expect("console event did not fire");
+
+    let ts = captured_ts
+        .lock()
+        .unwrap()
+        .take()
+        .expect("on_console handler should have fired");
+
+    assert!(ts > 0.0, "timestamp should be positive, got: {ts}");
+
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as f64;
+    assert!(
+        (now_ms - ts).abs() < 60_000.0,
+        "timestamp should be near wall-clock time; got {ts} vs now {now_ms}"
+    );
+
+    browser.close().await?;
+    Ok(())
+}
+
 #[tokio::test]
 async fn test_context_expect_console_message() -> Result<(), Box<dyn std::error::Error>> {
     let (_pw, _browser, context) = crate::common::setup_context().await;

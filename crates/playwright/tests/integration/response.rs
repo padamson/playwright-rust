@@ -187,3 +187,30 @@ async fn test_response_all_headers() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
+
+/// Test that response.http_version() returns a non-empty HTTP version string.
+#[tokio::test]
+async fn test_response_http_version() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+
+    let response = page
+        .goto(&server.url(), None)
+        .await
+        .expect("Failed to navigate")
+        .expect("Expected a response");
+
+    let http_version = response
+        .http_version()
+        .await
+        .expect("http_version() should succeed");
+
+    // HTTP/1.1 for our test server, but accept any HTTP/* format
+    assert!(
+        http_version.starts_with("HTTP/") || !http_version.is_empty(),
+        "http_version should be non-empty, got: {http_version}"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}

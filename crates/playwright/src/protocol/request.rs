@@ -33,6 +33,9 @@ pub struct Request {
     redirected_from: Arc<Mutex<Option<Request>>>,
     /// The request that this one redirected to (set by the later request's construction).
     redirected_to: Arc<Mutex<Option<Request>>>,
+    /// The Response that has been received for this request, if any.
+    /// Set when the `ResponseObject` for this request is constructed.
+    response: Arc<Mutex<Option<crate::protocol::page::Response>>>,
 }
 
 impl Request {
@@ -60,6 +63,7 @@ impl Request {
             frame: Arc::new(Mutex::new(None)),
             redirected_from: Arc::new(Mutex::new(None)),
             redirected_to: Arc::new(Mutex::new(None)),
+            response: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -103,6 +107,23 @@ impl Request {
     /// the redirect target request is constructed.
     pub(crate) fn set_redirected_to(&self, to: Request) {
         *self.redirected_to.lock().unwrap() = Some(to);
+    }
+
+    /// Returns the [`Response`](crate::protocol::page::Response) if it has already been received,
+    /// or `None` if the response has not yet arrived.
+    ///
+    /// This method returns immediately without waiting. Use [`response()`](Self::response) if you
+    /// need to wait for the response to arrive.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-request#request-existing-response>
+    pub fn existing_response(&self) -> Option<crate::protocol::page::Response> {
+        self.response.lock().unwrap().clone()
+    }
+
+    /// Sets the cached response. Called by the object factory when the `ResponseObject`
+    /// for this request is constructed.
+    pub(crate) fn set_response(&self, response: crate::protocol::page::Response) {
+        *self.response.lock().unwrap() = Some(response);
     }
 
     /// Returns the [`Response`](crate::protocol::response::ResponseObject) for this request.
