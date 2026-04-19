@@ -272,8 +272,7 @@ async fn test_launch_persistent_context_cross_browser() {
     }
 
     // Test WebKit (fixed on macOS in Playwright 1.58.2, was issue #39)
-    // Skip on Windows: WebKit persistent context hits "Initial load failed" in wkPage.js
-    if !cfg!(target_os = "windows") {
+    {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let user_data_dir = temp_dir.path().to_str().unwrap().to_string();
 
@@ -290,8 +289,6 @@ async fn test_launch_persistent_context_cross_browser() {
 
         context.close().await.expect("Failed to close WebKit");
         tracing::info!("✓ WebKit persistent context works");
-    } else {
-        tracing::warn!("Skipping WebKit persistent context test on Windows");
     }
 
     server.shutdown();
