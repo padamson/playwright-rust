@@ -212,6 +212,16 @@ The build script automatically downloads the Playwright driver to `drivers/` (gi
 
 **Platform Support:** ✅ Windows, macOS, Linux
 
+**Known limitation**: WebKit `launch_persistent_context()` fails on native
+Windows with "Initial load failed" — this is an upstream Playwright issue
+([microsoft/playwright#36936](https://github.com/microsoft/playwright/issues/36936),
+also tracked as playwright-rust [#39](https://github.com/padamson/playwright-rust/issues/39)).
+Microsoft is building a `channel: "webkit-wsl"` replacement
+([microsoft/playwright#37036](https://github.com/microsoft/playwright/issues/37036)).
+Chromium and Firefox persistent contexts work on all platforms. Non-persistent
+WebKit (`browser.new_context()`) works on Windows. Use WSL or macOS/Linux for
+WebKit persistent contexts.
+
 ### Running Tests
 
 This project uses [cargo-nextest](https://nexte.st/). Install once: `cargo install cargo-nextest`

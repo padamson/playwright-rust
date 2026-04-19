@@ -271,8 +271,15 @@ async fn test_launch_persistent_context_cross_browser() {
         tracing::info!("✓ Firefox persistent context works");
     }
 
-    // Test WebKit (fixed on macOS in Playwright 1.58.2, was issue #39)
-    {
+    // Test WebKit (works on macOS/Linux since Playwright 1.58.2).
+    //
+    // Known Windows limitation (issue #39): WebKit persistent context fails on
+    // native Windows with "Initial load failed" in
+    // wkPage.js:handleProvisionalLoadFailed. Microsoft tracks this under
+    // playwright#36936 (WebKit crashes on Win10/Server 16) and is building a
+    // `channel: "webkit-wsl"` replacement (playwright#37036). Re-test after
+    // webkit-wsl GAs or WebKit Windows builds stabilize.
+    if !cfg!(target_os = "windows") {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let user_data_dir = temp_dir.path().to_str().unwrap().to_string();
 
@@ -289,6 +296,8 @@ async fn test_launch_persistent_context_cross_browser() {
 
         context.close().await.expect("Failed to close WebKit");
         tracing::info!("✓ WebKit persistent context works");
+    } else {
+        tracing::warn!("Skipping WebKit persistent context test on Windows (issue #39)");
     }
 
     server.shutdown();
