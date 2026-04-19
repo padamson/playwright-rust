@@ -16,14 +16,16 @@ async fn notified_or_timeout(notify: &Notify, ms: u64, what: &str) {
 // Local read tests (no RPC needed)
 // ============================================================================
 
-/// Test that request.headers() returns a HashMap with standard headers including "host".
+/// Exercises local GET-request accessors in a single browser session:
+/// headers(), post_data() for GET, and failure() for a successful request.
 #[tokio::test]
-async fn test_request_headers() {
+async fn test_request_local_get_accessors() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
+    // --- headers() returns a non-empty map with at least one standard browser header ---
 
+    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
     let captured2 = captured.clone();
     page.on_request(move |request| {
         let captured = captured2.clone();
@@ -78,46 +80,8 @@ async fn test_request_headers() {
         headers.keys().collect::<Vec<_>>()
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.post_data() returns None for GET requests.
-#[tokio::test]
-async fn test_request_post_data_get() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    page.on_request(move |request| {
-        let captured = captured2.clone();
-        async move {
-            // Only capture the main document request
-            if request.resource_type() == "document" {
-                *captured.lock().await = Some(request);
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    let waiter = page
-        .expect_event("request", Some(5000.0))
-        .await
-        .expect("Failed to create request event waiter");
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    waiter.wait().await.expect("request event did not fire");
-
-    let guard = captured.lock().await;
-    let request = guard.as_ref().expect("Should have captured a request");
-
-    // GET request should have no post data
+    // --- post_data() returns None for GET requests ---
+    // The captured request above is a document GET; post_data() should be None.
     let post_data = request.post_data();
     assert!(
         post_data.is_none(),
@@ -125,236 +89,7 @@ async fn test_request_post_data_get() {
         post_data
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.post_data() returns data for POST requests made via fetch().
-#[tokio::test]
-async fn test_request_post_data_post() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    // Navigate first so we have a page context
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    let notify = Arc::new(Notify::new());
-    let notify2 = notify.clone();
-    page.on_request(move |request| {
-        let captured = captured2.clone();
-        let n = notify2.clone();
-        async move {
-            if request.method() == "POST" {
-                *captured.lock().await = Some(request);
-                n.notify_one();
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    let post_url = format!("{}/echo-headers", server.url());
-    // Use evaluate to make a POST fetch with a body
-    let _: serde_json::Value = page
-        .evaluate::<(), serde_json::Value>(
-            &format!(
-                r#"fetch('{}', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'text/plain'}},
-                    body: 'hello playwright'
-                }}).then(r => r.text())"#,
-                post_url
-            ),
-            None,
-        )
-        .await
-        .expect("fetch should succeed");
-
-    notified_or_timeout(&notify, 5000, "POST request handler").await;
-
-    let guard = captured.lock().await;
-    let request = guard.as_ref().expect("Should have captured a POST request");
-
-    let post_data = request.post_data();
-    assert!(post_data.is_some(), "POST request should have post data");
-    let data = post_data.unwrap();
-    assert_eq!(
-        data, "hello playwright",
-        "Post data should match sent body, got: {:?}",
-        data
-    );
-
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.post_data_buffer() returns bytes for POST requests.
-#[tokio::test]
-async fn test_request_post_data_buffer() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    let notify = Arc::new(Notify::new());
-    let notify2 = notify.clone();
-    page.on_request(move |request| {
-        let captured = captured2.clone();
-        let n = notify2.clone();
-        async move {
-            if request.method() == "POST" {
-                *captured.lock().await = Some(request);
-                n.notify_one();
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    let post_url = format!("{}/echo-headers", server.url());
-    let _: serde_json::Value = page
-        .evaluate::<(), serde_json::Value>(
-            &format!(
-                r#"fetch('{}', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'text/plain'}},
-                    body: 'buffer test'
-                }}).then(r => r.text())"#,
-                post_url
-            ),
-            None,
-        )
-        .await
-        .expect("fetch should succeed");
-
-    notified_or_timeout(&notify, 5000, "POST request handler").await;
-
-    let guard = captured.lock().await;
-    let request = guard.as_ref().expect("Should have captured a POST request");
-
-    let buf = request.post_data_buffer();
-    assert!(buf.is_some(), "POST request should have post data buffer");
-    let bytes = buf.unwrap();
-    assert_eq!(bytes, b"buffer test", "Buffer should match sent body bytes");
-
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.post_data_json() parses JSON post data.
-#[tokio::test]
-async fn test_request_post_data_json() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    let notify = Arc::new(Notify::new());
-    let notify2 = notify.clone();
-    page.on_request(move |request| {
-        let captured = captured2.clone();
-        let n = notify2.clone();
-        async move {
-            if request.method() == "POST" {
-                *captured.lock().await = Some(request);
-                n.notify_one();
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    let post_url = format!("{}/echo-headers", server.url());
-    let _: serde_json::Value = page
-        .evaluate::<(), serde_json::Value>(
-            &format!(
-                r#"fetch('{}', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'application/json'}},
-                    body: JSON.stringify({{key: 'value', number: 42}})
-                }}).then(r => r.text())"#,
-                post_url
-            ),
-            None,
-        )
-        .await
-        .expect("fetch should succeed");
-
-    notified_or_timeout(&notify, 5000, "POST request handler").await;
-
-    let guard = captured.lock().await;
-    let request = guard.as_ref().expect("Should have captured a POST request");
-
-    let json_result = request.post_data_json::<serde_json::Value>();
-    assert!(json_result.is_some(), "Should have JSON post data");
-    let value = json_result.unwrap().expect("JSON parse should succeed");
-    assert_eq!(
-        value.get("key").and_then(|v| v.as_str()),
-        Some("value"),
-        "Should parse key correctly"
-    );
-    assert_eq!(
-        value.get("number").and_then(|v| v.as_i64()),
-        Some(42),
-        "Should parse number correctly"
-    );
-
-    // GET request should return None
-    // (we'll test this via a fresh request captured from the initial navigation)
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.failure() returns None for successful requests.
-#[tokio::test]
-async fn test_request_failure_none_for_success() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    page.on_request(move |request| {
-        let captured = captured2.clone();
-        async move {
-            if request.resource_type() == "document" {
-                *captured.lock().await = Some(request);
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    let waiter = page
-        .expect_event("request", Some(5000.0))
-        .await
-        .expect("Failed to create request event waiter");
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    waiter.wait().await.expect("request event did not fire");
-
-    let guard = captured.lock().await;
-    let request = guard.as_ref().expect("Should have captured a request");
-
-    // Successful request should have no failure
+    // --- failure() returns None for a successful request ---
     let failure = request.failure();
     assert!(
         failure.is_none(),
@@ -409,13 +144,149 @@ async fn test_request_failure_text() {
     browser.close().await.expect("Failed to close browser");
 }
 
+/// Exercises POST-request data accessors in a single browser session:
+/// post_data(), post_data_buffer(), and post_data_json().
+#[tokio::test]
+async fn test_request_post_data_methods() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    // Navigate first so we have a page context
+    page.goto(&server.url(), None)
+        .await
+        .expect("Failed to navigate");
+
+    let post_url = format!("{}/echo-headers", server.url());
+
+    // --- post_data() returns the raw body string for POST requests ---
+
+    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
+    let captured2 = captured.clone();
+    let notify = Arc::new(Notify::new());
+    let notify2 = notify.clone();
+    page.on_request(move |request| {
+        let captured = captured2.clone();
+        let n = notify2.clone();
+        async move {
+            if request.method() == "POST" {
+                *captured.lock().await = Some(request);
+                n.notify_one();
+            }
+            Ok(())
+        }
+    })
+    .await
+    .expect("Failed to set request handler");
+
+    let _: serde_json::Value = page
+        .evaluate::<(), serde_json::Value>(
+            &format!(
+                r#"fetch('{}', {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'text/plain'}},
+                    body: 'hello playwright'
+                }}).then(r => r.text())"#,
+                post_url
+            ),
+            None,
+        )
+        .await
+        .expect("fetch should succeed");
+
+    notified_or_timeout(&notify, 5000, "POST request handler").await;
+
+    let guard = captured.lock().await;
+    let request = guard.as_ref().expect("Should have captured a POST request");
+
+    let post_data = request.post_data();
+    assert!(post_data.is_some(), "POST request should have post data");
+    let data = post_data.unwrap();
+    assert_eq!(
+        data, "hello playwright",
+        "Post data should match sent body, got: {:?}",
+        data
+    );
+
+    // --- post_data_buffer() returns the body as raw bytes ---
+    let buf = request.post_data_buffer();
+    assert!(buf.is_some(), "POST request should have post data buffer");
+    let bytes = buf.unwrap();
+    assert_eq!(
+        bytes, b"hello playwright",
+        "Buffer should match sent body bytes"
+    );
+
+    drop(guard);
+
+    // --- post_data_json() parses a JSON body ---
+
+    let captured_json: Arc<Mutex<Option<playwright_rs::protocol::Request>>> =
+        Arc::new(Mutex::new(None));
+    let captured_json2 = captured_json.clone();
+    let notify_json = Arc::new(Notify::new());
+    let notify_json2 = notify_json.clone();
+    page.on_request(move |request| {
+        let captured = captured_json2.clone();
+        let n = notify_json2.clone();
+        async move {
+            if request.method() == "POST" {
+                *captured.lock().await = Some(request);
+                n.notify_one();
+            }
+            Ok(())
+        }
+    })
+    .await
+    .expect("Failed to set second request handler");
+
+    let _: serde_json::Value = page
+        .evaluate::<(), serde_json::Value>(
+            &format!(
+                r#"fetch('{}', {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{key: 'value', number: 42}})
+                }}).then(r => r.text())"#,
+                post_url
+            ),
+            None,
+        )
+        .await
+        .expect("fetch should succeed");
+
+    notified_or_timeout(&notify_json, 5000, "JSON POST request handler").await;
+
+    let guard_json = captured_json.lock().await;
+    let json_request = guard_json
+        .as_ref()
+        .expect("Should have captured a JSON POST request");
+
+    let json_result = json_request.post_data_json::<serde_json::Value>();
+    assert!(json_result.is_some(), "Should have JSON post data");
+    let value = json_result.unwrap().expect("JSON parse should succeed");
+    assert_eq!(
+        value.get("key").and_then(|v| v.as_str()),
+        Some("value"),
+        "Should parse key correctly"
+    );
+    assert_eq!(
+        value.get("number").and_then(|v| v.as_i64()),
+        Some(42),
+        "Should parse number correctly"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
 // ============================================================================
 // RPC-based tests
 // ============================================================================
 
-/// Test that request.headers_array() returns all headers as name-value pairs.
+/// Exercises RPC header and timing accessors in a single browser session:
+/// headers_array(), all_headers(), header_value(), and timing().
 #[tokio::test]
-async fn test_request_headers_array() {
+async fn test_request_rpc_header_and_timing_methods() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
@@ -448,6 +319,7 @@ async fn test_request_headers_array() {
         .as_ref()
         .expect("Should have captured a finished request");
 
+    // --- headers_array() returns all headers as name-value pairs ---
     let headers_array = request
         .headers_array()
         .await
@@ -462,7 +334,6 @@ async fn test_request_headers_array() {
         assert!(!entry.name.is_empty(), "Header name should not be empty");
     }
 
-    // Should include a "host" header
     let has_host = headers_array
         .iter()
         .any(|h| h.name.to_lowercase() == "host");
@@ -472,45 +343,7 @@ async fn test_request_headers_array() {
         headers_array.iter().map(|h| &h.name).collect::<Vec<_>>()
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.all_headers() returns a HashMap with lowercased header keys.
-#[tokio::test]
-async fn test_request_all_headers() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    let notify = Arc::new(Notify::new());
-    let notify2 = notify.clone();
-    page.on_request_finished(move |request| {
-        let captured = captured2.clone();
-        let n = notify2.clone();
-        async move {
-            if request.resource_type() == "document" {
-                *captured.lock().await = Some(request);
-                n.notify_one();
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    notified_or_timeout(&notify, 5000, "request_finished handler").await;
-
-    let guard = captured.lock().await;
-    let request = guard
-        .as_ref()
-        .expect("Should have captured a finished request");
-
+    // --- all_headers() returns a HashMap with lowercased header keys ---
     let all_headers = request
         .all_headers()
         .await
@@ -521,51 +354,13 @@ async fn test_request_all_headers() {
         "all_headers() should return at least one header"
     );
 
-    // Keys should be lowercased
     assert!(
         all_headers.contains_key("host"),
         "all_headers() should contain 'host' key (lowercased), got keys: {:?}",
         all_headers.keys().collect::<Vec<_>>()
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.header_value() returns the correct value for a known header.
-#[tokio::test]
-async fn test_request_header_value() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    let notify = Arc::new(Notify::new());
-    let notify2 = notify.clone();
-    page.on_request_finished(move |request| {
-        let captured = captured2.clone();
-        let n = notify2.clone();
-        async move {
-            if request.resource_type() == "document" {
-                *captured.lock().await = Some(request);
-                n.notify_one();
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    notified_or_timeout(&notify, 5000, "request_finished handler").await;
-
-    let guard = captured.lock().await;
-    let request = guard
-        .as_ref()
-        .expect("Should have captured a finished request");
+    // --- header_value() returns the correct value for a known header ---
 
     // "host" header should be present
     let host = request
@@ -597,55 +392,15 @@ async fn test_request_header_value() {
         .expect("header_value() should succeed even for missing headers");
     assert!(missing.is_none(), "Missing header should return None");
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-/// Test that request.timing() returns a ResourceTiming with plausible values.
-#[tokio::test]
-async fn test_request_timing() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    let captured: Arc<Mutex<Option<playwright_rs::protocol::Request>>> = Arc::new(Mutex::new(None));
-    let captured2 = captured.clone();
-    let notify = Arc::new(Notify::new());
-    let notify2 = notify.clone();
-    page.on_request_finished(move |request| {
-        let captured = captured2.clone();
-        let n = notify2.clone();
-        async move {
-            if request.resource_type() == "document" {
-                *captured.lock().await = Some(request);
-                n.notify_one();
-            }
-            Ok(())
-        }
-    })
-    .await
-    .expect("Failed to set request handler");
-
-    page.goto(&server.url(), None)
-        .await
-        .expect("Failed to navigate");
-
-    notified_or_timeout(&notify, 5000, "request_finished handler").await;
-
-    let guard = captured.lock().await;
-    let request = guard
-        .as_ref()
-        .expect("Should have captured a finished request");
-
+    // --- timing() returns a ResourceTiming with plausible values ---
     let timing = request.timing().await.expect("timing() should succeed");
 
-    // start_time should be a positive epoch milliseconds value
     assert!(
         timing.start_time >= 0.0,
         "start_time should be non-negative, got: {}",
         timing.start_time
     );
 
-    // response_start should be after request_start or at least non-negative
     assert!(
         timing.response_start >= -1.0,
         "response_start should be >= -1 (Playwright uses -1 for unavailable), got: {}",

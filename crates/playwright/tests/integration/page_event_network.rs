@@ -4,13 +4,16 @@ use tokio::sync::Mutex;
 
 use crate::test_server::TestServer;
 
+/// Exercises on_request, on_response, on_request_finished, and on_request_failed events
+/// for a simple page load and an iframe-containing page load.
 #[tokio::test]
-async fn test_page_support_network_events() {
+async fn test_page_network_events() {
     let server = TestServer::start().await;
-
     let (_pw, browser, page) = crate::common::setup().await;
 
+    // Simple page load: on_request, on_response, on_request_finished, and on_request_failed
     let events = Arc::new(Mutex::new(vec![]));
+
     let events2 = events.clone();
     page.on_request(move |request| {
         let events = events2.clone();
@@ -80,20 +83,12 @@ async fn test_page_support_network_events() {
     assert_eq!(Some(&format!("DONE {}/", server.url())), events.get(1));
     assert_eq!(Some(&format!("GET {}/", server.url())), events.get(2));
 
-    browser.close().await.expect("Failed to close browser");
+    drop(binding);
 
-    server.shutdown();
-}
+    // iframe page: on_request and on_response fire for both the parent and the embedded frame
+    let iframe_events = Arc::new(Mutex::new(vec![]));
 
-#[tokio::test]
-async fn test_for_iframes() {
-    let server = TestServer::start().await;
-
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    let events = Arc::new(Mutex::new(vec![]));
-
-    let events2 = events.clone();
+    let events2 = iframe_events.clone();
     page.on_request(move |request| {
         let events = events2.clone();
         async move {
@@ -104,7 +99,7 @@ async fn test_for_iframes() {
     .await
     .expect("Failed to set request handler");
 
-    let events2 = events.clone();
+    let events2 = iframe_events.clone();
     page.on_response(move |response| {
         let events = events2.clone();
         async move {
@@ -116,23 +111,23 @@ async fn test_for_iframes() {
         }
     })
     .await
-    .expect("Failed to set request handler");
+    .expect("Failed to set response handler");
 
     page.goto(&format!("{}/frame.html", server.url()), None)
         .await
         .expect("Failed to navigate");
 
-    let mut binding = events.lock().await;
-    let events: &mut Vec<_> = binding.as_mut();
+    let mut binding = iframe_events.lock().await;
+    let iframe_events: &mut Vec<_> = binding.as_mut();
 
     // Since events are dispatched via `tokio::spawn`, we cannot guarantee the order of events.
     // So we sort them before asserting.
     // See more in file `crates/playwright/src/protocol/browser_context.rs`:
     // * BrowserContext::dispatch_request_event
     // * BrowserContext::dispatch_response_event
-    events.sort();
+    iframe_events.sort();
 
-    assert_eq!(4, events.len());
+    assert_eq!(4, iframe_events.len());
     assert_eq!(
         &vec![
             format!("200 {}/button.html", server.url()),
@@ -140,11 +135,12 @@ async fn test_for_iframes() {
             format!("GET {}/button.html", server.url()),
             format!("GET {}/frame.html", server.url()),
         ],
-        events
+        iframe_events
     );
 
-    browser.close().await.expect("Failed to close browser");
+    drop(binding);
 
+    browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
 

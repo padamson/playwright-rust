@@ -7,12 +7,13 @@ use playwright_rs::protocol::{
 // page.set_extra_http_headers()
 // ============================================================================
 
+/// Exercises set_extra_http_headers with a single header and with multiple headers.
 #[tokio::test]
 async fn test_page_set_extra_http_headers() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
-    // Set a custom header on the page
+    // Single custom header is echoed by the server
     let mut headers = std::collections::HashMap::new();
     headers.insert(
         "x-page-custom-header".to_string(),
@@ -22,12 +23,10 @@ async fn test_page_set_extra_http_headers() {
         .await
         .expect("Failed to set extra HTTP headers on page");
 
-    // Navigate to the echo-headers endpoint
     page.goto(&format!("{}/echo-headers", server.url()), None)
         .await
         .expect("Failed to navigate");
 
-    // Read the echoed headers
     let headers_json = page
         .evaluate_value("document.getElementById('headers').textContent")
         .await
@@ -44,15 +43,7 @@ async fn test_page_set_extra_http_headers() {
         headers_json
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-#[tokio::test]
-async fn test_page_set_extra_http_headers_multiple() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
+    // Multiple headers are all echoed by the server
     let mut headers = std::collections::HashMap::new();
     headers.insert("x-page-alpha".to_string(), "alpha-val".to_string());
     headers.insert("x-page-beta".to_string(), "beta-val".to_string());
@@ -88,6 +79,10 @@ async fn test_page_set_extra_http_headers_multiple() {
 // page.emulate_media()
 // ============================================================================
 
+/// Test that emulate_media(Print) causes matchMedia('print') to match.
+///
+/// Kept separate from the dark color-scheme test because media state persists
+/// within a page session — mixing both assertions in one page would confuse results.
 #[tokio::test]
 async fn test_page_emulate_media_print() {
     let server = TestServer::start().await;
@@ -97,14 +92,12 @@ async fn test_page_emulate_media_print() {
         .await
         .expect("Failed to navigate");
 
-    // Set media to print
     page.emulate_media(Some(
         EmulateMediaOptions::builder().media(Media::Print).build(),
     ))
     .await
     .expect("Failed to emulate media");
 
-    // Verify via matchMedia
     let matches = page
         .evaluate_value("window.matchMedia('print').matches")
         .await
@@ -121,6 +114,10 @@ async fn test_page_emulate_media_print() {
     server.shutdown();
 }
 
+/// Test that emulate_media(ColorScheme::Dark) causes matchMedia to report dark mode.
+///
+/// Kept separate from the print-media test because media state persists within a
+/// page session.
 #[tokio::test]
 async fn test_page_emulate_media_color_scheme_dark() {
     let server = TestServer::start().await;
@@ -130,7 +127,6 @@ async fn test_page_emulate_media_color_scheme_dark() {
         .await
         .expect("Failed to navigate");
 
-    // Set color scheme to dark
     page.emulate_media(Some(
         EmulateMediaOptions::builder()
             .color_scheme(ColorScheme::Dark)
@@ -139,7 +135,6 @@ async fn test_page_emulate_media_color_scheme_dark() {
     .await
     .expect("Failed to emulate dark color scheme");
 
-    // Verify via matchMedia
     let matches = page
         .evaluate_value("window.matchMedia('(prefers-color-scheme: dark)').matches")
         .await
@@ -156,11 +151,11 @@ async fn test_page_emulate_media_color_scheme_dark() {
     server.shutdown();
 }
 
+/// Test that emulate_media(None) succeeds without error.
 #[tokio::test]
 async fn test_page_emulate_media_none() {
     let (_pw, browser, page) = crate::common::setup().await;
 
-    // Calling emulate_media with None options should work without error
     page.emulate_media(None)
         .await
         .expect("emulate_media(None) should not fail");
@@ -172,39 +167,27 @@ async fn test_page_emulate_media_none() {
 // page.pdf()
 // ============================================================================
 
+/// Exercises pdf() with no options and with explicit PdfOptions in one session.
 #[tokio::test]
-async fn test_page_pdf_basic() {
+async fn test_page_pdf() {
     let server = TestServer::start().await;
-    // PDF only works in Chromium
     let (_pw, browser, page) = crate::common::setup().await;
 
     page.goto(&format!("{}/", server.url()), None)
         .await
         .expect("Failed to navigate");
 
+    // pdf() with no options returns valid PDF bytes
     let pdf_bytes = page.pdf(None).await.expect("Failed to generate PDF");
 
     assert!(!pdf_bytes.is_empty(), "PDF bytes should not be empty");
-    // PDF files start with "%PDF"
     assert_eq!(
         &pdf_bytes[0..4],
         b"%PDF",
         "Generated bytes should start with PDF magic bytes"
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-#[tokio::test]
-async fn test_page_pdf_with_options() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    page.goto(&format!("{}/", server.url()), None)
-        .await
-        .expect("Failed to navigate");
-
+    // pdf() with explicit options (A4, landscape, print_background) also returns valid PDF
     use playwright_rs::protocol::PdfOptions;
 
     let pdf_bytes = page
@@ -232,8 +215,9 @@ async fn test_page_pdf_with_options() {
 // page.add_script_tag()
 // ============================================================================
 
+/// Exercises add_script_tag with valid content and error cases in one session.
 #[tokio::test]
-async fn test_page_add_script_tag_with_content() {
+async fn test_page_add_script_tag() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
@@ -242,7 +226,7 @@ async fn test_page_add_script_tag_with_content() {
         .expect("Failed to navigate")
         .expect("Expected a response");
 
-    // Add a script tag that sets a window variable
+    // Script tag with inline content executes and sets a window variable
     page.add_script_tag(Some(
         AddScriptTagOptions::builder()
             .content("window.scriptTagExecuted = 'yes_it_ran';")
@@ -262,15 +246,7 @@ async fn test_page_add_script_tag_with_content() {
         value
     );
 
-    browser.close().await.expect("Failed to close browser");
-    server.shutdown();
-}
-
-#[tokio::test]
-async fn test_page_add_script_tag_error_no_options() {
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    // Should fail with no options (no url, path, or content)
+    // add_script_tag with empty options fails with a descriptive error
     let result = page
         .add_script_tag(Some(AddScriptTagOptions::builder().build()))
         .await;
@@ -285,43 +261,9 @@ async fn test_page_add_script_tag_error_no_options() {
         );
     }
 
-    browser.close().await.expect("Failed to close browser");
-}
-
-#[tokio::test]
-async fn test_page_add_script_tag_none_options() {
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    // Passing None should also fail (no content to inject)
+    // add_script_tag(None) also fails
     let result = page.add_script_tag(None).await;
     assert!(result.is_err(), "add_script_tag(None) should fail");
-
-    browser.close().await.expect("Failed to close browser");
-}
-
-#[tokio::test]
-async fn test_page_add_script_tag_cross_browser_chromium() {
-    let server = TestServer::start().await;
-    let (_pw, browser, page) = crate::common::setup().await;
-
-    page.goto(&format!("{}/input.html", server.url()), None)
-        .await
-        .expect("Failed to navigate");
-
-    page.add_script_tag(Some(
-        AddScriptTagOptions::builder()
-            .content("window.chromiumScriptRan = true;")
-            .build(),
-    ))
-    .await
-    .expect("Failed to add script tag in Chromium");
-
-    let value = page
-        .evaluate_value("window.chromiumScriptRan")
-        .await
-        .expect("Failed to evaluate");
-
-    assert_eq!(value.trim(), "true", "Script should have run in Chromium");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
