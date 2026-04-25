@@ -133,20 +133,45 @@ cargo nextest run --workspace
 
 **After all automated checks pass**, provide user with clear instructions:
 
-#### Git Commit and Tag
+#### Git Commit, then wait for CI, then tag
+
+**Important — do not push the tag in the same step as the commit.**
+A pushed tag triggers `release.yml` which publishes to crates.io, and
+crates.io publication is irreversible. Always validate on CI first.
 
 ```bash
 # Stage version changes
-git add Cargo.toml Cargo.lock CHANGELOG.md
+git add Cargo.toml Cargo.lock CHANGELOG.md README.md \
+        supply-chain/imports.lock supply-chain/config.toml
 
 # Commit version bump
 git commit -m "Bump version to vX.Y.Z"
 
-# Create annotated tag
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-
-# Push commit and tag
+# 1) Push the COMMIT only — no tag yet
 git push origin main
+```
+
+Wait for CI to complete on the new commit:
+
+```bash
+gh run watch  # or check the Actions tab on GitHub
+```
+
+Required checks before tagging:
+- Test on ubuntu-latest / macos-latest / windows-latest — all green
+- Security & Quality (cargo audit, deny, vet) — green
+
+If any required check fails, **do not tag**. Land a follow-up fix commit
+(or revert the version bump) and re-run CI. A failing `main` is
+recoverable; a published bad version is not.
+
+Only after CI is fully green:
+
+```bash
+# 2) Create the annotated tag
+git tag -a vX.Y.Z -m "Release vX.Y.Z — <one-line summary>"
+
+# 3) Push the tag — triggers release.yml
 git push origin vX.Y.Z
 ```
 
@@ -157,11 +182,12 @@ git push origin vX.Y.Z
 - It will build artifacts and publish the `playwright-rs` crate to crates.io.
 - **Do NOT** run `cargo publish` manually.
 
-#### GitHub Release (Automated + Manual Edit)
+#### GitHub Release (Automated)
 
-1. The CI workflow will automatically create/update the GitHub Release and upload assets.
-2. After CI completes, **Edit** the release on GitHub: https://github.com/padamson/playwright-rust/releases
-3. Paste the relevant section from `CHANGELOG.md` into the release description.
+The release workflow generates the GitHub Release body from the
+matching `[X.Y.Z]` CHANGELOG section via `parse-changelog`.
+**`CHANGELOG.md` is the single source of truth for release notes** —
+do not manually paste into the GitHub Release UI.
 
 ---
 
