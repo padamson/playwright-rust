@@ -2,12 +2,8 @@
 # cargo-vet imports lock
 
 [[unpublished.playwright-rs]]
-version = "0.11.0"
-audited_as = "0.10.0"
-
-[[unpublished.playwright-rs]]
-version = "0.12.0"
-audited_as = "0.11.0"
+version = "0.12.1"
+audited_as = "0.12.0"
 
 [[publisher.bumpalo]]
 version = "3.20.2"
@@ -507,6 +503,12 @@ change.
 who = "Chris Fallin <chris@cfallin.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.29 -> 0.3.32"
+
+[[audits.bytecode-alliance.audits.rustls-webpki]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.103.12 -> 0.103.13"
+notes = "Minor fixes for the bug being fixed in this release, nothing awry."
 
 [[audits.bytecode-alliance.audits.sha1]]
 who = "Andrew Brown <andrew.brown@intel.com>"

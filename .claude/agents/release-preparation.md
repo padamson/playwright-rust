@@ -84,7 +84,28 @@ Execute comprehensive pre-release verification, update version files, validate C
    - Ensures Cargo.lock is updated
    - Report: ✅ Version bump successful / ❌ Errors
 
+4. **Refresh cargo-vet supply chain entries** — the version bump invalidates
+   `supply-chain/imports.lock` because vet has no audit/exemption for the
+   new in-tree version yet. **Never hand-edit `imports.lock`** — use:
+   ```bash
+   cargo vet regenerate unpublished
+   ```
+   This automatically:
+   - Removes `[[unpublished.playwright-rs]]` entries for now-published versions
+   - Adds a fresh `[[unpublished.playwright-rs]]` entry for the new in-tree
+     version chained `audited_as` to the previous version
+
+   Then run `cargo vet` to verify the chain. If it still fails because
+   prior versions getting published broke the chain, bump the
+   `[[exemptions.playwright-rs]] version = "..."` line in
+   `supply-chain/config.toml` to the latest published version (the
+   exemption is the anchor that the unpublished entries chain to), and
+   re-run `cargo vet` until it succeeds.
+
 **After version bump**: Show git diff and ask user to review changes.
+The release commit must include `Cargo.toml`, `Cargo.lock`,
+`supply-chain/imports.lock`, and any `supply-chain/config.toml` exemption
+bump.
 
 ---
 

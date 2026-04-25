@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-04-25
+
+### Security
+
+- **`RUSTSEC-2026-0104`** — bump `rustls-webpki` from `0.103.12` to `0.103.13`. Reachable panic in CRL parsing via `BorrowedCertRevocationList::from_der` when handling a syntactically valid empty `BIT STRING` in the `onlySomeReasons` element of an `IssuingDistributionPoint` extension. Reachable prior to signature verification. Applications that don't use CRLs are not affected. Advisory: <https://rustsec.org/advisories/RUSTSEC-2026-0104>
+
 ## [0.12.0] - 2026-04-19
 
 ### Added
@@ -612,7 +618,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/padamson/playwright-rust/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/padamson/playwright-rust/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/padamson/playwright-rust/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/padamson/playwright-rust/compare/v0.9.0...v0.10.0
