@@ -577,12 +577,6 @@ criteria = "safe-to-deploy"
 version = "0.2.4"
 notes = "Implements a concurrency primitive with atomics, and is not obviously incorrect"
 
-[[audits.bytecode-alliance.audits.utf-8]]
-who = "Chris Fallin <chris@cfallin.org>"
-criteria = "safe-to-deploy"
-version = "0.7.6"
-notes = "Small library that uses `unsafe` only around `str::from_utf8_unchecked` after explicitly verifying UTF-8."
-
 [[audits.bytecode-alliance.audits.vcpkg]]
 who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"

@@ -57,7 +57,7 @@ version = "0.39.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum]]
-version = "0.8.8"
+version = "0.8.9"
 criteria = "safe-to-run"
 
 [[exemptions.axum-core]]
@@ -633,7 +633,7 @@ version = "1.11.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio]]
-version = "1.51.1"
+version = "1.52.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-macros]]
@@ -643,10 +643,6 @@ criteria = "safe-to-deploy"
 [[exemptions.tokio-rustls]]
 version = "0.26.4"
 criteria = "safe-to-deploy"
-
-[[exemptions.tokio-tungstenite]]
-version = "0.28.0"
-criteria = "safe-to-run"
 
 [[exemptions.tokio-tungstenite]]
 version = "0.29.0"
@@ -686,10 +682,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.tracing-subscriber]]
 version = "0.3.23"
-criteria = "safe-to-run"
-
-[[exemptions.tungstenite]]
-version = "0.28.0"
 criteria = "safe-to-run"
 
 [[exemptions.tungstenite]]
