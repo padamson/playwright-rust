@@ -1,0 +1,106 @@
+name: Upstream Playwright Check
+
+# Polls microsoft/playwright for new releases and opens a tracking issue
+# when our bundled driver version is behind upstream. Issue-only — does
+# not auto-bump because driver bumps can carry browser-binary changes,
+# protocol-schema deltas, or platform-support drops (e.g. macOS 14
+# WebKit removal in 1.59) that need human review.
+
+on:
+  schedule:
+    # Saturday 10:00 UTC — runs after the Dependabot Cargo PR window
+    # (04:00 ET = 09:00 UTC) so we batch maintenance tasks together.
+    - cron: '0 10 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-upstream:
+    name: Check microsoft/playwright for new release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read currently bundled driver version
+        id: current
+        run: |
+          version=$(grep -E 'const PLAYWRIGHT_VERSION:' crates/playwright/build.rs | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Bundled driver version: $version"
+
+      - name: Fetch latest microsoft/playwright release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Latest non-prerelease tag; strip leading "v" to compare against build.rs
+          latest=$(gh release view --repo microsoft/playwright --json tagName --jq '.tagName' | sed -E 's/^v//')
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+          echo "Latest upstream release: $latest"
+
+      - name: Open / update tracking issue if behind
+        if: steps.current.outputs.version != steps.upstream.outputs.version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT: ${{ steps.current.outputs.version }}
+          UPSTREAM: ${{ steps.upstream.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          title="Driver bump: Playwright ${UPSTREAM} available (we ship ${CURRENT})"
+
+          # Idempotent: if an open issue already tracks this exact upstream
+          # version, skip. Match on title to avoid spamming weekly.
+          existing=$(gh issue list --label upstream-playwright-bump \
+            --state open --search "in:title ${UPSTREAM}" \
+            --json number,title \
+            --jq '.[] | select(.title == "'"${title}"'") | .number' | head -n1)
+
+          if [ -n "${existing}" ]; then
+            echo "Open issue #${existing} already tracks ${UPSTREAM} — skipping."
+            exit 0
+          fi
+
+          # Ensure the label exists (idempotent — ignore failure if it does)
+          gh label create upstream-playwright-bump \
+            --description "Tracking issues for upstream Playwright driver version bumps" \
+            --color "1d76db" 2>/dev/null || true
+
+          # Render the body to a file to avoid YAML/shell quoting issues
+          cat > /tmp/issue-body.md <<EOF
+          Microsoft Playwright **${UPSTREAM}** is the current upstream release; this repo bundles **${CURRENT}** via \`crates/playwright/build.rs\`.
+
+          ## What changes when bumping
+
+          - \`crates/playwright/build.rs\` — \`PLAYWRIGHT_VERSION\` constant
+          - \`README.md\` — install snippet (\`npx playwright@VERSION install\`) and version badge
+          - \`crates/playwright/src/lib.rs\` — rustdoc reference if it pins a specific version
+          - \`.github/workflows/test.yml\` and \`.github/workflows/release.yml\` — browser cache keys and install paths (search for the old version string)
+          - \`crates/playwright/tests/playwright_version_test.rs\` — \`PLAYWRIGHT_VERSION\` assertion
+          - \`crates/playwright/examples/*\` — example comments referencing the version
+
+          See \`.claude/skills/release-process/SKILL.md\` and the **release** sub-agent for the full release flow.
+
+          ## Things to validate
+
+          - Browser binaries: \`drivers/playwright-${UPSTREAM}-<target>/node ... cli.js install\` works on Linux/macOS/Windows
+          - Protocol changes: review the [v${UPSTREAM} release notes](https://github.com/microsoft/playwright/releases/tag/v${UPSTREAM}) for breaking RPC or initializer-shape changes
+          - Platform support: minor releases sometimes drop OS support (e.g. macOS 14 WebKit was removed in 1.59) — document under \`### Breaking Changes\` if present
+          - Test suite: full run on all three platforms before tagging
+
+          ## Tracking
+
+          - Auto-created weekly by [.github/workflows/upstream-playwright-check.yml](.github/workflows/upstream-playwright-check.yml).
+          - Closes automatically when the bump commit lands referencing this issue (\`closes #<n>\`).
+          - A new issue will open the next time upstream releases a newer version.
+          EOF
+
+          gh issue create \
+            --label upstream-playwright-bump \
+            --title "${title}" \
+            --body-file /tmp/issue-body.md
+
+          echo "Opened tracking issue for ${UPSTREAM}."
