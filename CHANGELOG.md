@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-04-27
+
 ### Added
 
 - **Locator assertions** — `to_have_attribute(name, value)`, `to_have_class(expected)`, `to_have_css(name, value)`, `to_have_count(count)`, plus `_regex` variants for the first three. Closes [#58](https://github.com/padamson/playwright-rust/issues/58).
@@ -622,7 +624,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/padamson/playwright-rust/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/padamson/playwright-rust/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/padamson/playwright-rust/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/padamson/playwright-rust/compare/v0.10.0...v0.11.0

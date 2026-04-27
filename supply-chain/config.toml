@@ -409,7 +409,7 @@ version = "0.2.17"
 criteria = "safe-to-deploy"
 
 [[exemptions.playwright-rs]]
-version = "0.12.0"
+version = "0.12.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.plotters]]

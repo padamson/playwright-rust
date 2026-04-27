@@ -2,8 +2,8 @@
 # cargo-vet imports lock
 
 [[unpublished.playwright-rs]]
-version = "0.12.1"
-audited_as = "0.12.0"
+version = "0.12.2"
+audited_as = "0.12.1"
 
 [[publisher.bumpalo]]
 version = "3.20.2"
