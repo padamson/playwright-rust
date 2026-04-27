@@ -78,6 +78,16 @@ const DEFAULT_POLL_INTERVAL: Duration = Duration::from_millis(100);
 ///     page.goto("data:text/html,<input type='text' id='input' value='test value'>", None).await?;
 ///     expect(page.locator("#input").await).to_have_value("test value").await?;
 ///
+///     // Test to_have_attribute / to_have_class / to_have_css / to_have_count
+///     page.goto(
+///         "data:text/html,<a id='link' class='primary' href='/x' style='color:red'>A</a><a class='primary'>B</a>",
+///         None,
+///     ).await?;
+///     expect(page.locator("#link").await).to_have_attribute("href", "/x").await?;
+///     expect(page.locator("#link").await).to_have_class("primary").await?;
+///     expect(page.locator("#link").await).to_have_css("color", "rgb(255, 0, 0)").await?;
+///     expect(page.locator(".primary").await).to_have_count(2).await?;
+///
 ///     browser.close().await?;
 ///     Ok(())
 /// }
@@ -654,6 +664,289 @@ impl Expectation {
             }
 
             // Wait before next poll
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the element has the specified attribute set to the given value.
+    ///
+    /// A missing attribute (rather than one set to an empty string) never matches.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-attribute>
+    pub async fn to_have_attribute(self, name: &str, value: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+
+        loop {
+            let actual = self.locator.get_attribute(name).await?;
+
+            let matched = actual.as_deref() == Some(value);
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let actual_display = actual.as_deref().unwrap_or("<missing>");
+                let message = if self.negate {
+                    format!(
+                        "Expected element '{}' NOT to have attribute '{}'='{}', but it did after {:?}",
+                        selector, name, value, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected element '{}' to have attribute '{}'='{}', but had '{}' after {:?}",
+                        selector, name, value, actual_display, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the element's attribute value matches the specified regex pattern.
+    ///
+    /// A missing attribute never matches.
+    pub async fn to_have_attribute_regex(self, name: &str, pattern: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+        let re = regex::Regex::new(pattern)
+            .map_err(|e| crate::error::Error::InvalidArgument(format!("Invalid regex: {}", e)))?;
+
+        loop {
+            let actual = self.locator.get_attribute(name).await?;
+
+            let matched = actual.as_deref().is_some_and(|v| re.is_match(v));
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let actual_display = actual.as_deref().unwrap_or("<missing>");
+                let message = if self.negate {
+                    format!(
+                        "Expected element '{}' attribute '{}' NOT to match pattern '{}', but it did after {:?}",
+                        selector, name, pattern, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected element '{}' attribute '{}' to match pattern '{}', but had '{}' after {:?}",
+                        selector, name, pattern, actual_display, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the element has exactly the specified `class` attribute string.
+    ///
+    /// Mirrors Playwright's string-form behaviour: the element's full `class` attribute
+    /// (whitespace-trimmed) must equal `expected`. To match against a regex, use
+    /// [`to_have_class_regex`](Self::to_have_class_regex).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-class>
+    pub async fn to_have_class(self, expected: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+
+        loop {
+            let actual = self
+                .locator
+                .get_attribute("class")
+                .await?
+                .unwrap_or_default();
+            let actual_trimmed = actual.trim();
+
+            let matched = actual_trimmed == expected;
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected element '{}' NOT to have class '{}', but it did after {:?}",
+                        selector, expected, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected element '{}' to have class '{}', but had '{}' after {:?}",
+                        selector, expected, actual_trimmed, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the element's `class` attribute matches the specified regex pattern.
+    pub async fn to_have_class_regex(self, pattern: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+        let re = regex::Regex::new(pattern)
+            .map_err(|e| crate::error::Error::InvalidArgument(format!("Invalid regex: {}", e)))?;
+
+        loop {
+            let actual = self
+                .locator
+                .get_attribute("class")
+                .await?
+                .unwrap_or_default();
+
+            let matched = re.is_match(&actual);
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected element '{}' class NOT to match pattern '{}', but it did after {:?}",
+                        selector, pattern, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected element '{}' class to match pattern '{}', but had '{}' after {:?}",
+                        selector, pattern, actual, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the element has the given computed CSS property value.
+    ///
+    /// The value is read via `getComputedStyle(element).getPropertyValue(name)`, so
+    /// browser-normalized representations apply (e.g. `rgb(255, 0, 0)` rather than
+    /// `red`, `400` for `font-weight: bold`).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-css>
+    pub async fn to_have_css(self, name: &str, value: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+        let expr = format!(
+            "(el) => getComputedStyle(el).getPropertyValue({})",
+            serde_json::to_string(name).unwrap()
+        );
+
+        loop {
+            let actual: String = self.locator.evaluate(&expr, None::<()>).await?;
+
+            let matched = actual == value;
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected element '{}' NOT to have CSS '{}'='{}', but it did after {:?}",
+                        selector, name, value, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected element '{}' to have CSS '{}'='{}', but had '{}' after {:?}",
+                        selector, name, value, actual, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the element's computed CSS property matches the specified regex pattern.
+    pub async fn to_have_css_regex(self, name: &str, pattern: &str) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+        let re = regex::Regex::new(pattern)
+            .map_err(|e| crate::error::Error::InvalidArgument(format!("Invalid regex: {}", e)))?;
+        let expr = format!(
+            "(el) => getComputedStyle(el).getPropertyValue({})",
+            serde_json::to_string(name).unwrap()
+        );
+
+        loop {
+            let actual: String = self.locator.evaluate(&expr, None::<()>).await?;
+
+            let matched = re.is_match(&actual);
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected element '{}' CSS '{}' NOT to match pattern '{}', but it did after {:?}",
+                        selector, name, pattern, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected element '{}' CSS '{}' to match pattern '{}', but had '{}' after {:?}",
+                        selector, name, pattern, actual, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
+            tokio::time::sleep(self.poll_interval).await;
+        }
+    }
+
+    /// Asserts that the locator resolves to exactly `count` matching elements.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-count>
+    pub async fn to_have_count(self, count: usize) -> Result<()> {
+        let start = std::time::Instant::now();
+        let selector = self.locator.selector().to_string();
+
+        loop {
+            let actual = self.locator.count().await?;
+
+            let matched = actual == count;
+            let matches = if self.negate { !matched } else { matched };
+
+            if matches {
+                return Ok(());
+            }
+
+            if start.elapsed() >= self.timeout {
+                let message = if self.negate {
+                    format!(
+                        "Expected locator '{}' NOT to have count {}, but it did after {:?}",
+                        selector, count, self.timeout
+                    )
+                } else {
+                    format!(
+                        "Expected locator '{}' to have count {}, but had {} after {:?}",
+                        selector, count, actual, self.timeout
+                    )
+                };
+                return Err(crate::error::Error::AssertionTimeout(message));
+            }
+
             tokio::time::sleep(self.poll_interval).await;
         }
     }

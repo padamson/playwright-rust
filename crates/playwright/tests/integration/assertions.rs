@@ -774,6 +774,183 @@ async fn test_to_have_value_assertions() {
 }
 
 // ============================================================================
+// to_have_attribute / to_have_class / to_have_css / to_have_count
+// ============================================================================
+
+#[tokio::test]
+async fn test_to_have_attribute_assertions() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(
+        "data:text/html,<a id='link' href='/path' data-x='1'>Link</a>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    let link = page.locator("#link").await;
+
+    expect(link.clone())
+        .to_have_attribute("href", "/path")
+        .await
+        .expect("href should match");
+
+    expect(link.clone())
+        .to_have_attribute("data-x", "1")
+        .await
+        .expect("data-x should match");
+
+    expect(link.clone())
+        .not()
+        .to_have_attribute("href", "/other")
+        .await
+        .expect("href should NOT equal /other");
+
+    expect(link.clone())
+        .to_have_attribute_regex("href", r"^/p")
+        .await
+        .expect("href regex should match");
+
+    let result = expect(link.clone())
+        .with_timeout(std::time::Duration::from_millis(300))
+        .to_have_attribute("href", "/wrong")
+        .await;
+    assert!(result.is_err(), "Mismatched value should time out");
+
+    let result = expect(link)
+        .with_timeout(std::time::Duration::from_millis(300))
+        .to_have_attribute("nonexistent", "")
+        .await;
+    assert!(
+        result.is_err(),
+        "Missing attribute should not match empty string"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_to_have_class_assertions() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(
+        "data:text/html,<div id='a' class='primary'>A</div><div id='b' class='primary large'>B</div>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    expect(page.locator("#a").await)
+        .to_have_class("primary")
+        .await
+        .expect("Single class should match");
+
+    expect(page.locator("#b").await)
+        .to_have_class("primary large")
+        .await
+        .expect("Multi-class string should match exactly");
+
+    expect(page.locator("#b").await)
+        .not()
+        .to_have_class("primary")
+        .await
+        .expect("Multi-class element should NOT equal single-class string");
+
+    expect(page.locator("#b").await)
+        .to_have_class_regex(r"\blarge\b")
+        .await
+        .expect("Class regex should match");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_to_have_css_assertions() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(
+        "data:text/html,<div id='styled' style='color: rgb(255, 0, 0); font-weight: 700;'>X</div>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    let el = page.locator("#styled").await;
+
+    expect(el.clone())
+        .to_have_css("color", "rgb(255, 0, 0)")
+        .await
+        .expect("Color should match computed style");
+
+    expect(el.clone())
+        .to_have_css("font-weight", "700")
+        .await
+        .expect("Font weight should be normalized to numeric");
+
+    expect(el.clone())
+        .to_have_css_regex("color", r"^rgb")
+        .await
+        .expect("CSS regex should match");
+
+    let result = expect(el)
+        .with_timeout(std::time::Duration::from_millis(300))
+        .to_have_css("color", "rgb(0, 255, 0)")
+        .await;
+    assert!(result.is_err(), "Wrong CSS value should time out");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_to_have_count_assertions() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(
+        "data:text/html,<ul><li class='item'>A</li><li class='item'>B</li><li class='item'>C</li></ul>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    expect(page.locator(".item").await)
+        .to_have_count(3)
+        .await
+        .expect("Should have 3 items");
+
+    expect(page.locator(".missing").await)
+        .to_have_count(0)
+        .await
+        .expect("Missing selector should have count 0");
+
+    expect(page.locator(".item").await)
+        .not()
+        .to_have_count(5)
+        .await
+        .expect("Should NOT have count 5");
+
+    // Auto-retry: list grows after a delay
+    page.evaluate_expression(
+        r#"
+        setTimeout(() => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.textContent = 'D';
+            document.querySelector('ul').appendChild(li);
+        }, 150);
+        "#,
+    )
+    .await
+    .expect("Failed to inject script");
+
+    expect(page.locator(".item").await)
+        .to_have_count(4)
+        .await
+        .expect("Should auto-retry until count reaches 4");
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+// ============================================================================
 // Cross-browser Smoke Test
 // ============================================================================
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Locator assertions** — `to_have_attribute(name, value)`, `to_have_class(expected)`, `to_have_css(name, value)`, `to_have_count(count)`, plus `_regex` variants for the first three. Closes [#58](https://github.com/padamson/playwright-rust/issues/58).
+
 ## [0.12.1] - 2026-04-25
 
 ### Security
