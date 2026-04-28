@@ -1475,6 +1475,7 @@ dependencies = [
  "futures-util",
  "glob",
  "image",
+ "libc",
  "mime_guess",
  "parking_lot",
  "regex",

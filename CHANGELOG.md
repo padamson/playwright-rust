@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Defensive tty restore on Ctrl-C (Unix only)** — `Playwright::launch` now snapshots stdin's termios state and installs a SIGINT handler that restores it before exiting. Also closes the driver stdin pipe in `Drop` to let the Node driver shut down browsers gracefully instead of orphaning them on SIGKILL. Targets [#59](https://github.com/padamson/playwright-rust/issues/59) — terminal left in non-canonical mode after Ctrl-C. Opt-out via `PLAYWRIGHT_NO_SIGNAL_HANDLER=1`.
+
 ## [0.12.2] - 2026-04-27
 
 ### Added
