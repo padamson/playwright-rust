@@ -1,0 +1,104 @@
+#!/usr/bin/env expect -f
+# Harness for issue #59 reproduction.
+#
+# Runs multiple scenarios in a single pty. For each scenario, after
+# sending Ctrl-C to the running reproducer, we do TWO checks:
+#
+#   1. Snapshot `stty -a` and diff against baseline (catches termios
+#      changes).
+#
+# Note: the user's literal symptom is arrow-key escape sequences echoed
+# raw (`^[[D` etc.) after Ctrl-C. We tried adding a behavioural arrow-key
+# probe here, but inside an expect-allocated pty bash readline doesn't
+# engage the way it does in a real terminal emulator, so even the
+# healthy baseline shell echoes raw escapes. The check couldn't
+# distinguish broken from healthy in this environment, so we rely on
+# the stty diff alone — termios is the underlying mechanism that
+# produces that symptom in real terminals.
+#
+# Scenarios:
+#   A. Ctrl-C *during* chromium launch (before READY marker fires)
+#   B. Ctrl-C *after* READY (steady-state)
+#   C. Double Ctrl-C in rapid succession after READY
+#   D. Same as B, but with a default bash (loading profile/RC)
+
+set bin   [lindex $argv 0]
+set out   [lindex $argv 1]
+
+if {$bin == "" || $out == ""} {
+    puts stderr "usage: sigint_termios_harness.exp <bin> <out-dir>"
+    exit 2
+}
+
+set timeout 120
+log_user 1
+
+exec mkdir -p $out
+
+proc run_scenario {scenario_name interactive_loadrc trigger_when num_ctrlc} {
+    global bin out
+
+    if {$interactive_loadrc} {
+        set bash_args "-i"
+    } else {
+        set bash_args "--noprofile --norc -i"
+    }
+
+    eval spawn -noecho bash $bash_args
+    expect "$ "
+    send "PS1='READY> '\r"
+    expect "READY> "
+
+    # Run the reproducer in foreground
+    send "$bin\r"
+
+    if {$trigger_when == "before-ready"} {
+        expect {
+            "launching playwright" { }
+            timeout { puts stderr "\[$scenario_name\] timeout waiting for launching marker"; return 1 }
+        }
+        sleep 1
+    } else {
+        expect {
+            "\\\[sigint-repro\\\] READY" { }
+            timeout { puts stderr "\[$scenario_name\] timeout waiting for READY"; return 1 }
+        }
+        sleep 1
+    }
+
+    for {set i 0} {$i < $num_ctrlc} {incr i} {
+        send "\003"
+    }
+    expect "READY> "
+
+    send "sleep 2\r"
+    expect "READY> "
+
+    # Check 1: termios snapshot
+    send "stty -a > $out/stty-$scenario_name; echo SNAP_$scenario_name\r"
+    expect "SNAP_$scenario_name"
+    expect "READY> "
+
+    send "exit\r"
+    expect eof
+
+    return 0
+}
+
+# Baseline snapshot in a clean shell, no reproducer ever launched.
+spawn -noecho bash --noprofile --norc -i
+expect "$ "
+send "PS1='READY> '\r"
+expect "READY> "
+send "stty -a > $out/stty-baseline; echo BASELINE\r"
+expect "BASELINE"
+expect "READY> "
+
+send "exit\r"
+expect eof
+
+# Run scenarios
+run_scenario "A_before_ready" 0 "before-ready" 1
+run_scenario "B_after_ready"  0 "after-ready"  1
+run_scenario "C_double_ctrlc" 0 "after-ready"  2
+run_scenario "D_with_profile" 1 "after-ready"  1

@@ -93,6 +93,10 @@ jobs:
     - name: Run clippy
       run: cargo clippy --all-targets --all-features -- -D warnings
 
+    - name: Install expect (issue #59 reproducer harness)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y expect
+
     - name: Build
       run: cargo build --verbose
 
