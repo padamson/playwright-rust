@@ -53,7 +53,15 @@ impl PlaywrightServer {
         // The driver should already be downloaded by build.rs
         let (node_exe, cli_js) = get_driver_executable()?;
 
-        // Launch the server process
+        // Launch the server process. Stderr is piped (not inherited)
+        // because the Node driver writes terminal-capability queries
+        // and other escape sequences to its stderr while alive. With
+        // stderr inherited, those bytes clobber the user's tty and
+        // break shell line-editing after a Ctrl-C while the driver is
+        // still gracefully shutting down chromium (see #59). We drain
+        // the piped stderr in a background task and forward each line
+        // via `tracing::debug!` so users with tracing enabled can
+        // still see driver diagnostics.
         let mut cmd = Command::new(&node_exe);
         cmd.arg(&cli_js)
             .arg("run-driver")
@@ -62,7 +70,7 @@ impl PlaywrightServer {
             .env("PW_CLI_DISPLAY_VERSION", env!("CARGO_PKG_VERSION"))
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::inherit());
+            .stderr(std::process::Stdio::piped());
 
         // Put the Node driver in its own process group so a Ctrl-C in
         // the user's shell (which sends SIGINT to the foreground process
@@ -84,6 +92,21 @@ impl PlaywrightServer {
         let mut child = cmd
             .spawn()
             .map_err(|e| Error::LaunchFailed(format!("Failed to spawn process: {}", e)))?;
+
+        // Drain Node's stderr in a background task. Without an active
+        // reader the kernel pipe buffer would eventually fill and
+        // block the driver's writes; we don't want that. Bytes are
+        // forwarded line-by-line via `tracing::debug!` so they're
+        // accessible when needed without polluting the terminal.
+        if let Some(stderr) = child.stderr.take() {
+            tokio::spawn(async move {
+                use tokio::io::{AsyncBufReadExt, BufReader};
+                let mut lines = BufReader::new(stderr).lines();
+                while let Ok(Some(line)) = lines.next_line().await {
+                    tracing::debug!(target: "playwright_rs::driver_stderr", "{}", line);
+                }
+            });
+        }
 
         // Check if process started successfully
         // Give it a moment to potentially fail
