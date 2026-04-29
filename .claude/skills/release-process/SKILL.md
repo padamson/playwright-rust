@@ -70,13 +70,15 @@ If CI fails on `main` after the version-bump commit:
 
 ## What `release.yml` does on tag push
 
-1. Builds release binaries for each platform (matrix: linux/macOS/windows)
-2. Publishes to crates.io
-3. Generates the GitHub Release body from the matching `[X.Y.Z]`
+1. Runs the test suite on linux/macOS/windows as a final pre-publish gate
+2. Creates the GitHub Release with notes from the matching `[X.Y.Z]`
    CHANGELOG section via `parse-changelog` — **CHANGELOG.md is the
    single source of truth for release notes**, no manual paste needed
-4. Generates SLSA build provenance attestations (some annotations are
-   cosmetic — see issue #56)
+3. Publishes to crates.io
+
+The workflow is library-only: no binary artifacts are built, archived,
+or attested. If a CLI is ever shipped, add a separate binary-release
+pipeline rather than bolting onto this workflow.
 
 ## Post-release
 

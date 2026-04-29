@@ -27,3 +27,6 @@ Thumbs.db
 # cargo-mutants
 mutants.out/
 mutants.out.old/
+
+# Claude Code runtime state
+.claude/scheduled_tasks.lock

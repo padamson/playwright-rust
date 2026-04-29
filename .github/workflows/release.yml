@@ -11,12 +11,10 @@ env:
 
 permissions:
   contents: write
-  id-token: write       # Required for SLSA provenance attestation
-  attestations: write   # Required for GitHub artifact attestations
 
 jobs:
-  build-release:
-    name: Build ${{ matrix.target }}
+  test:
+    name: Test ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -25,29 +23,21 @@ jobs:
           # Linux x86_64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            cross: false
 
           # macOS x86_64 (Intel)
           - os: macos-latest
             target: x86_64-apple-darwin
-            cross: false
 
           # macOS aarch64 (Apple Silicon)
           - os: macos-latest
             target: aarch64-apple-darwin
-            cross: false
 
           # Windows x86_64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            cross: false
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Get version from tag
-        id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
@@ -94,10 +84,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-browsers-1.59.1-
 
-      - name: Install cargo-nextest & parse-changelog
+      - name: Install cargo-nextest
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-nextest,parse-changelog
+          tool: cargo-nextest
 
       - name: Build
         run: cargo build --verbose
@@ -122,70 +112,35 @@ jobs:
       - name: Run tests
         run: cargo nextest run --workspace --profile ci --target ${{ matrix.target }}
 
-      - name: Build release binary (if CLI exists)
-        run: cargo build --release --target ${{ matrix.target }} --verbose
-        continue-on-error: true  # May not have binary yet in early development
+  create-release:
+    name: Create GitHub Release
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
 
-      - name: Strip binary (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          if [ -f target/${{ matrix.target }}/release/playwright ]; then
-            strip target/${{ matrix.target }}/release/playwright
-          fi
-        continue-on-error: true
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Strip binary (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          if [ -f target/${{ matrix.target }}/release/playwright ]; then
-            strip target/${{ matrix.target }}/release/playwright
-          fi
-        continue-on-error: true
-
-      - name: Create archive (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd target/${{ matrix.target }}/release
-          if [ -f playwright ]; then
-            tar czf playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz playwright
-            mv playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.tar.gz ../../..
-          fi
-        continue-on-error: true
-
-      - name: Create archive (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          cd target/${{ matrix.target }}/release
-          if [ -f playwright.exe ]; then
-            7z a playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip playwright.exe
-            mv playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.zip ../../..
-          fi
-        continue-on-error: true
+      - name: Install parse-changelog
+        uses: taiki-e/install-action@v2
+        with:
+          tool: parse-changelog
 
       - name: Generate Release Notes
-        shell: bash
         run: parse-changelog CHANGELOG.md ${{ steps.get_version.outputs.version }} > release_notes.md
 
-      - name: Upload Release Asset
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate SLSA provenance attestation
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-path: playwright-rust-v${{ steps.get_version.outputs.version }}-${{ matrix.target }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
-        continue-on-error: true  # Don't fail release if attestation fails
-
   publish-crates:
     name: Publish to crates.io
-    needs: [build-release]
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
