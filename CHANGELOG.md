@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Defensive tty restore on Ctrl-C (Unix only)** — `Playwright::launch` now snapshots stdin's termios state and installs a SIGINT handler that restores it before exiting. Also closes the driver stdin pipe in `Drop` to let the Node driver shut down browsers gracefully instead of orphaning them on SIGKILL. Targets [#59](https://github.com/padamson/playwright-rust/issues/59) — terminal left in non-canonical mode after Ctrl-C. Opt-out via `PLAYWRIGHT_NO_SIGNAL_HANDLER=1`.
+- **Quiet shutdown on Ctrl-C (Unix only)** — the Node driver is now spawned in its own process group via `process_group(0)`, so a Ctrl-C in the user's shell only signals our Rust process rather than propagating to the Node child. When Rust dies, Node sees its stdin close and runs `gracefullyProcessExitDoNotHang` instead of crashing on EPIPE while chromium events are still in flight. The noisy stack trace (and the terminal-capability queries embedded in it that polluted the user's input buffer) no longer appears. Targets [#59](https://github.com/padamson/playwright-rust/issues/59).
+- **Defensive tty restore (Unix only)** — `Playwright::launch` snapshots stdin's termios at first call and a SIGINT handler restores it before exiting; `Drop` also closes the driver stdin pipe before falling back to SIGKILL. Belt-and-suspenders for any subprocess that does manage to clobber tty state. Opt-out via `PLAYWRIGHT_NO_SIGNAL_HANDLER=1`.
 
 ## [0.12.2] - 2026-04-27
 

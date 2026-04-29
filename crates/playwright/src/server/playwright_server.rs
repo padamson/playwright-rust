@@ -54,15 +54,34 @@ impl PlaywrightServer {
         let (node_exe, cli_js) = get_driver_executable()?;
 
         // Launch the server process
-        let mut child = Command::new(&node_exe)
-            .arg(&cli_js)
+        let mut cmd = Command::new(&node_exe);
+        cmd.arg(&cli_js)
             .arg("run-driver")
             .env("PW_LANG_NAME", "rust")
             .env("PW_LANG_NAME_VERSION", env!("CARGO_PKG_RUST_VERSION"))
             .env("PW_CLI_DISPLAY_VERSION", env!("CARGO_PKG_VERSION"))
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit());
+
+        // Put the Node driver in its own process group so a Ctrl-C in
+        // the user's shell (which sends SIGINT to the foreground process
+        // group) doesn't reach Node. When our process dies, Node's stdin
+        // pipe closes and the driver runs `gracefullyProcessExitDoNotHang`
+        // — a quiet, browser-aware shutdown. Without this isolation, Node
+        // gets SIGINT'd alongside us and races a noisy EPIPE error path
+        // that writes terminal-capability queries to stderr; the
+        // terminal's responses then pollute bash's stdin buffer and
+        // disrupt readline. See issue #59.
+        // process_group is on tokio::process::Command directly (Unix
+        // only). Pgid 0 means "make the child its own group leader"
+        // (PGID == child PID).
+        #[cfg(unix)]
+        {
+            cmd.process_group(0);
+        }
+
+        let mut child = cmd
             .spawn()
             .map_err(|e| Error::LaunchFailed(format!("Failed to spawn process: {}", e)))?;
 
