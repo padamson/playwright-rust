@@ -236,6 +236,45 @@ See [examples/](crates/playwright/examples/) for usage examples.
 cargo run --package playwright-rs --example basic
 ```
 
+## Testing & Debugging
+
+**See the source line that failed.** When `?` propagates an `Error` out of
+your test, you see the message but no Rust source location. Use
+[`anyhow`](https://docs.rs/anyhow) for tests and run with `RUST_BACKTRACE=1`:
+
+```rust,ignore
+use anyhow::{Context, Result};
+
+#[tokio::test]
+async fn my_test() -> Result<()> {
+    // ...
+    let content = heading.text_content().await.context("read heading")?;
+    // ...
+    Ok(())
+}
+```
+
+Run as `RUST_BACKTRACE=1 cargo nextest run` (or `cargo test`). The backtrace
+points at the failing `?`, and `.context("...")` adds breadcrumbs to the
+error chain. This matches how playwright-java/dotnet rely on the test
+runner's stack trace rather than baking source locations into the library.
+
+**Save a Playwright trace when a test fails.** Rust has no async `Drop`,
+so trace cleanup is explicit. Capture the test result, then run cleanup
+unconditionally and pass the trace path only on failure:
+
+```rust,ignore
+let result = run_test_body(&context).await;
+let trace_path = result.is_err().then(|| "trace.zip".to_string());
+let _ = tracing.stop(Some(TracingStopOptions { path: trace_path })).await;
+let _ = browser.close().await;
+result?;
+```
+
+See [`examples/trace_on_failure.rs`](crates/playwright/examples/trace_on_failure.rs)
+for a runnable end-to-end example. Open the resulting `trace.zip` at
+<https://trace.playwright.dev>.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=padamson/playwright-rust&type=Date)](https://star-history.com/#padamson/playwright-rust&Date)
