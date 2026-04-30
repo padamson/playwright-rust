@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-04-30
+
 ### Fixed
 
-- **Driver stderr no longer pollutes the user's terminal** — the Node driver's stderr is now piped and drained into `tracing::debug!` (target `playwright_rs::driver_stderr`) instead of being inherited from our process. Inheriting it meant any escape sequences the driver wrote (terminal-capability queries, error formatting) ended up on the user's tty, where the terminal's responses then disrupted shell line-editing after a Ctrl-C. Closes [#59](https://github.com/padamson/playwright-rust/issues/59) — terminal left in a state where arrow keys echo as raw `^[[A` instead of recalling history.
-- **Quiet shutdown on Ctrl-C (Unix only)** — the Node driver is also spawned in its own process group via `process_group(0)`. SIGINT in the user's shell only signals our Rust process; Node sees its stdin close cleanly and runs `gracefullyProcessExitDoNotHang` instead of crashing on EPIPE while chromium events are still in flight. Eliminates the noisy stack trace previously printed on Ctrl-C.
-- **Defensive tty restore (Unix only)** — `Playwright::launch` snapshots stdin's termios at first call and a SIGINT handler restores it before exiting; `Drop` also closes the driver stdin pipe before falling back to SIGKILL. Belt-and-suspenders for any subprocess that does manage to clobber tty state. Opt-out via `PLAYWRIGHT_NO_SIGNAL_HANDLER=1`.
+- **Ctrl-C no longer breaks the user's shell terminal (Unix)** — running a Playwright program and hitting Ctrl-C used to leave the shell with arrow keys echoing as raw `^[[A` instead of recalling history; recovering required `stty sane` or `reset`. Two layers fix it: (1) the Node driver is now spawned in its own process group via `process_group(0)`, so SIGINT only signals our Rust process and Node runs `gracefullyProcessExitDoNotHang` instead of crashing on EPIPE while chromium events are in flight; (2) the driver's stderr is piped and drained into `tracing::debug!` on target `playwright_rs::driver_stderr` instead of being inherited from our tty, so any terminal-capability queries Node writes during shutdown don't pollute the user's terminal. Closes [#59](https://github.com/padamson/playwright-rust/issues/59). A defensive tty-snapshot/restore SIGINT handler is also installed as belt-and-suspenders; opt-out via `PLAYWRIGHT_NO_SIGNAL_HANDLER=1`.
+
+### Added
+
+- **`trace_on_failure` example + README "Testing & Debugging" section** — idiomatic Rust pattern for ensuring `tracing.stop()` / `browser.close()` run on test failure (since `?` and `unwrap()` skip subsequent cleanup) and for getting line-pinpointed failures despite `?` hiding source location. Closest to the Java/.NET pattern (explicit try-finally) since Rust has no first-party Playwright test runner and no async `Drop`. Closes [#61](https://github.com/padamson/playwright-rust/issues/61).
+
+### Changed
+
+- **Release workflow: stripped dead CLI-binary scaffolding** — we're a library-only crate, so the build/strip/archive/upload-asset/SLSA-attestation steps were no-ops guarded by `if [ -f playwright ]`. Removing them eliminates the cosmetic "Could not find subject" red annotations that appeared on every release. Closes [#56](https://github.com/padamson/playwright-rust/issues/56).
 
 ## [0.12.2] - 2026-04-27
 
@@ -630,7 +638,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.2...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.12.3...HEAD
+[0.12.3]: https://github.com/padamson/playwright-rust/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/padamson/playwright-rust/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/padamson/playwright-rust/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/padamson/playwright-rust/compare/v0.11.0...v0.12.0
