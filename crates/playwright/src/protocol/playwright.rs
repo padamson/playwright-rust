@@ -100,6 +100,15 @@ impl Playwright {
         use crate::server::playwright_server::PlaywrightServer;
         use crate::server::transport::PipeTransport;
 
+        // Snapshot stdin termios and install a SIGINT handler that
+        // restores it before exiting. Defends against subprocesses that
+        // clobber the controlling terminal's mode and don't restore on
+        // abrupt exit (issue #59). Idempotent — multiple Playwright
+        // instances share the snapshot/handler. Opt-out via the
+        // PLAYWRIGHT_NO_SIGNAL_HANDLER env var.
+        crate::tty_guard::save_if_tty();
+        crate::tty_guard::install_signal_handler();
+
         // 1. Launch Playwright server
         tracing::debug!("Launching Playwright server");
         let mut server = PlaywrightServer::launch().await?;
@@ -423,30 +432,44 @@ impl ChannelOwner for Playwright {
 impl Drop for Playwright {
     /// Ensures Playwright server is shut down when Playwright is dropped.
     ///
-    /// This is critical on Windows to prevent process hangs when tests complete.
-    /// The Drop implementation will attempt to kill the server process synchronously.
+    /// On Unix, the driver's `cli/driver.js` listens for stdin close as a
+    /// graceful-exit signal — closing the pipe lets it tear down browsers
+    /// cleanly instead of leaving them as orphans. We drop stdin first,
+    /// then `start_kill` as a SIGKILL fallback (still issued
+    /// synchronously because we don't want to block the Drop).
     ///
-    /// Note: For graceful shutdown, prefer calling `playwright.shutdown().await`
-    /// explicitly before dropping.
+    /// On Windows, tokio's blocking stdio threadpool requires we drop
+    /// the pipes before killing or the cleanup hangs.
+    ///
+    /// Also restores any termios snapshot we took at launch time
+    /// (defends against subprocesses that left the tty in raw mode —
+    /// issue #59).
+    ///
+    /// For fully graceful shutdown, prefer calling
+    /// `playwright.shutdown().await` explicitly before dropping.
     fn drop(&mut self) {
         if let Some(mut server) = self.server.lock().take() {
-            tracing::debug!("Drop: Force-killing Playwright server");
+            tracing::debug!("Drop: shutting down Playwright server");
 
-            // We can't call async shutdown in Drop, so use blocking kill
-            // This is less graceful but ensures the process terminates
+            // Close stdin first — driver.js's `process.stdin.on("close",
+            // gracefullyProcessExitDoNotHang)` triggers cleanup of
+            // browser children. On Windows we drop all stdio handles to
+            // avoid the blocking-threadpool hang.
+            drop(server.process.stdin.take());
             #[cfg(windows)]
             {
-                // On Windows: Close stdio pipes before killing
-                drop(server.process.stdin.take());
                 drop(server.process.stdout.take());
                 drop(server.process.stderr.take());
             }
 
-            // Force kill the process
+            // SIGKILL fallback — non-blocking. If the driver was already
+            // exiting cleanly via stdin-close, this is a no-op.
             if let Err(e) = server.process.start_kill() {
                 tracing::warn!("Failed to kill Playwright server in Drop: {}", e);
             }
         }
+
+        crate::tty_guard::restore();
     }
 }
 

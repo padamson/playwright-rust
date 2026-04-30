@@ -37,6 +37,9 @@ futures-util = "0.3"
 url = "2.5"
 image = { version = "0.25", default-features = false, features = ["png"] }
 
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [dev-dependencies]
 anyhow = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }

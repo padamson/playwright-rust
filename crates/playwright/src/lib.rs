@@ -158,6 +158,7 @@ pub mod api;
 mod assertions;
 mod error;
 pub mod protocol;
+mod tty_guard;
 
 /// Playwright server version bundled with this crate.
 ///

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Driver stderr no longer pollutes the user's terminal** — the Node driver's stderr is now piped and drained into `tracing::debug!` (target `playwright_rs::driver_stderr`) instead of being inherited from our process. Inheriting it meant any escape sequences the driver wrote (terminal-capability queries, error formatting) ended up on the user's tty, where the terminal's responses then disrupted shell line-editing after a Ctrl-C. Closes [#59](https://github.com/padamson/playwright-rust/issues/59) — terminal left in a state where arrow keys echo as raw `^[[A` instead of recalling history.
+- **Quiet shutdown on Ctrl-C (Unix only)** — the Node driver is also spawned in its own process group via `process_group(0)`. SIGINT in the user's shell only signals our Rust process; Node sees its stdin close cleanly and runs `gracefullyProcessExitDoNotHang` instead of crashing on EPIPE while chromium events are still in flight. Eliminates the noisy stack trace previously printed on Ctrl-C.
+- **Defensive tty restore (Unix only)** — `Playwright::launch` snapshots stdin's termios at first call and a SIGINT handler restores it before exiting; `Drop` also closes the driver stdin pipe before falling back to SIGKILL. Belt-and-suspenders for any subprocess that does manage to clobber tty state. Opt-out via `PLAYWRIGHT_NO_SIGNAL_HANDLER=1`.
+
 ## [0.12.2] - 2026-04-27
 
 ### Added
