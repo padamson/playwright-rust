@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`build.rs`: replaced `reqwest` with `ureq`** for the one blocking driver download from Azure CDN. `reqwest` pulled in hyper, tower, h2, and ~220 lines of transitive build-time dependencies for a single GET; `ureq` is a thin synchronous client that covers the use case directly. Cuts our total `cargo tree` size from ~619 → ~507 lines (~18%). Build-only change, zero user-facing impact. Closes [#63](https://github.com/padamson/playwright-rust/issues/63) (sub-task of [#62](https://github.com/padamson/playwright-rust/issues/62)).
+
 ## [0.12.3] - 2026-04-30
 
 ### Fixed

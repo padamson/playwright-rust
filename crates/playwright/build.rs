@@ -160,20 +160,26 @@ fn download_and_extract_driver(drivers_dir: &Path, platform: &str) -> io::Result
 
     println!("cargo:warning=Downloading from: {}", url);
 
-    // Download the file
-    let response = reqwest::blocking::get(&url)
+    // Download the file via ureq (synchronous, minimal dep tree).
+    let mut response = ureq::get(&url)
+        .call()
         .map_err(|e| io::Error::other(format!("Download failed: {}", e)))?;
 
-    if !response.status().is_success() {
+    let status = response.status().as_u16();
+    if !(200..300).contains(&status) {
         return Err(io::Error::other(format!(
             "Download failed with status: {}",
-            response.status()
+            status
         )));
     }
 
-    // Read response bytes
-    let bytes = response
-        .bytes()
+    // The driver archive is ~50 MB; ureq's default body limit is 10 MB.
+    // Lift the limit for this trusted Microsoft CDN download.
+    let bytes: Vec<u8> = response
+        .body_mut()
+        .with_config()
+        .limit(u64::MAX)
+        .read_to_vec()
         .map_err(|e| io::Error::other(format!("Failed to read response: {}", e)))?;
 
     println!("cargo:warning=Downloaded {} bytes", bytes.len());

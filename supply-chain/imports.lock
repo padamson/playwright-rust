@@ -1,10 +1,6 @@
 
 # cargo-vet imports lock
 
-[[unpublished.playwright-rs]]
-version = "0.12.3"
-audited_as = "0.12.2"
-
 [[publisher.bumpalo]]
 version = "3.20.2"
 when = "2026-02-19"
@@ -18,13 +14,6 @@ when = "2022-02-07"
 user-id = 5946
 user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
-
-[[publisher.encoding_rs]]
-version = "0.8.35"
-when = "2024-10-24"
-user-id = 4484
-user-login = "hsivonen"
-user-name = "Henri Sivonen"
 
 [[publisher.flate2]]
 version = "1.1.9"

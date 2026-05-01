@@ -54,7 +54,10 @@ tempfile = "3"
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef"] }
 
 [build-dependencies]
-reqwest = { version = "0.13", features = ["blocking"] }
+# ureq (~5 transitive deps) covers the one blocking HTTP GET in
+# build.rs without dragging in the hyper/tower/h2 stack reqwest
+# would.
+ureq = "3"
 zip = "8"
 dirs = "6"
 
