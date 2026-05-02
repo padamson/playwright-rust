@@ -660,17 +660,61 @@ impl Page {
     /// Each call returns a snapshot; new messages arriving concurrently may or may not
     /// be included depending on timing.
     ///
+    /// To get a filtered subset, chain a standard iterator filter:
+    ///
+    /// ```ignore
+    /// let errors: Vec<_> = page
+    ///     .console_messages()
+    ///     .into_iter()
+    ///     .filter(|m| m.message_type() == "error")
+    ///     .collect();
+    /// ```
+    ///
+    /// Use [`clear_console_messages`](Self::clear_console_messages) to drop
+    /// the accumulator (e.g. between test phases).
+    ///
     /// See: <https://playwright.dev/docs/api/class-page#page-console-messages>
     pub fn console_messages(&self) -> Vec<crate::protocol::ConsoleMessage> {
         self.console_messages_log.lock().unwrap().clone()
+    }
+
+    /// Drops every console message accumulated so far. New messages arriving
+    /// after this call still get recorded; the accumulator just starts empty
+    /// again. Useful between test phases when you want to assert against
+    /// only messages from a specific phase.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-clear-console-messages>
+    pub fn clear_console_messages(&self) {
+        self.console_messages_log.lock().unwrap().clear();
     }
 
     /// Returns all uncaught JavaScript error messages received so far on this page.
     ///
     /// Errors are accumulated in order as they arrive via the `pageError` event.
     /// Each string is the `.message` field of the thrown `Error`.
+    ///
+    /// To get a filtered subset, chain a standard iterator filter:
+    ///
+    /// ```ignore
+    /// let typeerrors: Vec<_> = page
+    ///     .page_errors()
+    ///     .into_iter()
+    ///     .filter(|e| e.starts_with("TypeError"))
+    ///     .collect();
+    /// ```
+    ///
+    /// Use [`clear_page_errors`](Self::clear_page_errors) to drop the
+    /// accumulator (e.g. between test phases).
     pub fn page_errors(&self) -> Vec<String> {
         self.page_errors_log.lock().unwrap().clone()
+    }
+
+    /// Drops every page error accumulated so far. New errors arriving after
+    /// this call still get recorded.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-clear-page-errors>
+    pub fn clear_page_errors(&self) {
+        self.page_errors_log.lock().unwrap().clear();
     }
 
     /// Returns the page that opened this popup, or `None` if this page was not opened

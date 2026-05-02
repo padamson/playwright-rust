@@ -319,6 +319,79 @@ async fn test_page_page_errors() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Test that page.clear_console_messages() empties the accumulator and that
+/// new messages received after clearing are still recorded.
+#[tokio::test]
+async fn test_page_clear_console_messages() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let _ = page.goto("about:blank", None).await;
+
+    // Phase 1: produce a message, verify it lands.
+    let waiter_a = page.expect_console_message(Some(5000.0)).await?;
+    page.evaluate_expression("console.log('phase1')").await?;
+    waiter_a.wait().await.expect("phase1 event did not fire");
+    assert!(
+        !page.console_messages().is_empty(),
+        "phase1 should accumulate"
+    );
+
+    // Clear and confirm.
+    page.clear_console_messages();
+    assert!(
+        page.console_messages().is_empty(),
+        "console_messages() should be empty after clear_console_messages()"
+    );
+
+    // Phase 2: produce a new message, verify accumulation resumes from empty.
+    let waiter_b = page.expect_console_message(Some(5000.0)).await?;
+    page.evaluate_expression("console.log('phase2')").await?;
+    waiter_b.wait().await.expect("phase2 event did not fire");
+    let msgs = page.console_messages();
+    let texts: Vec<&str> = msgs.iter().map(|m| m.text()).collect();
+    assert!(
+        texts.contains(&"phase2"),
+        "post-clear messages should include 'phase2', got: {:?}",
+        texts
+    );
+    assert!(
+        !texts.contains(&"phase1"),
+        "post-clear messages must not include 'phase1' (was cleared), got: {:?}",
+        texts
+    );
+
+    browser.close().await?;
+    Ok(())
+}
+
+/// Test that page.clear_page_errors() empties the page-error accumulator.
+#[tokio::test]
+async fn test_page_clear_page_errors() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let _ = page.goto("about:blank", None).await;
+    let waiter = page.expect_event("pageerror", Some(5000.0)).await?;
+    page.evaluate::<(), ()>(
+        "() => { setTimeout(() => { throw new Error('to-be-cleared'); }, 0); }",
+        None,
+    )
+    .await?;
+    waiter.wait().await.expect("pageerror event did not fire");
+
+    assert!(
+        !page.page_errors().is_empty(),
+        "should have one error before clear"
+    );
+    page.clear_page_errors();
+    assert!(
+        page.page_errors().is_empty(),
+        "page_errors() should be empty after clear_page_errors()"
+    );
+
+    browser.close().await?;
+    Ok(())
+}
+
 /// Test that ConsoleMessage::timestamp() returns a valid wall-clock timestamp.
 ///
 /// Asserts that the timestamp is positive and within 60 seconds of the current time.
