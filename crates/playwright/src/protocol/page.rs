@@ -3829,6 +3829,20 @@ impl Page {
         crate::protocol::Accessibility::new(self.clone())
     }
 
+    /// Returns the ARIA accessibility tree for the page as a YAML string.
+    ///
+    /// Page-level shorthand for `page.locator("body").aria_snapshot()`. Useful
+    /// for asserting page-wide accessibility structure without first selecting
+    /// `body` explicitly.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-aria-snapshot>
+    pub async fn aria_snapshot(&self) -> Result<String> {
+        let frame = self.main_frame().await?;
+        frame
+            .aria_snapshot_raw("body", self.default_timeout_ms())
+            .await
+    }
+
     /// Returns the `Coverage` object for this page (Chromium only).
     ///
     /// Use `coverage().start_js_coverage()` / `stop_js_coverage()` and
