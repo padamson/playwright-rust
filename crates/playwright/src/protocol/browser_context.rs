@@ -176,6 +176,8 @@ pub struct BrowserContext {
     request_context_guid: Option<String>,
     /// Tracing GUID from initializer (resolved lazily)
     tracing_guid: Option<String>,
+    /// Debugger GUID from initializer (resolved lazily)
+    debugger_guid: Option<String>,
     /// Default action timeout for all pages in this context (milliseconds), stored as f64 bits.
     default_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
     /// Default navigation timeout for all pages in this context (milliseconds), stored as f64 bits.
@@ -261,6 +263,13 @@ impl BrowserContext {
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
+        // Extract Debugger GUID from initializer before moving it
+        let debugger_guid = initializer
+            .get("debugger")
+            .and_then(|v| v.get("guid"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
         let base = ChannelOwnerImpl::new(
             ParentOrConnection::Parent(parent.clone()),
             type_name,
@@ -280,6 +289,7 @@ impl BrowserContext {
             route_handlers: Arc::new(Mutex::new(Vec::new())),
             request_context_guid,
             tracing_guid,
+            debugger_guid,
             default_timeout_ms: Arc::new(std::sync::atomic::AtomicU64::new(
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
@@ -535,6 +545,25 @@ impl BrowserContext {
         })?;
 
         self.connection().get_typed::<Tracing>(guid).await
+    }
+
+    /// Returns the [`Debugger`](crate::protocol::Debugger) for this context.
+    ///
+    /// The Debugger surfaces programmatic control of Playwright Inspector's
+    /// "PAUSED" overlay — `request_pause`, `resume`, `next`, `run_to`, and a
+    /// `pausedStateChanged` event. Used by IDE integrations and
+    /// inspector-style tools.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-debugger>
+    pub async fn debugger(&self) -> Result<crate::protocol::Debugger> {
+        let guid = self.debugger_guid.as_ref().ok_or_else(|| {
+            crate::error::Error::ProtocolError(
+                "No Debugger object available for this context".to_string(),
+            )
+        })?;
+        self.connection()
+            .get_typed::<crate::protocol::Debugger>(guid)
+            .await
     }
 
     /// Returns the Clock object for this browser context.

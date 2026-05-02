@@ -25,6 +25,7 @@ pub mod click;
 pub mod clock;
 pub mod console_message;
 pub mod coverage;
+pub mod debugger;
 pub mod device;
 pub mod dialog;
 pub mod download;
@@ -89,6 +90,7 @@ pub use coverage::{
     CSSCoverageEntry, Coverage, CoverageRange, JSCoverageEntry, JSCoverageRange,
     JSFunctionCoverage, StartCSSCoverageOptions, StartJSCoverageOptions,
 };
+pub use debugger::{Debugger, PausedDetails, PausedLocation};
 pub use device::{DeviceDescriptor, DeviceViewport};
 pub use dialog::Dialog;
 pub use download::Download;
