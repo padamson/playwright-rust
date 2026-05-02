@@ -55,6 +55,7 @@ mod response;
 mod route_advanced;
 mod route_fallback_unroute;
 mod route_fetch;
+mod screencast;
 mod screenshot;
 mod scripts_styles;
 mod select_upload;

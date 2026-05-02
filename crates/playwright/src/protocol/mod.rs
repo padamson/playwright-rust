@@ -53,6 +53,7 @@ pub mod request;
 pub mod response;
 pub mod root;
 pub mod route;
+pub mod screencast;
 pub mod screenshot;
 pub mod select_option;
 pub mod selectors;
@@ -125,6 +126,10 @@ pub use root::Root;
 pub use route::{
     ContinueOptions, ContinueOptionsBuilder, FetchOptions, FetchOptionsBuilder, FetchResponse,
     FulfillOptions, FulfillOptionsBuilder, Route, UnrouteBehavior,
+};
+pub use screencast::{
+    ActionPosition, ChapterOptions, OverlayId, Screencast, ScreencastFrame, ScreencastSize,
+    ScreencastStartOptions, ShowActionsOptions, ShowOverlayOptions,
 };
 pub use screenshot::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 pub use select_option::SelectOption;

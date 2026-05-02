@@ -216,6 +216,13 @@ pub struct Page {
     binding_callbacks: Arc<Mutex<HashMap<String, PageBindingCallback>>>,
     /// Console event handlers
     console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
+    /// Screencast frame handlers
+    screencast_frame_handlers: Arc<Mutex<Vec<ScreencastFrameHandler>>>,
+    /// Active screencast Artifact GUID (set when `screencastStart` was
+    /// called with a path; cleared on `screencastStop`).
+    screencast_artifact_guid: Arc<Mutex<Option<String>>>,
+    /// Path to save the screencast Artifact to on stop.
+    screencast_save_path: Arc<Mutex<Option<std::path::PathBuf>>>,
     /// FileChooser event handlers
     filechooser_handlers: Arc<Mutex<Vec<FileChooserHandler>>>,
     /// One-shot senders waiting for the next "fileChooser" event (expect_file_chooser)
@@ -328,6 +335,13 @@ type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Sen
 
 /// WebSocket event handler
 type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
+
+/// Type alias for boxed screencast frame handler future
+type ScreencastFrameHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
+
+/// Screencast frame handler
+type ScreencastFrameHandler =
+    Arc<dyn Fn(crate::protocol::ScreencastFrame) -> ScreencastFrameHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed console handler future
 type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -538,6 +552,9 @@ impl Page {
             )),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
             console_handlers: Arc::new(Mutex::new(Vec::new())),
+            screencast_frame_handlers: Arc::new(Mutex::new(Vec::new())),
+            screencast_artifact_guid: Arc::new(Mutex::new(None)),
+            screencast_save_path: Arc::new(Mutex::new(None)),
             filechooser_handlers: Arc::new(Mutex::new(Vec::new())),
             filechooser_waiters: Arc::new(Mutex::new(Vec::new())),
             popup_waiters: Arc::new(Mutex::new(Vec::new())),
@@ -3944,6 +3961,161 @@ impl Page {
         crate::protocol::Coverage::new(self.clone())
     }
 
+    /// Returns the live-screencast handle for this page.
+    ///
+    /// Register frame handlers via [`Screencast::on_frame`], then call
+    /// [`Screencast::start`] to begin streaming. JPEG frames arrive on
+    /// the registered handlers as the browser renders.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-screencast>
+    pub fn screencast(&self) -> crate::protocol::Screencast {
+        crate::protocol::Screencast::new(self.clone())
+    }
+
+    pub(crate) async fn screencast_start(
+        &self,
+        options: crate::protocol::ScreencastStartOptions,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({});
+        if let Some(size) = options.size {
+            params["size"] = serde_json::json!({
+                "width": size.width,
+                "height": size.height,
+            });
+        }
+        if let Some(quality) = options.quality {
+            params["quality"] = serde_json::json!(quality);
+        }
+        let has_handlers = !self.screencast_frame_handlers.lock().unwrap().is_empty();
+        params["sendFrames"] = serde_json::json!(has_handlers);
+        let recording = options.path.is_some();
+        params["record"] = serde_json::json!(recording);
+
+        #[derive(serde::Deserialize)]
+        struct StartResponse {
+            artifact: Option<serde_json::Value>,
+        }
+        let response: StartResponse = self.channel().send("screencastStart", params).await?;
+
+        if recording {
+            *self.screencast_save_path.lock().unwrap() = options.path;
+            if let Some(artifact_value) = response.artifact
+                && let Some(guid) = artifact_value.get("guid").and_then(|v| v.as_str())
+            {
+                *self.screencast_artifact_guid.lock().unwrap() = Some(guid.to_string());
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn screencast_stop(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("screencastStop", serde_json::json!({}))
+            .await?;
+
+        let path = self.screencast_save_path.lock().unwrap().take();
+        let artifact_guid = self.screencast_artifact_guid.lock().unwrap().take();
+        if let (Some(path), Some(guid)) = (path, artifact_guid) {
+            let artifact = self
+                .connection()
+                .get_typed::<crate::protocol::artifact::Artifact>(&guid)
+                .await?;
+            artifact.save_as(path.to_string_lossy().as_ref()).await?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn screencast_on_frame<F, Fut>(&self, handler: F)
+    where
+        F: Fn(crate::protocol::ScreencastFrame) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let h: ScreencastFrameHandler = Arc::new(
+            move |f: crate::protocol::ScreencastFrame| -> ScreencastFrameHandlerFuture {
+                Box::pin(handler(f))
+            },
+        );
+        self.screencast_frame_handlers.lock().unwrap().push(h);
+    }
+
+    pub(crate) async fn screencast_show_actions(
+        &self,
+        options: crate::protocol::ShowActionsOptions,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({});
+        if let Some(d) = options.duration {
+            params["duration"] = serde_json::json!(d);
+        }
+        if let Some(p) = options.position {
+            params["position"] = serde_json::json!(p.as_str());
+        }
+        if let Some(f) = options.font_size {
+            params["fontSize"] = serde_json::json!(f);
+        }
+        self.channel()
+            .send_no_result("screencastShowActions", params)
+            .await
+    }
+
+    pub(crate) async fn screencast_hide_actions(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("screencastHideActions", serde_json::json!({}))
+            .await
+    }
+
+    pub(crate) async fn screencast_chapter(
+        &self,
+        title: &str,
+        options: crate::protocol::ChapterOptions,
+    ) -> Result<()> {
+        let mut params = serde_json::json!({ "title": title });
+        if let Some(desc) = options.description {
+            params["description"] = serde_json::json!(desc);
+        }
+        if let Some(d) = options.duration {
+            params["duration"] = serde_json::json!(d);
+        }
+        self.channel()
+            .send_no_result("screencastChapter", params)
+            .await
+    }
+
+    pub(crate) async fn screencast_show_overlay(
+        &self,
+        html: &str,
+        options: crate::protocol::ShowOverlayOptions,
+    ) -> Result<crate::protocol::OverlayId> {
+        let mut params = serde_json::json!({ "html": html });
+        if let Some(d) = options.duration {
+            params["duration"] = serde_json::json!(d);
+        }
+        #[derive(serde::Deserialize)]
+        struct OverlayResponse {
+            id: String,
+        }
+        let response: OverlayResponse =
+            self.channel().send("screencastShowOverlay", params).await?;
+        Ok(crate::protocol::OverlayId(response.id))
+    }
+
+    pub(crate) async fn screencast_remove_overlay(
+        &self,
+        id: crate::protocol::OverlayId,
+    ) -> Result<()> {
+        self.channel()
+            .send_no_result("screencastRemoveOverlay", serde_json::json!({ "id": id.0 }))
+            .await
+    }
+
+    pub(crate) async fn screencast_set_overlay_visible(&self, visible: bool) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "screencastSetOverlayVisible",
+                serde_json::json!({ "visible": visible }),
+            )
+            .await
+    }
+
     // Internal accessibility method (called by Accessibility struct)
     //
     // The legacy `accessibilitySnapshot` RPC was removed in modern Playwright.
@@ -4417,6 +4589,25 @@ impl ChannelOwner for Page {
                 tokio::spawn(async move {
                     self_clone.on_pageerror_event(message).await;
                 });
+            }
+            "screencastFrame" => {
+                // params: {"data": "<base64 jpeg>"}
+                if let Some(b64) = params.get("data").and_then(|v| v.as_str()) {
+                    if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(b64) {
+                        let frame = crate::protocol::ScreencastFrame { data: bytes };
+                        let handlers = self.screencast_frame_handlers.lock().unwrap().clone();
+                        for h in handlers {
+                            let f = frame.clone();
+                            tokio::spawn(async move {
+                                if let Err(e) = h(f).await {
+                                    tracing::warn!("Screencast frame handler error: {}", e);
+                                }
+                            });
+                        }
+                    } else {
+                        tracing::warn!("Failed to decode screencast frame data");
+                    }
+                }
             }
             // "popup" is forwarded from BrowserContext::on_event when a "page" event
             // is received for a page that has an opener. No direct "popup" event on Page.

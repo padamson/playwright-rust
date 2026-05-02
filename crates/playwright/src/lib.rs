@@ -226,6 +226,12 @@ pub use protocol::{FilePayload, SelectOption};
 // Re-export screenshot types
 pub use protocol::{ScreenshotClip, ScreenshotOptions, ScreenshotType};
 
+// Re-export screencast types
+pub use protocol::{
+    ActionPosition, ChapterOptions, OverlayId, Screencast, ScreencastFrame, ScreencastSize,
+    ScreencastStartOptions, ShowActionsOptions, ShowOverlayOptions,
+};
+
 // Re-export new page method types
 pub use protocol::{
     AddScriptTagOptions, ColorScheme, EmulateMediaOptions, ForcedColors, Media, PdfMargin,
