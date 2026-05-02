@@ -27,6 +27,9 @@ async fn main() -> Result<()> {
             name: Some("trace-on-failure".into()),
             screenshots: Some(true),
             snapshots: Some(true),
+            // Optional: set live: Some(true) to allow attaching the trace
+            // viewer to an in-progress recording. Default false works for
+            // the typical post-mortem workflow used here.
             ..Default::default()
         }))
         .await?;

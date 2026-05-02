@@ -1,19 +1,60 @@
-// Locator - Lazy element selector with auto-waiting
-//
-// Locators are the central piece of Playwright's auto-waiting and retry-ability.
-// They represent a way to find element(s) on the page at any given moment.
-//
-// Key characteristics:
-// - Lazy: Don't execute until an action is performed
-// - Retryable: Auto-wait for elements to match actionability checks
-// - Chainable: Can create sub-locators via first(), last(), nth(), locator()
-//
-// Architecture:
-// - Locator is NOT a ChannelOwner - it's a lightweight wrapper
-// - Stores selector string and reference to Frame
-// - Delegates all operations to Frame with strict=true
-//
-// See: https://playwright.dev/docs/api/class-locator
+//! Locator — lazy element selector with auto-waiting.
+//!
+//! Locators are the central piece of Playwright's auto-waiting and retry
+//! semantics. They represent *a way to find element(s)* at any given
+//! moment — not an element handle. Each action re-queries.
+//!
+//! Key characteristics:
+//! - Lazy: don't execute until an action is performed
+//! - Retryable: auto-wait for elements to match actionability checks
+//! - Chainable: can create sub-locators via `first()`, `last()`,
+//!   `nth()`, `locator()`, `filter()`
+//!
+//! Architecture:
+//! - Locator is **not** a ChannelOwner; it's a lightweight wrapper
+//! - Stores a selector string + reference to its Frame + parent Page
+//! - Delegates all operations to Frame with `strict=true`
+//!
+//! # Example
+//!
+//! ```ignore
+//! use playwright_rs::Playwright;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let pw = Playwright::launch().await?;
+//!     let browser = pw.chromium().launch().await?;
+//!     let page = browser.new_page().await?;
+//!
+//!     page.set_content(
+//!         r#"<button data-testid="submit" role="button">Submit</button>
+//!            <ul><li class="item">A</li><li class="item">B</li></ul>"#,
+//!         None,
+//!     ).await?;
+//!
+//!     // Basic locator + action
+//!     page.locator("button").await.click(None).await?;
+//!
+//!     // Robust locator from a fragile starting point: normalize() asks
+//!     // Playwright for the canonical equivalent (test-id / role / text).
+//!     let stable = page
+//!         .locator("body button:nth-child(1)")
+//!         .await
+//!         .normalize()
+//!         .await?;
+//!     assert!(!stable.selector().is_empty());
+//!
+//!     // Chain primitives: filter, count, nth
+//!     let items = page.locator(".item").await;
+//!     assert_eq!(items.count().await?, 2);
+//!     items.nth(0).click(None).await?;
+//!
+//!     browser.close().await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! See: <https://playwright.dev/docs/api/class-locator>
 
 use crate::error::Result;
 use crate::protocol::Frame;
@@ -1625,6 +1666,8 @@ impl Locator {
     /// is less coupled to CSS classes or DOM structure. Useful as a
     /// building block for codegen helpers that want the "most stable
     /// selector for this element" primitive.
+    ///
+    /// See the module-level example for usage.
     ///
     /// # Errors
     ///
