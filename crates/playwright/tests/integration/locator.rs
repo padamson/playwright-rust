@@ -1864,7 +1864,7 @@ async fn test_locator_aria_snapshot() {
 
     let body = page.locator("body").await;
     let snapshot = body
-        .aria_snapshot()
+        .aria_snapshot(None)
         .await
         .expect("aria_snapshot should succeed");
 

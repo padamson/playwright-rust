@@ -1652,9 +1652,12 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
-    pub async fn aria_snapshot(&self) -> Result<String> {
+    pub async fn aria_snapshot(
+        &self,
+        options: Option<crate::protocol::AriaSnapshotOptions>,
+    ) -> Result<String> {
         self.frame
-            .locator_aria_snapshot(&self.selector)
+            .locator_aria_snapshot(&self.selector, options.as_ref())
             .await
             .map_err(|e| self.wrap_error_with_selector(e))
     }

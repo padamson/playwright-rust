@@ -15,6 +15,7 @@ pub mod accessibility;
 pub mod action_options;
 pub mod android;
 pub mod api_request_context;
+pub mod aria_snapshot;
 pub mod artifact;
 pub mod binding_call;
 pub mod browser;
@@ -74,6 +75,7 @@ pub use android::Android;
 pub use api_request_context::{
     APIRequest, APIRequestContext, APIRequestContextOptions, APIResponse,
 };
+pub use aria_snapshot::{AriaSnapshotMode, AriaSnapshotOptions};
 pub use binding_call::BindingCall;
 pub use browser::{BindOptions, BindResult, Browser, StartTracingOptions};
 pub use browser_context::{

@@ -3909,15 +3909,25 @@ impl Page {
 
     /// Returns the ARIA accessibility tree for the page as a YAML string.
     ///
-    /// Page-level shorthand for `page.locator("body").aria_snapshot()`. Useful
+    /// Page-level shorthand for `page.locator("body").aria_snapshot(...)`. Useful
     /// for asserting page-wide accessibility structure without first selecting
     /// `body` explicitly.
     ///
+    /// Pass `Some(AriaSnapshotOptions { mode: Some(AriaSnapshotMode::Ai), .. })`
+    /// to get the AI-friendly form intended for LLM/codegen consumption.
+    ///
     /// See: <https://playwright.dev/docs/api/class-page#page-aria-snapshot>
-    pub async fn aria_snapshot(&self) -> Result<String> {
+    pub async fn aria_snapshot(
+        &self,
+        options: Option<crate::protocol::AriaSnapshotOptions>,
+    ) -> Result<String> {
         let frame = self.main_frame().await?;
+        let timeout = options
+            .as_ref()
+            .and_then(|o| o.timeout)
+            .unwrap_or_else(|| self.default_timeout_ms());
         frame
-            .aria_snapshot_raw("body", self.default_timeout_ms())
+            .aria_snapshot_raw("body", timeout, options.as_ref())
             .await
     }
 
@@ -3947,7 +3957,7 @@ impl Page {
     ) -> Result<serde_json::Value> {
         let frame = self.main_frame().await?;
         let timeout = self.default_timeout_ms();
-        let snapshot = frame.aria_snapshot_raw("body", timeout).await?;
+        let snapshot = frame.aria_snapshot_raw("body", timeout, None).await?;
         Ok(serde_json::Value::String(snapshot))
     }
 

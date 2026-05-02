@@ -1910,28 +1910,45 @@ impl Frame {
     /// names, and properties of the element and its descendants.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
-    pub(crate) async fn locator_aria_snapshot(&self, selector: &str) -> Result<String> {
-        self.aria_snapshot_raw(selector, crate::DEFAULT_TIMEOUT_MS)
-            .await
+    pub(crate) async fn locator_aria_snapshot(
+        &self,
+        selector: &str,
+        options: Option<&crate::protocol::AriaSnapshotOptions>,
+    ) -> Result<String> {
+        let timeout = options
+            .and_then(|o| o.timeout)
+            .unwrap_or(crate::DEFAULT_TIMEOUT_MS);
+        self.aria_snapshot_raw(selector, timeout, options).await
     }
 
-    pub(crate) async fn aria_snapshot_raw(&self, selector: &str, timeout: f64) -> Result<String> {
+    pub(crate) async fn aria_snapshot_raw(
+        &self,
+        selector: &str,
+        timeout: f64,
+        options: Option<&crate::protocol::AriaSnapshotOptions>,
+    ) -> Result<String> {
         #[derive(Deserialize)]
         struct AriaSnapshotResponse {
             snapshot: String,
         }
 
-        let response: AriaSnapshotResponse = self
-            .channel()
-            .send(
-                "ariaSnapshot",
-                serde_json::json!({
-                    "selector": selector,
-                    "timeout": timeout
-                }),
-            )
-            .await?;
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "timeout": timeout,
+        });
+        if let Some(opts) = options {
+            if let Some(mode) = opts.mode {
+                params["mode"] = serde_json::Value::String(mode.as_str().to_string());
+            }
+            if let Some(ref track) = opts.track {
+                params["track"] = serde_json::Value::String(track.clone());
+            }
+            if let Some(depth) = opts.depth {
+                params["depth"] = serde_json::Value::from(depth);
+            }
+        }
 
+        let response: AriaSnapshotResponse = self.channel().send("ariaSnapshot", params).await?;
         Ok(response.snapshot)
     }
 

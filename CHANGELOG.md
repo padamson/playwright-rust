@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking changes
+
+- **`Locator::aria_snapshot()` now takes `Option<AriaSnapshotOptions>`.** The Playwright 1.59 `ariaSnapshot` RPC accepts `mode` (Ai or Default), `track`, `depth`, and `timeout`; we now surface those through a struct passed to `aria_snapshot(...)`. To migrate, change `locator.aria_snapshot()` → `locator.aria_snapshot(None)`. The newly-added `Page::aria_snapshot(options)` lands in this release with the same shape, so it's not a migration concern there. See the matching entry under **Added** for the full motivation.
+
 ### Changed
 
 - **`build.rs`: replaced `reqwest` with `ureq`** for the one blocking driver download from Azure CDN. `reqwest` pulled in hyper, tower, h2, and ~220 lines of transitive build-time dependencies for a single GET; `ureq` is a thin synchronous client that covers the use case directly. Cuts our total `cargo tree` size from ~619 → ~507 lines (~18%). Build-only change, zero user-facing impact. Closes [#63](https://github.com/padamson/playwright-rust/issues/63) (sub-task of [#62](https://github.com/padamson/playwright-rust/issues/62)).
@@ -15,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`Page::aria_snapshot()`** — page-level shorthand for `page.locator("body").aria_snapshot()`. Returns the ARIA accessibility tree for the entire page as a YAML string. Closes [#70](https://github.com/padamson/playwright-rust/issues/70) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).
+- **`Page::aria_snapshot(options)`** — page-level shorthand for `page.locator("body").aria_snapshot(options)`. Returns the ARIA accessibility tree for the entire page as a YAML string. Closes [#70](https://github.com/padamson/playwright-rust/issues/70) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).
+- **`AriaSnapshotOptions` on both `Locator::aria_snapshot` and `Page::aria_snapshot`** — surfaces the Playwright 1.59 `mode`, `track`, `depth`, and `timeout` parameters. The headline knob is `mode: AriaSnapshotMode::Ai` for AI-friendly snapshots intended for LLM/codegen consumption (the default mode is the human-readable form). Re-exported as `AriaSnapshotMode` and `AriaSnapshotOptions` from the crate root. **Breaking:** the `Locator::aria_snapshot()` no-arg signature is gone; the new shape is `aria_snapshot(options: Option<AriaSnapshotOptions>)`. Migration is one character per call site — pass `None` to keep the prior behaviour.
 - **`TracingStartOptions::live`** — new field; when `Some(true)`, enables Playwright's live-trace mode so a viewer can attach to an in-progress recording. Forwarded as `{"live": true}` to the `tracingStart` RPC. Closes [#71](https://github.com/padamson/playwright-rust/issues/71) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).
 - **`Locator::normalize()`** — returns a new locator whose selector has been resolved to a best-practices canonical form (test-ids, ARIA roles, accessible text). Useful as a building block for codegen helpers. Calls Playwright's `resolveSelector` RPC under the hood. Closes [#69](https://github.com/padamson/playwright-rust/issues/69) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).
 - **`LaunchOptions::artifacts_dir`** — surfaces Playwright's `artifactsDir` launch option so consumers can choose where traces, video, and downloads land instead of letting Playwright pick a temp directory. Builder method `LaunchOptions::artifacts_dir(path)`. Closes [#72](https://github.com/padamson/playwright-rust/issues/72) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).

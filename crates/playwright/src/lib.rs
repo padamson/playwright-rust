@@ -204,7 +204,8 @@ pub use protocol::{Request, ResourceTiming};
 
 // Re-export Locator and element APIs
 pub use protocol::{
-    AriaRole, BoundingBox, ElementHandle, FilterOptions, GetByRoleOptions, JSHandle, Locator,
+    AriaRole, AriaSnapshotMode, AriaSnapshotOptions, BoundingBox, ElementHandle, FilterOptions,
+    GetByRoleOptions, JSHandle, Locator,
 };
 
 // Re-export navigation and page options

@@ -1,4 +1,5 @@
 use playwright_rs::expect;
+use playwright_rs::protocol::{AriaSnapshotMode, AriaSnapshotOptions};
 
 #[tokio::test]
 async fn test_to_match_aria_snapshot_basic() {
@@ -69,13 +70,13 @@ async fn test_page_aria_snapshot_matches_body_locator() {
     // Page::aria_snapshot() should produce the same YAML as the
     // explicit locator("body").aria_snapshot() form it shorthand-wraps.
     let from_page = page
-        .aria_snapshot()
+        .aria_snapshot(None)
         .await
         .expect("Page::aria_snapshot should succeed");
     let from_locator = page
         .locator("body")
         .await
-        .aria_snapshot()
+        .aria_snapshot(None)
         .await
         .expect("Locator::aria_snapshot should succeed");
 
@@ -92,6 +93,61 @@ async fn test_page_aria_snapshot_matches_body_locator() {
     assert!(
         from_page.contains("Click me"),
         "Snapshot should mention button text: {from_page}"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
+#[tokio::test]
+async fn test_aria_snapshot_options_plumb_through() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content(
+        "<main><h1>Title</h1><nav><a href='#'>Home</a><a href='#'>About</a></nav></main>",
+        None,
+    )
+    .await
+    .expect("Failed to set content");
+
+    let body = page.locator("body").await;
+
+    let default_snapshot = body
+        .aria_snapshot(None)
+        .await
+        .expect("default aria_snapshot should succeed");
+
+    let ai_snapshot = body
+        .aria_snapshot(Some(AriaSnapshotOptions {
+            mode: Some(AriaSnapshotMode::Ai),
+            ..Default::default()
+        }))
+        .await
+        .expect("aria_snapshot(mode=Ai) should succeed");
+
+    let depth_snapshot = body
+        .aria_snapshot(Some(AriaSnapshotOptions {
+            depth: Some(1),
+            ..Default::default()
+        }))
+        .await
+        .expect("aria_snapshot(depth=1) should succeed");
+
+    assert!(
+        !default_snapshot.is_empty(),
+        "default snapshot should be non-empty"
+    );
+    assert!(!ai_snapshot.is_empty(), "ai snapshot should be non-empty");
+    assert!(
+        !depth_snapshot.is_empty(),
+        "depth-limited snapshot should be non-empty"
+    );
+
+    // depth=1 should be shorter than the full default snapshot.
+    assert!(
+        depth_snapshot.len() <= default_snapshot.len(),
+        "depth=1 ({} bytes) should be no longer than default ({} bytes)",
+        depth_snapshot.len(),
+        default_snapshot.len()
     );
 
     browser.close().await.expect("Failed to close browser");
