@@ -1935,6 +1935,31 @@ impl Frame {
         Ok(response.snapshot)
     }
 
+    /// Resolves a selector to a best-practices canonical form (preferring
+    /// test-ids, ARIA roles, then accessible text). Used by
+    /// [`Locator::normalize`].
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-normalize>
+    pub(crate) async fn frame_resolve_selector(&self, selector: &str) -> Result<String> {
+        #[derive(Deserialize)]
+        struct ResolveSelectorResponse {
+            #[serde(rename = "resolvedSelector")]
+            resolved_selector: String,
+        }
+
+        let response: ResolveSelectorResponse = self
+            .channel()
+            .send(
+                "resolveSelector",
+                serde_json::json!({
+                    "selector": selector,
+                }),
+            )
+            .await?;
+
+        Ok(response.resolved_selector)
+    }
+
     /// Highlights the element matching the selector in the browser (debug tool).
     ///
     /// Draws a colored overlay over the matched element for a short period.

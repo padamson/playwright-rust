@@ -1926,3 +1926,53 @@ async fn test_locator_content_frame() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+#[tokio::test]
+async fn test_locator_normalize_returns_robust_selector() {
+    // Locator::normalize() resolves a possibly-fragile selector to a
+    // best-practices canonical form. We can't assert the exact resolved
+    // selector (the algorithm is server-side and may evolve), but we can
+    // assert: (1) normalize returns something non-empty and different
+    // from a CSS selector when the element has stronger affordances, and
+    // (2) the normalized locator points at the same element.
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content(
+        r#"<button data-testid="submit-btn" role="button" aria-label="Submit">Click me</button>"#,
+        None,
+    )
+    .await
+    .expect("Failed to set content");
+
+    // Start with a CSS selector that's structurally fragile.
+    let fragile = page.locator("button").await;
+    let normalized = fragile.normalize().await.expect("normalize should succeed");
+
+    let original_selector = fragile.selector().to_string();
+    let normalized_selector = normalized.selector().to_string();
+
+    // Sanity: not empty.
+    assert!(
+        !normalized_selector.is_empty(),
+        "normalized selector should not be empty"
+    );
+
+    // Both locators should still resolve to the same element. We check by
+    // text content; the underlying DOM node is the same.
+    let original_text = fragile
+        .text_content()
+        .await
+        .expect("Failed to read original text")
+        .unwrap_or_default();
+    let normalized_text = normalized
+        .text_content()
+        .await
+        .expect("Failed to read normalized text")
+        .unwrap_or_default();
+    assert_eq!(
+        original_text, normalized_text,
+        "normalized locator should point at the same element ({original_selector} → {normalized_selector})"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}

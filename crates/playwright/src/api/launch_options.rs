@@ -18,6 +18,12 @@ pub struct LaunchOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub args: Option<Vec<String>>,
 
+    /// Directory to write artifacts (traces, video, downloads) to.
+    /// Surfaces Playwright's `artifactsDir` option; if unset, Playwright
+    /// chooses a temp directory.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub artifacts_dir: Option<String>,
+
     /// Browser distribution channel (e.g., "chrome", "msedge")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub channel: Option<String>,
@@ -102,6 +108,12 @@ impl LaunchOptions {
     /// Set additional arguments to pass to browser instance
     pub fn args(mut self, args: Vec<String>) -> Self {
         self.args = Some(args);
+        self
+    }
+
+    /// Set the directory to write artifacts (traces, video, downloads) to
+    pub fn artifacts_dir(mut self, path: String) -> Self {
+        self.artifacts_dir = Some(path);
         self
     }
 

@@ -1618,6 +1618,34 @@ impl Locator {
             .map_err(|e| self.wrap_error_with_selector(e))
     }
 
+    /// Returns a new locator whose selector has been resolved to a
+    /// best-practices canonical form — preferring test-ids, then ARIA
+    /// roles, then accessible text. The resolved locator points at the
+    /// same element(s) as `self` but uses a more robust selector that
+    /// is less coupled to CSS classes or DOM structure. Useful as a
+    /// building block for codegen helpers that want the "most stable
+    /// selector for this element" primitive.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No element matches the original selector
+    /// - The protocol call fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-normalize>
+    pub async fn normalize(&self) -> Result<Locator> {
+        let resolved = self
+            .frame
+            .frame_resolve_selector(&self.selector)
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))?;
+        Ok(Locator {
+            frame: Arc::clone(&self.frame),
+            selector: resolved,
+            page: self.page.clone(),
+        })
+    }
+
     /// Returns a new Locator with an attached description for traces and error messages.
     ///
     /// The description does not affect element matching — it is purely informational,

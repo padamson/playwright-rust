@@ -379,3 +379,53 @@ async fn test_launch_persistent_context_ignore_default_args_array() {
     server.shutdown();
     tracing::debug!("[TEST] test_launch_persistent_context_ignore_default_args_array: Complete");
 }
+
+#[tokio::test]
+async fn test_launch_with_artifacts_dir() {
+    crate::common::init_tracing();
+
+    use playwright_rs::api::LaunchOptions;
+
+    let pw = Playwright::launch()
+        .await
+        .expect("Failed to launch playwright");
+
+    // Create a fresh artifacts dir for this run; verify Playwright accepts
+    // the option and the launch succeeds. We can't assert exact artifact
+    // file placement (Playwright may write into subdirectories) — the
+    // contract here is "the option is plumbed through to Node and not
+    // rejected as an invalid arg".
+    let temp = std::env::temp_dir().join(format!(
+        "pw-rust-artifacts-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    std::fs::create_dir_all(&temp).expect("Failed to create temp artifacts dir");
+
+    let options = LaunchOptions::new().artifacts_dir(temp.to_string_lossy().into_owned());
+    let browser = pw
+        .chromium()
+        .launch_with_options(options)
+        .await
+        .expect("Failed to launch chromium with artifacts_dir");
+
+    // Sanity-check we can do a basic operation with the resulting browser.
+    let context = browser
+        .new_context()
+        .await
+        .expect("Failed to create context");
+    let page = context.new_page().await.expect("Failed to create page");
+    page.goto(
+        "data:text/html,<html><body>artifacts test</body></html>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    browser.close().await.expect("Failed to close browser");
+
+    // Cleanup the directory; ignore errors (Playwright may have left files).
+    let _ = std::fs::remove_dir_all(&temp);
+}
