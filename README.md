@@ -137,6 +137,22 @@ playwright-rs = "0.12"  # Auto-updates to latest 0.12.x
 tokio = { version = "1", features = ["full"] }
 ```
 
+### Feature flags
+
+| Flag | Default | Effect |
+|---|---|---|
+| `native-tls` | on | TLS via the system stack (`tokio-tungstenite/native-tls`) |
+| `rustls-tls-native-roots` | off | TLS via rustls + OS-provided roots |
+| `rustls-tls-webpki-roots` | off | TLS via rustls + bundled webpki roots |
+| `screenshot-diff` | on | `to_have_screenshot()` pixel-diff assertions; pulls in the `image` crate |
+
+If you don't use `to_have_screenshot()`, you can shave several transitive dependencies and a bit of cold-build time:
+
+```toml
+[dependencies]
+playwright-rs = { version = "0.12", default-features = false, features = ["native-tls"] }
+```
+
 See the [CHANGELOG](CHANGELOG.md) for version history and features.
 
 ### Browser Installation (Required)

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Narrowed `tokio` features from `"full"` to the explicit subset we use** (`fs`, `io-util`, `macros`, `net`, `process`, `rt`, `rt-multi-thread`, `signal`, `sync`, `time`). Drops the unused `parking_lot`, `tracing`, and `io-std` features. No public API change; this just documents the runtime surface we depend on. Closes [#64](https://github.com/padamson/playwright-rust/issues/64) (sub-task of [#62](https://github.com/padamson/playwright-rust/issues/62)).
 - **Replaced `mime_guess` with a small hand-rolled extension-to-MIME map.** `mime_guess` ships a compile-time lookup table for hundreds of MIME types we'd never encounter for browser-automation file uploads. The new helper covers the ~40 extensions actually relevant (images, documents, archives, common text/data formats) and falls back to `application/octet-stream`. Internal-use only; SemVer-compatible. Closes [#65](https://github.com/padamson/playwright-rust/issues/65) (sub-task of [#62](https://github.com/padamson/playwright-rust/issues/62)).
 
+### Added
+
+- **`screenshot-diff` feature flag** (default-on) — gates `Expectation::to_have_screenshot` / `PageExpectation::to_have_screenshot` and the related types (`Animations`, `ScreenshotAssertionOptions`, `ScreenshotAssertionOptionsBuilder`) along with the `image` dependency. Default-on so existing consumers see no change. Disable with `default-features = false` to drop the `image` crate and its transitive deps if you don't use screenshot comparison. Closes [#66](https://github.com/padamson/playwright-rust/issues/66) (sub-task of [#62](https://github.com/padamson/playwright-rust/issues/62)).
+
 ## [0.12.3] - 2026-04-30
 
 ### Fixed

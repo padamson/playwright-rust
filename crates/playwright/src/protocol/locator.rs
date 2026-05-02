@@ -596,6 +596,7 @@ impl Locator {
     /// Evaluate a JavaScript expression in the frame context.
     ///
     /// Used internally for injecting CSS (e.g., disabling animations) before screenshot assertions.
+    #[cfg(feature = "screenshot-diff")]
     pub(crate) async fn evaluate_js<T: serde::Serialize>(
         &self,
         expression: &str,

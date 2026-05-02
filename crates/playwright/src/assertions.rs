@@ -6,6 +6,7 @@
 
 use crate::error::Result;
 use crate::protocol::{Locator, Page};
+#[cfg(feature = "screenshot-diff")]
 use std::path::Path;
 use std::time::Duration;
 
@@ -989,7 +990,12 @@ impl Expectation {
     /// On first run (no baseline file), saves the screenshot as the new baseline.
     /// On subsequent runs, compares the screenshot pixel-by-pixel against the baseline.
     ///
+    /// **Available with the `screenshot-diff` feature** (default-on). Disable
+    /// default features to drop the `image` crate and ~5 transitive deps if
+    /// you don't use screenshot comparison.
+    ///
     /// See: <https://playwright.dev/docs/test-assertions#locator-assertions-to-have-screenshot-1>
+    #[cfg(feature = "screenshot-diff")]
     pub async fn to_have_screenshot(
         self,
         baseline_path: impl AsRef<Path>,
@@ -1029,6 +1035,7 @@ impl Expectation {
 }
 
 /// CSS to disable all animations and transitions
+#[cfg(feature = "screenshot-diff")]
 const DISABLE_ANIMATIONS_JS: &str = r#"
 (() => {
     const style = document.createElement('style');
@@ -1039,6 +1046,7 @@ const DISABLE_ANIMATIONS_JS: &str = r#"
 "#;
 
 /// Build JavaScript to overlay mask regions with pink (#FF00FF) rectangles
+#[cfg(feature = "screenshot-diff")]
 fn build_mask_js(locators: &[Locator]) -> String {
     let selectors: Vec<String> = locators
         .iter()
@@ -1068,6 +1076,7 @@ fn build_mask_js(locators: &[Locator]) -> String {
 /// Animation control for screenshots
 ///
 /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-screenshot-1>
+#[cfg(feature = "screenshot-diff")]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Animations {
     /// Allow animations to run normally
@@ -1079,6 +1088,7 @@ pub enum Animations {
 /// Options for screenshot assertions
 ///
 /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-screenshot-1>
+#[cfg(feature = "screenshot-diff")]
 #[derive(Debug, Clone, Default)]
 pub struct ScreenshotAssertionOptions {
     /// Maximum number of different pixels allowed (default: 0)
@@ -1095,6 +1105,7 @@ pub struct ScreenshotAssertionOptions {
     pub update_snapshots: Option<bool>,
 }
 
+#[cfg(feature = "screenshot-diff")]
 impl ScreenshotAssertionOptions {
     /// Create a new builder for ScreenshotAssertionOptions
     pub fn builder() -> ScreenshotAssertionOptionsBuilder {
@@ -1103,6 +1114,7 @@ impl ScreenshotAssertionOptions {
 }
 
 /// Builder for ScreenshotAssertionOptions
+#[cfg(feature = "screenshot-diff")]
 #[derive(Debug, Clone, Default)]
 pub struct ScreenshotAssertionOptionsBuilder {
     max_diff_pixels: Option<u32>,
@@ -1113,6 +1125,7 @@ pub struct ScreenshotAssertionOptionsBuilder {
     update_snapshots: Option<bool>,
 }
 
+#[cfg(feature = "screenshot-diff")]
 impl ScreenshotAssertionOptionsBuilder {
     /// Maximum number of different pixels allowed
     pub fn max_diff_pixels(mut self, pixels: u32) -> Self {
@@ -1370,7 +1383,10 @@ impl PageExpectation {
 
     /// Asserts that the page screenshot matches a baseline image.
     ///
+    /// **Available with the `screenshot-diff` feature** (default-on).
+    ///
     /// See: <https://playwright.dev/docs/test-assertions#page-assertions-to-have-screenshot-1>
+    #[cfg(feature = "screenshot-diff")]
     pub async fn to_have_screenshot(
         self,
         baseline_path: impl AsRef<Path>,
@@ -1403,6 +1419,7 @@ impl PageExpectation {
 }
 
 /// Core screenshot comparison logic shared by Locator and Page assertions.
+#[cfg(feature = "screenshot-diff")]
 async fn compare_screenshot<F, Fut>(
     opts: &ScreenshotAssertionOptions,
     baseline_path: &Path,
@@ -1527,11 +1544,13 @@ where
 }
 
 /// Result of comparing two images pixel-by-pixel
+#[cfg(feature = "screenshot-diff")]
 struct ImageComparison {
     diff_count: u32,
     diff_ratio: f64,
 }
 
+#[cfg(feature = "screenshot-diff")]
 fn is_within_tolerance(
     comparison: &ImageComparison,
     max_diff_pixels: Option<u32>,
@@ -1555,6 +1574,7 @@ fn is_within_tolerance(
 }
 
 /// Compare two PNG images pixel-by-pixel with a color distance threshold
+#[cfg(feature = "screenshot-diff")]
 fn compare_images(
     baseline_bytes: &[u8],
     actual_bytes: &[u8],
@@ -1618,6 +1638,7 @@ fn compare_images(
 }
 
 /// Generate a diff image highlighting differences in red
+#[cfg(feature = "screenshot-diff")]
 fn generate_diff_image(
     baseline_bytes: &[u8],
     actual_bytes: &[u8],

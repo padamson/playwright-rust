@@ -1021,6 +1021,7 @@ async fn test_text_assertions_cross_browser_smoke() {
 // to_have_screenshot() Assertions
 // ============================================================================
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_to_have_screenshot_creates_baseline() {
     let (_pw, browser, page) = crate::common::setup().await;
@@ -1052,6 +1053,7 @@ async fn test_to_have_screenshot_creates_baseline() {
     browser.close().await.expect("Failed to close browser");
 }
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_to_have_screenshot_matches_baseline() {
     let (_pw, browser, page) = crate::common::setup().await;
@@ -1085,6 +1087,7 @@ async fn test_to_have_screenshot_matches_baseline() {
     browser.close().await.expect("Failed to close browser");
 }
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_to_have_screenshot_detects_difference() {
     let (_pw, browser, page) = crate::common::setup().await;
@@ -1132,6 +1135,7 @@ async fn test_to_have_screenshot_detects_difference() {
     browser.close().await.expect("Failed to close browser");
 }
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_to_have_screenshot_max_diff_pixels() {
     let (_pw, browser, page) = crate::common::setup().await;
@@ -1172,6 +1176,7 @@ async fn test_to_have_screenshot_max_diff_pixels() {
     browser.close().await.expect("Failed to close browser");
 }
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_to_have_screenshot_update_snapshots() {
     let (_pw, browser, page) = crate::common::setup().await;
@@ -1216,6 +1221,7 @@ async fn test_to_have_screenshot_update_snapshots() {
     browser.close().await.expect("Failed to close browser");
 }
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_to_have_screenshot_animations_disabled() {
     let (_pw, browser, page) = crate::common::setup().await;
@@ -1257,6 +1263,7 @@ async fn test_to_have_screenshot_animations_disabled() {
     browser.close().await.expect("Failed to close browser");
 }
 
+#[cfg(feature = "screenshot-diff")]
 #[tokio::test]
 async fn test_expect_page_to_have_screenshot() {
     let (_pw, browser, page) = crate::common::setup().await;
