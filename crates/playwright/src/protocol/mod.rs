@@ -42,6 +42,7 @@ pub mod js_handle;
 pub mod keyboard;
 pub mod local_utils;
 pub mod locator;
+pub(crate) mod mime;
 pub mod mouse;
 pub mod page;
 pub mod playwright;

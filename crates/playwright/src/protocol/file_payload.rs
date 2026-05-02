@@ -32,7 +32,6 @@ pub struct FilePayload {
 }
 
 use crate::error::Result;
-use mime_guess::from_path;
 use std::fs;
 use std::path::Path;
 
@@ -54,7 +53,7 @@ impl FilePayload {
             .to_string_lossy()
             .into_owned();
 
-        let mime_type = from_path(path).first_or_octet_stream().to_string();
+        let mime_type = crate::protocol::mime::from_path(path).to_string();
         let buffer = fs::read(path)?;
 
         Ok(Self {

@@ -148,9 +148,7 @@ impl ElementHandle {
                     .file_name()
                     .map(|n| n.to_string_lossy().into_owned())
                     .unwrap_or_else(|| "file".to_string());
-                let mime_type = mime_guess::from_path(path)
-                    .first_or_octet_stream()
-                    .to_string();
+                let mime_type = crate::protocol::mime::from_path(path);
                 let buffer = std::fs::read(path).unwrap_or_default();
                 let b64 = general_purpose::STANDARD.encode(&buffer);
                 serde_json::json!({
