@@ -139,6 +139,110 @@ async fn test_new_cdp_session_navigate_and_evaluate() {
     drop(playwright);
 }
 
+#[tokio::test]
+async fn test_cdp_session_on_fires_for_network_event() {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    crate::common::init_tracing();
+
+    let (playwright, browser, context) = crate::common::setup_context().await;
+    let page = context.new_page().await.expect("Failed to create page");
+    let session = context
+        .new_cdp_session(&page)
+        .await
+        .expect("Failed to create CDP session");
+
+    let saw_request = Arc::new(AtomicBool::new(false));
+    let flag = saw_request.clone();
+    session.on("Network.requestWillBeSent", move |_params| {
+        let flag = flag.clone();
+        async move {
+            flag.store(true, Ordering::SeqCst);
+            Ok(())
+        }
+    });
+
+    session
+        .send("Network.enable", None)
+        .await
+        .expect("Failed to enable Network domain");
+
+    page.goto(
+        "data:text/html,<html><body>cdp event test</body></html>",
+        None,
+    )
+    .await
+    .expect("Failed to navigate");
+
+    // Trigger a real network request (data: URLs don't always emit
+    // requestWillBeSent on every chromium build, so we issue a fetch
+    // to a same-origin no-op URL).
+    let _ = page
+        .evaluate_value("fetch('data:text/plain,x').catch(()=>{})")
+        .await;
+
+    let mut waited = std::time::Duration::ZERO;
+    while !saw_request.load(Ordering::SeqCst) && waited < std::time::Duration::from_secs(5) {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        waited += std::time::Duration::from_millis(50);
+    }
+    assert!(
+        saw_request.load(Ordering::SeqCst),
+        "Network.requestWillBeSent handler should have fired within 5s"
+    );
+
+    session
+        .detach()
+        .await
+        .expect("Failed to detach CDP session");
+    context.close().await.expect("Failed to close context");
+    browser.close().await.expect("Failed to close browser");
+    drop(playwright);
+}
+
+#[tokio::test]
+async fn test_cdp_session_on_close_fires_on_detach() {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    crate::common::init_tracing();
+
+    let (playwright, browser, context) = crate::common::setup_context().await;
+    let page = context.new_page().await.expect("Failed to create page");
+    let session = context
+        .new_cdp_session(&page)
+        .await
+        .expect("Failed to create CDP session");
+
+    let closed = Arc::new(AtomicBool::new(false));
+    let flag = closed.clone();
+    session.on_close(move || {
+        let flag = flag.clone();
+        async move {
+            flag.store(true, Ordering::SeqCst);
+            Ok(())
+        }
+    });
+
+    session
+        .detach()
+        .await
+        .expect("Failed to detach CDP session");
+
+    let mut waited = std::time::Duration::ZERO;
+    while !closed.load(Ordering::SeqCst) && waited < std::time::Duration::from_secs(2) {
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        waited += std::time::Duration::from_millis(20);
+    }
+    assert!(
+        closed.load(Ordering::SeqCst),
+        "close handler should have fired after detach"
+    );
+
+    context.close().await.expect("Failed to close context");
+    browser.close().await.expect("Failed to close browser");
+    drop(playwright);
+}
+
 // ============================================================================
 // Tracing Tests
 // ============================================================================

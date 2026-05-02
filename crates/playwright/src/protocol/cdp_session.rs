@@ -50,9 +50,18 @@ use crate::server::channel_owner::{
     ChannelOwner, ChannelOwnerImpl, DisposeReason, ParentOrConnection,
 };
 use crate::server::connection::ConnectionLike;
+use parking_lot::Mutex;
 use serde_json::Value;
 use std::any::Any;
+use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
+
+type EventHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send + 'static>>;
+type EventHandler = Arc<dyn Fn(Value) -> EventHandlerFuture + Send + Sync + 'static>;
+type CloseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send + 'static>>;
+type CloseHandler = Arc<dyn Fn() -> CloseHandlerFuture + Send + Sync + 'static>;
 
 /// A Chrome DevTools Protocol session for a page or browser context.
 ///
@@ -62,6 +71,8 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct CDPSession {
     base: ChannelOwnerImpl,
+    event_handlers: Arc<Mutex<HashMap<String, Vec<EventHandler>>>>,
+    close_handlers: Arc<Mutex<Vec<CloseHandler>>>,
 }
 
 impl CDPSession {
@@ -76,6 +87,8 @@ impl CDPSession {
     ) -> Result<Self> {
         Ok(Self {
             base: ChannelOwnerImpl::new(parent, type_name, guid, initializer),
+            event_handlers: Arc::new(Mutex::new(HashMap::new())),
+            close_handlers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -100,6 +113,43 @@ impl CDPSession {
             "params": params.unwrap_or(serde_json::json!({})),
         });
         self.channel().send("send", params).await
+    }
+
+    /// Register a handler for a CDP event by method name. Multiple handlers
+    /// may be registered for the same method; they fire in registration
+    /// order. The Playwright server forwards every CDP event the
+    /// underlying session emits — no Playwright-side subscription is
+    /// needed, but you typically must enable the CDP domain itself first
+    /// (e.g. `session.send("Network.enable", None).await?` before
+    /// expecting `Network.requestWillBeSent`).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-cdpsession#cdp-session-on>
+    pub fn on<F, Fut>(&self, method: impl Into<String>, handler: F)
+    where
+        F: Fn(Value) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let h: EventHandler =
+            Arc::new(move |v: Value| -> EventHandlerFuture { Box::pin(handler(v)) });
+        self.event_handlers
+            .lock()
+            .entry(method.into())
+            .or_default()
+            .push(h);
+    }
+
+    /// Register a handler for the `close` event, fired when the session
+    /// is detached (parent target closes, browser closes, or
+    /// [`detach`](Self::detach) is called).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-cdpsession#cdp-session-event-close>
+    pub fn on_close<F, Fut>(&self, handler: F)
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let h: CloseHandler = Arc::new(move || -> CloseHandlerFuture { Box::pin(handler()) });
+        self.close_handlers.lock().push(h);
     }
 
     /// Detach the CDP session from the target.
@@ -162,7 +212,43 @@ impl ChannelOwner for CDPSession {
     }
 
     fn on_event(&self, method: &str, params: Value) {
-        self.base.on_event(method, params)
+        match method {
+            "event" => {
+                let cdp_method = params
+                    .get("method")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+                let cdp_params = params.get("params").cloned().unwrap_or(Value::Null);
+                if let Some(cdp_method) = cdp_method {
+                    let handlers = self
+                        .event_handlers
+                        .lock()
+                        .get(&cdp_method)
+                        .cloned()
+                        .unwrap_or_default();
+                    for h in handlers {
+                        let p = cdp_params.clone();
+                        tokio::spawn(async move {
+                            if let Err(e) = h(p).await {
+                                tracing::warn!("CDPSession event handler error: {}", e);
+                            }
+                        });
+                    }
+                }
+            }
+            "close" => {
+                let handlers = self.close_handlers.lock().clone();
+                for h in handlers {
+                    tokio::spawn(async move {
+                        if let Err(e) = h().await {
+                            tracing::warn!("CDPSession close handler error: {}", e);
+                        }
+                    });
+                }
+            }
+            _ => {}
+        }
+        self.base.on_event(method, params);
     }
 
     fn was_collected(&self) -> bool {
