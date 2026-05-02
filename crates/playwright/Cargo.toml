@@ -15,10 +15,17 @@ readme = "../../README.md"
 doctest = false  # Disable doc-tests by default (run with: cargo test --doc)
 
 [features]
-default = ["native-tls"]
+default = ["native-tls", "screenshot-diff"]
 native-tls = ["tokio-tungstenite/native-tls"]
 rustls-tls-native-roots = ["tokio-tungstenite/rustls-tls-native-roots"]
 rustls-tls-webpki-roots = ["tokio-tungstenite/rustls-tls-webpki-roots"]
+# Enables `Expectation::to_have_screenshot` and `PageExpectation::to_have_screenshot`,
+# pulling in the `image` crate for PNG decode and pixel-diff. Default-on for
+# compatibility on the v0.12.x line; consumers that don't need screenshot
+# comparison can disable this with `default-features = false` to drop ~5
+# transitive deps. Planned to flip to default-off in v0.13.0 as a
+# documented breaking change.
+screenshot-diff = ["dep:image"]
 
 [dependencies]
 tokio = { workspace = true }
@@ -34,7 +41,7 @@ glob = "0.3"
 tokio-tungstenite = { version = "0.29" }
 futures-util = "0.3"
 url = "2.5"
-image = { version = "0.25", default-features = false, features = ["png"] }
+image = { version = "0.25", default-features = false, features = ["png"], optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -64,6 +71,10 @@ dirs = "6"
 # Pin nightly to avoid generic-array 0.14 breakage (doc_auto_cfg removed in Rust 1.92)
 # See: https://github.com/rust-lang/rust/pull/138907
 toolchain = "nightly-2025-05-01"
+
+[[example]]
+name = "visual_regression"
+required-features = ["screenshot-diff"]
 
 [[bench]]
 name = "browser_operations"
