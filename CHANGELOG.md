@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`Page::aria_snapshot()`** — page-level shorthand for `page.locator("body").aria_snapshot()`. Returns the ARIA accessibility tree for the entire page as a YAML string. Closes [#70](https://github.com/padamson/playwright-rust/issues/70) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).
+- **`TracingStartOptions::live`** — new field; when `Some(true)`, enables Playwright's live-trace mode so a viewer can attach to an in-progress recording. Forwarded as `{"live": true}` to the `tracingStart` RPC. Closes [#71](https://github.com/padamson/playwright-rust/issues/71) (sub-task of [#55](https://github.com/padamson/playwright-rust/issues/55), v0.13.0).
 - **`screenshot-diff` feature flag** (default-on) — gates `Expectation::to_have_screenshot` / `PageExpectation::to_have_screenshot` and the related types (`Animations`, `ScreenshotAssertionOptions`, `ScreenshotAssertionOptionsBuilder`) along with the `image` dependency. Default-on so existing consumers see no change. Disable with `default-features = false` to drop the `image` crate and its transitive deps if you don't use screenshot comparison. Closes [#66](https://github.com/padamson/playwright-rust/issues/66) (sub-task of [#62](https://github.com/padamson/playwright-rust/issues/62)).
 
 ## [0.12.3] - 2026-04-30

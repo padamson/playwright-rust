@@ -27,6 +27,7 @@ async fn main() -> Result<()> {
             name: Some("trace-on-failure".into()),
             screenshots: Some(true),
             snapshots: Some(true),
+            ..Default::default()
         }))
         .await?;
 

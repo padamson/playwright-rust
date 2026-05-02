@@ -31,6 +31,7 @@
 //!         name: Some("my-trace".to_string()),
 //!         screenshots: Some(true),
 //!         snapshots: Some(true),
+//!         ..Default::default()
 //!     })).await?;
 //!
 //!     let page = context.new_page().await?;
@@ -72,6 +73,13 @@ pub struct TracingStartOptions {
     pub screenshots: Option<bool>,
     /// Whether to capture DOM snapshots on each action.
     pub snapshots: Option<bool>,
+    /// Whether to enable live trace updates while recording. When `true`,
+    /// the trace viewer can attach and observe the trace as it is being
+    /// captured, rather than waiting for the recording to finish. Useful
+    /// for debugging long-running flows.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start-option-live>
+    pub live: Option<bool>,
 }
 
 /// Options for stopping a trace recording.
@@ -140,6 +148,9 @@ impl Tracing {
         }
         if let Some(snapshots) = opts.snapshots {
             start_params["snapshots"] = serde_json::Value::Bool(snapshots);
+        }
+        if let Some(live) = opts.live {
+            start_params["live"] = serde_json::Value::Bool(live);
         }
 
         self.channel()
