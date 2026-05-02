@@ -344,3 +344,29 @@ async fn test_page_add_script_tag_cross_browser_webkit() {
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
+
+#[tokio::test]
+async fn test_page_pick_locator_cancel_releases_handle() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content("<html><body><h1>cancel test</h1></body></html>", None)
+        .await
+        .expect("Failed to set content");
+
+    let page_for_pick = page.clone();
+    let pick_handle = tokio::spawn(async move { page_for_pick.pick_locator().await });
+
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    page.cancel_pick_locator()
+        .await
+        .expect("cancel_pick_locator should succeed");
+
+    // Whether pick_locator returns Ok or Err on cancel is server-defined;
+    // the contract under test is that cancel unblocks the call.
+    let outcome = tokio::time::timeout(std::time::Duration::from_secs(5), pick_handle)
+        .await
+        .expect("pick_locator did not resolve within 5s of cancel");
+    let _ = outcome.expect("spawned task panicked");
+
+    browser.close().await.expect("Failed to close browser");
+}

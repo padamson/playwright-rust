@@ -3548,6 +3548,40 @@ impl Page {
             .await
     }
 
+    /// Enters Playwright Inspector's interactive picker mode and resolves
+    /// once the user clicks an element. The returned [`Locator`] points at
+    /// whatever element was clicked.
+    ///
+    /// This is the programmatic entry point to the same picker the
+    /// Playwright Inspector and codegen tools use. It only resolves after
+    /// a real DOM click — synthetic clicks (e.g. via `page.mouse.click`)
+    /// do **not** complete the picker. To abort the picker without a
+    /// click, call [`Page::cancel_pick_locator`] from a different async
+    /// context.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-pick-locator>
+    pub async fn pick_locator(&self) -> Result<crate::protocol::Locator> {
+        #[derive(serde::Deserialize)]
+        struct PickLocatorResponse {
+            selector: String,
+        }
+        let response: PickLocatorResponse = self
+            .channel()
+            .send("pickLocator", serde_json::json!({}))
+            .await?;
+        Ok(self.locator(&response.selector).await)
+    }
+
+    /// Cancels an in-progress [`Page::pick_locator`] call. Has no effect
+    /// if the picker is not currently active.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-cancel-pick-locator>
+    pub async fn cancel_pick_locator(&self) -> Result<()> {
+        self.channel()
+            .send_no_result("cancelPickLocator", serde_json::json!({}))
+            .await
+    }
+
     /// Sets extra HTTP headers that will be sent with every request from this page.
     ///
     /// These headers are sent in addition to headers set on the browser context via
