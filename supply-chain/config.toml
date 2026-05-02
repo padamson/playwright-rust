@@ -29,7 +29,7 @@ url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/
 audit-as-crates-io = true
 
 [[exemptions.aes]]
-version = "0.8.4"
+version = "0.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.aho-corasick]]
@@ -60,6 +60,10 @@ criteria = "safe-to-run"
 version = "2.11.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.block-buffer]]
+version = "0.12.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.bytemuck]]
 version = "1.25.0"
 criteria = "safe-to-deploy"
@@ -80,6 +84,10 @@ criteria = "safe-to-deploy"
 version = "1.2.60"
 criteria = "safe-to-deploy"
 
+[[exemptions.cipher]]
+version = "0.5.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.clap]]
 version = "4.6.0"
 criteria = "safe-to-run"
@@ -92,12 +100,24 @@ criteria = "safe-to-run"
 version = "1.1.0"
 criteria = "safe-to-run"
 
+[[exemptions.cmov]]
+version = "0.5.3"
+criteria = "safe-to-deploy"
+
+[[exemptions.const-oid]]
+version = "0.10.2"
+criteria = "safe-to-deploy"
+
 [[exemptions.constant_time_eq]]
 version = "0.4.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.core-foundation]]
 version = "0.10.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.cpubits]]
+version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.cpufeatures]]
@@ -124,6 +144,14 @@ criteria = "safe-to-run"
 version = "0.1.7"
 criteria = "safe-to-deploy"
 
+[[exemptions.crypto-common]]
+version = "0.2.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.ctutils]]
+version = "0.4.2"
+criteria = "safe-to-deploy"
+
 [[exemptions.data-encoding]]
 version = "2.10.0"
 criteria = "safe-to-deploy"
@@ -134,6 +162,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.digest]]
 version = "0.10.7"
+criteria = "safe-to-deploy"
+
+[[exemptions.digest]]
+version = "0.11.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.dirs]]
@@ -188,6 +220,10 @@ criteria = "safe-to-deploy"
 version = "0.17.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.hmac]]
+version = "0.13.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.http]]
 version = "1.4.0"
 criteria = "safe-to-deploy"
@@ -198,6 +234,10 @@ criteria = "safe-to-run"
 
 [[exemptions.httparse]]
 version = "1.10.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.hybrid-array]]
+version = "0.4.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.hyper]]
@@ -248,6 +288,10 @@ criteria = "safe-to-deploy"
 version = "2.14.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.inout]]
+version = "0.2.2"
+criteria = "safe-to-deploy"
+
 [[exemptions.itoa]]
 version = "1.0.18"
 criteria = "safe-to-deploy"
@@ -265,7 +309,7 @@ version = "0.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.libc]]
-version = "0.2.184"
+version = "0.2.186"
 criteria = "safe-to-deploy"
 
 [[exemptions.libredox]]
@@ -333,7 +377,7 @@ version = "0.9.12"
 criteria = "safe-to-deploy"
 
 [[exemptions.pbkdf2]]
-version = "0.12.2"
+version = "0.13.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.pin-project-lite]]
@@ -476,6 +520,10 @@ criteria = "safe-to-deploy"
 version = "0.1.20"
 criteria = "safe-to-run"
 
+[[exemptions.sha1]]
+version = "0.11.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.signal-hook-registry]]
 version = "1.4.8"
 criteria = "safe-to-deploy"
@@ -577,7 +625,7 @@ version = "0.12.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.typenum]]
-version = "1.19.0"
+version = "1.20.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.unicode-ident]]
@@ -741,7 +789,7 @@ version = "0.11.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.zip]]
-version = "8.5.1"
+version = "8.6.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.zmij]]
