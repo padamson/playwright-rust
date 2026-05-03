@@ -94,6 +94,7 @@ impl Debugger {
     /// Asks Playwright to pause before the next action runs. The pause
     /// is surfaced via the `pausedStateChanged` event (register a
     /// handler with [`Debugger::on_paused_state_changed`]).
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn request_pause(&self) -> Result<()> {
         self.channel()
             .send_no_result("requestPause", serde_json::json!({}))
@@ -101,6 +102,7 @@ impl Debugger {
     }
 
     /// Resume execution from a paused state.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn resume(&self) -> Result<()> {
         self.channel()
             .send_no_result("resume", serde_json::json!({}))
@@ -108,6 +110,7 @@ impl Debugger {
     }
 
     /// Step to the next action call, then pause again.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn next(&self) -> Result<()> {
         self.channel()
             .send_no_result("next", serde_json::json!({}))
@@ -115,6 +118,7 @@ impl Debugger {
     }
 
     /// Run to a specific source location, then pause.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn run_to(&self, location: PausedLocation) -> Result<()> {
         let mut loc = serde_json::json!({ "file": location.file });
         if let Some(line) = location.line {

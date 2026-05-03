@@ -235,6 +235,7 @@ impl Frame {
     /// - Communication with the browser fails
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate-handle>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate_handle(
         &self,
         expression: &str,
@@ -305,6 +306,7 @@ impl Frame {
     /// - Communication with the browser fails
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate-handle>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate_handle_js(
         &self,
         expression: &str,
@@ -477,6 +479,7 @@ impl Frame {
     /// * `options` - Optional navigation options (timeout, wait_until)
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-goto>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), url = %url, status = tracing::field::Empty))]
     pub async fn goto(&self, url: &str, options: Option<GotoOptions>) -> Result<Option<Response>> {
         // Build params manually using json! macro
         let mut params = serde_json::json!({
@@ -559,6 +562,7 @@ impl Frame {
                 })
                 .collect();
 
+            tracing::Span::current().record("status", status);
             Ok(Some(Response::new(
                 initializer["url"]
                     .as_str()
@@ -581,6 +585,7 @@ impl Frame {
     /// Returns the frame's title.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-title>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn title(&self) -> Result<String> {
         #[derive(Deserialize)]
         struct TitleResponse {
@@ -594,6 +599,7 @@ impl Frame {
     /// Returns the full HTML content of the frame, including the DOCTYPE.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-content>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn content(&self) -> Result<String> {
         #[derive(Deserialize)]
         struct ContentResponse {
@@ -610,6 +616,7 @@ impl Frame {
     /// Sets the content of the frame.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-set-content>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_content(&self, html: &str, options: Option<GotoOptions>) -> Result<()> {
         let mut params = serde_json::json!({
             "html": html,
@@ -638,6 +645,7 @@ impl Frame {
     /// `document.readyState` via JavaScript evaluation.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-wait-for-load-state>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn wait_for_load_state(&self, state: Option<WaitUntil>) -> Result<()> {
         let target_state = state.unwrap_or(WaitUntil::Load);
 
@@ -705,6 +713,7 @@ impl Frame {
     /// it's implemented client-side. We implement it by polling `window.location.href`.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-wait-for-url>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %url))]
     pub async fn wait_for_url(&self, url: &str, options: Option<GotoOptions>) -> Result<()> {
         let timeout_ms = options
             .as_ref()
@@ -753,6 +762,7 @@ impl Frame {
     /// Returns the first element matching the selector, or None if not found.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-query-selector>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn query_selector(
         &self,
         selector: &str,
@@ -803,6 +813,7 @@ impl Frame {
     /// Returns all elements matching the selector.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-query-selector-all>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn query_selector_all(
         &self,
         selector: &str,
@@ -2108,6 +2119,7 @@ impl Frame {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-evaluate>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate<T: serde::Serialize>(
         &self,
         expression: &str,
@@ -2176,6 +2188,7 @@ impl Frame {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-add-style-tag>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_style_tag(
         &self,
         options: crate::protocol::page::AddStyleTagOptions,
@@ -2345,6 +2358,7 @@ impl Frame {
     /// At least one of `content`, `url`, or `path` must be specified.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-add-script-tag>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_script_tag(
         &self,
         options: crate::protocol::page::AddScriptTagOptions,

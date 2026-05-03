@@ -149,6 +149,34 @@
 //!     Ok(())
 //! }
 //! ```
+//!
+//! ## Observability
+//!
+//! Every public async method on the user-facing types
+//! (`Browser`, `BrowserContext`, `BrowserType`, `Page`, `Frame`, `Locator`,
+//! `ElementHandle`, `Tracing`, `CDPSession`, `Debugger`, `Screencast`, plus
+//! `Request`, `Response`, `Dialog`, `Download`, `Worker`, `FileChooser`)
+//! is instrumented with the [`tracing`] crate. Wire up any
+//! `tracing_subscriber` and you get spans for free, with cardinality-bounded
+//! identifiers (`guid`, `selector`, `url`, `name`) and selected
+//! completion-time fields (`status`, `bytes_len`, `count`, `version`).
+//! Internal `tokio::spawn` sites propagate the caller's span via
+//! `Instrument::in_current_span()` so user-registered handlers and event
+//! fan-out tasks inherit the surrounding context.
+//!
+//! Levels: top-level user operations (`goto`, `click`, `fill`, `screenshot`,
+//! `pdf`, `evaluate`, `tracing.start/stop`, `browser_type.launch`) are at
+//! `info`; everything else is at `debug`. Sensitive payloads — input
+//! values, eval expressions, request/response bodies — are deliberately
+//! excluded from span fields.
+//!
+//! ```ignore
+//! use tracing_subscriber::EnvFilter;
+//!
+//! tracing_subscriber::fmt()
+//!     .with_env_filter(EnvFilter::new("playwright_rs=info"))
+//!     .init();
+//! ```
 
 // Internal modules (exposed for integration tests)
 #[doc(hidden)]

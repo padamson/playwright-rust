@@ -62,6 +62,7 @@ mod select_upload;
 mod selectors;
 mod stability;
 mod storage_state;
+mod tracing_emission;
 mod transport;
 mod web_error;
 mod websocket;

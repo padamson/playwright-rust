@@ -132,6 +132,7 @@ impl Request {
     /// Returns `None` if the request has not received a response (e.g., it failed).
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-response>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn response(&self) -> Result<Option<crate::protocol::page::Response>> {
         use serde::Deserialize;
 
@@ -216,6 +217,7 @@ impl Request {
     /// on the response's channel.
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-sizes>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn sizes(&self) -> Result<crate::protocol::response::RequestSizes> {
         let response = self.response().await?;
         let response = response.ok_or_else(|| {
@@ -389,6 +391,7 @@ impl Request {
     /// Returns an error if the RPC call to the server fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-headers-array>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn headers_array(&self) -> Result<Vec<HeaderEntry>> {
         use serde::Deserialize;
 
@@ -430,6 +433,7 @@ impl Request {
     /// Returns an error if the RPC call to the server fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-all-headers>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn all_headers(&self) -> Result<HashMap<String, String>> {
         let entries = self.headers_array().await?;
         let mut map: HashMap<String, String> = HashMap::new();
@@ -455,6 +459,7 @@ impl Request {
     /// Returns an error if the RPC call to the server fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-header-value>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), name = %name))]
     pub async fn header_value(&self, name: &str) -> Result<Option<String>> {
         let all = self.all_headers().await?;
         Ok(all.get(&name.to_lowercase()).cloned())
@@ -475,6 +480,7 @@ impl Request {
     /// `requestFinished` fires, or for a request that has not completed successfully).
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-timing>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn timing(&self) -> Result<ResourceTiming> {
         use serde::Deserialize;
 

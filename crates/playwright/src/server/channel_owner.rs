@@ -22,6 +22,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
+use tracing::Instrument;
 
 /// Type alias for the children registry mapping GUIDs to ChannelOwner objects
 type ChildrenRegistry = HashMap<Arc<str>, Arc<dyn ChannelOwner>>;
@@ -327,9 +328,12 @@ impl ChannelOwnerImpl {
         // Remove from connection (spawn to avoid blocking in sync context)
         let connection = self.connection.clone();
         let guid = Arc::clone(&self.guid);
-        tokio::spawn(async move {
-            connection.unregister_object(&guid).await;
-        });
+        tokio::spawn(
+            async move {
+                connection.unregister_object(&guid).await;
+            }
+            .in_current_span(),
+        );
 
         // Dispose all children (snapshot to avoid holding lock)
         let children: Vec<_> = {

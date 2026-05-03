@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::any::Any;
 use std::sync::Arc;
+use tracing::Instrument;
 
 /// BrowserType represents a browser engine (Chromium, Firefox, or WebKit).
 ///
@@ -160,6 +161,7 @@ impl BrowserType {
     /// - Browser process fails to start
     ///
     /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-launch>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name()))]
     pub async fn launch(&self) -> Result<Browser> {
         self.launch_with_options(LaunchOptions::default()).await
     }
@@ -179,6 +181,7 @@ impl BrowserType {
     /// - Browser process fails to start
     ///
     /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-launch>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name()))]
     pub async fn launch_with_options(&self, options: LaunchOptions) -> Result<Browser> {
         // Add Windows CI-specific browser args to prevent hanging
         let options = {
@@ -267,6 +270,7 @@ impl BrowserType {
     /// - User data directory cannot be created
     ///
     /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name()))]
     pub async fn launch_persistent_context(
         &self,
         user_data_dir: impl Into<String>,
@@ -298,6 +302,7 @@ impl BrowserType {
     /// - User data directory cannot be created
     ///
     /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name()))]
     pub async fn launch_persistent_context_with_options(
         &self,
         user_data_dir: impl Into<String>,
@@ -421,6 +426,7 @@ impl BrowserType {
     ///
     /// # Errors
     /// Returns error if connection fails or handshake fails.
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name(), url = %ws_endpoint))]
     pub async fn connect(
         &self,
         ws_endpoint: &str,
@@ -458,9 +464,12 @@ impl BrowserType {
 
         // 3. Start message loop
         let conn_for_loop = Arc::clone(&connection);
-        tokio::spawn(async move {
-            conn_for_loop.run().await;
-        });
+        tokio::spawn(
+            async move {
+                conn_for_loop.run().await;
+            }
+            .in_current_span(),
+        );
 
         // 4. Initialize Playwright
         // This exchanges the "initialize" message and returns the root Playwright object
@@ -506,6 +515,7 @@ impl BrowserType {
     /// - Connection timeout
     ///
     /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name(), url = %endpoint_url))]
     pub async fn connect_over_cdp(
         &self,
         endpoint_url: &str,

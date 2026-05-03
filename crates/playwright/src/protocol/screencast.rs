@@ -65,15 +65,23 @@
 
 use crate::error::Result;
 use crate::protocol::page::Page;
+use crate::server::channel_owner::ChannelOwner;
 use std::path::PathBuf;
 
 /// A single frame emitted while a screencast is active. Wire format is
 /// JPEG; `data` holds the raw bytes ready to write to disk or pass to
 /// an image decoder.
+///
+/// `data` is a [`bytes::Bytes`] handle so the decoded JPEG is allocated
+/// exactly once per frame and cloning into each registered handler is
+/// a refcount bump rather than a memcpy. `Bytes` implements
+/// `Deref<Target = [u8]>`, so existing reads (`frame.data.len()`,
+/// `&frame.data[..]`, `tokio::fs::write(path, &frame.data)`) compile
+/// unchanged from the previous `Vec<u8>` shape.
 #[derive(Debug, Clone)]
 pub struct ScreencastFrame {
     /// JPEG-encoded frame bytes.
-    pub data: Vec<u8>,
+    pub data: bytes::Bytes,
 }
 
 /// Options for [`Screencast::start`].
@@ -175,12 +183,14 @@ impl Screencast {
     ///
     /// If `options.path` is set, the screencast is also recorded to
     /// disk; the file is written when [`stop`](Self::stop) is called.
+    #[tracing::instrument(level = "info", skip_all, fields(page_guid = %self.page.guid()))]
     pub async fn start(&self, options: ScreencastStartOptions) -> Result<()> {
         self.page.screencast_start(options).await
     }
 
     /// Stop the screencast. If `start` was called with a `path`, the
     /// recorded file is written to that path before this call returns.
+    #[tracing::instrument(level = "info", skip_all, fields(page_guid = %self.page.guid()))]
     pub async fn stop(&self) -> Result<()> {
         self.page.screencast_stop().await
     }
@@ -197,11 +207,13 @@ impl Screencast {
 
     /// Overlay action labels on the streamed frames as actions occur.
     /// Pair with [`hide_actions`](Self::hide_actions) to stop.
+    #[tracing::instrument(level = "debug", skip_all, fields(page_guid = %self.page.guid()))]
     pub async fn show_actions(&self, options: ShowActionsOptions) -> Result<()> {
         self.page.screencast_show_actions(options).await
     }
 
     /// Stop overlaying action labels. No-op if not currently shown.
+    #[tracing::instrument(level = "debug", skip_all, fields(page_guid = %self.page.guid()))]
     pub async fn hide_actions(&self) -> Result<()> {
         self.page.screencast_hide_actions().await
     }
@@ -209,6 +221,7 @@ impl Screencast {
     /// Show a chapter card with the given title (and optional
     /// description). Useful for splitting a session into named phases
     /// for an agent's video log.
+    #[tracing::instrument(level = "debug", skip_all, fields(page_guid = %self.page.guid(), title = %title))]
     pub async fn show_chapter(&self, title: &str, options: ChapterOptions) -> Result<()> {
         self.page.screencast_chapter(title, options).await
     }
@@ -217,12 +230,14 @@ impl Screencast {
     /// you can pass to [`remove_overlay`](Self::remove_overlay) to
     /// dismiss it early; otherwise it dismisses itself after
     /// `options.duration` (if set) or stays until removed.
+    #[tracing::instrument(level = "debug", skip_all, fields(page_guid = %self.page.guid()))]
     pub async fn show_overlay(&self, html: &str, options: ShowOverlayOptions) -> Result<OverlayId> {
         self.page.screencast_show_overlay(html, options).await
     }
 
     /// Remove an overlay previously created via
     /// [`show_overlay`](Self::show_overlay). Idempotent.
+    #[tracing::instrument(level = "debug", skip_all, fields(page_guid = %self.page.guid()))]
     pub async fn remove_overlay(&self, id: OverlayId) -> Result<()> {
         self.page.screencast_remove_overlay(id).await
     }
@@ -230,6 +245,7 @@ impl Screencast {
     /// Toggle visibility of all currently-shown overlays without
     /// removing them. Useful for hiding overlays during a section the
     /// agent considers "noise" and re-showing them later.
+    #[tracing::instrument(level = "debug", skip_all, fields(page_guid = %self.page.guid(), visible))]
     pub async fn set_overlay_visible(&self, visible: bool) -> Result<()> {
         self.page.screencast_set_overlay_visible(visible).await
     }

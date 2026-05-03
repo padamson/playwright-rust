@@ -135,6 +135,7 @@ impl FileChooser {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-filechooser#file-chooser-set-files>
+    #[tracing::instrument(level = "debug", skip_all, fields(count = files.len()))]
     pub async fn set_files(&self, files: &[PathBuf]) -> Result<()> {
         self.element.set_input_files(files).await
     }

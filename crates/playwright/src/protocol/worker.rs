@@ -99,6 +99,7 @@ impl Worker {
     /// Returns an error if the JavaScript expression throws.
     ///
     /// See: <https://playwright.dev/docs/api/class-worker#worker-evaluate>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate<R, T>(&self, expression: &str, arg: Option<T>) -> Result<R>
     where
         R: DeserializeOwned,
@@ -137,6 +138,7 @@ impl Worker {
     /// * `expression` - JavaScript expression or function body
     ///
     /// See: <https://playwright.dev/docs/api/class-worker#worker-evaluate-handle>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate_handle(
         &self,
         expression: &str,

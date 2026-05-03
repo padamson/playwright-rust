@@ -888,11 +888,15 @@ impl Locator {
     /// Returns the number of elements matching this locator.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-count>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector, count = tracing::field::Empty))]
     pub async fn count(&self) -> Result<usize> {
-        self.frame
+        let n = self
+            .frame
             .locator_count(&self.selector)
             .await
-            .map_err(|e| self.wrap_error_with_selector(e))
+            .map_err(|e| self.wrap_error_with_selector(e))?;
+        tracing::Span::current().record("count", n);
+        Ok(n)
     }
 
     /// Returns an array of locators, one for each matching element.
@@ -901,6 +905,7 @@ impl Locator {
     /// and instead immediately returns whatever is in the DOM.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-all>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn all(&self) -> Result<Vec<Locator>> {
         let count = self.count().await?;
         Ok((0..count).map(|i| self.nth(i as i32)).collect())
@@ -909,6 +914,7 @@ impl Locator {
     /// Returns the text content of the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-text-content>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn text_content(&self) -> Result<Option<String>> {
         self.frame
             .locator_text_content(&self.selector)
@@ -919,6 +925,7 @@ impl Locator {
     /// Returns the inner text of the element (visible text).
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-inner-text>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn inner_text(&self) -> Result<String> {
         self.frame
             .locator_inner_text(&self.selector)
@@ -929,6 +936,7 @@ impl Locator {
     /// Returns the inner HTML of the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-inner-html>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn inner_html(&self) -> Result<String> {
         self.frame
             .locator_inner_html(&self.selector)
@@ -939,6 +947,7 @@ impl Locator {
     /// Returns the value of the specified attribute.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-get-attribute>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector, name = %name))]
     pub async fn get_attribute(&self, name: &str) -> Result<Option<String>> {
         self.frame
             .locator_get_attribute(&self.selector, name)
@@ -949,6 +958,7 @@ impl Locator {
     /// Returns whether the element is visible.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-visible>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_visible(&self) -> Result<bool> {
         self.frame
             .locator_is_visible(&self.selector)
@@ -959,6 +969,7 @@ impl Locator {
     /// Returns whether the element is enabled.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-enabled>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_enabled(&self) -> Result<bool> {
         self.frame
             .locator_is_enabled(&self.selector)
@@ -969,6 +980,7 @@ impl Locator {
     /// Returns whether the checkbox or radio button is checked.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-checked>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_checked(&self) -> Result<bool> {
         self.frame
             .locator_is_checked(&self.selector)
@@ -979,6 +991,7 @@ impl Locator {
     /// Returns whether the element is editable.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-editable>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_editable(&self) -> Result<bool> {
         self.frame
             .locator_is_editable(&self.selector)
@@ -989,6 +1002,7 @@ impl Locator {
     /// Returns whether the element is hidden.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-hidden>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_hidden(&self) -> Result<bool> {
         self.frame
             .locator_is_hidden(&self.selector)
@@ -999,6 +1013,7 @@ impl Locator {
     /// Returns whether the element is disabled.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-disabled>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_disabled(&self) -> Result<bool> {
         self.frame
             .locator_is_disabled(&self.selector)
@@ -1009,6 +1024,7 @@ impl Locator {
     /// Returns whether the element is focused (currently has focus).
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-is-focused>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn is_focused(&self) -> Result<bool> {
         self.frame
             .locator_is_focused(&self.selector)
@@ -1021,6 +1037,7 @@ impl Locator {
     /// Clicks the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-click>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn click(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
         self.frame
             .locator_click(&self.selector, Some(self.with_timeout(options)))
@@ -1054,6 +1071,7 @@ impl Locator {
     /// Double clicks the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-dblclick>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn dblclick(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
         self.frame
             .locator_dblclick(&self.selector, Some(self.with_timeout(options)))
@@ -1064,6 +1082,7 @@ impl Locator {
     /// Fills the element with text.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-fill>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn fill(
         &self,
         text: &str,
@@ -1078,6 +1097,7 @@ impl Locator {
     /// Clears the element's value.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-clear>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn clear(&self, options: Option<crate::protocol::FillOptions>) -> Result<()> {
         self.frame
             .locator_clear(&self.selector, Some(self.with_timeout(options)))
@@ -1088,6 +1108,7 @@ impl Locator {
     /// Presses a key on the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-press>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn press(
         &self,
         key: &str,
@@ -1105,6 +1126,7 @@ impl Locator {
     /// specific element for subsequent keyboard interactions.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-focus>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn focus(&self) -> Result<()> {
         self.frame
             .locator_focus(&self.selector)
@@ -1117,6 +1139,7 @@ impl Locator {
     /// Calls the element's `blur()` method. Moves keyboard focus away from the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-blur>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn blur(&self) -> Result<()> {
         self.frame
             .locator_blur(&self.selector)
@@ -1137,6 +1160,7 @@ impl Locator {
     /// * `options` - Optional [`PressSequentiallyOptions`](crate::protocol::PressSequentiallyOptions) (e.g., `delay` between key presses)
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-press-sequentially>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn press_sequentially(
         &self,
         text: &str,
@@ -1154,6 +1178,7 @@ impl Locator {
     /// `all_inner_texts()` returns text from all matching elements.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-all-inner-texts>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn all_inner_texts(&self) -> Result<Vec<String>> {
         self.frame
             .locator_all_inner_texts(&self.selector)
@@ -1167,6 +1192,7 @@ impl Locator {
     /// `all_text_contents()` returns text from all matching elements.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-all-text-contents>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn all_text_contents(&self) -> Result<Vec<String>> {
         self.frame
             .locator_all_text_contents(&self.selector)
@@ -1179,6 +1205,7 @@ impl Locator {
     /// This method is idempotent - if already checked, does nothing.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-check>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn check(&self, options: Option<crate::protocol::CheckOptions>) -> Result<()> {
         self.frame
             .locator_check(&self.selector, Some(self.with_timeout(options)))
@@ -1191,6 +1218,7 @@ impl Locator {
     /// This method is idempotent - if already unchecked, does nothing.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-uncheck>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn uncheck(&self, options: Option<crate::protocol::CheckOptions>) -> Result<()> {
         self.frame
             .locator_uncheck(&self.selector, Some(self.with_timeout(options)))
@@ -1204,6 +1232,7 @@ impl Locator {
     /// or `uncheck()` if `checked` is false.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-set-checked>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn set_checked(
         &self,
         checked: bool,
@@ -1219,6 +1248,7 @@ impl Locator {
     /// Hovers the mouse over the element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-hover>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn hover(&self, options: Option<crate::protocol::HoverOptions>) -> Result<()> {
         self.frame
             .locator_hover(&self.selector, Some(self.with_timeout(options)))
@@ -1229,6 +1259,7 @@ impl Locator {
     /// Returns the value of the input, textarea, or select element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-input-value>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn input_value(&self, _options: Option<()>) -> Result<String> {
         self.frame
             .locator_input_value(&self.selector)
@@ -1241,6 +1272,7 @@ impl Locator {
     /// Returns an array of option values that have been successfully selected.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-select-option>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn select_option(
         &self,
         value: impl Into<crate::protocol::SelectOption>,
@@ -1261,6 +1293,7 @@ impl Locator {
     /// Returns an array of option values that have been successfully selected.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-select-option>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn select_option_multiple(
         &self,
         values: &[impl Into<crate::protocol::SelectOption> + Clone],
@@ -1281,6 +1314,7 @@ impl Locator {
     /// Sets the file path(s) to upload to a file input element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-set-input-files>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn set_input_files(
         &self,
         file: &std::path::PathBuf,
@@ -1295,6 +1329,7 @@ impl Locator {
     /// Sets multiple file paths to upload to a file input element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-set-input-files>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn set_input_files_multiple(
         &self,
         files: &[&std::path::PathBuf],
@@ -1309,6 +1344,7 @@ impl Locator {
     /// Sets a file to upload using FilePayload (explicit name, mimeType, buffer).
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-set-input-files>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn set_input_files_payload(
         &self,
         file: crate::protocol::FilePayload,
@@ -1323,6 +1359,7 @@ impl Locator {
     /// Sets multiple files to upload using FilePayload.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-set-input-files>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn set_input_files_payload_multiple(
         &self,
         files: &[crate::protocol::FilePayload],
@@ -1353,6 +1390,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-dispatch-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn dispatch_event(
         &self,
         type_: &str,
@@ -1377,6 +1415,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-bounding-box>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn bounding_box(&self) -> Result<Option<BoundingBox>> {
         self.frame
             .locator_bounding_box(&self.selector)
@@ -1395,6 +1434,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-scroll-into-view-if-needed>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn scroll_into_view_if_needed(&self) -> Result<()> {
         self.frame
             .locator_scroll_into_view_if_needed(&self.selector)
@@ -1408,6 +1448,7 @@ impl Locator {
     /// Use `first()`, `last()`, or `nth()` to refine the selector to a single element.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-screenshot>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector, bytes_len = tracing::field::Empty))]
     pub async fn screenshot(
         &self,
         options: Option<crate::protocol::ScreenshotOptions>,
@@ -1426,10 +1467,12 @@ impl Locator {
             })?;
 
         // Delegate to ElementHandle.screenshot() with default timeout injected
-        element
+        let bytes = element
             .screenshot(Some(self.with_timeout(options)))
             .await
-            .map_err(|e| self.wrap_error_with_selector(e))
+            .map_err(|e| self.wrap_error_with_selector(e))?;
+        tracing::Span::current().record("bytes_len", bytes.len());
+        Ok(bytes)
     }
 
     /// Performs a touch-tap on the element.
@@ -1450,6 +1493,7 @@ impl Locator {
     /// - The browser context was not created with `has_touch: true`
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-tap>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn tap(&self, options: Option<crate::protocol::TapOptions>) -> Result<()> {
         self.frame
             .locator_tap(&self.selector, Some(self.with_timeout(options)))
@@ -1477,6 +1521,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-drag-to>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn drag_to(
         &self,
         target: &Locator,
@@ -1509,6 +1554,7 @@ impl Locator {
     /// Returns an error if the element does not satisfy the expected state within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn wait_for(&self, options: Option<crate::protocol::WaitForOptions>) -> Result<()> {
         self.frame
             .locator_wait_for(&self.selector, Some(self.with_timeout(options)))
@@ -1560,6 +1606,7 @@ impl Locator {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-evaluate>
+    #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
     pub async fn evaluate<R, T>(&self, expression: &str, arg: Option<T>) -> Result<R>
     where
         R: serde::de::DeserializeOwned,
@@ -1621,6 +1668,7 @@ impl Locator {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-evaluate-all>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn evaluate_all<R, T>(&self, expression: &str, arg: Option<T>) -> Result<R>
     where
         R: serde::de::DeserializeOwned,
@@ -1652,6 +1700,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector, mode = tracing::field::Empty))]
     pub async fn aria_snapshot(
         &self,
         options: Option<crate::protocol::AriaSnapshotOptions>,
@@ -1679,6 +1728,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-normalize>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn normalize(&self) -> Result<Locator> {
         let resolved = self
             .frame
@@ -1723,6 +1773,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-highlight>
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn highlight(&self) -> Result<()> {
         self.frame
             .locator_highlight(&self.selector)

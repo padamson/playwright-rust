@@ -291,6 +291,29 @@ See [`examples/trace_on_failure.rs`](crates/playwright/examples/trace_on_failure
 for a runnable end-to-end example. Open the resulting `trace.zip` at
 <https://trace.playwright.dev>.
 
+**See playwright-rs operations in your app's logs.** Every public async
+method on the user-facing types (`Browser`, `Page`, `Frame`, `Locator`,
+`ElementHandle`, `Tracing`, `CDPSession`, `Debugger`, `Screencast`,
+`Request`, `Response`, ...) is instrumented with the
+[`tracing`](https://docs.rs/tracing) crate. Wire up any `tracing_subscriber`
+and playwright-rs spans appear alongside spans from the rest of your app
+(reqwest, sqlx, tonic, etc.):
+
+```rust,ignore
+tracing_subscriber::fmt()
+    .with_env_filter("playwright_rs=info")
+    .init();
+```
+
+Top-level operations (`goto`, `click`, `screenshot`, `pdf`, `evaluate`,
+`browser.close`, `browser_type.launch`) emit at `info`; everything else
+at `debug`. Span fields include cardinality-bounded identifiers (`guid`,
+`selector`, `url`, `name`) and selected completion-time fields (`status`,
+`bytes_len`, `count`). Sensitive payloads (input values, eval expressions,
+request/response bodies) are deliberately excluded. See
+[`examples/observability.rs`](crates/playwright/examples/observability.rs)
+for the full pattern, including nested user spans.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=padamson/playwright-rust&type=Date)](https://star-history.com/#padamson/playwright-rust&Date)

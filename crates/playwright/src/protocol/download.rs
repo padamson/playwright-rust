@@ -95,6 +95,7 @@ impl Download {
     /// Returns an error if the download fails or is canceled.
     ///
     /// See: <https://playwright.dev/docs/api/class-download#download-path>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.artifact.guid(), url = %self.url))]
     pub async fn path(&self) -> Result<Option<PathBuf>> {
         #[derive(serde::Deserialize)]
         struct PathResponse {
@@ -122,6 +123,7 @@ impl Download {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-download#download-save-as>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.artifact.guid(), url = %self.url))]
     pub async fn save_as(&self, path: impl AsRef<std::path::Path>) -> Result<()> {
         let path_str = path
             .as_ref()
@@ -140,6 +142,7 @@ impl Download {
     /// After calling this method, `failure()` will return an error message.
     ///
     /// See: <https://playwright.dev/docs/api/class-download#download-cancel>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.artifact.guid(), url = %self.url))]
     pub async fn cancel(&self) -> Result<()> {
         self.channel().send_no_result("cancel", json!({})).await?;
 
@@ -151,6 +154,7 @@ impl Download {
     /// The download must be finished before calling this method.
     ///
     /// See: <https://playwright.dev/docs/api/class-download#download-delete>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.artifact.guid(), url = %self.url))]
     pub async fn delete(&self) -> Result<()> {
         self.channel().send_no_result("delete", json!({})).await?;
 
@@ -160,6 +164,7 @@ impl Download {
     /// Returns the download error message if it failed, otherwise None.
     ///
     /// See: <https://playwright.dev/docs/api/class-download#download-failure>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.artifact.guid(), url = %self.url))]
     pub async fn failure(&self) -> Result<Option<String>> {
         #[derive(serde::Deserialize)]
         struct FailureResponse {

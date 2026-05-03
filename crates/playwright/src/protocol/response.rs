@@ -138,6 +138,7 @@ impl ResponseObject {
     /// as a base64-encoded binary string.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-body>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
     pub async fn body(&self) -> Result<Vec<u8>> {
         use serde::Deserialize;
 
@@ -163,6 +164,7 @@ impl ResponseObject {
     /// Returns TLS/SSL security details for HTTPS connections, or `None` for HTTP.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-security-details>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn security_details(&self) -> Result<Option<SecurityDetails>> {
         let result: serde_json::Value = self
             .channel()
@@ -190,6 +192,7 @@ impl ResponseObject {
     /// Returns the server's IP address and port for this response, or `None`.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-server-addr>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn server_addr(&self) -> Result<Option<RemoteAddr>> {
         let result: serde_json::Value = self
             .channel()
@@ -214,6 +217,7 @@ impl ResponseObject {
     /// Returns resource size information for this response.
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-sizes>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn sizes(&self) -> Result<RequestSizes> {
         use serde::Deserialize;
 
@@ -246,6 +250,7 @@ impl ResponseObject {
     /// Sends a `"httpVersion"` RPC call to the Playwright server.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-http-version>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), version = tracing::field::Empty))]
     pub async fn http_version(&self) -> Result<String> {
         use serde::Deserialize;
 
@@ -266,6 +271,7 @@ impl ResponseObject {
     /// Sends a `"rawResponseHeaders"` RPC call to the Playwright server.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-headers-array>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn raw_headers(&self) -> Result<Vec<HeaderEntry>> {
         use serde::Deserialize;
 

@@ -13,6 +13,7 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::protocol::selectors::Selectors;
 use crate::server::channel_owner::ChannelOwner;
+use tracing::Instrument;
 
 /// Trait defining the interface that ChannelOwner needs from a Connection.
 ///
@@ -338,11 +339,14 @@ impl Connection {
             .take()
             .expect("run() can only be called once - transport receiver already taken");
 
-        let transport_handle = tokio::spawn(async move {
-            if let Err(e) = transport_receiver.run().await {
-                tracing::error!("Transport error: {}", e);
+        let transport_handle = tokio::spawn(
+            async move {
+                if let Err(e) = transport_receiver.run().await {
+                    tracing::error!("Transport error: {}", e);
+                }
             }
-        });
+            .in_current_span(),
+        );
 
         let mut message_rx = self
             .message_rx

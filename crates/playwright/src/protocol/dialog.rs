@@ -112,6 +112,7 @@ impl Dialog {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-dialog#dialog-accept>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn accept(&self, prompt_text: Option<&str>) -> Result<()> {
         let params = if let Some(text) = prompt_text {
             json!({ "promptText": text })
@@ -136,6 +137,7 @@ impl Dialog {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-dialog#dialog-dismiss>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn dismiss(&self) -> Result<()> {
         self.channel().send_no_result("dismiss", json!({})).await?;
 

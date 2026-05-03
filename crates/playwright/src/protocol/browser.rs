@@ -216,6 +216,7 @@ impl Browser {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name))]
     pub async fn new_context(&self) -> Result<BrowserContext> {
         #[derive(Deserialize)]
         struct NewContextResponse {
@@ -264,6 +265,7 @@ impl Browser {
     /// - Storage state file cannot be read or parsed
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name))]
     pub async fn new_context_with_options(
         &self,
         mut options: crate::protocol::BrowserContextOptions,
@@ -342,6 +344,7 @@ impl Browser {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-new-page>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name))]
     pub async fn new_page(&self) -> Result<Page> {
         // Create a default context and then create a page in it
         let context = self.new_context().await?;
@@ -404,6 +407,7 @@ impl Browser {
     /// Chromium only.
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-new-browser-cdp-session>
+    #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name))]
     pub async fn new_browser_cdp_session(&self) -> Result<crate::protocol::CDPSession> {
         #[derive(Deserialize)]
         struct Response {
@@ -426,6 +430,7 @@ impl Browser {
     }
 
     /// See: <https://playwright.dev/docs/api/class-browser#browser-event-disconnected>
+    #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name))]
     pub async fn on_disconnected<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -455,6 +460,7 @@ impl Browser {
     /// requested host/port is unavailable.
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-bind>
+    #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name, title = %title))]
     pub async fn bind(&self, title: &str, options: Option<BindOptions>) -> Result<BindResult> {
         let mut params = serde_json::to_value(options.unwrap_or_default())
             .unwrap_or_else(|_| serde_json::json!({}));
@@ -469,6 +475,7 @@ impl Browser {
     /// Calling `unbind()` when no server is bound is a no-op.
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-unbind>
+    #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name))]
     pub async fn unbind(&self) -> Result<()> {
         self.channel()
             .send_no_result("stopServer", serde_json::json!({}))
@@ -491,6 +498,7 @@ impl Browser {
     /// - Communication with the browser fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-start-tracing>
+    #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name))]
     pub async fn start_tracing(&self, options: Option<StartTracingOptions>) -> Result<()> {
         #[derive(serde::Serialize)]
         struct StartTracingParams {
@@ -537,6 +545,7 @@ impl Browser {
     /// Returns error if no tracing was started or communication fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-stop-tracing>
+    #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name, bytes_len = tracing::field::Empty))]
     pub async fn stop_tracing(&self) -> Result<Vec<u8>> {
         #[derive(Deserialize)]
         struct StopTracingResponse {
@@ -584,6 +593,7 @@ impl Browser {
 
         let _ = tokio::fs::remove_file(&tmp_path).await;
 
+        tracing::Span::current().record("bytes_len", bytes.len());
         Ok(bytes)
     }
 
@@ -599,6 +609,7 @@ impl Browser {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-close>
+    #[tracing::instrument(level = "info", skip_all, fields(name = %self.name))]
     pub async fn close(&self) -> Result<()> {
         // Send close RPC to server
         // The protocol expects an empty object as params

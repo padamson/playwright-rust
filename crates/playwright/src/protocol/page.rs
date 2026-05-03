@@ -18,6 +18,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
+use tracing::Instrument;
 
 /// Page represents a web page within a browser context.
 ///
@@ -514,16 +515,19 @@ impl Page {
             if let Some(artifact_guid) = video_artifact_guid {
                 let connection = base.connection();
                 let v_clone = v.clone();
-                tokio::spawn(async move {
-                    match connection.get_object(&artifact_guid).await {
-                        Ok(artifact_arc) => v_clone.set_artifact(artifact_arc),
-                        Err(e) => tracing::warn!(
-                            "Failed to resolve video artifact {} from initializer: {}",
-                            artifact_guid,
-                            e
-                        ),
+                tokio::spawn(
+                    async move {
+                        match connection.get_object(&artifact_guid).await {
+                            Ok(artifact_arc) => v_clone.set_artifact(artifact_arc),
+                            Err(e) => tracing::warn!(
+                                "Failed to resolve video artifact {} from initializer: {}",
+                                artifact_guid,
+                                e
+                            ),
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
             }
             Some(v)
         } else {
@@ -600,6 +604,7 @@ impl Page {
     ///
     /// This method also wires up the back-reference from the frame to the page so that
     /// `frame.page()`, `frame.locator()`, and `frame.get_by_*()` work correctly.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn main_frame(&self) -> Result<crate::protocol::Frame> {
         // Get and downcast the Frame object from the connection's object registry
         let frame: crate::protocol::Frame = self
@@ -649,6 +654,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-close>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn close(&self) -> Result<()> {
         // Send close RPC to server
         let result = self
@@ -747,6 +753,7 @@ impl Page {
     /// object is not found in the connection registry.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-opener>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn opener(&self) -> Result<Option<Page>> {
         // The opener guid is stored in the page initializer as {"opener": {"guid": "..."}}.
         // It is set when the page is created as a popup; absent for non-popup pages.
@@ -791,6 +798,7 @@ impl Page {
     /// * `timeout` - Timeout in milliseconds
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-default-timeout>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_default_timeout(&self, timeout: f64) {
         self.default_timeout_ms
             .store(timeout.to_bits(), Ordering::Relaxed);
@@ -807,6 +815,7 @@ impl Page {
     /// * `timeout` - Timeout in milliseconds
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-default-navigation-timeout>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_default_navigation_timeout(&self, timeout: f64) {
         self.default_navigation_timeout_ms
             .store(timeout.to_bits(), Ordering::Relaxed);
@@ -859,6 +868,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-frames>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn frames(&self) -> Result<Vec<crate::protocol::Frame>> {
         // Start with the main frame
         let main = self.main_frame().await?;
@@ -883,6 +893,7 @@ impl Page {
     /// - Network error
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-goto>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), url = %url, status = tracing::field::Empty))]
     pub async fn goto(&self, url: &str, options: Option<GotoOptions>) -> Result<Option<Response>> {
         // Inject the page-level navigation timeout when no explicit timeout is given
         let options = self.with_navigation_timeout(options);
@@ -911,6 +922,9 @@ impl Page {
             *page_url = resp.url().to_string();
         }
 
+        if let Some(ref resp) = response {
+            tracing::Span::current().record("status", resp.status());
+        }
         Ok(response)
     }
 
@@ -957,6 +971,7 @@ impl Page {
     /// "Resume" in the page overlay or in the debugger.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-pause>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn pause(&self) -> Result<()> {
         self.context()?.pause().await
     }
@@ -964,6 +979,7 @@ impl Page {
     /// Returns the page's title.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-title>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn title(&self) -> Result<String> {
         // Delegate to main frame
         let frame = self.main_frame().await?;
@@ -976,6 +992,7 @@ impl Page {
     /// including the doctype declaration and all DOM elements.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-content>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn content(&self) -> Result<String> {
         // Delegate to main frame
         let frame = self.main_frame().await?;
@@ -985,6 +1002,7 @@ impl Page {
     /// Sets the content of the page.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-content>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_content(&self, html: &str, options: Option<GotoOptions>) -> Result<()> {
         let frame = self.main_frame().await?;
         frame.set_content(html, options).await
@@ -997,6 +1015,7 @@ impl Page {
     /// document has already reached the required state, resolves immediately.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-load-state>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn wait_for_load_state(&self, state: Option<WaitUntil>) -> Result<()> {
         let frame = self.main_frame().await?;
         frame.wait_for_load_state(state).await
@@ -1005,6 +1024,7 @@ impl Page {
     /// Waits for the main frame to navigate to a URL matching the given string or glob pattern.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-url>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %url))]
     pub async fn wait_for_url(&self, url: &str, options: Option<GotoOptions>) -> Result<()> {
         let frame = self.main_frame().await?;
         frame.wait_for_url(url, options).await
@@ -1020,6 +1040,7 @@ impl Page {
     /// * `selector` - CSS selector or other locating strategy
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-locator>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = %selector))]
     pub async fn locator(&self, selector: &str) -> crate::protocol::Locator {
         // Get the main frame
         let frame = self.main_frame().await.expect("Main frame should exist");
@@ -1032,6 +1053,7 @@ impl Page {
     /// The `selector` identifies the iframe element (e.g., `"iframe[name='content']"`).
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-frame-locator>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = %selector))]
     pub async fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
         let frame = self.main_frame().await.expect("Main frame should exist");
         crate::protocol::FrameLocator::new(Arc::new(frame), selector.to_string(), self.clone())
@@ -1043,6 +1065,7 @@ impl Page {
     /// Set `exact` to `true` for case-sensitive exact matching.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-text>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
         self.locator(&crate::protocol::locator::get_by_text_selector(text, exact))
             .await
@@ -1051,6 +1074,7 @@ impl Page {
     /// Returns a locator that matches elements by their associated label text.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-label>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_label(&self, text: &str, exact: bool) -> crate::protocol::Locator {
         self.locator(&crate::protocol::locator::get_by_label_selector(
             text, exact,
@@ -1061,6 +1085,7 @@ impl Page {
     /// Returns a locator that matches elements by their placeholder text.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-placeholder>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_placeholder(&self, text: &str, exact: bool) -> crate::protocol::Locator {
         self.locator(&crate::protocol::locator::get_by_placeholder_selector(
             text, exact,
@@ -1071,6 +1096,7 @@ impl Page {
     /// Returns a locator that matches elements by their alt text.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-alt-text>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_alt_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
         self.locator(&crate::protocol::locator::get_by_alt_text_selector(
             text, exact,
@@ -1081,6 +1107,7 @@ impl Page {
     /// Returns a locator that matches elements by their title attribute.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-title>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_title(&self, text: &str, exact: bool) -> crate::protocol::Locator {
         self.locator(&crate::protocol::locator::get_by_title_selector(
             text, exact,
@@ -1097,6 +1124,7 @@ impl Page {
     /// Always uses exact matching (case-sensitive).
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-test-id>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
         let attr = self.connection().selectors().test_id_attribute();
         self.locator(&crate::protocol::locator::get_by_test_id_selector_with_attr(test_id, &attr))
@@ -1106,6 +1134,7 @@ impl Page {
     /// Returns a locator that matches elements by their ARIA role.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-role>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn get_by_role(
         &self,
         role: crate::protocol::locator::AriaRole,
@@ -1369,6 +1398,7 @@ impl Page {
     /// drag action times out, or the page has been closed.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-drag-and-drop>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn drag_and_drop(
         &self,
         source: &str,
@@ -1389,6 +1419,7 @@ impl Page {
     /// about:blank). This matches Playwright's behavior across all language bindings.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-reload>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn reload(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
         self.navigate_history("reload", options).await
     }
@@ -1399,6 +1430,7 @@ impl Page {
     /// will resolve with the response of the last redirect. If can not go back, returns `None`.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-go-back>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn go_back(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
         self.navigate_history("goBack", options).await
     }
@@ -1409,6 +1441,7 @@ impl Page {
     /// will resolve with the response of the last redirect. If can not go forward, returns `None`.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-go-forward>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn go_forward(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
         self.navigate_history("goForward", options).await
     }
@@ -1507,6 +1540,7 @@ impl Page {
     /// Returns the first element matching the selector, or None if not found.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-query-selector>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn query_selector(
         &self,
         selector: &str,
@@ -1518,6 +1552,7 @@ impl Page {
     /// Returns all elements matching the selector.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-query-selector-all>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn query_selector_all(
         &self,
         selector: &str,
@@ -1529,6 +1564,7 @@ impl Page {
     /// Takes a screenshot of the page and returns the image bytes.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-screenshot>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
     pub async fn screenshot(
         &self,
         options: Option<crate::protocol::ScreenshotOptions>,
@@ -1557,12 +1593,14 @@ impl Page {
                 crate::error::Error::ProtocolError(format!("Failed to decode screenshot: {}", e))
             })?;
 
+        tracing::Span::current().record("bytes_len", bytes.len());
         Ok(bytes)
     }
 
     /// Takes a screenshot and saves it to a file, also returning the bytes.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-screenshot>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn screenshot_to_file(
         &self,
         path: &std::path::Path,
@@ -1585,6 +1623,7 @@ impl Page {
     /// context without returning a value.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-evaluate>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate_expression(&self, expression: &str) -> Result<()> {
         // Delegate to the main frame
         let frame = self.main_frame().await?;
@@ -1606,6 +1645,7 @@ impl Page {
     /// The result as a `serde_json::Value`
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-evaluate>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate<T: serde::Serialize, U: serde::de::DeserializeOwned>(
         &self,
         expression: &str,
@@ -1628,6 +1668,7 @@ impl Page {
     /// The result converted to a String
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-evaluate>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn evaluate_value(&self, expression: &str) -> Result<String> {
         let frame = self.main_frame().await?;
         frame.frame_evaluate_expression_value(expression).await
@@ -1644,6 +1685,7 @@ impl Page {
     /// * `handler` - Async closure that handles the route
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-route>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %pattern))]
     pub async fn route<F, Fut>(&self, pattern: &str, handler: F) -> Result<()>
     where
         F: Fn(Route) -> Fut + Send + Sync + 'static,
@@ -1696,6 +1738,7 @@ impl Page {
     /// * `pattern` - URL pattern to remove handlers for
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-unroute>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %pattern))]
     pub async fn unroute(&self, pattern: &str) -> Result<()> {
         self.route_handlers
             .lock()
@@ -1711,6 +1754,7 @@ impl Page {
     /// * `behavior` - Optional behavior for in-flight handlers
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-unroute-all>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn unroute_all(
         &self,
         _behavior: Option<crate::protocol::route::UnrouteBehavior>,
@@ -1738,6 +1782,7 @@ impl Page {
     /// - The Playwright server fails to open the archive
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-route-from-har>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn route_from_har(
         &self,
         har_path: &str,
@@ -1897,6 +1942,7 @@ impl Page {
     /// Returns an error if the RPC call to enable interception fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-route-web-socket>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %url))]
     pub async fn route_web_socket<F, Fut>(&self, url: &str, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::WebSocketRoute) -> Fut + Send + Sync + 'static,
@@ -1975,6 +2021,7 @@ impl Page {
     /// * `handler` - Async closure that receives the Download object
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-download>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_download<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Download) -> Fut + Send + Sync + 'static,
@@ -2001,6 +2048,7 @@ impl Page {
     /// * `handler` - Async closure that receives the Dialog object
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-dialog>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_dialog<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Dialog) -> Fut + Send + Sync + 'static,
@@ -2031,6 +2079,7 @@ impl Page {
     /// * `handler` - Async closure that receives the [`ConsoleMessage`](crate::protocol::ConsoleMessage)
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-console>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_console<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::ConsoleMessage) -> Fut + Send + Sync + 'static,
@@ -2079,6 +2128,7 @@ impl Page {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-file-chooser>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_filechooser<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::FileChooser) -> Fut + Send + Sync + 'static,
@@ -2131,6 +2181,7 @@ impl Page {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_file_chooser(
         &self,
         timeout: Option<f64>,
@@ -2171,6 +2222,7 @@ impl Page {
     /// opens within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_popup(
         &self,
         timeout: Option<f64>,
@@ -2198,6 +2250,7 @@ impl Page {
     /// starts within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_download(
         &self,
         timeout: Option<f64>,
@@ -2225,6 +2278,7 @@ impl Page {
     /// arrives within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_response(
         &self,
         timeout: Option<f64>,
@@ -2262,6 +2316,7 @@ impl Page {
     /// is issued within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_request(
         &self,
         timeout: Option<f64>,
@@ -2299,6 +2354,7 @@ impl Page {
     /// message is produced within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_console_message(
         &self,
         timeout: Option<f64>,
@@ -2345,6 +2401,7 @@ impl Page {
     /// Returns [`crate::error::Error::Timeout`] if the event does not fire within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_event(
         &self,
         event: &str,
@@ -2370,11 +2427,14 @@ impl Page {
                 }
                 self.request_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Request(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Request(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2393,11 +2453,14 @@ impl Page {
                 }
                 self.response_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Response(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Response(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2407,11 +2470,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<Page>();
                 self.popup_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Page(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Page(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2421,11 +2487,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Download>();
                 self.download_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Download(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Download(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2444,11 +2513,14 @@ impl Page {
                 }
                 self.console_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::ConsoleMessage(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::ConsoleMessage(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2470,11 +2542,14 @@ impl Page {
                 }
                 self.filechooser_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::FileChooser(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::FileChooser(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2484,11 +2559,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<()>();
                 self.close_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if inner_rx.await.is_ok() {
-                        let _ = tx.send(EventValue::Close);
+                tokio::spawn(
+                    async move {
+                        if inner_rx.await.is_ok() {
+                            let _ = tx.send(EventValue::Close);
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2498,11 +2576,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<()>();
                 self.load_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if inner_rx.await.is_ok() {
-                        let _ = tx.send(EventValue::Load);
+                tokio::spawn(
+                    async move {
+                        if inner_rx.await.is_ok() {
+                            let _ = tx.send(EventValue::Load);
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2512,11 +2593,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<()>();
                 self.crash_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if inner_rx.await.is_ok() {
-                        let _ = tx.send(EventValue::Crash);
+                tokio::spawn(
+                    async move {
+                        if inner_rx.await.is_ok() {
+                            let _ = tx.send(EventValue::Crash);
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2526,11 +2610,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<String>();
                 self.pageerror_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(msg) = inner_rx.await {
-                        let _ = tx.send(EventValue::PageError(msg));
+                tokio::spawn(
+                    async move {
+                        if let Ok(msg) = inner_rx.await {
+                            let _ = tx.send(EventValue::PageError(msg));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2540,11 +2627,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
                 self.frameattached_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Frame(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Frame(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2554,11 +2644,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
                 self.framedetached_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Frame(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Frame(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2568,11 +2661,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
                 self.framenavigated_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Frame(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Frame(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2582,11 +2678,14 @@ impl Page {
                 let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Worker>();
                 self.worker_waiters.lock().unwrap().push(inner_tx);
 
-                tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Worker(v));
+                tokio::spawn(
+                    async move {
+                        if let Ok(v) = inner_rx.await {
+                            let _ = tx.send(EventValue::Worker(v));
+                        }
                     }
-                });
+                    .in_current_span(),
+                );
 
                 Ok(crate::protocol::EventWaiter::new(rx, timeout_ms))
             }
@@ -2601,6 +2700,7 @@ impl Page {
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -2624,6 +2724,7 @@ impl Page {
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request-finished>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_request_finished<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -2646,6 +2747,7 @@ impl Page {
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-request-failed>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_request_failed<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -2668,6 +2770,7 @@ impl Page {
     }
 
     /// See: <https://playwright.dev/docs/api/class-page#page-event-response>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_response<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
@@ -2699,6 +2802,7 @@ impl Page {
     /// * `handler` - The function to call when the event occurs
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-on-websocket>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_websocket<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(WebSocket) -> Fut + Send + Sync + 'static,
@@ -2719,6 +2823,7 @@ impl Page {
     /// * `handler` - Async closure called with the new [`Worker`] object
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-worker>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_worker<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Worker) -> Fut + Send + Sync + 'static,
@@ -2739,6 +2844,7 @@ impl Page {
     /// * `handler` - Async closure called with no arguments when the page closes
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-close>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_close<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -2762,6 +2868,7 @@ impl Page {
     /// * `handler` - Async closure called with no arguments when the page loads
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-load>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_load<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -2782,6 +2889,7 @@ impl Page {
     /// * `handler` - Async closure called with no arguments when the page crashes
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-crash>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_crash<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -2805,6 +2913,7 @@ impl Page {
     /// * `handler` - Async closure that receives the error message string
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-page-error>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_pageerror<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(String) -> Fut + Send + Sync + 'static,
@@ -2830,6 +2939,7 @@ impl Page {
     /// * `handler` - Async closure that receives the popup Page
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-popup>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_popup<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Page) -> Fut + Send + Sync + 'static,
@@ -2851,6 +2961,7 @@ impl Page {
     /// * `handler` - Async closure that receives the attached Frame
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-frameattached>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_frameattached<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
@@ -2875,6 +2986,7 @@ impl Page {
     /// * `handler` - Async closure that receives the detached Frame
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-framedetached>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_framedetached<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
@@ -2899,6 +3011,7 @@ impl Page {
     /// * `handler` - Async closure that receives the navigated Frame
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-event-framenavigated>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_framenavigated<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
@@ -2935,6 +3048,7 @@ impl Page {
     /// - Communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-expose-function>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), name = %name))]
     pub async fn expose_function<F, Fut>(&self, name: &str, callback: F) -> Result<()>
     where
         F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
@@ -2962,6 +3076,7 @@ impl Page {
     /// - Communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-expose-binding>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), name = %name))]
     pub async fn expose_binding<F, Fut>(&self, name: &str, callback: F) -> Result<()>
     where
         F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
@@ -3101,6 +3216,7 @@ impl Page {
     /// Returns error if communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-add-locator-handler>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_locator_handler<F, Fut>(
         &self,
         locator: &crate::protocol::Locator,
@@ -3168,6 +3284,7 @@ impl Page {
     /// communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-remove-locator-handler>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn remove_locator_handler(&self, locator: &crate::protocol::Locator) -> Result<()> {
         let selector = locator.selector();
 
@@ -3208,6 +3325,7 @@ impl Page {
     ///
     /// Dialog events are sent to BrowserContext and forwarded to the associated Page.
     /// This method is public so BrowserContext can forward dialog events.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn trigger_dialog_event(&self, dialog: Dialog) {
         self.on_dialog_event(dialog).await;
     }
@@ -3443,6 +3561,7 @@ impl Page {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-add-style-tag>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_style_tag(
         &self,
         options: AddStyleTagOptions,
@@ -3477,6 +3596,7 @@ impl Page {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-add-init-script>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_init_script(&self, script: &str) -> Result<()> {
         self.channel()
             .send_no_result("addInitScript", serde_json::json!({ "source": script }))
@@ -3525,6 +3645,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-viewport-size>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_viewport_size(&self, viewport: crate::protocol::Viewport) -> Result<()> {
         // Store the new viewport locally so viewport_size() can reflect the change
         if let Ok(mut guard) = self.viewport.write() {
@@ -3550,6 +3671,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-bring-to-front>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn bring_to_front(&self) -> Result<()> {
         self.channel()
             .send_no_result("bringToFront", serde_json::json!({}))
@@ -3559,6 +3681,7 @@ impl Page {
     /// Forces garbage collection in the browser (Chromium only).
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-request-gc>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn request_gc(&self) -> Result<()> {
         self.channel()
             .send_no_result("requestGC", serde_json::json!({}))
@@ -3577,6 +3700,7 @@ impl Page {
     /// context.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-pick-locator>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn pick_locator(&self) -> Result<crate::protocol::Locator> {
         #[derive(serde::Deserialize)]
         struct PickLocatorResponse {
@@ -3593,6 +3717,7 @@ impl Page {
     /// if the picker is not currently active.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-cancel-pick-locator>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn cancel_pick_locator(&self) -> Result<()> {
         self.channel()
             .send_no_result("cancelPickLocator", serde_json::json!({}))
@@ -3616,6 +3741,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-extra-http-headers>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_extra_http_headers(
         &self,
         headers: std::collections::HashMap<String, String>,
@@ -3678,6 +3804,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn emulate_media(&self, options: Option<EmulateMediaOptions>) -> Result<()> {
         let mut params = serde_json::json!({});
 
@@ -3751,6 +3878,7 @@ impl Page {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-pdf>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
     pub async fn pdf(&self, options: Option<PdfOptions>) -> Result<Vec<u8>> {
         let mut params = serde_json::json!({});
         let mut save_path: Option<std::path::PathBuf> = None;
@@ -3824,6 +3952,7 @@ impl Page {
             })?;
         }
 
+        tracing::Span::current().record("bytes_len", pdf_bytes.len());
         Ok(pdf_bytes)
     }
 
@@ -3871,6 +4000,7 @@ impl Page {
     /// - Script loading fails (e.g., invalid URL)
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-add-script-tag>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_script_tag(
         &self,
         options: Option<AddScriptTagOptions>,
@@ -3934,6 +4064,7 @@ impl Page {
     /// to get the AI-friendly form intended for LLM/codegen consumption.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-aria-snapshot>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn aria_snapshot(
         &self,
         options: Option<crate::protocol::AriaSnapshotOptions>,
@@ -4269,29 +4400,32 @@ impl ChannelOwner for Page {
                     let route_guid_owned = route_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        // Get and downcast Route object
-                        let route: Route =
-                            match connection.get_typed::<Route>(&route_guid_owned).await {
-                                Ok(r) => r,
-                                Err(e) => {
-                                    tracing::warn!("Failed to get route object: {}", e);
-                                    return;
-                                }
-                            };
+                    tokio::spawn(
+                        async move {
+                            // Get and downcast Route object
+                            let route: Route =
+                                match connection.get_typed::<Route>(&route_guid_owned).await {
+                                    Ok(r) => r,
+                                    Err(e) => {
+                                        tracing::warn!("Failed to get route object: {}", e);
+                                        return;
+                                    }
+                                };
 
-                        // Set APIRequestContext on the route for fetch() support.
-                        // Page's parent is BrowserContext, which has the request context.
-                        if let Some(ctx) =
-                            downcast_parent::<crate::protocol::BrowserContext>(&self_clone)
-                            && let Ok(api_ctx) = ctx.request().await
-                        {
-                            route.set_api_request_context(api_ctx);
+                            // Set APIRequestContext on the route for fetch() support.
+                            // Page's parent is BrowserContext, which has the request context.
+                            if let Some(ctx) =
+                                downcast_parent::<crate::protocol::BrowserContext>(&self_clone)
+                                && let Ok(api_ctx) = ctx.request().await
+                            {
+                                route.set_api_request_context(api_ctx);
+                            }
+
+                            // Call the route handler and wait for completion
+                            self_clone.on_route_event(route).await;
                         }
-
-                        // Call the route handler and wait for completion
-                        self_clone.on_route_event(route).await;
-                    });
+                        .in_current_span(),
+                    );
                 }
             }
             "download" => {
@@ -4318,27 +4452,31 @@ impl ChannelOwner for Page {
                     let artifact_guid_owned = artifact_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        // Wait for Artifact object to be created
-                        let artifact_arc = match connection.get_object(&artifact_guid_owned).await {
-                            Ok(obj) => obj,
-                            Err(e) => {
-                                tracing::warn!("Failed to get artifact object: {}", e);
-                                return;
-                            }
-                        };
+                    tokio::spawn(
+                        async move {
+                            // Wait for Artifact object to be created
+                            let artifact_arc =
+                                match connection.get_object(&artifact_guid_owned).await {
+                                    Ok(obj) => obj,
+                                    Err(e) => {
+                                        tracing::warn!("Failed to get artifact object: {}", e);
+                                        return;
+                                    }
+                                };
 
-                        // Create Download wrapper from Artifact + event params
-                        let download = Download::from_artifact(
-                            artifact_arc,
-                            url,
-                            suggested_filename,
-                            self_clone.clone(),
-                        );
+                            // Create Download wrapper from Artifact + event params
+                            let download = Download::from_artifact(
+                                artifact_arc,
+                                url,
+                                suggested_filename,
+                                self_clone.clone(),
+                            );
 
-                        // Call the download handlers
-                        self_clone.on_download_event(download).await;
-                    });
+                            // Call the download handlers
+                            self_clone.on_download_event(download).await;
+                        }
+                        .in_current_span(),
+                    );
                 }
             }
             "dialog" => {
@@ -4355,28 +4493,34 @@ impl ChannelOwner for Page {
                     let ws_guid_owned = ws_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        // Get and downcast WebSocket object
-                        let ws: WebSocket =
-                            match connection.get_typed::<WebSocket>(&ws_guid_owned).await {
-                                Ok(ws) => ws,
-                                Err(e) => {
-                                    tracing::warn!("Failed to get WebSocket object: {}", e);
-                                    return;
-                                }
-                            };
+                    tokio::spawn(
+                        async move {
+                            // Get and downcast WebSocket object
+                            let ws: WebSocket =
+                                match connection.get_typed::<WebSocket>(&ws_guid_owned).await {
+                                    Ok(ws) => ws,
+                                    Err(e) => {
+                                        tracing::warn!("Failed to get WebSocket object: {}", e);
+                                        return;
+                                    }
+                                };
 
-                        // Call handlers
-                        let handlers = self_clone.websocket_handlers.lock().unwrap().clone();
-                        for handler in handlers {
-                            let ws_clone = ws.clone();
-                            tokio::spawn(async move {
-                                if let Err(e) = handler(ws_clone).await {
-                                    tracing::error!("Error in websocket handler: {}", e);
-                                }
-                            });
+                            // Call handlers
+                            let handlers = self_clone.websocket_handlers.lock().unwrap().clone();
+                            for handler in handlers {
+                                let ws_clone = ws.clone();
+                                tokio::spawn(
+                                    async move {
+                                        if let Err(e) = handler(ws_clone).await {
+                                            tracing::error!("Error in websocket handler: {}", e);
+                                        }
+                                    }
+                                    .in_current_span(),
+                                );
+                            }
                         }
-                    });
+                        .in_current_span(),
+                    );
                 }
             }
             "webSocketRoute" => {
@@ -4391,33 +4535,42 @@ impl ChannelOwner for Page {
                     let wsr_guid_owned = wsr_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        let route: crate::protocol::WebSocketRoute = match connection
-                            .get_typed::<crate::protocol::WebSocketRoute>(&wsr_guid_owned)
-                            .await
-                        {
-                            Ok(r) => r,
-                            Err(e) => {
-                                tracing::warn!("Failed to get WebSocketRoute object: {}", e);
-                                return;
-                            }
-                        };
+                    tokio::spawn(
+                        async move {
+                            let route: crate::protocol::WebSocketRoute = match connection
+                                .get_typed::<crate::protocol::WebSocketRoute>(&wsr_guid_owned)
+                                .await
+                            {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get WebSocketRoute object: {}", e);
+                                    return;
+                                }
+                            };
 
-                        let url = route.url().to_string();
-                        let handlers = self_clone.ws_route_handlers.lock().unwrap().clone();
-                        for entry in handlers.iter().rev() {
-                            if crate::protocol::route::matches_pattern(&entry.pattern, &url) {
-                                let handler = entry.handler.clone();
-                                let route_clone = route.clone();
-                                tokio::spawn(async move {
-                                    if let Err(e) = handler(route_clone).await {
-                                        tracing::error!("Error in webSocketRoute handler: {}", e);
-                                    }
-                                });
-                                break;
+                            let url = route.url().to_string();
+                            let handlers = self_clone.ws_route_handlers.lock().unwrap().clone();
+                            for entry in handlers.iter().rev() {
+                                if crate::protocol::route::matches_pattern(&entry.pattern, &url) {
+                                    let handler = entry.handler.clone();
+                                    let route_clone = route.clone();
+                                    tokio::spawn(
+                                        async move {
+                                            if let Err(e) = handler(route_clone).await {
+                                                tracing::error!(
+                                                    "Error in webSocketRoute handler: {}",
+                                                    e
+                                                );
+                                            }
+                                        }
+                                        .in_current_span(),
+                                    );
+                                    break;
+                                }
                             }
                         }
-                    });
+                        .in_current_span(),
+                    );
                 }
             }
             "worker" => {
@@ -4432,33 +4585,39 @@ impl ChannelOwner for Page {
                     let worker_guid_owned = worker_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        let worker: Worker =
-                            match connection.get_typed::<Worker>(&worker_guid_owned).await {
-                                Ok(w) => w,
-                                Err(e) => {
-                                    tracing::warn!("Failed to get Worker object: {}", e);
-                                    return;
-                                }
-                            };
+                    tokio::spawn(
+                        async move {
+                            let worker: Worker =
+                                match connection.get_typed::<Worker>(&worker_guid_owned).await {
+                                    Ok(w) => w,
+                                    Err(e) => {
+                                        tracing::warn!("Failed to get Worker object: {}", e);
+                                        return;
+                                    }
+                                };
 
-                        // Track the worker for workers() accessor
-                        self_clone.workers_list.lock().unwrap().push(worker.clone());
+                            // Track the worker for workers() accessor
+                            self_clone.workers_list.lock().unwrap().push(worker.clone());
 
-                        let handlers = self_clone.worker_handlers.lock().unwrap().clone();
-                        for handler in handlers {
-                            let worker_clone = worker.clone();
-                            tokio::spawn(async move {
-                                if let Err(e) = handler(worker_clone).await {
-                                    tracing::error!("Error in worker handler: {}", e);
-                                }
-                            });
+                            let handlers = self_clone.worker_handlers.lock().unwrap().clone();
+                            for handler in handlers {
+                                let worker_clone = worker.clone();
+                                tokio::spawn(
+                                    async move {
+                                        if let Err(e) = handler(worker_clone).await {
+                                            tracing::error!("Error in worker handler: {}", e);
+                                        }
+                                    }
+                                    .in_current_span(),
+                                );
+                            }
+                            // Notify expect_event("worker") waiters
+                            if let Some(tx) = self_clone.worker_waiters.lock().unwrap().pop() {
+                                let _ = tx.send(worker);
+                            }
                         }
-                        // Notify expect_event("worker") waiters
-                        if let Some(tx) = self_clone.worker_waiters.lock().unwrap().pop() {
-                            let _ = tx.send(worker);
-                        }
-                    });
+                        .in_current_span(),
+                    );
                 }
             }
             "bindingCall" => {
@@ -4511,7 +4670,7 @@ impl ChannelOwner for Page {
                         if let Err(e) = binding_call.resolve(serialized).await {
                             tracing::warn!("Failed to resolve BindingCall '{}': {}", name, e);
                         }
-                    });
+                    }.in_current_span());
                 }
             }
             "fileChooser" => {
@@ -4531,29 +4690,32 @@ impl ChannelOwner for Page {
                     let element_guid_owned = element_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        let element: crate::protocol::ElementHandle = match connection
-                            .get_typed::<crate::protocol::ElementHandle>(&element_guid_owned)
-                            .await
-                        {
-                            Ok(e) => e,
-                            Err(err) => {
-                                tracing::warn!(
-                                    "Failed to get ElementHandle for fileChooser: {}",
-                                    err
-                                );
-                                return;
-                            }
-                        };
+                    tokio::spawn(
+                        async move {
+                            let element: crate::protocol::ElementHandle = match connection
+                                .get_typed::<crate::protocol::ElementHandle>(&element_guid_owned)
+                                .await
+                            {
+                                Ok(e) => e,
+                                Err(err) => {
+                                    tracing::warn!(
+                                        "Failed to get ElementHandle for fileChooser: {}",
+                                        err
+                                    );
+                                    return;
+                                }
+                            };
 
-                        let chooser = crate::protocol::FileChooser::new(
-                            self_clone.clone(),
-                            std::sync::Arc::new(element),
-                            is_multiple,
-                        );
+                            let chooser = crate::protocol::FileChooser::new(
+                                self_clone.clone(),
+                                std::sync::Arc::new(element),
+                                is_multiple,
+                            );
 
-                        self_clone.on_filechooser_event(chooser).await;
-                    });
+                            self_clone.on_filechooser_event(chooser).await;
+                        }
+                        .in_current_span(),
+                    );
                 }
             }
             "close" => {
@@ -4561,21 +4723,30 @@ impl ChannelOwner for Page {
                 self.is_closed.store(true, Ordering::Relaxed);
                 // Dispatch close handlers
                 let self_clone = self.clone();
-                tokio::spawn(async move {
-                    self_clone.on_close_event().await;
-                });
+                tokio::spawn(
+                    async move {
+                        self_clone.on_close_event().await;
+                    }
+                    .in_current_span(),
+                );
             }
             "load" => {
                 let self_clone = self.clone();
-                tokio::spawn(async move {
-                    self_clone.on_load_event().await;
-                });
+                tokio::spawn(
+                    async move {
+                        self_clone.on_load_event().await;
+                    }
+                    .in_current_span(),
+                );
             }
             "crash" => {
                 let self_clone = self.clone();
-                tokio::spawn(async move {
-                    self_clone.on_crash_event().await;
-                });
+                tokio::spawn(
+                    async move {
+                        self_clone.on_crash_event().await;
+                    }
+                    .in_current_span(),
+                );
             }
             "pageError" => {
                 // params: {"error": {"message": "...", "stack": "..."}}
@@ -4586,23 +4757,32 @@ impl ChannelOwner for Page {
                     .unwrap_or("")
                     .to_string();
                 let self_clone = self.clone();
-                tokio::spawn(async move {
-                    self_clone.on_pageerror_event(message).await;
-                });
+                tokio::spawn(
+                    async move {
+                        self_clone.on_pageerror_event(message).await;
+                    }
+                    .in_current_span(),
+                );
             }
             "screencastFrame" => {
                 // params: {"data": "<base64 jpeg>"}
                 if let Some(b64) = params.get("data").and_then(|v| v.as_str()) {
                     if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(b64) {
-                        let frame = crate::protocol::ScreencastFrame { data: bytes };
+                        // Wrap once in `Bytes`; each handler-clone below is a refcount bump.
+                        let frame = crate::protocol::ScreencastFrame {
+                            data: bytes::Bytes::from(bytes),
+                        };
                         let handlers = self.screencast_frame_handlers.lock().unwrap().clone();
                         for h in handlers {
                             let f = frame.clone();
-                            tokio::spawn(async move {
-                                if let Err(e) = h(f).await {
-                                    tracing::warn!("Screencast frame handler error: {}", e);
+                            tokio::spawn(
+                                async move {
+                                    if let Err(e) = h(f).await {
+                                        tracing::warn!("Screencast frame handler error: {}", e);
+                                    }
                                 }
-                            });
+                                .in_current_span(),
+                            );
                         }
                     } else {
                         tracing::warn!("Failed to decode screencast frame data");
@@ -4622,19 +4802,22 @@ impl ChannelOwner for Page {
                     let frame_guid_owned = frame_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        let frame: crate::protocol::Frame = match connection
-                            .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
-                            .await
-                        {
-                            Ok(f) => f,
-                            Err(e) => {
-                                tracing::warn!("Failed to get Frame for frameAttached: {}", e);
-                                return;
-                            }
-                        };
-                        self_clone.on_frameattached_event(frame).await;
-                    });
+                    tokio::spawn(
+                        async move {
+                            let frame: crate::protocol::Frame = match connection
+                                .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
+                                .await
+                            {
+                                Ok(f) => f,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get Frame for frameAttached: {}", e);
+                                    return;
+                                }
+                            };
+                            self_clone.on_frameattached_event(frame).await;
+                        }
+                        .in_current_span(),
+                    );
                 }
             }
             "frameDetached" => {
@@ -4648,19 +4831,22 @@ impl ChannelOwner for Page {
                     let frame_guid_owned = frame_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        let frame: crate::protocol::Frame = match connection
-                            .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
-                            .await
-                        {
-                            Ok(f) => f,
-                            Err(e) => {
-                                tracing::warn!("Failed to get Frame for frameDetached: {}", e);
-                                return;
-                            }
-                        };
-                        self_clone.on_framedetached_event(frame).await;
-                    });
+                    tokio::spawn(
+                        async move {
+                            let frame: crate::protocol::Frame = match connection
+                                .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
+                                .await
+                            {
+                                Ok(f) => f,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get Frame for frameDetached: {}", e);
+                                    return;
+                                }
+                            };
+                            self_clone.on_framedetached_event(frame).await;
+                        }
+                        .in_current_span(),
+                    );
                 }
             }
             "frameNavigated" => {
@@ -4676,19 +4862,22 @@ impl ChannelOwner for Page {
                     let frame_guid_owned = frame_guid.to_string();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        let frame: crate::protocol::Frame = match connection
-                            .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
-                            .await
-                        {
-                            Ok(f) => f,
-                            Err(e) => {
-                                tracing::warn!("Failed to get Frame for frameNavigated: {}", e);
-                                return;
-                            }
-                        };
-                        self_clone.on_framenavigated_event(frame).await;
-                    });
+                    tokio::spawn(
+                        async move {
+                            let frame: crate::protocol::Frame = match connection
+                                .get_typed::<crate::protocol::Frame>(&frame_guid_owned)
+                                .await
+                            {
+                                Ok(f) => f,
+                                Err(e) => {
+                                    tracing::warn!("Failed to get Frame for frameNavigated: {}", e);
+                                    return;
+                                }
+                            };
+                            self_clone.on_framenavigated_event(frame).await;
+                        }
+                        .in_current_span(),
+                    );
                 }
             }
             "locatorHandlerTriggered" => {
@@ -4698,55 +4887,58 @@ impl ChannelOwner for Page {
                     let locator_handlers = self.locator_handlers.clone();
                     let self_clone = self.clone();
 
-                    tokio::spawn(async move {
-                        // Look up handler and decrement times_remaining
-                        let (handler, selector, should_remove) = {
-                            let mut handlers = locator_handlers.lock().unwrap();
-                            let entry = handlers.iter_mut().find(|e| e.uid == uid);
-                            match entry {
-                                None => return,
-                                Some(e) => {
-                                    let handler = e.handler.clone();
-                                    let selector = e.selector.clone();
-                                    let remove = match e.times_remaining {
-                                        Some(1) => true,
-                                        Some(ref mut n) => {
-                                            *n -= 1;
-                                            false
-                                        }
-                                        None => false,
-                                    };
-                                    (handler, selector, remove)
+                    tokio::spawn(
+                        async move {
+                            // Look up handler and decrement times_remaining
+                            let (handler, selector, should_remove) = {
+                                let mut handlers = locator_handlers.lock().unwrap();
+                                let entry = handlers.iter_mut().find(|e| e.uid == uid);
+                                match entry {
+                                    None => return,
+                                    Some(e) => {
+                                        let handler = e.handler.clone();
+                                        let selector = e.selector.clone();
+                                        let remove = match e.times_remaining {
+                                            Some(1) => true,
+                                            Some(ref mut n) => {
+                                                *n -= 1;
+                                                false
+                                            }
+                                            None => false,
+                                        };
+                                        (handler, selector, remove)
+                                    }
                                 }
+                            };
+
+                            // Build a Locator for the handler to receive
+                            let locator = self_clone.locator(&selector).await;
+
+                            // Run the handler
+                            if let Err(e) = handler(locator).await {
+                                tracing::warn!("locator handler error (uid={}): {}", uid, e);
                             }
-                        };
 
-                        // Build a Locator for the handler to receive
-                        let locator = self_clone.locator(&selector).await;
+                            // Send resolveLocatorHandler — remove=true if times exhausted
+                            let _ = self_clone
+                                .channel()
+                                .send_no_result(
+                                    "resolveLocatorHandler",
+                                    serde_json::json!({ "uid": uid, "remove": should_remove }),
+                                )
+                                .await;
 
-                        // Run the handler
-                        if let Err(e) = handler(locator).await {
-                            tracing::warn!("locator handler error (uid={}): {}", uid, e);
+                            // Remove from local registry if one-shot
+                            if should_remove {
+                                self_clone
+                                    .locator_handlers
+                                    .lock()
+                                    .unwrap()
+                                    .retain(|e| e.uid != uid);
+                            }
                         }
-
-                        // Send resolveLocatorHandler — remove=true if times exhausted
-                        let _ = self_clone
-                            .channel()
-                            .send_no_result(
-                                "resolveLocatorHandler",
-                                serde_json::json!({ "uid": uid, "remove": should_remove }),
-                            )
-                            .await;
-
-                        // Remove from local registry if one-shot
-                        if should_remove {
-                            self_clone
-                                .locator_handlers
-                                .lock()
-                                .unwrap()
-                                .retain(|e| e.uid != uid);
-                        }
-                    });
+                        .in_current_span(),
+                    );
                 }
             }
             _ => {
@@ -5430,6 +5622,7 @@ impl Response {
     /// Returns TLS/SSL security details for HTTPS connections, or `None` for HTTP.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-security-details>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn security_details(
         &self,
     ) -> crate::error::Result<Option<crate::protocol::response::SecurityDetails>> {
@@ -5439,6 +5632,7 @@ impl Response {
     /// Returns the server's IP address and port, or `None`.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-server-addr>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn server_addr(
         &self,
     ) -> crate::error::Result<Option<crate::protocol::response::RemoteAddr>> {
@@ -5452,6 +5646,7 @@ impl Response {
     /// the body may still be loading.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-finished>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn finished(&self) -> crate::error::Result<()> {
         // The Playwright protocol dispatches `requestFinished` as a separate event
         // rather than exposing a `finished` RPC method on Response.
@@ -5471,8 +5666,11 @@ impl Response {
     /// - The RPC call to the server fails
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-http-version>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url(), version = tracing::field::Empty))]
     pub async fn http_version(&self) -> crate::error::Result<String> {
-        self.response_object()?.http_version().await
+        let v = self.response_object()?.http_version().await?;
+        tracing::Span::current().record("version", &v);
+        Ok(v)
     }
 
     /// Returns the response body as raw bytes.
@@ -5487,8 +5685,11 @@ impl Response {
     /// - The base64 response cannot be decoded
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-body>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url(), bytes_len = tracing::field::Empty))]
     pub async fn body(&self) -> crate::error::Result<Vec<u8>> {
-        self.response_object()?.body().await
+        let bytes = self.response_object()?.body().await?;
+        tracing::Span::current().record("bytes_len", bytes.len());
+        Ok(bytes)
     }
 
     /// Returns the response body as a UTF-8 string.
@@ -5502,6 +5703,7 @@ impl Response {
     /// - The body is not valid UTF-8
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-text>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn text(&self) -> crate::error::Result<String> {
         let bytes = self.body().await?;
         String::from_utf8(bytes).map_err(|e| {
@@ -5520,6 +5722,7 @@ impl Response {
     /// - The body is not valid JSON or doesn't match the expected type
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-json>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn json<T: serde::de::DeserializeOwned>(&self) -> crate::error::Result<T> {
         let text = self.text().await?;
         serde_json::from_str(&text).map_err(|e| {
@@ -5538,6 +5741,7 @@ impl Response {
     /// - The RPC call to the server fails
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-headers-array>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn headers_array(
         &self,
     ) -> crate::error::Result<Vec<crate::protocol::response::HeaderEntry>> {
@@ -5556,6 +5760,7 @@ impl Response {
     /// - The RPC call to the server fails
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-all-headers>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url()))]
     pub async fn all_headers(
         &self,
     ) -> crate::error::Result<std::collections::HashMap<String, String>> {
@@ -5596,6 +5801,7 @@ impl Response {
     /// Returns an error if the underlying `headers_array()` RPC call fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-header-value>
+    #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url(), name = %name))]
     pub async fn header_value(&self, name: &str) -> crate::error::Result<Option<String>> {
         let entries = self.headers_array().await?;
         let name_lower = name.to_lowercase();

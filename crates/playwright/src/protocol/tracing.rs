@@ -135,6 +135,7 @@ impl Tracing {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn start(&self, options: Option<TracingStartOptions>) -> Result<()> {
         let opts = options.unwrap_or_default();
 
@@ -187,6 +188,7 @@ impl Tracing {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-tracing#tracing-stop>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn stop(&self, options: Option<TracingStopOptions>) -> Result<()> {
         let path = options.and_then(|o| o.path);
 

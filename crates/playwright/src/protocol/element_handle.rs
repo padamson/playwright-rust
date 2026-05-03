@@ -66,6 +66,7 @@ impl ElementHandle {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-screenshot>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
     pub async fn screenshot(
         &self,
         options: Option<crate::protocol::ScreenshotOptions>,
@@ -105,6 +106,7 @@ impl ElementHandle {
     /// The bounding box is in pixels, relative to the top-left corner of the page.
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-bounding-box>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn bounding_box(&self) -> Result<Option<BoundingBox>> {
         #[derive(Deserialize)]
         struct BoundingBoxResponse {
@@ -174,6 +176,7 @@ impl ElementHandle {
     /// Scrolls this element into the viewport if it is not already visible.
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-scroll-into-view-if-needed>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn scroll_into_view_if_needed(&self) -> Result<()> {
         self.base
             .channel()
@@ -190,6 +193,7 @@ impl ElementHandle {
     /// the element is not an iframe.
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-content-frame>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn content_frame(&self) -> Result<Option<crate::protocol::Frame>> {
         use crate::server::connection::ConnectionExt;
 
@@ -225,6 +229,7 @@ impl ElementHandle {
     /// Every element belongs to a frame (the main frame or a child iframe frame).
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-owner-frame>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn owner_frame(&self) -> Result<Option<crate::protocol::Frame>> {
         use crate::server::connection::ConnectionExt;
 
@@ -265,6 +270,7 @@ impl ElementHandle {
     /// * `timeout` — optional timeout in milliseconds (defaults to [`DEFAULT_TIMEOUT_MS`](crate::DEFAULT_TIMEOUT_MS))
     ///
     /// See: <https://playwright.dev/docs/api/class-elementhandle#element-handle-wait-for-element-state>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn wait_for_element_state(&self, state: &str, timeout: Option<f64>) -> Result<()> {
         let timeout_ms = timeout.unwrap_or(crate::DEFAULT_TIMEOUT_MS);
         self.base

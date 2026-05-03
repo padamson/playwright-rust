@@ -31,6 +31,7 @@
 mod imp {
     use parking_lot::Mutex;
     use std::sync::OnceLock;
+    use tracing::Instrument;
 
     static SAVED: OnceLock<Mutex<Option<libc::termios>>> = OnceLock::new();
     static HANDLER_INSTALLED: OnceLock<()> = OnceLock::new();
@@ -84,18 +85,21 @@ mod imp {
             return;
         }
 
-        tokio::spawn(async move {
-            // tokio::signal::ctrl_c registers a SIGINT listener via the
-            // tokio runtime; multiple listeners can coexist with user
-            // handlers, but our task gets to act first and exit the
-            // process cleanly.
-            if tokio::signal::ctrl_c().await.is_ok() {
-                restore();
-                // 128 + SIGINT(2) = 130, the conventional exit code for
-                // Ctrl-C interrupted programs.
-                std::process::exit(130);
+        tokio::spawn(
+            async move {
+                // tokio::signal::ctrl_c registers a SIGINT listener via the
+                // tokio runtime; multiple listeners can coexist with user
+                // handlers, but our task gets to act first and exit the
+                // process cleanly.
+                if tokio::signal::ctrl_c().await.is_ok() {
+                    restore();
+                    // 128 + SIGINT(2) = 130, the conventional exit code for
+                    // Ctrl-C interrupted programs.
+                    std::process::exit(130);
+                }
             }
-        });
+            .in_current_span(),
+        );
     }
 }
 

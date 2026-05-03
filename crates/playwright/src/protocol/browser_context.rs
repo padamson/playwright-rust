@@ -360,6 +360,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-add-init-script>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_init_script(&self, script: &str) -> Result<()> {
         self.channel()
             .send_no_result("addInitScript", serde_json::json!({ "source": script }))
@@ -378,6 +379,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-new-page>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn new_page(&self) -> Result<Page> {
         // Response contains the GUID of the created Page
         #[derive(Deserialize)]
@@ -474,6 +476,7 @@ impl BrowserContext {
     /// by `Route::fetch()`.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-request>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn request(&self) -> Result<APIRequestContext> {
         let guid = self.request_context_guid.as_ref().ok_or_else(|| {
             crate::error::Error::ProtocolError(
@@ -501,6 +504,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-new-cdp-session>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), page_guid = %page.guid()))]
     pub async fn new_cdp_session(&self, page: &Page) -> Result<CDPSession> {
         #[derive(serde::Deserialize)]
         struct NewCDPSessionResponse {
@@ -537,6 +541,7 @@ impl BrowserContext {
     /// should not happen in normal usage).
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-tracing>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn tracing(&self) -> Result<Tracing> {
         let guid = self.tracing_guid.as_ref().ok_or_else(|| {
             crate::error::Error::ProtocolError(
@@ -555,6 +560,7 @@ impl BrowserContext {
     /// inspector-style tools.
     ///
     /// See: <https://playwright.dev/docs/api/class-debugger>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn debugger(&self) -> Result<crate::protocol::Debugger> {
         let guid = self.debugger_guid.as_ref().ok_or_else(|| {
             crate::error::Error::ProtocolError(
@@ -590,6 +596,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-close>
+    #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn close(&self) -> Result<()> {
         // Unregister from Selectors coordinator so closed channels are not sent future messages.
         let selectors = self.connection().selectors();
@@ -615,6 +622,7 @@ impl BrowserContext {
     /// * `timeout` - Timeout in milliseconds
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_default_timeout(&self, timeout: f64) {
         self.default_timeout_ms
             .store(timeout.to_bits(), std::sync::atomic::Ordering::Relaxed);
@@ -640,6 +648,7 @@ impl BrowserContext {
     /// * `timeout` - Timeout in milliseconds
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-navigation-timeout>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_default_navigation_timeout(&self, timeout: f64) {
         self.default_navigation_timeout_ms
             .store(timeout.to_bits(), std::sync::atomic::Ordering::Relaxed);
@@ -674,6 +683,7 @@ impl BrowserContext {
     /// Pauses the browser context.
     ///
     /// This pauses the execution of all pages in the context.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn pause(&self) -> Result<()> {
         self.channel()
             .send_no_result("pause", serde_json::Value::Null)
@@ -685,6 +695,7 @@ impl BrowserContext {
     /// Contains current cookies and local storage snapshots.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-storage-state>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn storage_state(&self) -> Result<StorageState> {
         let response: StorageState = self
             .channel()
@@ -726,6 +737,7 @@ impl BrowserContext {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-storage-state>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_storage_state(&self, state: StorageState) -> Result<()> {
         // Step 1: Clear all existing cookies
         self.clear_cookies(None).await?;
@@ -783,6 +795,7 @@ impl BrowserContext {
     /// with `name`, `value`, `url`, `domain`, `path`, `expires`, `httpOnly`, `secure`, `sameSite`.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-add-cookies>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), count = cookies.len()))]
     pub async fn add_cookies(&self, cookies: &[Cookie]) -> Result<()> {
         self.channel()
             .send_no_result(
@@ -809,6 +822,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-cookies>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), count = tracing::field::Empty))]
     pub async fn cookies(&self, urls: Option<&[&str]>) -> Result<Vec<Cookie>> {
         let url_list: Vec<&str> = urls.unwrap_or(&[]).to_vec();
         #[derive(serde::Deserialize)]
@@ -838,6 +852,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-cookies>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn clear_cookies(&self, options: Option<ClearCookiesOptions>) -> Result<()> {
         let params = match options {
             None => serde_json::json!({}),
@@ -862,6 +877,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-extra-http-headers>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), count = headers.len()))]
     pub async fn set_extra_http_headers(&self, headers: HashMap<String, String>) -> Result<()> {
         // Playwright protocol expects an array of {name, value} objects
         let headers_array: Vec<serde_json::Value> = headers
@@ -897,6 +913,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-grant-permissions>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn grant_permissions(
         &self,
         permissions: &[&str],
@@ -925,6 +942,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-permissions>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn clear_permissions(&self) -> Result<()> {
         self.channel()
             .send_no_result("clearPermissions", serde_json::json!({}))
@@ -951,6 +969,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-geolocation>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn set_geolocation(&self, geolocation: Option<Geolocation>) -> Result<()> {
         // Playwright protocol: omit the "geolocation" key entirely to clear;
         // passing null causes a validation error on the server side.
@@ -979,6 +998,7 @@ impl BrowserContext {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-offline>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), offline))]
     pub async fn set_offline(&self, offline: bool) -> Result<()> {
         self.channel()
             .send_no_result("setOffline", serde_json::json!({ "offline": offline }))
@@ -996,6 +1016,7 @@ impl BrowserContext {
     /// * `handler` - Async closure that handles the route
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-route>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %pattern))]
     pub async fn route<F, Fut>(&self, pattern: &str, handler: F) -> Result<()>
     where
         F: Fn(Route) -> Fut + Send + Sync + 'static,
@@ -1019,6 +1040,7 @@ impl BrowserContext {
     /// * `pattern` - URL pattern to remove handlers for
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-unroute>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %pattern))]
     pub async fn unroute(&self, pattern: &str) -> Result<()> {
         self.route_handlers
             .lock()
@@ -1034,6 +1056,7 @@ impl BrowserContext {
     /// * `behavior` - Optional behavior for in-flight handlers
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-unroute-all>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn unroute_all(&self, _behavior: Option<UnrouteBehavior>) -> Result<()> {
         self.route_handlers.lock().unwrap().clear();
         self.enable_network_interception().await
@@ -1058,6 +1081,7 @@ impl BrowserContext {
     /// - The Playwright server fails to open the archive
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-route-from-har>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn route_from_har(
         &self,
         har_path: &str,
@@ -1198,6 +1222,7 @@ impl BrowserContext {
     /// * `handler` - Async function that receives the new `Page`
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-page>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_page<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Page) -> Fut + Send + Sync + 'static,
@@ -1217,6 +1242,7 @@ impl BrowserContext {
     /// * `handler` - Async function called with no arguments when the context closes
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-close>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_close<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -1240,6 +1266,7 @@ impl BrowserContext {
     /// * `handler` - Async function that receives the `Request`
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-request>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_request<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -1268,6 +1295,7 @@ impl BrowserContext {
     /// * `handler` - Async function that receives the completed `Request`
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-request-finished>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_request_finished<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -1299,6 +1327,7 @@ impl BrowserContext {
     /// * `handler` - Async function that receives the failed `Request`
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-request-failed>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_request_failed<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Request) -> Fut + Send + Sync + 'static,
@@ -1329,6 +1358,7 @@ impl BrowserContext {
     /// * `handler` - Async function that receives the `ResponseObject`
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-response>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_response<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
@@ -1364,6 +1394,7 @@ impl BrowserContext {
     /// Returns error if communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-dialog>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_dialog<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::Dialog) -> Fut + Send + Sync + 'static,
@@ -1391,6 +1422,7 @@ impl BrowserContext {
     /// * `handler` - Async closure that receives the [`ConsoleMessage`](crate::protocol::ConsoleMessage)
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-console>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_console<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::ConsoleMessage) -> Fut + Send + Sync + 'static,
@@ -1428,6 +1460,7 @@ impl BrowserContext {
     /// Returns error if communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-web-error>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_weberror<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::WebError) -> Fut + Send + Sync + 'static,
@@ -1453,6 +1486,7 @@ impl BrowserContext {
     /// * `handler` - Async closure called with the new [`Worker`](crate::protocol::Worker) object
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-service-worker>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn on_serviceworker<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::Worker) -> Fut + Send + Sync + 'static,
@@ -1491,6 +1525,7 @@ impl BrowserContext {
     /// - Communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-expose-function>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), name = %name))]
     pub async fn expose_function<F, Fut>(&self, name: &str, callback: F) -> Result<()>
     where
         F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
@@ -1519,6 +1554,7 @@ impl BrowserContext {
     /// - Communication with the browser process fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-expose-binding>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), name = %name))]
     pub async fn expose_binding<F, Fut>(&self, name: &str, callback: F) -> Result<()>
     where
         F: Fn(Vec<serde_json::Value>) -> Fut + Send + Sync + 'static,
@@ -1591,6 +1627,7 @@ impl BrowserContext {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_page(&self, timeout: Option<f64>) -> Result<EventWaiter<Page>> {
         let (tx, rx) = oneshot::channel();
         self.page_waiters.lock().unwrap().push(tx);
@@ -1621,6 +1658,7 @@ impl BrowserContext {
     /// ```
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_close(&self, timeout: Option<f64>) -> Result<EventWaiter<()>> {
         let (tx, rx) = oneshot::channel();
         self.close_waiters.lock().unwrap().push(tx);
@@ -1630,6 +1668,7 @@ impl BrowserContext {
     /// Waits for a console message from any page in this context.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-console>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_console_message(
         &self,
         timeout: Option<f64>,
@@ -1667,6 +1706,7 @@ impl BrowserContext {
     /// Returns [`crate::error::Error::Timeout`] if the event does not fire within the timeout.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_event(
         &self,
         event: &str,
@@ -1826,6 +1866,7 @@ impl BrowserContext {
     /// Returns an error if the RPC call to enable interception fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-route-web-socket>
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %url))]
     pub async fn route_web_socket<F, Fut>(&self, url: &str, handler: F) -> Result<()>
     where
         F: Fn(crate::protocol::WebSocketRoute) -> Fut + Send + Sync + 'static,
