@@ -15,7 +15,7 @@ readme = "../../README.md"
 doctest = false  # Disable doc-tests by default (run with: cargo test --doc)
 
 [features]
-default = ["native-tls", "screenshot-diff"]
+default = ["native-tls", "screenshot-diff", "macros"]
 native-tls = ["tokio-tungstenite/native-tls"]
 rustls-tls-native-roots = ["tokio-tungstenite/rustls-tls-native-roots"]
 rustls-tls-webpki-roots = ["tokio-tungstenite/rustls-tls-webpki-roots"]
@@ -26,6 +26,11 @@ rustls-tls-webpki-roots = ["tokio-tungstenite/rustls-tls-webpki-roots"]
 # transitive deps. Planned to flip to default-off in v0.13.0 as a
 # documented breaking change.
 screenshot-diff = ["dep:image"]
+# Re-exports the `playwright_rs::locator!` compile-time-validated
+# selector macro from the companion `playwright-rs-macros` crate.
+# Default-on; opt out with `default-features = false` if proc-macro
+# build cost matters.
+macros = ["dep:playwright-rs-macros"]
 
 [dependencies]
 tokio = { workspace = true }
@@ -43,6 +48,7 @@ tokio-tungstenite = { version = "0.29" }
 futures-util = "0.3"
 url = "2.5"
 image = { version = "0.25", default-features = false, features = ["png"], optional = true }
+playwright-rs-macros = { version = "0.1.0", path = "../playwright-rs-macros", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

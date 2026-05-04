@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/playwright",
+    "crates/playwright-rs-macros",
 ]
 resolver = "2"
 

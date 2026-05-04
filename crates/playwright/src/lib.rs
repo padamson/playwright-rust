@@ -317,3 +317,10 @@ pub use api::{ConnectOverCdpOptions, LaunchOptions};
 
 // Re-export browser installation helpers
 pub use server::driver::{install_browsers, install_browsers_with_deps};
+
+// Re-export the `locator!` compile-time-validated selector macro from
+// the companion `playwright-rs-macros` crate. Gated on the `macros`
+// feature (default-on) so users without the proc-macro toolchain
+// available can opt out.
+#[cfg(feature = "macros")]
+pub use playwright_rs_macros::locator;

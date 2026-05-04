@@ -1,0 +1,5 @@
+error: unknown selector engine `foo=...`; expected one of css, xpath, text, role, id, data-testid, nth, or an `internal:*=` prefix
+ --> tests/ui/unknown_engine.rs:4:22
+  |
+4 |     let _ = locator!("foo=bar");
+  |                      ^^^^^^^^^

@@ -1,0 +1,5 @@
+error: unmatched closing `)`
+ --> tests/ui/unmatched_closer.rs:4:22
+  |
+4 |     let _ = locator!("button)");
+  |                      ^^^^^^^^^

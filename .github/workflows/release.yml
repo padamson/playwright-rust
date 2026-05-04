@@ -160,6 +160,21 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
+      # Publish in dependency order: playwright-rs depends on
+      # playwright-rs-macros, so macros must hit crates.io first or the
+      # main crate's `cargo publish` will fail to resolve the dep. Each
+      # publish is `continue-on-error: true` so a release run that
+      # republishes the same versions (already published) still
+      # succeeds. The macros crate is independently versioned, so
+      # uncoordinated bumps land here as long as the dep line in
+      # `crates/playwright/Cargo.toml` is updated to match.
+      - name: Publish playwright-rs-macros
+        if: steps.check_token.outputs.skip == 'false'
+        run: cargo publish -p playwright-rs-macros
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true
+
       - name: Publish playwright-rs
         if: steps.check_token.outputs.skip == 'false'
         run: cargo publish -p playwright-rs
