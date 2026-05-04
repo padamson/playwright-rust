@@ -1,0 +1,22 @@
+[package]
+name = "playwright-rs-trace"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Parser for Playwright trace zip files (format v8)"
+keywords = ["playwright", "trace", "parser", "viewer"]
+categories = ["development-tools::testing", "parser-implementations"]
+readme = "README.md"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+# Playwright trace zips use deflate exclusively. Disable other
+# compression backends to keep the dep tree small (and to avoid
+# pulling in C-FFI compressors that complicate the eventual WASM
+# build planned in slice 6).
+zip = { version = "8", default-features = false, features = ["deflate"] }

@@ -3,7 +3,13 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      # Per-crate tag prefixes — the create-release and publish-crates
+      # jobs route to the right CHANGELOG / cargo package based on the
+      # prefix. See `crates/<crate>/CHANGELOG.md` for each crate's
+      # release notes; the top-level CHANGELOG.md is an index.
+      - 'v*'           # playwright-rs
+      - 'macros-v*'    # playwright-rs-macros
+      - 'trace-v*'     # playwright-rs-trace
 
 env:
   CARGO_TERM_COLOR: always
@@ -119,9 +125,34 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Get version from tag
-        id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      # Resolve which crate this release tag is for, which CHANGELOG to
+      # extract notes from, and the bare version string. Three tag
+      # patterns are recognised — see the `on.push.tags` block above.
+      - name: Resolve crate, changelog, and version from tag
+        id: resolve
+        run: |
+          REF="${GITHUB_REF#refs/tags/}"
+          case "$REF" in
+            macros-v*)
+              echo "crate=playwright-rs-macros" >> "$GITHUB_OUTPUT"
+              echo "changelog=crates/playwright-rs-macros/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+              echo "version=${REF#macros-v}" >> "$GITHUB_OUTPUT"
+              ;;
+            trace-v*)
+              echo "crate=playwright-rs-trace" >> "$GITHUB_OUTPUT"
+              echo "changelog=crates/playwright-rs-trace/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+              echo "version=${REF#trace-v}" >> "$GITHUB_OUTPUT"
+              ;;
+            v*)
+              echo "crate=playwright-rs" >> "$GITHUB_OUTPUT"
+              echo "changelog=crates/playwright/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+              echo "version=${REF#v}" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unknown tag pattern: $REF" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Install parse-changelog
         uses: taiki-e/install-action@v2
@@ -129,11 +160,12 @@ jobs:
           tool: parse-changelog
 
       - name: Generate Release Notes
-        run: parse-changelog CHANGELOG.md ${{ steps.get_version.outputs.version }} > release_notes.md
+        run: parse-changelog ${{ steps.resolve.outputs.changelog }} ${{ steps.resolve.outputs.version }} > release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          name: ${{ steps.resolve.outputs.crate }} ${{ steps.resolve.outputs.version }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -160,24 +192,32 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      # Publish in dependency order: playwright-rs depends on
-      # playwright-rs-macros, so macros must hit crates.io first or the
-      # main crate's `cargo publish` will fail to resolve the dep. Each
-      # publish is `continue-on-error: true` so a release run that
-      # republishes the same versions (already published) still
-      # succeeds. The macros crate is independently versioned, so
-      # uncoordinated bumps land here as long as the dep line in
-      # `crates/playwright/Cargo.toml` is updated to match.
+      # Each tag prefix publishes exactly one crate. Independent
+      # versioning means a coordinated release pushes multiple tags
+      # in dependency order:
+      #
+      #   1. macros-vX.Y.Z  (if macros bumped this cycle)
+      #   2. trace-vX.Y.Z   (if trace bumped this cycle)
+      #   3. vX.Y.Z         (always, for the main crate)
+      #
+      # Wait ~30s between tags so the crates.io index propagates before
+      # the next publish runs. If neither macros nor trace bumped this
+      # cycle, just push the `v*` tag — the existing published versions
+      # already satisfy `playwright-rs`'s dep constraints.
       - name: Publish playwright-rs-macros
-        if: steps.check_token.outputs.skip == 'false'
+        if: steps.check_token.outputs.skip == 'false' && startsWith(github.ref_name, 'macros-v')
         run: cargo publish -p playwright-rs-macros
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        continue-on-error: true
+
+      - name: Publish playwright-rs-trace
+        if: steps.check_token.outputs.skip == 'false' && startsWith(github.ref_name, 'trace-v')
+        run: cargo publish -p playwright-rs-trace
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Publish playwright-rs
-        if: steps.check_token.outputs.skip == 'false'
+        if: steps.check_token.outputs.skip == 'false' && startsWith(github.ref_name, 'v')
         run: cargo publish -p playwright-rs
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        continue-on-error: true

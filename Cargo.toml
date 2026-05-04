@@ -2,6 +2,8 @@
 members = [
     "crates/playwright",
     "crates/playwright-rs-macros",
+    "crates/playwright-rs-trace",
+    "crates/xtask",
 ]
 resolver = "2"
 

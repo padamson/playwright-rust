@@ -1,0 +1,8 @@
+[alias]
+# Run the xtask binary in release mode. Used for build tooling that
+# isn't a library and shouldn't ship to crates.io — currently
+# fixture regeneration for `playwright-rs-trace`. The convention is
+# borrowed from rust-analyzer / wasm-bindgen / parts of cargo itself.
+#
+# Example: `cargo xtask regenerate-trace-fixture`
+xtask = "run --package xtask --release --"
