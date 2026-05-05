@@ -1030,6 +1030,41 @@ impl Page {
         frame.wait_for_url(url, options).await
     }
 
+    /// Replace the URL fragment without firing a navigation.
+    ///
+    /// Wraps `history.replaceState(null, '', <pathname+search+#hash>)`.
+    /// A leading `#` on `hash` is optional — both `"foo"` and `"#foo"`
+    /// produce the same result.
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
+    pub async fn set_url_fragment(&self, hash: &str) -> Result<()> {
+        let normalized = if hash.starts_with('#') {
+            hash.to_string()
+        } else {
+            format!("#{hash}")
+        };
+        // JSON-encode so quotes / backslashes / control chars in `hash`
+        // don't break the surrounding JS string literal.
+        let json = serde_json::to_string(&normalized).map_err(|e| {
+            crate::error::Error::ProtocolError(format!("serialize url fragment: {e}"))
+        })?;
+        let js =
+            format!("history.replaceState(null, '', location.pathname + location.search + {json})");
+        self.evaluate_expression(&js).await
+    }
+
+    /// Clear the URL fragment without firing a navigation.
+    ///
+    /// Wraps `history.replaceState(null, '', <pathname+search>)`,
+    /// stripping any trailing `#...`. Pairs with
+    /// [`set_url_fragment`](Self::set_url_fragment).
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
+    pub async fn clear_url_fragment(&self) -> Result<()> {
+        self.evaluate_expression(
+            "history.replaceState(null, '', location.pathname + location.search)",
+        )
+        .await
+    }
+
     /// Creates a locator for finding elements on the page.
     ///
     /// Locators are the central piece of Playwright's auto-waiting and retry-ability.

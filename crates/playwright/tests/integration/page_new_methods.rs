@@ -370,3 +370,81 @@ async fn test_page_pick_locator_cancel_releases_handle() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+// ============================================================================
+// page.set_url_fragment() / page.clear_url_fragment()
+// ============================================================================
+
+#[tokio::test]
+async fn test_page_set_and_clear_url_fragment() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let base = format!("{}/", server.url());
+    page.goto(&base, None).await.expect("Failed to navigate");
+
+    // Sanity: no fragment after a plain navigation.
+    assert!(
+        !page.url().contains('#'),
+        "fresh navigation should have no fragment, got {}",
+        page.url(),
+    );
+
+    // Setting a fragment without a leading '#' should be normalized.
+    page.set_url_fragment("section-one")
+        .await
+        .expect("set_url_fragment failed");
+    assert!(
+        page.url().ends_with("#section-one"),
+        "URL should end with #section-one, got {}",
+        page.url(),
+    );
+
+    // Setting a fragment with a leading '#' should be accepted as-is.
+    page.set_url_fragment("#section-two")
+        .await
+        .expect("set_url_fragment failed");
+    assert!(
+        page.url().ends_with("#section-two"),
+        "URL should end with #section-two, got {}",
+        page.url(),
+    );
+
+    // Clearing strips the fragment entirely.
+    page.clear_url_fragment()
+        .await
+        .expect("clear_url_fragment failed");
+    assert!(
+        !page.url().contains('#'),
+        "URL should have no fragment after clear, got {}",
+        page.url(),
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_page_set_url_fragment_escapes_special_characters() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    // A hash that would break naive JS string interpolation.
+    let tricky = r#"section'with"quotes\and-newlines"#;
+    page.set_url_fragment(tricky)
+        .await
+        .expect("set_url_fragment with special chars failed");
+
+    let url = page.url();
+    assert!(
+        url.contains("#"),
+        "URL should carry the fragment marker, got {url}",
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
