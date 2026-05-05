@@ -6,6 +6,8 @@
 //! which downstream parser tests consume.
 
 use anyhow::{Context as _, Result};
+use axum::Router;
+use axum::routing::get;
 use clap::Parser;
 use playwright_rs::Playwright;
 use playwright_rs::protocol::{TracingStartOptions, TracingStopOptions};
@@ -34,16 +36,25 @@ async fn main() -> Result<()> {
     }
 }
 
-/// Drive a deterministic playwright-rs session and write its trace zip
-/// to `out`. Operations are chosen to exercise the event kinds the
-/// slice-1 parser models: `context-options`, `before`/`input`/`log`/
-/// `after` for an action, `console`, navigation, click. Resulting
-/// fixture should stay in the tens-of-KB range.
 async fn regenerate_trace_fixture(out: &Path) -> Result<()> {
     if let Some(parent) = out.parent() {
         std::fs::create_dir_all(parent)
             .with_context(|| format!("create parent dir {}", parent.display()))?;
     }
+
+    // Local server so the navigation produces a `resource-snapshot`
+    // in `trace.network` — `data:` URLs don't.
+    let app = Router::new().route(
+        "/",
+        get(|| async { axum::response::Html(FIXTURE_PAGE_HTML) }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .context("bind fixture server")?;
+    let addr = listener.local_addr().context("local_addr")?;
+    let server = tokio::spawn(async move {
+        let _ = axum::serve(listener, app).await;
+    });
 
     let pw = Playwright::launch()
         .await
@@ -64,14 +75,9 @@ async fn regenerate_trace_fixture(out: &Path) -> Result<()> {
 
     let page = context.new_page().await.context("new page")?;
 
-    // Deterministic content via data: URL — no network dependency, no
-    // platform-specific paths.
-    page.goto(
-        "data:text/html,<button id='b' onclick='console.log(\"hi\")'>X</button>",
-        None,
-    )
-    .await
-    .context("goto data url")?;
+    page.goto(&format!("http://{addr}/"), None)
+        .await
+        .context("goto local fixture server")?;
 
     page.locator("#b")
         .await
@@ -91,7 +97,15 @@ async fn regenerate_trace_fixture(out: &Path) -> Result<()> {
         .context("stop tracing")?;
 
     browser.close().await.context("close browser")?;
+    server.abort();
 
     println!("wrote {}", out.display());
     Ok(())
 }
+
+const FIXTURE_PAGE_HTML: &str = r#"<!doctype html>
+<html>
+<body>
+<button id="b" onclick='console.log("hi")'>X</button>
+</body>
+</html>"#;

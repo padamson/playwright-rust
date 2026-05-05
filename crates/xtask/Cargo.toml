@@ -18,3 +18,4 @@ playwright-rs = { path = "../playwright", version = "0.12.3" }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 clap = { version = "4", features = ["derive"] }
+axum = "0.8"

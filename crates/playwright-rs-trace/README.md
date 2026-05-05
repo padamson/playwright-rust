@@ -41,10 +41,12 @@ the full JSON.
 
 ## Status
 
-Slice 1 of issue [#80][issue-80] — open zip, stream events, reassemble
-actions. Slices 2+ (network entries, snapshot indexing, resource
-loading, action tree, query helpers, WASM compatibility, console +
-screencast) land iteratively as the slice 1 ergonomics settle.
+Pre-1.0. Today: open a trace zip, stream events, reassemble actions,
+parse network entries. See the [crate CHANGELOG](CHANGELOG.md) for
+what's shipped; the project's
+[`docs/implementation-plans/trace.md`](https://github.com/padamson/playwright-rust/blob/main/docs/implementation-plans/trace.md)
+tracks the longer roadmap (snapshots, resource loader, action tree,
+query helpers, WASM compatibility, console + screencast).
 
 ## Test fixtures
 
@@ -62,7 +64,6 @@ See [`tests/fixtures/README.md`](tests/fixtures/README.md) for details.
 Apache-2.0. See [LICENSE](../../LICENSE) (workspace root).
 
 [pw]: https://playwright.dev/
-[issue-80]: https://github.com/padamson/playwright-rust/issues/80
 [issue-82]: https://github.com/padamson/playwright-rust/issues/82
 [unknown]: https://docs.rs/playwright-rs-trace/latest/playwright_rs_trace/enum.TraceEvent.html#variant.Unknown
 [raw-kind]: https://docs.rs/playwright-rs-trace/latest/playwright_rs_trace/struct.RawEvent.html#method.kind

@@ -134,13 +134,7 @@ where
                     }
                     // Orphan after — ignore.
                 }
-                _ => {
-                    // ContextOptions, Console, Event, FrameSnapshot,
-                    // ScreencastFrame, Unknown: not part of action
-                    // reassembly. Slice 1 ignores; later slices may
-                    // index snapshots / surface console messages on
-                    // the action.
-                }
+                _ => {}
             }
         }
     }

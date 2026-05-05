@@ -5,12 +5,15 @@ use crate::action::{Action, ActionStream};
 use crate::error::{Result, TraceError};
 use crate::event::{ContextOptions, RawEvent, TraceEvent};
 use crate::jsonl::JsonLines;
+use crate::network::NetworkEntry;
 use std::io::{BufRead, BufReader, Read, Seek};
 use std::path::Path;
 use zip::ZipArchive;
 
 const TRACE_ENTRY: &str = "trace.trace";
+const NETWORK_ENTRY: &str = "trace.network";
 const SUPPORTED_VERSION: u32 = 8;
+const RESOURCE_SNAPSHOT_KIND: &str = "resource-snapshot";
 
 /// Streaming reader over a Playwright trace zip.
 ///
@@ -84,6 +87,44 @@ impl<R: Read + Seek> TraceReader<R> {
     /// `end_time = None` rather than discarded.
     pub fn actions(&mut self) -> Result<impl Iterator<Item = Result<Action>>> {
         Ok(ActionStream::new(self.events()?))
+    }
+
+    /// Streaming iterator over [`NetworkEntry`] records from
+    /// `trace.network`. Yields zero items when the trace recorded no
+    /// requests (the entry is present but empty).
+    ///
+    /// HAR fields not modelled on [`NetworkEntry`] are preserved on
+    /// [`NetworkEntry::raw_snapshot`].
+    pub fn network(&mut self) -> Result<impl Iterator<Item = Result<NetworkEntry>>> {
+        let entry = self.zip.by_name(NETWORK_ENTRY)?;
+        let lines = JsonLines::new(BufReader::new(entry));
+        Ok(lines.map(|res| {
+            let mut map = res?;
+            // Check the discriminator before deserialising the
+            // payload — otherwise serde rejects an unexpected kind
+            // with a confusing "missing field `snapshot`" message.
+            let kind = map
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            if kind != RESOURCE_SNAPSHOT_KIND {
+                return Err(TraceError::MalformedAction {
+                    call_id: String::new(),
+                    reason: format!(
+                        "trace.network: expected `{RESOURCE_SNAPSHOT_KIND}` event, got `{kind}`",
+                    ),
+                });
+            }
+            let snapshot = map
+                .remove("snapshot")
+                .ok_or_else(|| TraceError::MalformedAction {
+                    call_id: String::new(),
+                    reason: "trace.network: resource-snapshot missing `snapshot` payload".into(),
+                })?;
+            NetworkEntry::from_snapshot(snapshot)
+                .map_err(|source| TraceError::Json { line: 0, source })
+        }))
     }
 }
 

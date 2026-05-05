@@ -124,32 +124,47 @@ doc-gen, supply-chain wrappers) gets a natural home here.
 
 ### Slice 2 — `trace.network` parsing → `NetworkEntry` streaming iterator (next-up)
 
-Public API (illustrative — adjust as slice 1 ergonomics surface):
+**Why:** trace files record HTTP traffic alongside actions, and any
+post-mortem analysis of a Playwright run needs both. Without slice 2,
+`playwright-rs-trace` can tell you what the user clicked but not what
+the page fetched.
 
-- `TraceReader::network() -> Result<impl Iterator<Item = Result<NetworkEntry>>>`
-- `pub struct NetworkEntry { request, response, frame_ref, monotonic_time }`
-  — keep HAR shape verbatim for slice 2; helper accessors (e.g.
-  `failed_requests()`) defer to slice 6.
-- Sub-types: `RequestSnapshot`, `ResponseSnapshot`, `RequestPostData
-  { sha1 }`, `ResponseContent { mime_type, sha1 }`.
+**What:** add `TraceReader::network()` returning a streaming iterator
+of `NetworkEntry`. Each entry is a HAR-like resource snapshot
+(request + response pair) read from the second JSONL stream in the
+zip. The HAR shape is preserved verbatim — slice 6 layers query
+helpers (failed-request filters, redirect-chain joins) on top.
 
-Three decisions pinned during the slice 2 detail pass (see also the
-sub-issue body):
+**Wire format** (from driver source: `lib/server/trace/recorder/tracing.js`
++ `lib/server/har/harTracer.js`): each line is
+`{"type": "resource-snapshot", "snapshot": <HAR entry>}`. The HAR
+entry carries Playwright extensions: `_frameref`, `pageref`,
+`_monotonicTime`, and `_sha1` references on `postData` and
+`content` that the slice 3 resource loader resolves.
+
+**Decisions pinned:**
 
 1. **Single iterator, not raw + typed.** `trace.network` only has one
-   event kind (`resource-snapshot`), so a typed-vs-raw split has near-
-   zero value. Forward-compat lives in field shapes (use
-   `serde_json::Value` for unrecognised header bags / options).
-2. **No `all_events_chronological()` helper in slice 2.** Callers who
-   want a merged time-ordered view can `events().chain(network())`
-   collect-and-sort themselves. Add a builtin merge in slice 6 if
-   query helpers actually need it.
+   event kind. Forward-compat comes from preserving the unmodelled
+   HAR fields on the entry verbatim, not from a raw-vs-typed split.
+2. **No `all_events_chronological()` helper.** Callers who want a
+   merged time-ordered view can collect-and-sort themselves. Add a
+   builtin merge in slice 6 if query helpers actually need it.
 3. **Local-server fixture regeneration.** `data:` URLs don't generate
-   network entries, so slice 2 needs at least one HTTP request in the
-   fixture. Stand up a tiny localhost server inside the xtask binary
-   (axum + tokio, ~30 lines) — hermetic, matches the
-   `tests/integration/test_server.rs` pattern in `playwright-rs`. No
-   external-network dep at fixture-regen time.
+   network entries. Stand up a tiny localhost server in the xtask
+   binary and have the page navigate to it. Hermetic, matches the
+   `tests/integration/test_server.rs` pattern in `playwright-rs`.
+4. **Missing `trace.network` is an error; empty `trace.network` is
+   not.** Trace zips from `playwright-rs::Tracing` always include the
+   entry; an absent file means a corrupt or non-Playwright zip.
+
+**Tests:** parse-against-synthetic-zip for the HAR shape and
+forward-compat error path; parse-against-real-fixture once the xtask
+local-server regen lands.
+
+**Out of scope:** resource loading (`_sha1` → bytes; slice 3),
+filter helpers (slice 6), HAR / W3C conversion (per the umbrella's
+out-of-scope list), redirect-chain joins (slice 6).
 
 ### Slice 3 — Resource loader (sketched)
 

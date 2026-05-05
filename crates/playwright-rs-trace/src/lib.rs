@@ -43,6 +43,7 @@ mod action;
 mod error;
 mod event;
 mod jsonl;
+mod network;
 mod trace;
 
 pub use action::{Action, ActionStream, LogLine};
@@ -51,5 +52,8 @@ pub use event::{
     ActionError, AfterEvent, BeforeEvent, ConsoleEvent, ConsoleLocation, ContextOptions,
     FrameSnapshotEvent, InputEvent, LogEvent, Point, RawEvent, ResourceOverride,
     ScreencastFrameEvent, SystemEvent, TraceEvent, Viewport,
+};
+pub use network::{
+    HeaderEntry, NetworkEntry, RequestPostData, RequestSnapshot, ResponseContent, ResponseSnapshot,
 };
 pub use trace::{TraceReader, open};

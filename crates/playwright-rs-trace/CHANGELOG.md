@@ -11,29 +11,41 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ### Added
 
-- **Slice 1 of [#80](https://github.com/padamson/playwright-rust/issues/80) — `TraceReader`, streaming events, action reassembly.**
-  - `TraceReader::open(reader)` opens a Playwright trace zip and parses
-    the `context-options` event eagerly so callers can read
-    `reader.context()` before iterating.
-  - `TraceReader::raw_events()` — lossless streaming iterator over every
-    JSONL line in `trace.trace`, yielding `RawEvent` (the full JSON
-    object). Forward-compatibility escape hatch for callers who want to
-    dispatch on event kinds the parser doesn't model yet.
-  - `TraceReader::events()` — typed streaming iterator yielding
-    `TraceEvent` (enum tagged on `type`). Known kinds become typed
-    variants; anything else (including kinds whose schema we fail to
-    deserialize, e.g. a future field addition) surfaces as
+- **`TraceReader` — open a Playwright trace zip, stream events, reassemble actions.**
+  - `TraceReader::open(reader)` parses the `context-options` event
+    eagerly so callers can read `reader.context()` before iterating.
+  - `TraceReader::raw_events()` — lossless iterator over every JSONL
+    line in `trace.trace`, yielding `RawEvent` (the full JSON object).
+    Forward-compat escape hatch for callers dispatching on event kinds
+    the parser doesn't model yet.
+  - `TraceReader::events()` — typed iterator yielding `TraceEvent`.
+    Known kinds become typed variants; anything else surfaces as
     `TraceEvent::Unknown(RawEvent)` so nothing is silently dropped.
-  - `TraceReader::actions()` — streaming iterator that reassembles
-    `before` + optional `input` + zero-or-more `log` + `after` events
-    into a logical `Action`. Truncated actions (no matching `after`) are
-    emitted at end-of-stream rather than discarded — useful for
-    crashed-mid-action diagnostics.
-  - Free function `playwright_rs_trace::open(path)` for the common
+  - `TraceReader::actions()` — reassembles `before` + optional `input`
+    + zero-or-more `log` + `after` events into a logical `Action`.
+    Truncated actions are emitted at end-of-stream rather than
+    discarded.
+  - Free function `playwright_rs_trace::open(path)` for the
     file-on-disk case.
 
-  Workflow / release plumbing parallels `playwright-rs-macros`:
-  workspace member, independent versioning, per-crate CHANGELOG, vet
-  exemptions for new transitives. Test fixtures regenerated via
-  `cargo xtask regenerate-trace-fixture` (see
-  [`tests/fixtures/README.md`](tests/fixtures/README.md)).
+- **`TraceReader::network()` — `trace.network` parsing → `NetworkEntry` iterator.**
+  - One entry per recorded HTTP request/response pair (HAR-like
+    resource snapshot). Empty `trace.network` (typical for traces
+    driven against `data:` URLs) yields zero items.
+  - HAR `-1` "unknown" sentinels are mapped to `None` at parse time —
+    the public types use `Option<u64>` / `Option<u16>` / `Option<f64>`
+    on `time`, `headers_size`, `body_size`, `status`, `content.size`,
+    so callers don't have to know the convention. Empty `redirectURL`
+    likewise → `None`.
+  - HAR fields not modelled individually (`cookies`, `timings`,
+    `cache`, `queryString`, `_transferSize`, …) are preserved on
+    `NetworkEntry::raw_snapshot: serde_json::Value`.
+  - Unknown event kinds in `trace.network` yield an error rather than
+    being silently skipped — the stream is single-purpose.
+
+- **`xtask` workspace member with `regenerate-trace-fixture`
+  subcommand.** Drives a real Chromium session through
+  `playwright-rs::Tracing` — including a localhost `axum` server so
+  the navigation produces a real `resource-snapshot` — to refresh
+  the deterministic test fixture under `tests/fixtures/`. New
+  `.cargo/config.toml` aliases `cargo xtask`.
