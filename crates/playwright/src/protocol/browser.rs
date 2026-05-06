@@ -72,6 +72,24 @@ pub struct StartTracingOptions {
 /// A Browser is created when you call `BrowserType::launch()`. It provides methods
 /// to create browser contexts and pages.
 ///
+/// # Runtime binding
+///
+/// A `Browser` (and every protocol object descended from it — `BrowserContext`,
+/// `Page`, `Frame`, `Locator`, …) is **bound to the tokio runtime that
+/// launched it**. The underlying JSON-RPC channels are owned by that
+/// runtime; using a `Browser` from a different runtime silently deadlocks
+/// because the channels can't deliver responses back.
+///
+/// In particular, **do not share a `Browser` across `#[tokio::test]`
+/// invocations** via `OnceCell<Browser>` or similar caching — each
+/// `#[tokio::test]` spins up a fresh runtime that exits when the test
+/// returns, leaving any cached `Browser` pointing at dead channels.
+/// Launch a fresh `Playwright` + `Browser` per test.
+///
+/// Debug builds (`cfg(debug_assertions)`) panic with a clear message
+/// when a cross-runtime use is detected on the wire path. Release
+/// builds skip the check.
+///
 /// # Example
 ///
 /// ```ignore

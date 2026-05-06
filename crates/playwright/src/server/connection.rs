@@ -229,6 +229,14 @@ pub struct Connection {
     /// Selectors is a client-side object; it is created once per Connection and
     /// wired into every BrowserContext that is created on this connection.
     selectors: Arc<Selectors>,
+    /// Identity of the tokio runtime that constructed this connection.
+    /// Used in debug builds to fail fast when a `Browser` is shared
+    /// across runtimes (e.g. between `#[tokio::test]` invocations) —
+    /// the protocol channels are bound to the original runtime, so
+    /// cross-runtime use silently deadlocks. `None` when constructed
+    /// outside any runtime.
+    #[cfg(debug_assertions)]
+    creator_runtime: Option<tokio::runtime::Id>,
 }
 
 // Type alias for compatibility (though generic parameters are gone, we can keep alias if needed)
@@ -248,10 +256,39 @@ impl Connection {
             transport_receiver: Arc::new(TokioMutex::new(Some(Box::new(receiver)))),
             objects: Arc::new(ParkingLotMutex::new(HashMap::new())),
             selectors: Arc::new(Selectors::new()),
+            #[cfg(debug_assertions)]
+            creator_runtime: tokio::runtime::Handle::try_current().ok().map(|h| h.id()),
+        }
+    }
+
+    /// Panic in debug builds when this connection is being used from a
+    /// different tokio runtime than the one that created it. No-op in
+    /// release. Skips the check entirely when no creator runtime was
+    /// captured (the connection was constructed outside any runtime —
+    /// rare, only relevant in unit tests with stubbed transports).
+    fn assert_same_runtime(&self) {
+        #[cfg(debug_assertions)]
+        {
+            let Some(creator) = self.creator_runtime else {
+                return;
+            };
+            let Some(current) = tokio::runtime::Handle::try_current().ok().map(|h| h.id()) else {
+                return;
+            };
+            assert_eq!(
+                current, creator,
+                "playwright-rs: Browser used from a different tokio runtime than the one that \
+                 launched it. The protocol channels are bound to the launching runtime; using \
+                 a Browser from another runtime (e.g. sharing across `#[tokio::test]` boundaries \
+                 via OnceCell) silently deadlocks. Launch a fresh Playwright + Browser per \
+                 runtime instead."
+            );
         }
     }
 
     pub async fn send_message(&self, guid: String, method: String, params: Value) -> Result<Value> {
+        self.assert_same_runtime();
+
         let id = self.last_id.fetch_add(1, Ordering::SeqCst);
 
         tracing::trace!(
