@@ -105,7 +105,7 @@ version = "0.5.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap]]
-version = "4.6.0"
+version = "4.6.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap_builder]]
@@ -113,7 +113,7 @@ version = "4.6.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap_derive]]
-version = "4.6.0"
+version = "4.6.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap_lex]]
@@ -621,7 +621,7 @@ version = "0.8.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio]]
-version = "1.52.1"
+version = "1.52.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-macros]]
@@ -657,7 +657,7 @@ version = "0.5.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.tower-http]]
-version = "0.6.8"
+version = "0.6.10"
 criteria = "safe-to-run"
 
 [[exemptions.tower-layer]]
