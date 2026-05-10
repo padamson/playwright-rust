@@ -1,8 +1,7 @@
 // State assertions examples demonstrating enabled, checked, and editable assertions
 //
 // Run with:
-// PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.59.1-mac-arm64 \
-//     cargo run --package playwright --example state_assertions
+//   cargo run --package playwright-rs --example state_assertions
 
 use playwright_rs::expect;
 use playwright_rs::protocol::Playwright;

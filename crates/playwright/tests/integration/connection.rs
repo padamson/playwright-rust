@@ -385,23 +385,9 @@ setTimeout(() => {{
 async fn test_connect_over_cdp_real_chrome() {
     crate::common::init_tracing();
 
-    // Find the Playwright package path
-    let drivers_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("drivers");
-
-    let package_path = std::fs::read_dir(&drivers_dir)
-        .ok()
-        .and_then(|mut entries| entries.next())
-        .and_then(|e| e.ok())
-        .map(|e| e.path().join("package"));
-
-    let package_path = match package_path {
-        Some(p) if p.exists() => p,
-        _ => {
+    let package_path = match crate::common::playwright_package_dir() {
+        Some(p) => p,
+        None => {
             tracing::warn!("Skipping test: Playwright driver not found");
             return;
         }
@@ -767,27 +753,10 @@ const {{ chromium }} = require('{}');
 async fn test_connect_to_real_server() {
     crate::common::init_tracing();
 
-    // Find the Playwright package path
-    let drivers_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("drivers");
-
-    let package_path = std::fs::read_dir(&drivers_dir)
-        .ok()
-        .and_then(|mut entries| entries.next())
-        .and_then(|e| e.ok())
-        .map(|e| e.path().join("package"));
-
-    let package_path = match package_path {
-        Some(p) if p.exists() => p,
-        _ => {
-            tracing::warn!(
-                "Skipping test: Playwright driver not found in {:?}",
-                drivers_dir
-            );
+    let package_path = match crate::common::playwright_package_dir() {
+        Some(p) => p,
+        None => {
+            tracing::warn!("Skipping test: Playwright driver not found");
             return;
         }
     };
@@ -936,22 +905,9 @@ async fn test_connect_with_custom_headers() {
     // For now, we just verify that passing headers doesn't break the connection.
     // A full test would require a server that validates headers.
 
-    let drivers_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("drivers");
-
-    let package_path = std::fs::read_dir(&drivers_dir)
-        .ok()
-        .and_then(|mut entries| entries.next())
-        .and_then(|e| e.ok())
-        .map(|e| e.path().join("package"));
-
-    let package_path = match package_path {
-        Some(p) if p.exists() => p,
-        _ => {
+    let package_path = match crate::common::playwright_package_dir() {
+        Some(p) => p,
+        None => {
             tracing::warn!("Skipping test: Playwright driver not found");
             return;
         }

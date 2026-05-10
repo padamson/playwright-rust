@@ -1395,6 +1395,7 @@ dependencies = [
  "axum",
  "base64",
  "bytes",
+ "clap",
  "criterion",
  "dirs",
  "futures-util",

@@ -1,4 +1,5 @@
 use playwright_rs::protocol::{Browser, BrowserContext, Page, Playwright};
+use std::path::PathBuf;
 use std::sync::Once;
 
 static INIT: Once = Once::new();
@@ -56,4 +57,12 @@ pub async fn setup_context() -> (Playwright, Browser, BrowserContext) {
         .await
         .expect("setup_context: failed to create new context");
     (playwright, browser, context)
+}
+
+/// Resolve the Playwright `package/` directory via the crate's public driver
+/// lookup. Returns `None` if the driver can't be found anywhere, so tests
+/// that need to exec `node ... cli.js` can skip cleanly.
+pub fn playwright_package_dir() -> Option<PathBuf> {
+    let (_node, cli_js) = playwright_rs::server::driver::get_driver_executable().ok()?;
+    cli_js.parent().map(PathBuf::from)
 }

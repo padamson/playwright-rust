@@ -18,6 +18,8 @@ mod browser;
 mod browser_context;
 mod cdp_tracing;
 mod checkbox;
+#[cfg(feature = "cli")]
+mod cli_bin;
 mod click_options;
 mod connection;
 mod console_message;

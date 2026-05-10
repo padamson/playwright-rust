@@ -1,8 +1,7 @@
 // Network routing examples demonstrating request interception
 //
 // Run with:
-// PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.59.1-mac-arm64 \
-//     cargo run --package playwright --example routing
+//   cargo run --package playwright-rs --example routing
 
 use playwright_rs::protocol::{FulfillOptions, Playwright};
 use serde_json::json;

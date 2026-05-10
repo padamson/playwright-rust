@@ -11,10 +11,11 @@ use std::process::Command;
 ///
 /// This function attempts to locate the Playwright driver in the following order:
 /// 1. Bundled driver downloaded by build.rs (PRIMARY - matches official bindings)
-/// 2. PLAYWRIGHT_DRIVER_PATH environment variable (user override)
-/// 3. PLAYWRIGHT_NODE_EXE and PLAYWRIGHT_CLI_JS environment variables (user override)
-/// 4. Global npm installation (`npm root -g`) (development fallback)
-/// 5. Local npm installation (`npm root`) (development fallback)
+/// 2. User cache populated by `playwright-rs install` (stable across cargo install)
+/// 3. PLAYWRIGHT_DRIVER_PATH environment variable (user override)
+/// 4. PLAYWRIGHT_NODE_EXE and PLAYWRIGHT_CLI_JS environment variables (user override)
+/// 5. Global npm installation (`npm root -g`) (development fallback)
+/// 6. Local npm installation (`npm root`) (development fallback)
 ///
 /// Returns a tuple of (node_executable_path, cli_js_path).
 ///
@@ -33,27 +34,26 @@ use std::process::Command;
 /// # Ok::<(), playwright_rs::Error>(())
 /// ```
 pub fn get_driver_executable() -> Result<(PathBuf, PathBuf)> {
-    // 1. Try bundled driver from build.rs (PRIMARY PATH - matches official bindings)
     if let Some(result) = try_bundled_driver()? {
         return Ok(result);
     }
 
-    // 2. Try PLAYWRIGHT_DRIVER_PATH environment variable
+    if let Some(result) = try_user_cache_driver()? {
+        return Ok(result);
+    }
+
     if let Some(result) = try_driver_path_env()? {
         return Ok(result);
     }
 
-    // 3. Try PLAYWRIGHT_NODE_EXE and PLAYWRIGHT_CLI_JS environment variables
     if let Some(result) = try_node_cli_env()? {
         return Ok(result);
     }
 
-    // 4. Try npm global installation (development fallback)
     if let Some(result) = try_npm_global()? {
         return Ok(result);
     }
 
-    // 5. Try npm local installation (development fallback)
     if let Some(result) = try_npm_local()? {
         return Ok(result);
     }
@@ -95,6 +95,52 @@ fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
     }
 
     Ok(None)
+}
+
+/// Try to find driver in the user cache populated by `playwright-rs install`.
+///
+/// The CLI bootstrap drops the driver at
+/// `<cache>/playwright-rust/<version>/playwright-<version>-<platform>/`,
+/// which survives `cargo install` cleanup of the build's `target/`. The
+/// version and platform come from compile-time env vars emitted by build.rs.
+fn try_user_cache_driver() -> Result<Option<(PathBuf, PathBuf)>> {
+    let Some(cache_dir) = dirs::cache_dir() else {
+        return Ok(None);
+    };
+    let (Some(version), Some(platform)) = (
+        option_env!("PLAYWRIGHT_DRIVER_VERSION"),
+        option_env!("PLAYWRIGHT_DRIVER_PLATFORM"),
+    ) else {
+        return Ok(None);
+    };
+    try_user_cache_driver_in(&cache_dir, version, platform)
+}
+
+/// Resolution helper for `try_user_cache_driver` parameterised by cache root,
+/// version, and platform — exposed at module scope so tests can drive it
+/// with a `tempfile::tempdir()`.
+fn try_user_cache_driver_in(
+    cache_root: &Path,
+    version: &str,
+    platform: &str,
+) -> Result<Option<(PathBuf, PathBuf)>> {
+    let driver_dir = cache_root
+        .join("playwright-rust")
+        .join(version)
+        .join(format!("playwright-{}-{}", version, platform));
+
+    let node_exe = if platform.starts_with("win32") {
+        driver_dir.join("node.exe")
+    } else {
+        driver_dir.join("node")
+    };
+    let cli_js = driver_dir.join("package").join("cli.js");
+
+    if node_exe.exists() && cli_js.exists() {
+        Ok(Some((node_exe, cli_js)))
+    } else {
+        Ok(None)
+    }
 }
 
 /// Try to find driver from PLAYWRIGHT_DRIVER_PATH environment variable
@@ -429,5 +475,67 @@ mod tests {
             }
             Err(e) => panic!("Unexpected error: {:?}", e),
         }
+    }
+
+    #[test]
+    fn try_user_cache_driver_in_resolves_when_files_present() {
+        let temp = tempfile::tempdir().unwrap();
+        let driver_subdir = temp
+            .path()
+            .join("playwright-rust")
+            .join("1.59.1")
+            .join("playwright-1.59.1-linux");
+        std::fs::create_dir_all(driver_subdir.join("package")).unwrap();
+        std::fs::write(driver_subdir.join("node"), b"").unwrap();
+        std::fs::write(driver_subdir.join("package").join("cli.js"), b"").unwrap();
+
+        let (node, cli) = try_user_cache_driver_in(temp.path(), "1.59.1", "linux")
+            .unwrap()
+            .unwrap();
+        assert!(node.exists());
+        assert!(cli.exists());
+    }
+
+    #[test]
+    fn try_user_cache_driver_in_returns_none_when_absent() {
+        let temp = tempfile::tempdir().unwrap();
+        let result = try_user_cache_driver_in(temp.path(), "1.59.1", "linux").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn bundled_driver_dir_lives_under_out_dir() {
+        let dir = env!("PLAYWRIGHT_DRIVER_DIR");
+        let sep = std::path::MAIN_SEPARATOR;
+        let build_marker = format!("{sep}build{sep}playwright-rs");
+        let out_marker = format!("{sep}out{sep}");
+        assert!(
+            dir.contains(&build_marker) && dir.contains(&out_marker),
+            "PLAYWRIGHT_DRIVER_DIR should sit under target/<profile>/build/playwright-rs-<hash>/out, got: {dir}"
+        );
+    }
+
+    #[test]
+    fn try_user_cache_driver_in_uses_node_exe_for_windows_platforms() {
+        let temp = tempfile::tempdir().unwrap();
+        let driver_subdir = temp
+            .path()
+            .join("playwright-rust")
+            .join("1.59.1")
+            .join("playwright-1.59.1-win32_x64");
+        std::fs::create_dir_all(driver_subdir.join("package")).unwrap();
+        std::fs::write(driver_subdir.join("node.exe"), b"").unwrap();
+        std::fs::write(driver_subdir.join("package").join("cli.js"), b"").unwrap();
+
+        let (node, _cli) = try_user_cache_driver_in(temp.path(), "1.59.1", "win32_x64")
+            .unwrap()
+            .unwrap();
+        assert!(
+            node.file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .ends_with(".exe")
+        );
     }
 }

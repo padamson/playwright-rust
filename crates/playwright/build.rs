@@ -1,17 +1,18 @@
-//! Build script for playwright-core
+//! Build script for playwright-rs
 //!
-//! Downloads and extracts the Playwright driver from Azure CDN during build time.
-//! This matches the approach used by playwright-python, playwright-java, and playwright-dotnet.
+//! Downloads and extracts the Playwright Node.js driver from Azure CDN
+//! into Cargo's `$OUT_DIR`. The runtime side (`src/server/driver.rs`)
+//! picks the path up via compile-time `option_env!()` lookups. Because
+//! `$OUT_DIR` lives inside `target/`, the driver is automatically cached
+//! by any `target/`-cache configuration in CI (e.g. `Swatinem/rust-cache`).
+//! No manual driver-cache step is needed.
 
 use std::env;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Playwright driver version to download
 const PLAYWRIGHT_VERSION: &str = "1.59.1";
-
-/// Azure CDN base URL for Playwright drivers
 const DRIVER_BASE_URL: &str = "https://playwright.azureedge.net/builds/driver";
 
 fn main() {
@@ -20,33 +21,27 @@ fn main() {
     // Skip driver download on docs.rs — it has no network access and doesn't need drivers
     if std::env::var("DOCS_RS").is_ok() {
         println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR=");
-        println!(
-            "cargo:rustc-env=PLAYWRIGHT_DRIVER_VERSION={}",
-            PLAYWRIGHT_VERSION
-        );
+        println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_VERSION={PLAYWRIGHT_VERSION}");
         println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_PLATFORM=docs-rs");
         return;
     }
 
-    // Get the appropriate drivers directory using robust workspace detection
-    let drivers_dir = get_drivers_dir();
+    let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR set by Cargo"));
+    let drivers_dir = out_dir.join("playwright-driver");
 
-    // Detect platform
     let platform = detect_platform();
-    let driver_dir = drivers_dir.join(format!("playwright-{}-{}", PLAYWRIGHT_VERSION, platform));
+    let driver_dir = drivers_dir.join(format!("playwright-{PLAYWRIGHT_VERSION}-{platform}"));
 
-    // Check if driver already exists
+    // Old driver versions linger in OUT_DIR until `cargo clean` — Cargo's
+    // build-script fingerprint reruns this on PLAYWRIGHT_VERSION bumps
+    // (which change build.rs) so the new version is always written, but
+    // we don't garbage-collect prior versions. Disk bloat only.
     if driver_dir.exists() {
-        // Driver already downloaded, silently use it
         set_output_env_vars(&driver_dir, platform);
         return;
     }
 
-    // Download and extract driver
-    println!(
-        "cargo:warning=Downloading Playwright driver {} for {}...",
-        PLAYWRIGHT_VERSION, platform
-    );
+    println!("cargo:warning=Downloading Playwright driver {PLAYWRIGHT_VERSION} for {platform}...");
 
     match download_and_extract_driver(&drivers_dir, platform) {
         Ok(extracted_dir) => {
@@ -57,76 +52,13 @@ fn main() {
             set_output_env_vars(&extracted_dir, platform);
         }
         Err(e) => {
-            println!("cargo:warning=Failed to download Playwright driver: {}", e);
+            println!("cargo:warning=Failed to download Playwright driver: {e}");
             println!("cargo:warning=The driver will need to be installed manually or via npm.");
             println!(
                 "cargo:warning=You can set PLAYWRIGHT_DRIVER_PATH to specify driver location."
             );
         }
     }
-}
-
-/// Get the drivers directory using robust workspace detection
-///
-/// This function handles multiple scenarios:
-/// 1. Development within playwright-rust workspace
-/// 2. Used as a dependency from crates.io in a workspace project
-/// 3. Used as a dependency from crates.io in a non-workspace project
-///
-/// The detection strategy:
-/// 1. Try CARGO_WORKSPACE_DIR (available in Rust 1.73+) - gets the dependent project's workspace
-/// 2. Walk up directory tree looking for Cargo.toml with [workspace]
-/// 3. Fallback to platform-specific cache directory (like playwright-python)
-fn get_drivers_dir() -> PathBuf {
-    // Strategy 1: Use CARGO_WORKSPACE_DIR if available (Rust 1.73+)
-    // This points to the workspace root of the project being built (not playwright-core)
-    if let Ok(workspace_dir) = env::var("CARGO_WORKSPACE_DIR") {
-        let drivers_dir = PathBuf::from(workspace_dir).join("drivers");
-        println!(
-            "cargo:warning=Using workspace drivers directory: {}",
-            drivers_dir.display()
-        );
-        return drivers_dir;
-    }
-
-    // Strategy 2: Walk up the directory tree to find a workspace Cargo.toml
-    // This handles cases where CARGO_WORKSPACE_DIR isn't available
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-
-    let mut current = manifest_dir.as_path();
-    while let Some(parent) = current.parent() {
-        let cargo_toml = parent.join("Cargo.toml");
-        if cargo_toml.exists()
-            && fs::read_to_string(&cargo_toml)
-                .is_ok_and(|contents| contents.contains("[workspace]"))
-        {
-            let drivers_dir = parent.join("drivers");
-            println!("cargo:warning=Found workspace at: {}", parent.display());
-            println!(
-                "cargo:warning=Using drivers directory: {}",
-                drivers_dir.display()
-            );
-            return drivers_dir;
-        }
-        current = parent;
-    }
-
-    // Strategy 3: Fallback to platform-specific cache directory
-    // This matches playwright-python's approach and works in all scenarios
-    let cache_dir = dirs::cache_dir()
-        .expect("Could not determine cache directory")
-        .join("playwright-rust")
-        .join("drivers");
-
-    println!(
-        "cargo:warning=No workspace found, using cache directory: {}",
-        cache_dir.display()
-    );
-    println!(
-        "cargo:warning=This matches playwright-python's approach for system-wide driver installation"
-    );
-
-    cache_dir
 }
 
 /// Detect the current platform and return the Playwright platform identifier

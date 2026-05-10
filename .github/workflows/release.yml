@@ -64,12 +64,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Cache Playwright Drivers
-        uses: actions/cache@v5
-        with:
-          path: drivers/
-          key: ${{ runner.os }}-playwright-drivers-1.59.1
-
       - name: Cache Playwright Browsers (Linux/macOS)
         if: runner.os != 'Windows'
         uses: actions/cache@v5
@@ -98,22 +92,8 @@ jobs:
       - name: Build
         run: cargo build --verbose
 
-      - name: Install Playwright browsers (Linux)
-        if: runner.os == 'Linux'
-        run: drivers/playwright-1.59.1-linux/node drivers/playwright-1.59.1-linux/package/cli.js install chromium firefox webkit --with-deps
-
-      - name: Install Playwright browsers (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          if [ -d "drivers/playwright-1.59.1-mac-arm64" ]; then
-            drivers/playwright-1.59.1-mac-arm64/node drivers/playwright-1.59.1-mac-arm64/package/cli.js install chromium firefox webkit
-          else
-            drivers/playwright-1.59.1-mac/node drivers/playwright-1.59.1-mac/package/cli.js install chromium firefox webkit
-          fi
-
-      - name: Install Playwright browsers (Windows)
-        if: runner.os == 'Windows'
-        run: drivers\playwright-1.59.1-win32_x64\node.exe drivers\playwright-1.59.1-win32_x64\package\cli.js install chromium firefox webkit
+      - name: Install Playwright browsers
+        run: cargo run --release --bin playwright-rs --features cli -- install chromium firefox webkit${{ runner.os == 'Linux' && ' --with-deps' || '' }}
 
       - name: Run tests
         run: cargo nextest run --workspace --profile ci --target ${{ matrix.target }}

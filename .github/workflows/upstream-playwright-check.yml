@@ -86,7 +86,7 @@ jobs:
 
           ## Things to validate
 
-          - Browser binaries: \`drivers/playwright-${UPSTREAM}-<target>/node ... cli.js install\` works on Linux/macOS/Windows
+          - Browser binaries: \`cargo run --bin playwright-rs --features cli -- install\` succeeds on Linux/macOS/Windows
           - Protocol changes: review the [v${UPSTREAM} release notes](https://github.com/microsoft/playwright/releases/tag/v${UPSTREAM}) for breaking RPC or initializer-shape changes
           - Platform support: minor releases sometimes drop OS support (e.g. macOS 14 WebKit was removed in 1.59) — document under \`### Breaking Changes\` if present
           - Test suite: full run on all three platforms before tagging

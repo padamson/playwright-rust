@@ -212,14 +212,22 @@ cargo build
 
 ### Installing Browsers
 
-After building, install browsers as described in [Browser Installation](#browser-installation-required) above:
+After building, install browsers using the bundled CLI:
 
 ```bash
 cargo build
-npx playwright@1.59.1 install chromium firefox webkit
+cargo run --bin playwright-rs --features cli -- install chromium firefox webkit
 ```
 
-The build script automatically downloads the Playwright driver to `drivers/` (gitignored). CI handles browser installation automatically - see `.github/workflows/test.yml`.
+The build script automatically downloads the Playwright driver into Cargo's
+`$OUT_DIR` (under `target/`), which is cached by any `target/`-cache CI
+configuration. For downstream binaries distributed via `cargo install`, run
+`cargo install playwright-rs --features cli` and then `playwright-rs install`
+once to populate the cross-build user cache
+(`~/Library/Caches/playwright-rust/<version>/` on macOS,
+`~/.cache/playwright-rust/<version>/` on Linux,
+`%LOCALAPPDATA%\playwright-rust\<version>\` on Windows). CI in this repo
+handles browser installation automatically — see `.github/workflows/test.yml`.
 
 **Platform Support:** ✅ Windows, macOS, Linux
 

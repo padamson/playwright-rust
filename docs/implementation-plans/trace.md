@@ -81,7 +81,8 @@ Notable mechanics:
 - **Format v8 stable across Playwright 1.59.x.**
 
 The driver bundles the trace-viewer source under
-`drivers/playwright-*/package/lib/server/trace/` — that's the
+`<driver>/package/lib/server/trace/` (where `<driver>` resolves at
+build time to Cargo's `$OUT_DIR/playwright-driver/playwright-<version>-<platform>/`) — that's the
 authoritative reference for the chunk schema and zip layout.
 
 ## Slice tracking
@@ -234,4 +235,4 @@ JPEG bytes via the slice 3 resource loader. No new deps.
 - [`crates/playwright-rs-trace/CHANGELOG.md`](../../crates/playwright-rs-trace/CHANGELOG.md)
 - [`crates/playwright-rs-trace/tests/fixtures/`](../../crates/playwright-rs-trace/tests/fixtures/) — `basic.trace.zip` + regenerate doc
 - [`crates/xtask/src/main.rs`](../../crates/xtask/src/main.rs) — fixture regeneration entry point
-- [`drivers/playwright-1.59.1-mac-arm64/package/lib/server/trace/`](../../drivers/) — authoritative format reference (read-only; no changes here)
+- `<driver>/package/lib/server/trace/` (under `target/<profile>/build/playwright-rs-<hash>/out/playwright-driver/`) — authoritative format reference, read-only

@@ -1,8 +1,7 @@
 // Assertions examples demonstrating auto-retry assertions
 //
 // Run with:
-// PLAYWRIGHT_DRIVER_PATH=./drivers/playwright-1.59.1-mac-arm64 \
-//     cargo run --package playwright --example assertions
+//   cargo run --package playwright-rs --example assertions
 
 use playwright_rs::protocol::Playwright;
 use playwright_rs::{expect, expect_page};

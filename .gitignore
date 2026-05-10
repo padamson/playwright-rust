@@ -4,9 +4,6 @@
 *.pdb
 # Cargo.lock is committed for CI reproducibility (cargo vet requires exact versions)
 
-# Playwright drivers (downloaded at build time)
-/drivers/
-
 # IDE
 .vscode/
 .idea/
