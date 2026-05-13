@@ -10,6 +10,11 @@
 
 **Status:** Pre-1.0, API stabilizing. See [coverage](#coverage) for the path to v1.0.
 
+> This README describes the latest published release on crates.io. For changes
+> on `main` that haven't been released yet (new features, breaking changes,
+> bug fixes), see [`crates/playwright/CHANGELOG.md`](crates/playwright/CHANGELOG.md)
+> under `[Unreleased]`.
+
 ## 🎯 Why playwright-rust?
 
 Read our [WHY.md](WHY.md) to understand the vision, timing, and philosophy behind this project.
@@ -137,22 +142,6 @@ playwright-rs = "0.12"  # Auto-updates to latest 0.12.x
 tokio = { version = "1", features = ["full"] }
 ```
 
-### Feature flags
-
-| Flag | Default | Effect |
-|---|---|---|
-| `native-tls` | on | TLS via the system stack (`tokio-tungstenite/native-tls`) |
-| `rustls-tls-native-roots` | off | TLS via rustls + OS-provided roots |
-| `rustls-tls-webpki-roots` | off | TLS via rustls + bundled webpki roots |
-| `screenshot-diff` | on | `to_have_screenshot()` pixel-diff assertions; pulls in the `image` crate |
-
-If you don't use `to_have_screenshot()`, you can shave several transitive dependencies and a bit of cold-build time:
-
-```toml
-[dependencies]
-playwright-rs = { version = "0.12", default-features = false, features = ["native-tls"] }
-```
-
 See the [CHANGELOG](CHANGELOG.md) for version history and features.
 
 ### Browser Installation (Required)
@@ -212,22 +201,14 @@ cargo build
 
 ### Installing Browsers
 
-After building, install browsers using the bundled CLI:
+After building, install browsers as described in [Browser Installation](#browser-installation-required) above:
 
 ```bash
 cargo build
-cargo run --bin playwright-rs --features cli -- install chromium firefox webkit
+npx playwright@1.59.1 install chromium firefox webkit
 ```
 
-The build script automatically downloads the Playwright driver into Cargo's
-`$OUT_DIR` (under `target/`), which is cached by any `target/`-cache CI
-configuration. For downstream binaries distributed via `cargo install`, run
-`cargo install playwright-rs --features cli` and then `playwright-rs install`
-once to populate the cross-build user cache
-(`~/Library/Caches/playwright-rust/<version>/` on macOS,
-`~/.cache/playwright-rust/<version>/` on Linux,
-`%LOCALAPPDATA%\playwright-rust\<version>\` on Windows). CI in this repo
-handles browser installation automatically — see `.github/workflows/test.yml`.
+The build script automatically downloads the Playwright driver to `drivers/` (gitignored). CI handles browser installation automatically - see `.github/workflows/test.yml`.
 
 **Platform Support:** ✅ Windows, macOS, Linux
 
@@ -298,29 +279,6 @@ result?;
 See [`examples/trace_on_failure.rs`](crates/playwright/examples/trace_on_failure.rs)
 for a runnable end-to-end example. Open the resulting `trace.zip` at
 <https://trace.playwright.dev>.
-
-**See playwright-rs operations in your app's logs.** Every public async
-method on the user-facing types (`Browser`, `Page`, `Frame`, `Locator`,
-`ElementHandle`, `Tracing`, `CDPSession`, `Debugger`, `Screencast`,
-`Request`, `Response`, ...) is instrumented with the
-[`tracing`](https://docs.rs/tracing) crate. Wire up any `tracing_subscriber`
-and playwright-rs spans appear alongside spans from the rest of your app
-(reqwest, sqlx, tonic, etc.):
-
-```rust,ignore
-tracing_subscriber::fmt()
-    .with_env_filter("playwright_rs=info")
-    .init();
-```
-
-Top-level operations (`goto`, `click`, `screenshot`, `pdf`, `evaluate`,
-`browser.close`, `browser_type.launch`) emit at `info`; everything else
-at `debug`. Span fields include cardinality-bounded identifiers (`guid`,
-`selector`, `url`, `name`) and selected completion-time fields (`status`,
-`bytes_len`, `count`). Sensitive payloads (input values, eval expressions,
-request/response bodies) are deliberately excluded. See
-[`examples/observability.rs`](crates/playwright/examples/observability.rs)
-for the full pattern, including nested user spans.
 
 ## Star History
 

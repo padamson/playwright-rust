@@ -63,8 +63,15 @@ table above; the workflow is otherwise identical.
    - Rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
    - Add a fresh empty `## [Unreleased]` heading above
    - Update any compare-link footer if present
-7. **Update README install snippet** if minor or major version (`"0.X"`)
-   — applies to `playwright-rs` only
+7. **Sync README.md to the release** — applies to `playwright-rs` only.
+   The repo's `README.md` describes the **latest published release**, not
+   `main`'s in-progress state. A pointer line under the **Status:** header
+   directs readers at `crates/playwright/CHANGELOG.md` `[Unreleased]` for
+   anything not yet on crates.io. At release time, fold in everything the
+   `[Unreleased]` CHANGELOG has been previewing — feature flags table,
+   install/CI snippets, Testing & Debugging additions, etc. Also bump the
+   install snippet's pinned `"0.X"` (line 136 area) if this is a minor or
+   major bump.
 8. **Verify locally**:
    - `cargo nextest run --workspace`
    - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
@@ -72,7 +79,19 @@ table above; the workflow is otherwise identical.
    - `cargo audit && cargo deny check && cargo vet`
    - **Dry-run the publish**: `cargo publish --dry-run -p <crate>` —
      catches packaging issues (missing files, license check, README
-     path) before the irreversible real `cargo publish`
+     path) before the irreversible real `cargo publish`. Pass
+     `--allow-dirty` if you're verifying mid-edit. **Coordinated
+     first-publish caveat**: when a release pushes a not-yet-published
+     sibling crate (e.g. v0.13.0's first publish of
+     `playwright-rs-macros`), the main crate's dry-run fails with
+     `no matching package named '<sibling>' found ... required by
+     package 'playwright-rs'` because cargo resolves all deps against
+     the crates.io index. Dry-run the sibling crates in dependency
+     order (`-p playwright-rs-macros` → `-p playwright-rs-trace` →
+     `-p playwright-rs`); the main crate's dry-run only completes after
+     the siblings are actually published. For pre-release verification,
+     `cargo package --list -p playwright-rs --allow-dirty` confirms the
+     tarball contents without index lookups.
 
 ## The safer push-then-tag workflow
 

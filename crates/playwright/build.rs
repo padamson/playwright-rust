@@ -81,7 +81,12 @@ fn detect_platform() -> &'static str {
     }
 }
 
-/// Download and extract the Playwright driver
+/// Download and extract the Playwright driver.
+//
+// TODO: this download/extract routine is duplicated in
+// `src/bin/playwright_rs.rs::ensure_driver_in_user_cache` for v0.x.
+// Extract to a shared module (via `include!()` or an internal crate)
+// once the architecture stabilizes.
 fn download_and_extract_driver(drivers_dir: &Path, platform: &str) -> io::Result<PathBuf> {
     // Create drivers directory
     fs::create_dir_all(drivers_dir)?;

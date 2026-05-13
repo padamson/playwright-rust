@@ -4,7 +4,7 @@
 
 **Architecture:** JSON-RPC communication with Playwright Node.js server (same as all official bindings)
 
-**Status:** Version 0.12.0 complete (2026-04-19)
+**Status:** Version 0.13.0 code complete on `main` ([Unreleased]); dogfooding before tag cut. Version 0.12.0 shipped 2026-04-19.
 
 ---
 
@@ -25,6 +25,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.8.0** - Typed Evaluate API complete - 2025-12-30
 - ✅ **v0.8.1** - Persistent Contexts & App Mode complete - 2026-01-04
 - ✅ **v0.8.x through v0.12.0** - Full Python API parity + agent integration complete (2026-04-19)
+- 🚧 **v0.13.0** - Playwright 1.59 completeness + agent codegen + companion crates (code complete on `main`, dogfooding before tag cut)
 - 🚧 **v1.0.0** - Real-World Validation & Final Polish
 - 🔮 **v1.1.0** - Future enhancements
 
@@ -189,6 +190,26 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
   - Result deserialization: Receive typed results with compile-time validation
   - Comprehensive serialization module with Playwright protocol support
   - Backward compatible with original methods
+
+---
+
+## Version 0.13: Playwright 1.59 Completeness + Agent Codegen
+
+**Goal:** Catch up to Playwright 1.59 (screencast, debugger, picker, CDP events, aria-snapshot options), ship the agent-codegen surfaces (programmatic locator picking, trace-file consumption from Rust), and trim the default dep tree for leaner cold builds.
+
+**Status:** 🚧 Code complete on `main` (`[Unreleased]`); dogfooding before the tag cut. See [`crates/playwright/CHANGELOG.md`](../crates/playwright/CHANGELOG.md) for the full list of additions, changes, and breaking changes.
+
+**Milestones (all landed):**
+- ✅ Playwright 1.59 parity — `Page::screencast`, `Debugger` + `BrowserContext::debugger()`, `Page::pick_locator()`, `CDPSession::on(method, handler)` event side, `AriaSnapshotOptions`, `Tracing.start({live: true})`, `Page::aria_snapshot()`, `Locator::normalize()`, `LaunchOptions::artifacts_dir`, `Page::clear_console_messages()` / `clear_page_errors()` (closed: #69, #70, #71, #72, #73, #74, #75, #76, #79; umbrella #55)
+- ✅ Tracing instrumentation across the public async surface — `#[tracing::instrument]` on every public method on `Browser`, `Page`, `Frame`, `Locator`, `ElementHandle`, `Tracing`, `CDPSession`, `Debugger`, `Screencast`, etc., with cardinality-bounded span fields (#84, #91)
+- ✅ Companion crate [`playwright-rs-macros`](../crates/playwright-rs-macros/) 0.1.0 — compile-time-validated `locator!()` macro
+- ✅ Companion crate [`playwright-rs-trace`](../crates/playwright-rs-trace/) 0.1.0 — programmatic trace-file consumption (independently versioned, tag prefix `trace-v*`)
+- ✅ Dep trim — `image` behind opt-in `screenshot-diff` feature, `reqwest` → `ureq` in build script, `mime_guess` → hand-rolled, narrowed `tokio` features (closed: #62, #63, #64, #65, #66, #67)
+- ✅ Build-script driver location moved to Cargo's `$OUT_DIR` (was workspace-relative `drivers/`, which broke for downstream git-dep consumers because Cargo's CI caches don't preserve `~/.cargo/git/checkouts/`)
+- ✅ New `playwright-rs` `[[bin]]` (feature `cli`) — bootstrap installer for the bundled driver into a stable cross-build user cache, for downstream binaries distributed via `cargo install`
+- ✅ Debug-build runtime-binding assertion on `Browser` (#90), `Page::set_url_fragment` / `clear_url_fragment` helpers (#89)
+
+**Release prep:** Tracked on [#86](https://github.com/padamson/playwright-rust/issues/86). All pre-release plumbing verified during dogfooding — `cargo publish --dry-run` clean for `playwright-rs-macros` and `playwright-rs-trace`; `release.yml` already handles all three tag prefixes; the release-process skill captures the macros first-publish gotcha (`[policy.<crate>] audit-as-crates-io = true` must be added *after* the first publish, not before).
 
 ---
 
