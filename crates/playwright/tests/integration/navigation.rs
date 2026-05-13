@@ -232,9 +232,14 @@ async fn test_navigation_error_methods() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
-    // Test 1: goto() timeout error with non-routable IP
+    // Test 1: goto() timeout error with non-routable IP.
+    // 192.0.2.1 is in TEST-NET-1 (RFC 5737) — guaranteed-never-routed, so
+    // navigation hangs until the timeout fires. Private-space addresses
+    // (10.x, 172.16-31.x, 192.168.x) can be silently forwarded by corporate
+    // or hotel gateways, which TCP-RSTs the connection instantly and breaks
+    // the timeout assertion.
     let options = GotoOptions::new().timeout(Duration::from_millis(100));
-    let result = page.goto("http://10.255.255.1:9999/", Some(options)).await;
+    let result = page.goto("http://192.0.2.1:9999/", Some(options)).await;
 
     assert!(result.is_err(), "Expected timeout error");
 
@@ -405,7 +410,7 @@ async fn test_navigation_errors_cross_browser_smoke() {
 
     let options = GotoOptions::new().timeout(Duration::from_millis(100));
     let result = firefox_page
-        .goto("http://10.255.255.1:9999/", Some(options))
+        .goto("http://192.0.2.1:9999/", Some(options))
         .await;
 
     assert!(result.is_err(), "Expected timeout error in Firefox");
@@ -424,7 +429,7 @@ async fn test_navigation_errors_cross_browser_smoke() {
 
     let options = GotoOptions::new().timeout(Duration::from_millis(100));
     let result = webkit_page
-        .goto("http://10.255.255.1:9999/", Some(options))
+        .goto("http://192.0.2.1:9999/", Some(options))
         .await;
 
     assert!(result.is_err(), "Expected timeout error in WebKit");

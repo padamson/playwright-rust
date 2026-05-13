@@ -890,9 +890,13 @@ async fn test_error_quality_navigation_timeout() {
         .expect("Failed to launch browser");
     let page = browser.new_page().await.expect("Failed to create page");
 
-    // Test: Timeout error should include duration and URL
+    // Test: Timeout error should include duration and URL.
+    // 192.0.2.1 is in TEST-NET-1 (RFC 5737), reserved as never-routed; a
+    // private-space address like 10.x.x.x can be silently forwarded by a
+    // corporate/hotel gateway, which TCP-RSTs the connection instead of
+    // letting it hang for the timeout test.
     let timeout_duration = Duration::from_millis(100);
-    let target_url = "http://10.255.255.1:9999/page.html";
+    let target_url = "http://192.0.2.1:9999/page.html";
     let options = GotoOptions::new().timeout(timeout_duration);
     let result = page.goto(target_url, Some(options)).await;
 
@@ -909,7 +913,7 @@ async fn test_error_quality_navigation_timeout() {
     );
 
     // ASSERTION: Error should ideally include URL
-    // Expected improvement: "Navigation timeout after 100ms navigating to http://10.255.255.1:9999/page.html"
+    // Expected improvement: "Navigation timeout after 100ms navigating to http://192.0.2.1:9999/page.html"
     // Current state might just say "Timeout: ..."
 
     tracing::info!("\n✓ Navigation timeout error includes timeout duration");
@@ -1114,7 +1118,7 @@ async fn test_error_quality_error_sequence() {
     let errors = [
         ("invalid-url", "Invalid URL test"),
         ("http://localhost:59999/", "Connection refused test"),
-        ("http://10.255.255.1:9999/timeout", "Timeout test"),
+        ("http://192.0.2.1:9999/timeout", "Timeout test"),
     ];
 
     for (url, test_name) in errors {
@@ -1316,7 +1320,7 @@ async fn test_error_recovery_network_timeout() {
 
     // Test: After a timeout error, page should still be usable
     let options = GotoOptions::new().timeout(Duration::from_millis(100));
-    let result = page.goto("http://10.255.255.1:9999/", Some(options)).await;
+    let result = page.goto("http://192.0.2.1:9999/", Some(options)).await;
 
     assert!(result.is_err(), "Expected timeout error");
     assert!(result.is_err(), "Expected timeout error");
@@ -1407,7 +1411,7 @@ async fn test_error_recovery_multiple_errors() {
     let errors = [
         "not-valid-url",
         "http://localhost:59999/",
-        "http://10.255.255.1:9999/",
+        "http://192.0.2.1:9999/",
     ];
 
     for (i, url) in errors.iter().enumerate() {

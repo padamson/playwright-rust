@@ -85,9 +85,12 @@ async fn test_page_set_default_navigation_timeout() {
     // Set a 100 ms navigation timeout
     page.set_default_navigation_timeout(100.0).await;
 
-    // Attempt to navigate to a non-routable IP; should time out quickly
+    // Attempt to navigate to a non-routable IP; should time out quickly.
+    // 192.0.2.1 is in TEST-NET-1 (RFC 5737) — guaranteed-never-routed.
+    // Don't use private-space addresses (10.x, etc.) here; corporate/hotel
+    // gateways forward them and TCP-RST instantly, breaking the timeout.
     let start = std::time::Instant::now();
-    let result = page.goto("http://10.255.255.1/timeout-test", None).await;
+    let result = page.goto("http://192.0.2.1/timeout-test", None).await;
     let elapsed = start.elapsed();
 
     assert!(result.is_err(), "Expected navigation timeout error, got Ok");
@@ -143,7 +146,7 @@ async fn test_context_timeout_methods() {
     let page2 = context.new_page().await.expect("Failed to create page");
 
     let start = std::time::Instant::now();
-    let result = page2.goto("http://10.255.255.1/timeout-test", None).await;
+    let result = page2.goto("http://192.0.2.1/timeout-test", None).await;
     let elapsed = start.elapsed();
 
     assert!(result.is_err(), "Expected navigation timeout error, got Ok");
