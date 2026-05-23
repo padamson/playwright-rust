@@ -43,6 +43,20 @@ user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
+[[publisher.anyhow]]
+version = "1.0.102"
+when = "2026-02-20"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.async-trait]]
+version = "0.1.89"
+when = "2025-08-14"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.bumpalo]]
 version = "3.20.2"
 when = "2026-02-19"
@@ -141,6 +155,13 @@ user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
+[[publisher.itoa]]
+version = "1.0.18"
+when = "2026-03-20"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.memchr]]
 version = "2.8.0"
 when = "2026-02-06"
@@ -161,6 +182,13 @@ when = "2025-10-21"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
+
+[[publisher.prettyplease]]
+version = "0.2.37"
+when = "2025-08-19"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
 
 [[publisher.regex]]
 version = "1.12.3"
@@ -183,12 +211,61 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.ryu]]
+version = "1.0.23"
+when = "2026-02-08"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.serde_json]]
+version = "1.0.150"
+when = "2026-05-21"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.serde_path_to_error]]
+version = "0.1.20"
+when = "2025-09-15"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.serde_spanned]]
 version = "1.1.1"
 when = "2026-03-31"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
+
+[[publisher.syn]]
+version = "2.0.117"
+when = "2026-02-20"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.target-triple]]
+version = "1.0.0"
+when = "2025-10-27"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.thiserror]]
+version = "2.0.18"
+when = "2026-01-18"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.thiserror-impl]]
+version = "2.0.18"
+when = "2026-01-18"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
 
 [[publisher.toml]]
 version = "1.1.2+spec-1.1.0"
@@ -226,11 +303,25 @@ user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.tower-http]]
-version = "0.6.10"
-when = "2026-05-06"
+version = "0.6.11"
+when = "2026-05-18"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
+
+[[publisher.trybuild]]
+version = "1.0.116"
+when = "2026-02-12"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.unicode-ident]]
+version = "1.0.24"
+when = "2026-02-16"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
 
 [[publisher.unicode-xid]]
 version = "0.2.6"
@@ -396,6 +487,13 @@ trusted-publisher = "github:bytecodealliance/wasm-tools"
 version = "0.244.0"
 when = "2026-01-06"
 trusted-publisher = "github:bytecodealliance/wasm-tools"
+
+[[publisher.zmij]]
+version = "1.0.21"
+when = "2026-02-12"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
 
 [[audits.ariel-os.audits.futures-core]]
 who = "Nils Ponsard <nils.ponsard@inria.fr>"
@@ -1978,7 +2076,7 @@ who = "Manish Goregaokar <manishsmail@gmail.com>"
 criteria = "safe-to-deploy"
 user-id = 1139 # Manish Goregaokar (Manishearth)
 start = "2019-07-25"
-end = "2026-02-01"
+end = "2027-04-23"
 notes = "All code written or reviewed by Manish"
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 

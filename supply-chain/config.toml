@@ -35,14 +35,6 @@ audit-as-crates-io = true
 version = "0.9.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.anyhow]]
-version = "1.0.102"
-criteria = "safe-to-deploy"
-
-[[exemptions.async-trait]]
-version = "0.1.89"
-criteria = "safe-to-deploy"
-
 [[exemptions.axum]]
 version = "0.8.9"
 criteria = "safe-to-deploy"
@@ -247,10 +239,6 @@ criteria = "safe-to-deploy"
 version = "2.14.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.itoa]]
-version = "1.0.18"
-criteria = "safe-to-deploy"
-
 [[exemptions.jobserver]]
 version = "0.1.34"
 criteria = "safe-to-deploy"
@@ -367,10 +355,6 @@ criteria = "safe-to-deploy"
 version = "0.2.21"
 criteria = "safe-to-deploy"
 
-[[exemptions.prettyplease]]
-version = "0.2.37"
-criteria = "safe-to-deploy"
-
 [[exemptions.pxfm]]
 version = "0.1.28"
 criteria = "safe-to-deploy"
@@ -419,10 +403,6 @@ criteria = "safe-to-deploy"
 version = "0.103.12"
 criteria = "safe-to-deploy"
 
-[[exemptions.ryu]]
-version = "1.0.23"
-criteria = "safe-to-deploy"
-
 [[exemptions.schannel]]
 version = "0.1.29"
 criteria = "safe-to-deploy"
@@ -441,14 +421,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.semver]]
 version = "1.0.28"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_json]]
-version = "1.0.149"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_path_to_error]]
-version = "0.1.20"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_urlencoded]]
@@ -479,28 +451,12 @@ criteria = "safe-to-deploy"
 version = "1.2.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.syn]]
-version = "2.0.117"
-criteria = "safe-to-deploy"
-
 [[exemptions.sync_wrapper]]
 version = "1.0.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.target-triple]]
-version = "1.0.0"
-criteria = "safe-to-run"
-
 [[exemptions.tempfile]]
 version = "3.27.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.thiserror]]
-version = "2.0.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.thiserror-impl]]
-version = "2.0.18"
 criteria = "safe-to-deploy"
 
 [[exemptions.time]]
@@ -551,10 +507,6 @@ criteria = "safe-to-deploy"
 version = "0.3.23"
 criteria = "safe-to-run"
 
-[[exemptions.trybuild]]
-version = "1.0.116"
-criteria = "safe-to-run"
-
 [[exemptions.tungstenite]]
 version = "0.29.0"
 criteria = "safe-to-deploy"
@@ -565,10 +517,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.typenum]]
 version = "1.20.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.unicode-ident]]
-version = "1.0.24"
 criteria = "safe-to-deploy"
 
 [[exemptions.untrusted]]
@@ -681,10 +629,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.zip]]
 version = "8.6.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.zmij]]
-version = "1.0.21"
 criteria = "safe-to-deploy"
 
 [[exemptions.zopfli]]
