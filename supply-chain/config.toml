@@ -34,6 +34,9 @@ audit-as-crates-io = true
 [policy.playwright-rs-macros]
 audit-as-crates-io = true
 
+[policy.playwright-rs-trace]
+audit-as-crates-io = true
+
 [[exemptions.aes]]
 version = "0.9.0"
 criteria = "safe-to-deploy"
@@ -327,10 +330,14 @@ version = "0.2.17"
 criteria = "safe-to-deploy"
 
 [[exemptions.playwright-rs]]
-version = "0.12.3"
+version = "0.13.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.playwright-rs-macros]]
+version = "0.1.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.playwright-rs-trace]]
 version = "0.1.0"
 criteria = "safe-to-deploy"
 
