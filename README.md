@@ -280,6 +280,28 @@ See [`examples/trace_on_failure.rs`](crates/playwright/examples/trace_on_failure
 for a runnable end-to-end example. Open the resulting `trace.zip` at
 <https://trace.playwright.dev>.
 
+## Using with Claude Code / AI agents
+
+If you're writing playwright-rs tests with Claude Code or another
+coding agent, two artifacts in this repo are designed to be copied
+into your downstream project so the agent has the right API model
+loaded:
+
+- [**`docs/agent/CLAUDE_SNIPPET.md`**](docs/agent/CLAUDE_SNIPPET.md) —
+  a ~50-line section to paste into your project's `CLAUDE.md`. Covers
+  the object model, conventions (builder pattern, `locator!()`,
+  auto-wait), and the trace-on-failure pattern. Zero-friction install:
+  one paste.
+- [**`.claude/skills/playwright-rs-usage/`**](.claude/skills/playwright-rs-usage/) —
+  the same content in skill form (auto-loads when the trigger
+  description matches the user's request). Install with
+  `cp -r path/to/playwright-rust/.claude/skills/playwright-rs-usage your-project/.claude/skills/`.
+
+Both point back at [docs.rs](https://docs.rs/playwright-rs) and the
+[examples](crates/playwright/examples/) for the API surface itself —
+they're a thin "what to reach for, what to avoid" overlay rather than
+a duplicate of the API reference.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=padamson/playwright-rust&type=Date)](https://star-history.com/#padamson/playwright-rust&Date)

@@ -777,7 +777,7 @@ impl BrowserContext {
 
     /// Returns whether this browser context has been closed.
     ///
-    /// Returns `true` after [`close()`] has been called on this context, or after the
+    /// Returns `true` after [`close()`](Self::close) has been called on this context, or after the
     /// context receives a close event from the server (e.g. when the browser is closed).
     ///
     /// Note: this reflects eventual state. If the context was closed by a server-initiated

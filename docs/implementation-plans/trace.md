@@ -1,6 +1,6 @@
 # `playwright-rs-trace` Plan
 
-**Last updated:** 2026-05-04
+**Last updated:** 2026-05-23
 **Tracking issue:** [#80](https://github.com/padamson/playwright-rust/issues/80) (closed; planning lives here now)
 **Crate:** [`crates/playwright-rs-trace/`](../../crates/playwright-rs-trace/)
 **Targets:** independent of `playwright-rs` versions; first publish ships alongside v0.13.0 (see [#86](https://github.com/padamson/playwright-rust/issues/86))
@@ -123,7 +123,9 @@ real Chromium session through `playwright-rs::Tracing` to refresh the
 deterministic test fixture. Future build automation (release prep,
 doc-gen, supply-chain wrappers) gets a natural home here.
 
-### Slice 2 — `trace.network` parsing → `NetworkEntry` streaming iterator (next-up)
+### Slice 2 — `trace.network` parsing → `NetworkEntry` streaming iterator ✅
+
+**Status:** shipped in commit [`abd9e6a2`](https://github.com/padamson/playwright-rust/commit/abd9e6a2d8d74e3bc0c89c5e8583d9d9a3d52f50).
 
 **Why:** trace files record HTTP traffic alongside actions, and any
 post-mortem analysis of a Playwright run needs both. Without slice 2,

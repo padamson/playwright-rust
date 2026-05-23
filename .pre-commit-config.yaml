@@ -83,6 +83,19 @@ repos:
         types: [rust]
         pass_filenames: false
 
+      # 5a. Verify agent-integration snippets compile against the
+      # current playwright-rs API. Catches drift between
+      # docs/agent/CLAUDE_SNIPPET.md / SKILL.md and the crate.
+      - id: verify-agent-docs
+        name: cargo xtask verify-agent-docs
+        description: Compile-check the rust,no_run snippets in the agent-integration docs
+        entry: cargo xtask verify-agent-docs
+        language: system
+        pass_filenames: false
+        # Run when the snippet sources change OR when the crate API
+        # surface changes.
+        files: (docs/agent/|\.claude/skills/playwright-rs-usage/|crates/playwright/src/|crates/playwright-rs-macros/src/|crates/xtask/src/)
+
       # 6. Security audit (same as CI: cargo audit)
       - id: cargo-audit
         name: cargo audit

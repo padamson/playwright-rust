@@ -1,11 +1,11 @@
 //! Live screencast frame streaming, optional disk recording, and
 //! action / chapter / HTML overlays.
 //!
-//! Available on every [`Page`](crate::protocol::Page) via
+//! Available on every [`Page`] via
 //! [`screencast()`](crate::protocol::Page::screencast). Once started,
 //! the Playwright server streams JPEG frames as they're rendered,
 //! delivered to handlers registered with [`Screencast::on_frame`].
-//! Optionally records to disk via the [`Artifact`](crate::protocol::Artifact)
+//! Optionally records to disk via the [`Artifact`](crate::protocol::artifact::Artifact)
 //! save-on-stop pathway, and can overlay action labels, chapter cards,
 //! or arbitrary HTML on the streamed frames.
 //!

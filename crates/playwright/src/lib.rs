@@ -2,6 +2,73 @@
 //!
 //! This crate provides the public API for browser automation using Playwright.
 //!
+//! # Quick tour
+//!
+//! ## Object model
+//!
+//! ```text
+//! Playwright            start here — Playwright::launch().await?
+//!   └── BrowserType     .chromium() / .firefox() / .webkit()
+//!         └── Browser   .launch().await? → owns the browser process
+//!               └── BrowserContext       isolated cookies / storage
+//!                     └── Page            one tab
+//!                           └── Locator   selector with auto-wait
+//! ```
+//!
+//! [`Locator`] is the workhorse. Build one with [`Page::locator`] or one
+//! of the semantic helpers (`get_by_role`, `get_by_text`, `get_by_label`,
+//! `get_by_placeholder`, `get_by_test_id`, `get_by_alt_text`,
+//! `get_by_title`), then call action / assertion methods on it — they
+//! wait for the element to be actionable automatically.
+//!
+//! ## API conventions
+//!
+//! - **`Result<T>` everywhere.** One error type, [`Error`].
+//! - **Builders for option-heavy methods.** `goto`, `click`, `screenshot`,
+//!   `tracing.start`, etc. take an `Options` struct (`..Default::default()`).
+//! - **Auto-wait by default.** Locator-based actions wait until the
+//!   element is actionable; [`expect`] assertions auto-retry until the
+//!   condition holds or times out. You almost never need a manual `sleep`.
+//! - **Async/await on `tokio`.** Every method that does I/O is `async`.
+//! - **Selectors validated at compile time.** Prefer the [`locator!`]
+//!   macro (re-exported when the default `macros` feature is on) over
+//!   raw `&str`: empty / malformed selectors fail at `cargo build`, not
+//!   at runtime.
+//!
+//! ## Debugging failures
+//!
+//! Fastest path to "what happened" is tracing:
+//!
+//! 1. Wrap the test body with [`BrowserContext::tracing`] —
+//!    `start({ snapshots, screenshots, sources })` → run → `stop({ path })`.
+//! 2. Open the resulting `.trace.zip` with
+//!    `playwright show-trace path/to/trace.zip` — the trace viewer is
+//!    language-agnostic, the same UI JS / Python users see.
+//! 3. To inspect a trace programmatically (CI bots, agent feedback
+//!    loops), pull in [`playwright-rs-trace`](https://docs.rs/playwright-rs-trace)
+//!    as a `[dev-dependencies]`.
+//!
+//! See [`examples/trace_on_failure.rs`](https://github.com/padamson/playwright-rust/blob/main/crates/playwright/examples/trace_on_failure.rs)
+//! for the canonical Rust pattern (Rust has no async `Drop`, so cleanup
+//! is explicit).
+//!
+//! ## Companion crates
+//!
+//! - [`playwright-rs-macros`](https://docs.rs/playwright-rs-macros) —
+//!   compile-time-validated [`locator!`] macro. Default-on via the
+//!   `macros` feature; surfaced here as `playwright_rs::locator!`.
+//! - [`playwright-rs-trace`](https://docs.rs/playwright-rs-trace) —
+//!   pure-Rust parser for `.trace.zip` files. Standalone; add to
+//!   `[dev-dependencies]` for post-mortem analysis.
+//!
+//! ## For AI coding agents
+//!
+//! If you're using this crate with Claude Code or another coding agent,
+//! see [`docs/agent/`](https://github.com/padamson/playwright-rust/tree/main/docs/agent)
+//! for a copy-paste CLAUDE.md snippet and the
+//! [`playwright-rs-usage` skill](https://github.com/padamson/playwright-rust/tree/main/.claude/skills/playwright-rs-usage)
+//! you can drop into your project's `.claude/skills/`.
+//!
 //! # Examples
 //!
 //! ## Basic Navigation and Interaction

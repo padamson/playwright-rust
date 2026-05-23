@@ -122,4 +122,9 @@ jobs:
       run: cargo build --package playwright-rs --examples
 
     - name: Generate documentation
+      env:
+        RUSTDOCFLAGS: "-D rustdoc::broken-intra-doc-links"
       run: cargo doc --no-deps --workspace
+
+    - name: Verify agent-integration doc snippets
+      run: cargo xtask verify-agent-docs

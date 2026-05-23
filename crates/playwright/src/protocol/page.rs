@@ -3724,7 +3724,7 @@ impl Page {
     }
 
     /// Enters Playwright Inspector's interactive picker mode and resolves
-    /// once the user clicks an element. The returned [`Locator`] points at
+    /// once the user clicks an element. The returned [`Locator`](crate::Locator) points at
     /// whatever element was clicked.
     ///
     /// This is the programmatic entry point to the same picker the
@@ -4129,8 +4129,8 @@ impl Page {
 
     /// Returns the live-screencast handle for this page.
     ///
-    /// Register frame handlers via [`Screencast::on_frame`], then call
-    /// [`Screencast::start`] to begin streaming. JPEG frames arrive on
+    /// Register frame handlers via [`Screencast::on_frame`](crate::Screencast::on_frame), then call
+    /// [`Screencast::start`](crate::Screencast::start) to begin streaming. JPEG frames arrive on
     /// the registered handlers as the browser renders.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-screencast>

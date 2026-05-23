@@ -29,28 +29,9 @@ crates/playwright/      single crate (consolidated from playwright-core in v0.7)
 drivers/                Playwright server binaries (gitignored)
 supply-chain/           cargo-vet audit config (see skill)
 docs/                   roadmap, ADRs, implementation plans, technical notes
-.claude/agents/         specialized sub-agents (see below)
+docs/agent/             agent-integration guidance for downstream users
 .claude/skills/         procedural reference (see below)
 ```
-
-## Specialized Agents
-
-Use these sub-agents (`.claude/agents/`) for multi-step workflows:
-
-- **tdd-feature-implementation** — implementing any new Playwright API.
-  Drives Red → Green → Refactor with cross-browser testing and API
-  compatibility checks. Auto-invoke for "implement X" / "add Y method".
-- **api-compatibility-validator** — cross-language API comparison
-  against playwright-python/JS/Java. Auto-invoke for "validate X" /
-  "does X match Playwright?".
-- **documentation-maintenance** — coordinated doc updates when
-  finishing slices/versions. Auto-invoke for "Slice X done" /
-  "update docs".
-- **release** — version bump, CHANGELOG, pre-release verification.
-  Auto-invoke for "release vX.Y.Z" / "publish to crates.io".
-
-Don't reach for an agent for: single-file edits, reading or searching
-code, running a single test, sub-10-line bug fixes, fmt/clippy fixes.
 
 ## Skills (procedural reference)
 
@@ -65,6 +46,12 @@ their domain:
 - **release-process** — end-to-end release runbook including the
   push-commit-then-wait-for-CI-then-tag pattern. Read before driving
   a release manually.
+- **playwright-rs-usage** — procedural reference for using
+  playwright-rs as a downstream Rust dependency (object model,
+  `locator!()` macro, builder pattern, auto-wait semantics, trace
+  capture). Mirrors the artifact we ship for downstream copy (see
+  "Agent-integration artifacts" below). Loaded automatically in
+  sessions running in this repo.
 
 ## Documentation Hierarchy
 
@@ -84,15 +71,23 @@ Just-in-time philosophy — write the right thing in the right file:
    docs (`See: <https://playwright.dev/...>`), errors section, and any
    Rust-specific behavior notes. Examples go in module-level doctests
    per the doctest-conventions skill, not on individual functions.
+6. **`docs/agent/`** — guidance distributed to downstream Rust
+   projects that consume this crate from a Claude Code / agent
+   workflow. `CLAUDE_SNIPPET.md` is the copy-paste version;
+   `.claude/skills/playwright-rs-usage/SKILL.md` is the in-repo
+   canonical that downstream users can also `cp -r` into their own
+   `.claude/skills/`. Keep both in sync — the snippet is the
+   short-form version of the skill.
 
 ## Working on Features
 
 1. Always check Playwright's official API docs first (and
    playwright-python as the reference implementation).
-2. For new APIs use the **tdd-feature-implementation** agent.
-3. For bug fixes / refactors, work directly: write the failing test,
-   make it pass, refactor.
-4. Match Playwright's API exactly across languages — same method
+2. Default to TDD: write the failing test, make it pass, refactor.
+   For new APIs that's Red → Green → Refactor against the cross-browser
+   integration suite + an API-compatibility check against
+   playwright-python.
+3. Match Playwright's API exactly across languages — same method
    names, same semantics. Diverge only for idiomatic Rust where
    compatibility allows (`Result<T>`, builders for option-heavy
    methods, async/await).
@@ -143,7 +138,7 @@ pre-commit run --all-files
 
 `0.x.y` while pre-1.0; API may evolve. `1.0.0` after stable parity is
 proven through dogfooding (see roadmap). For release mechanics see the
-**release-process** skill or the **release** agent.
+**release-process** skill.
 
 ## Useful References
 
