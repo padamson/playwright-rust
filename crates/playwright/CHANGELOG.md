@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Trace-level `tracing` spans on the internal JSON-RPC layer** — Phase 2 of the observability work. `Connection::send_message` and inbound message `dispatch`, plus the pipe and websocket transport send paths, now carry `#[tracing::instrument(level = "trace")]` spans with structural fields only (`method`, `guid`, request `id`, frame `bytes_len`); `skip_all` keeps arbitrary-JSON RPC params out of the spans. Opt in with `playwright_rs=trace` for per-request protocol timing and event sequencing. Closes [#98](https://github.com/padamson/playwright-rust/issues/98) (Phase 2 sub-task of [#83](https://github.com/padamson/playwright-rust/issues/83)).
+
+### Changed
+
+- **`build.rs` driver download is now relocatable and skippable via env.** `PLAYWRIGHT_DRIVER_CACHE_DIR` downloads the driver to a stable, version-keyed path instead of `$OUT_DIR` so CI can cache it on its own key — necessary because `Swatinem/rust-cache` prunes workspace build-script output, so a driver left in `$OUT_DIR` is *not* cached by it and re-downloads (~42 MB) every run (correcting the v0.13.0 note that claimed `$OUT_DIR` was automatically cached). `PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD` skips the download entirely for compile-only consumers (e.g. `cargo check`) that never launch a browser. Both default off; local builds are unchanged (the driver still lands in `$OUT_DIR`).
+
 ## [0.13.0] - 2026-05-23
 
 ### Security
