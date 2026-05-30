@@ -36,18 +36,22 @@ fn main() {
         println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR=");
         println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_VERSION={PLAYWRIGHT_VERSION}");
         println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_PLATFORM=skipped");
+        println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR_SOURCE=skipped");
         return;
     }
 
     // Default to OUT_DIR; PLAYWRIGHT_DRIVER_CACHE_DIR relocates the driver to a
     // stable, version-keyed path that CI can cache on its own key (see header).
-    let drivers_dir = match env::var_os("PLAYWRIGHT_DRIVER_CACHE_DIR") {
-        Some(dir) => PathBuf::from(dir),
+    // The source is recorded so tests can assert the OUT_DIR layout only when
+    // it actually applies.
+    let (drivers_dir, source) = match env::var_os("PLAYWRIGHT_DRIVER_CACHE_DIR") {
+        Some(dir) => (PathBuf::from(dir), "cache_dir"),
         None => {
             let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR set by Cargo"));
-            out_dir.join("playwright-driver")
+            (out_dir.join("playwright-driver"), "out_dir")
         }
     };
+    println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR_SOURCE={source}");
 
     let platform = detect_platform();
     let driver_dir = drivers_dir.join(format!("playwright-{PLAYWRIGHT_VERSION}-{platform}"));

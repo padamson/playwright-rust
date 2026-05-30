@@ -505,6 +505,13 @@ mod tests {
 
     #[test]
     fn bundled_driver_dir_lives_under_out_dir() {
+        // Only meaningful for the default download location. CI relocates the
+        // driver via PLAYWRIGHT_DRIVER_CACHE_DIR (cached on its own key) and
+        // compile-only jobs skip the download entirely; in those modes the
+        // OUT_DIR layout intentionally does not apply.
+        if env!("PLAYWRIGHT_DRIVER_DIR_SOURCE") != "out_dir" {
+            return;
+        }
         let dir = env!("PLAYWRIGHT_DRIVER_DIR");
         let sep = std::path::MAIN_SEPARATOR;
         let build_marker = format!("{sep}build{sep}playwright-rs");
