@@ -297,7 +297,8 @@ async fn test_request_existing_response() {
         let n = notify2.clone();
         async move {
             if request.is_navigation_request() {
-                // At request time, existing_response() must return None
+                // The /slow.html route holds its response for 500ms, so the
+                // response cannot have arrived by the time this handler runs.
                 let existing = request.existing_response();
                 assert!(
                     existing.is_none(),
@@ -317,7 +318,7 @@ async fn test_request_existing_response() {
         .await
         .expect("Failed to create response event waiter");
 
-    page.goto(&server.url(), None)
+    page.goto(&format!("{}/slow.html", server.url()), None)
         .await
         .expect("Failed to navigate");
 

@@ -53,6 +53,7 @@ impl TestServer {
             .route("/drag_drop.html", get(drag_drop_page))
             .route("/wait_for.html", get(wait_for_page))
             .route("/api/data.json", get(json_data_endpoint))
+            .route("/slow.html", get(slow_page))
             .route("/api/echo", post(echo_post_endpoint))
             .route("/redirect", get(redirect_handler))
             .route("/iframe-test.html", get(iframe_test_page))
@@ -829,6 +830,25 @@ async fn json_data_endpoint() -> Response<Body> {
         .header("Content-Type", "application/json")
         .body(Body::from(
             r#"{"status":"ok","message":"hello from test server"}"#,
+        ))
+        .unwrap()
+}
+
+/// Serves HTML only after a deliberate delay, leaving a window in which the
+/// navigation request exists but its response has not yet arrived — so a
+/// request handler can observe `existing_response() == None` without racing
+/// the response event.
+async fn slow_page() -> Response<Body> {
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>Slow</title></head>
+<body><h1>Slow page</h1></body>
+</html>"#,
         ))
         .unwrap()
 }
