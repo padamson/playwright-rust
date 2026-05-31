@@ -92,6 +92,22 @@ async fn landing_page_boots_and_shows_hero() {
         .await
         .expect("comparison should show the Rust side");
 
+    // Every advertised feature card renders.
+    for id in [
+        "#feature-locators",
+        "#feature-assertions",
+        "#feature-cross-browser",
+        "#feature-routing",
+        "#feature-tracing",
+        "#feature-responsive",
+    ] {
+        let card = page.locator(id).await;
+        expect(card)
+            .to_be_visible()
+            .await
+            .unwrap_or_else(|e| panic!("feature card {id} should render: {e:?}"));
+    }
+
     browser.close().await.ok();
     server.abort();
 }
