@@ -219,6 +219,22 @@ async fn landing_page_works_as_advertised() {
         .expect("footer names the Microsoft trademark");
     shot(&page, &steps, "05.png", "#footer").await;
 
+    // Step 6: demonstrate masking. Capture the hero with its badges redacted
+    // behind a solid rust-colored box. This consumes the mask / mask_color
+    // screenshot options that completed screenshot parity in playwright-rs.
+    let masked = ScreenshotOptions::builder()
+        .animations(Animations::Disabled)
+        .mask(vec![page.locator("#hero-badges img").await])
+        .mask_color("#ce422b")
+        .build();
+    let bytes = page
+        .locator("#hero")
+        .await
+        .screenshot(Some(masked))
+        .await
+        .expect("masked hero screenshot");
+    std::fs::write(steps.join("06.png"), bytes).expect("write step 06 screenshot");
+
     // The walkthrough is itself an interactive stepper. Driving it covers the
     // third interactive widget on the page.
     page.locator("#walk-next")
@@ -227,7 +243,7 @@ async fn landing_page_works_as_advertised() {
         .await
         .expect("click the walkthrough Next button");
     expect(page.locator("#walkthrough").await)
-        .to_contain_text("Step 2 of 5")
+        .to_contain_text("Step 2 of 6")
         .await
         .expect("the walkthrough advances to the next step");
 

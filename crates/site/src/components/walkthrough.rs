@@ -31,6 +31,11 @@ fn steps() -> Vec<(&'static str, &'static str, &'static str)> {
             snippets::WALK_05_RS,
             "/receipts/steps/05.png",
         ),
+        (
+            "Redact elements with a mask",
+            snippets::WALK_06_RS,
+            "/receipts/steps/06.png",
+        ),
     ]
 }
 
