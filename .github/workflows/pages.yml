@@ -92,7 +92,7 @@ jobs:
           cp -r crates/site/public/receipts crates/site/dist/receipts
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: crates/site/dist
 
