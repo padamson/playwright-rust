@@ -1,4 +1,6 @@
-use playwright_rs::protocol::{BrowserContextOptions, Geolocation, Playwright, Viewport};
+use playwright_rs::protocol::{
+    BrowserContextOptions, BrowserType, Geolocation, Playwright, Viewport,
+};
 use std::env;
 
 #[tokio::test]
@@ -909,37 +911,42 @@ async fn test_browser_context_is_closed() {
     browser.close().await.expect("Failed to close browser");
 }
 
+// One engine per test (rather than all three in a single test) so each browser
+// launch gets its own timeout budget to avoid timeouts on slow stress runs.
+async fn assert_context_browser(browser_type: &BrowserType, name: &str) {
+    let browser = browser_type.launch().await.unwrap();
+    let context = browser.new_context().await.unwrap();
+
+    let context_browser = context.browser();
+    assert!(
+        context_browser.is_some(),
+        "{name} context should return Some(Browser)"
+    );
+    let ctx_browser = context_browser.unwrap();
+    assert_eq!(ctx_browser.name(), browser.name());
+    assert_eq!(ctx_browser.version(), browser.version());
+
+    context.close().await.unwrap();
+    browser.close().await.unwrap();
+}
+
 #[tokio::test]
 #[ignore]
-async fn test_context_browser_cross_browser() {
-    let playwright = Playwright::launch().await.unwrap();
+async fn test_context_browser_chromium() {
+    let pw = Playwright::launch().await.unwrap();
+    assert_context_browser(pw.chromium(), "chromium").await;
+}
 
-    // Test on all three browsers
-    let browser_types = vec![
-        ("chromium", playwright.chromium()),
-        ("firefox", playwright.firefox()),
-        ("webkit", playwright.webkit()),
-    ];
+#[tokio::test]
+#[ignore]
+async fn test_context_browser_firefox() {
+    let pw = Playwright::launch().await.unwrap();
+    assert_context_browser(pw.firefox(), "firefox").await;
+}
 
-    for (name, browser_type) in browser_types {
-        println!("Testing context.browser() on {}", name);
-
-        let browser = browser_type.launch().await.unwrap();
-        let context = browser.new_context().await.unwrap();
-
-        // Should return browser
-        let context_browser = context.browser();
-        assert!(
-            context_browser.is_some(),
-            "{} context should return Some(Browser)",
-            name
-        );
-
-        let ctx_browser = context_browser.unwrap();
-        assert_eq!(ctx_browser.name(), browser.name());
-        assert_eq!(ctx_browser.version(), browser.version());
-
-        context.close().await.unwrap();
-        browser.close().await.unwrap();
-    }
+#[tokio::test]
+#[ignore]
+async fn test_context_browser_webkit() {
+    let pw = Playwright::launch().await.unwrap();
+    assert_context_browser(pw.webkit(), "webkit").await;
 }
