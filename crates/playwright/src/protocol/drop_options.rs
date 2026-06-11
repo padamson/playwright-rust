@@ -21,11 +21,7 @@ use crate::protocol::click::Position;
 /// use playwright_rs::{DropOptions, FilePayload, Position};
 ///
 /// // Drop an in-memory file onto a drop zone
-/// let file = FilePayload::builder()
-///     .name("note.txt".to_string())
-///     .mime_type("text/plain".to_string())
-///     .buffer(b"hello".to_vec())
-///     .build();
+/// let file = FilePayload::new("note.txt", "text/plain", b"hello".to_vec());
 /// let options = DropOptions::builder().file(file).build();
 ///
 /// // Drop MIME-typed data (e.g. a dragged URL) at a specific point
@@ -169,11 +165,7 @@ mod tests {
 
     #[test]
     fn test_drop_options_file_payload() {
-        let file = FilePayload::builder()
-            .name("note.txt".to_string())
-            .mime_type("text/plain".to_string())
-            .buffer(b"hi".to_vec())
-            .build();
+        let file = FilePayload::new("note.txt", "text/plain", b"hi".to_vec());
         let json = DropOptions::builder().file(file).build().to_json();
         assert_eq!(json["payloads"][0]["name"], "note.txt");
         assert_eq!(json["payloads"][0]["mimeType"], "text/plain");

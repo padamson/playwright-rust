@@ -100,6 +100,11 @@ Just-in-time philosophy — write the right thing in the right file:
 - Locators auto-wait for elements; assertions auto-retry — see the
   expect API (`crate::assertions`)
 - No unsafe code without a `// SAFETY:` justification
+- No `unwrap()`/`expect()` on fallible paths reachable from public
+  APIs — return an `Error` variant. Two sanctioned exceptions:
+  `std::sync` lock acquisition (poisoning means another thread already
+  panicked; propagating that panic is the policy) and invariants
+  guaranteed by construction (comment why at the call site)
 
 ## Testing
 

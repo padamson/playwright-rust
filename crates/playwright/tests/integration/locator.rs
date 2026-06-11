@@ -1544,11 +1544,7 @@ async fn test_locator_drop_data_and_file() {
     );
 
     // Drop an in-memory file; the zone reports the dropped file name.
-    let file = FilePayload::builder()
-        .name("note.txt".to_string())
-        .mime_type("text/plain".to_string())
-        .buffer(b"hi".to_vec())
-        .build();
+    let file = FilePayload::new("note.txt", "text/plain", b"hi".to_vec());
     zone.drop(DropOptions::builder().file(file).build())
         .await
         .expect("drop file should succeed");

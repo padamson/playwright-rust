@@ -391,10 +391,9 @@ impl BrowserType {
             if b {
                 params["ignoreAllDefaultArgs"] = serde_json::json!(true);
             }
-            params
-                .as_object_mut()
-                .expect("params is a JSON object")
-                .remove("ignoreDefaultArgs");
+            if let Some(obj) = params.as_object_mut() {
+                obj.remove("ignoreDefaultArgs");
+            }
         }
 
         // Send launchPersistentContext RPC to server

@@ -177,14 +177,9 @@ use tracing::Instrument;
 #[derive(Clone)]
 pub struct Page {
     base: ChannelOwnerImpl,
-    /// Current URL of the page
-    /// Wrapped in RwLock to allow updates from events
-    url: Arc<RwLock<String>>,
-    /// GUID of the main frame
-    main_frame_guid: Arc<str>,
-    /// Cached reference to the main frame for synchronous URL access
-    /// This is populated after the first call to main_frame()
-    cached_main_frame: Arc<Mutex<Option<crate::protocol::Frame>>>,
+    /// The page's main frame, resolved once at construction (the protocol
+    /// guarantees the Frame object exists before the Page that references it)
+    main_frame: crate::protocol::Frame,
     /// Route handlers for network interception
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
     /// Download event handlers
@@ -452,15 +447,8 @@ impl Page {
         type_name: String,
         guid: Arc<str>,
         initializer: Value,
+        main_frame: crate::protocol::Frame,
     ) -> Result<Self> {
-        // Extract mainFrame GUID from initializer
-        let main_frame_guid: Arc<str> =
-            Arc::from(initializer["mainFrame"]["guid"].as_str().ok_or_else(|| {
-                crate::error::Error::ProtocolError(
-                    "Page initializer missing 'mainFrame.guid' field".to_string(),
-                )
-            })?);
-
         // Check the parent BrowserContext's initializer for record_video before
         // moving `parent` into ChannelOwnerImpl. The Playwright server delivers
         // the video artifact GUID directly in the Page initializer's "video" field.
@@ -484,7 +472,6 @@ impl Page {
         );
 
         // Initialize URL to about:blank
-        let url = Arc::new(RwLock::new("about:blank".to_string()));
 
         // Initialize empty route handlers
         let route_handlers = Arc::new(Mutex::new(Vec::new()));
@@ -496,7 +483,6 @@ impl Page {
         let ws_route_handlers = Arc::new(Mutex::new(Vec::new()));
 
         // Initialize cached main frame as empty (will be populated on first access)
-        let cached_main_frame = Arc::new(Mutex::new(None));
 
         // Extract viewport from initializer (may be null for no_viewport contexts)
         let initial_viewport: Option<Viewport> =
@@ -536,9 +522,7 @@ impl Page {
 
         Ok(Self {
             base,
-            url,
-            main_frame_guid,
-            cached_main_frame,
+            main_frame,
             route_handlers,
             download_handlers,
             dialog_handlers,
@@ -606,22 +590,16 @@ impl Page {
     /// `frame.page()`, `frame.locator()`, and `frame.get_by_*()` work correctly.
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn main_frame(&self) -> Result<crate::protocol::Frame> {
-        // Get and downcast the Frame object from the connection's object registry
-        let frame: crate::protocol::Frame = self
-            .connection()
-            .get_typed::<crate::protocol::Frame>(&self.main_frame_guid)
-            .await?;
+        Ok(self.main_frame_wired())
+    }
 
-        // Wire up the back-reference so frame.page() / frame.locator() work.
-        // This is safe to call multiple times (subsequent calls are no-ops once set).
+    /// Clone of the construction-time main frame with the page back-reference
+    /// wired, so `frame.page()` / `frame.locator()` work. Infallible: the
+    /// frame is resolved when the Page is created.
+    pub(crate) fn main_frame_wired(&self) -> crate::protocol::Frame {
+        let frame = self.main_frame.clone();
         frame.set_page(self.clone());
-
-        // Cache the frame for synchronous access in url()
-        if let Ok(mut cached) = self.cached_main_frame.lock() {
-            *cached = Some(frame.clone());
-        }
-
-        Ok(frame)
+        frame
     }
 
     /// Returns the current URL of the page.
@@ -631,15 +609,9 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-url>
     pub fn url(&self) -> String {
-        // Try to get URL from the cached main frame (source of truth for navigation including hashes)
-        if let Ok(cached) = self.cached_main_frame.lock()
-            && let Some(frame) = cached.as_ref()
-        {
-            return frame.url();
-        }
-
-        // Fallback to cached URL if frame not yet loaded
-        self.url.read().unwrap().clone()
+        // The main frame is the source of truth for navigation, including
+        // hash fragments from anchor navigation.
+        self.main_frame.url()
     }
 
     /// Closes the page.
@@ -915,13 +887,6 @@ impl Page {
             other => other,
         })?;
 
-        // Update the page's URL if we got a response
-        if let Some(ref resp) = response
-            && let Ok(mut page_url) = self.url.write()
-        {
-            *page_url = resp.url().to_string();
-        }
-
         if let Some(ref resp) = response {
             tracing::Span::current().record("status", resp.status());
         }
@@ -1077,8 +1042,7 @@ impl Page {
     /// See: <https://playwright.dev/docs/api/class-page#page-locator>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = %selector))]
     pub async fn locator(&self, selector: &str) -> crate::protocol::Locator {
-        // Get the main frame
-        let frame = self.main_frame().await.expect("Main frame should exist");
+        let frame = self.main_frame_wired();
 
         crate::protocol::Locator::new(Arc::new(frame), selector.to_string(), self.clone())
     }
@@ -1090,7 +1054,7 @@ impl Page {
     /// See: <https://playwright.dev/docs/api/class-page#page-frame-locator>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = %selector))]
     pub async fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
-        let frame = self.main_frame().await.expect("Main frame should exist");
+        let frame = self.main_frame_wired();
         crate::protocol::FrameLocator::new(Arc::new(frame), selector.to_string(), self.clone())
     }
 
@@ -1561,10 +1525,6 @@ impl Page {
                 headers,
                 Some(response_arc),
             );
-
-            if let Ok(mut page_url) = self.url.write() {
-                *page_url = response.url().to_string();
-            }
 
             Ok(Some(response))
         } else {
@@ -4425,13 +4385,7 @@ impl ChannelOwner for Page {
     fn on_event(&self, method: &str, params: Value) {
         match method {
             "navigated" => {
-                // Update URL when page navigates
-                if let Some(url_value) = params.get("url")
-                    && let Some(url_str) = url_value.as_str()
-                    && let Ok(mut url) = self.url.write()
-                {
-                    *url = url_str.to_string();
-                }
+                // The main frame tracks navigation; nothing to update here.
             }
             "route" => {
                 // Handle network routing event

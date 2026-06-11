@@ -107,7 +107,7 @@ pub use evaluate_conversion::{parse_result, parse_value, serialize_argument, ser
 pub use event_value::EventValue;
 pub use event_waiter::EventWaiter;
 pub use file_chooser::FileChooser;
-pub use file_payload::{FilePayload, FilePayloadBuilder};
+pub use file_payload::FilePayload;
 pub use frame::Frame;
 pub use frame_locator::FrameLocator;
 pub use har_options::{HarContent, HarMode, StartHarOptions};

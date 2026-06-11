@@ -336,10 +336,7 @@ impl Connection {
 
         tracing::debug!("Root object registered, sending initialize message");
 
-        let root_typed: Root = self
-            .get_typed::<Root>("")
-            .await
-            .expect("Root object should be Root type");
+        let root_typed: Root = self.get_typed::<Root>("").await?;
 
         let response = tokio::time::timeout(Duration::from_secs(30), root_typed.initialize())
             .await

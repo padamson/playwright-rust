@@ -19,9 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking: `FilePayload::builder()` replaced by `FilePayload::new(name, mime_type, buffer)`.** All three fields are required, so the builder's only failure mode was a runtime panic on a missing field; the constructor makes them required at compile time. `from_path` / `from_file` are unchanged.
 - **Breaking: public option/data structs and enums are now `#[non_exhaustive]`** ([ADR 0005](../../docs/adr/0005-non-exhaustive-public-types.md)). Struct-literal construction (including the `..Default::default()` form) no longer compiles downstream; construct via the existing builders (`ScreenshotOptions::builder()`, ...), the new chainable setters (`GetByRoleOptions::default().name("OK").exact(true)`, `Cookie::new(name, value).domain(...)`, `ProxySettings::new(server)`, `TracingStartOptions::default().screenshots(true)`, ...), or `Default` + field mutation. Matching on public enums (including `Error`) now needs a wildcard arm. This makes upstream Playwright option/field additions semver-minor after 1.0 instead of breaking. Geometrically closed types (`Position`, `ScreenshotClip`, `PdfMargin`, `ScreencastSize`, `Viewport`, `DeviceViewport`, `Geolocation`) stay exhaustive and keep literal construction.
 - **Breaking: `Locator::highlight()` now takes `Option<HighlightOptions>`** (previously no arguments), to carry the new 1.60 `style` option and to match Playwright's `highlight(options)` plus this crate's option-method convention. Existing calls migrate `.highlight()` → `.highlight(None)`.
 - **`build.rs` driver download is now relocatable and skippable via env.** `PLAYWRIGHT_DRIVER_CACHE_DIR` downloads the driver to a stable, version-keyed path instead of `$OUT_DIR` so CI can cache it on its own key — necessary because `Swatinem/rust-cache` prunes workspace build-script output, so a driver left in `$OUT_DIR` is *not* cached by it and re-downloads (~42 MB) every run (correcting the v0.13.0 note that claimed `$OUT_DIR` was automatically cached). `PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD` skips the download entirely for compile-only consumers (e.g. `cargo check`) that never launch a browser. Both default off; local builds are unchanged (the driver still lands in `$OUT_DIR`).
+
+### Fixed
+
+- **`Page::locator()` / `frame_locator()` can no longer panic.** They previously `.expect()`-ed a per-call registry lookup of the main frame, which panicked if the page had been closed. The main frame is now resolved once at `Page` construction (matching playwright-python), making locator creation genuinely infallible; actions on a closed page still fail with a normal `Error`. `Page::url()` now always reads through the main frame too, instead of a fallback cache. The remaining flagged panics on public paths (`FilePayload` builder, root-object init, a CDP params invariant) were converted to errors or made unreachable.
 
 ## [0.13.0] - 2026-05-23
 

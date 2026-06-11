@@ -179,11 +179,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let upload = FilePayload::builder()
-        .name("report.csv".to_string())
-        .mime_type("text/csv".to_string())
-        .buffer(b"a,b,c\n1,2,3\n".to_vec())
-        .build();
+    let upload = FilePayload::new("report.csv", "text/csv", b"a,b,c\n1,2,3\n".to_vec());
     page.locator("#zone")
         .await
         .drop(DropOptions::builder().file(upload).build())
