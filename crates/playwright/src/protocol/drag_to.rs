@@ -34,6 +34,7 @@ use crate::protocol::click::Position;
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-drag-to>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct DragToOptions {
     /// Whether to bypass actionability checks
     pub force: Option<bool>,

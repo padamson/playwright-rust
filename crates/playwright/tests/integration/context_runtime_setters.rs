@@ -13,16 +13,9 @@ async fn test_context_cookies_retrieve() {
     let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add a cookie via add_cookies
-    let cookie = Cookie {
-        name: "test_cookie".to_string(),
-        value: "test_value".to_string(),
-        domain: "example.com".to_string(),
-        path: "/".to_string(),
-        expires: -1.0,
-        http_only: false,
-        secure: false,
-        same_site: Some("Lax".to_string()),
-    };
+    let cookie = Cookie::new("test_cookie", "test_value")
+        .domain("example.com")
+        .same_site("Lax");
     context
         .add_cookies(&[cookie])
         .await
@@ -47,26 +40,8 @@ async fn test_context_cookies_with_url_filter() {
     let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Add cookies for two different domains
-    let cookie1 = Cookie {
-        name: "alpha_cookie".to_string(),
-        value: "alpha_value".to_string(),
-        domain: "example.com".to_string(),
-        path: "/".to_string(),
-        expires: -1.0,
-        http_only: false,
-        secure: false,
-        same_site: None,
-    };
-    let cookie2 = Cookie {
-        name: "beta_cookie".to_string(),
-        value: "beta_value".to_string(),
-        domain: "playwright.dev".to_string(),
-        path: "/".to_string(),
-        expires: -1.0,
-        http_only: false,
-        secure: false,
-        same_site: None,
-    };
+    let cookie1 = Cookie::new("alpha_cookie", "alpha_value").domain("example.com");
+    let cookie2 = Cookie::new("beta_cookie", "beta_value").domain("playwright.dev");
     context
         .add_cookies(&[cookie1, cookie2])
         .await
@@ -112,26 +87,8 @@ async fn test_context_clear_cookies_all() {
 
     // Add some cookies
     let cookies = vec![
-        Cookie {
-            name: "cookie_one".to_string(),
-            value: "value_one".to_string(),
-            domain: "example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        },
-        Cookie {
-            name: "cookie_two".to_string(),
-            value: "value_two".to_string(),
-            domain: "example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        },
+        Cookie::new("cookie_one", "value_one").domain("example.com"),
+        Cookie::new("cookie_two", "value_two").domain("example.com"),
     ];
     context
         .add_cookies(&cookies)
@@ -165,26 +122,8 @@ async fn test_context_clear_cookies_with_name_filter() {
 
     // Add two cookies
     let cookies = vec![
-        Cookie {
-            name: "keep_me".to_string(),
-            value: "keep".to_string(),
-            domain: "example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        },
-        Cookie {
-            name: "delete_me".to_string(),
-            value: "delete".to_string(),
-            domain: "example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        },
+        Cookie::new("keep_me", "keep").domain("example.com"),
+        Cookie::new("delete_me", "delete").domain("example.com"),
     ];
     context
         .add_cookies(&cookies)
@@ -192,11 +131,7 @@ async fn test_context_clear_cookies_with_name_filter() {
         .expect("Failed to add cookies");
 
     // Clear only the "delete_me" cookie by name
-    let options = ClearCookiesOptions {
-        name: Some("delete_me".to_string()),
-        domain: None,
-        path: None,
-    };
+    let options = ClearCookiesOptions::default().name("delete_me");
     context
         .clear_cookies(Some(options))
         .await
@@ -324,9 +259,7 @@ async fn test_context_grant_permissions_with_origin() {
     let (_pw, browser, context) = crate::common::setup_context().await;
 
     // Grant geolocation permission for a specific origin
-    let options = GrantPermissionsOptions {
-        origin: Some("https://example.com".to_string()),
-    };
+    let options = GrantPermissionsOptions::default().origin("https://example.com");
     context
         .grant_permissions(&["geolocation"], Some(options))
         .await

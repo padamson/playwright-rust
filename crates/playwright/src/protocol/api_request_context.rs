@@ -418,6 +418,7 @@ impl std::fmt::Debug for APIResponse {
 ///
 /// See: <https://playwright.dev/docs/api/class-apirequest#api-request-new-context>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct APIRequestContextOptions {
     /// Base URL for all relative requests made with this context.
     pub base_url: Option<String>,
@@ -429,6 +430,34 @@ pub struct APIRequestContextOptions {
     pub user_agent: Option<String>,
     /// Default timeout for fetch operations in milliseconds.
     pub timeout: Option<f64>,
+}
+
+impl APIRequestContextOptions {
+    /// Base URL prepended to relative request paths.
+    pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = Some(base_url.into());
+        self
+    }
+    /// Extra HTTP headers sent with every request.
+    pub fn extra_http_headers(mut self, headers: HashMap<String, String>) -> Self {
+        self.extra_http_headers = Some(headers);
+        self
+    }
+    /// Ignore HTTPS certificate errors.
+    pub fn ignore_https_errors(mut self, ignore: bool) -> Self {
+        self.ignore_https_errors = Some(ignore);
+        self
+    }
+    /// User-Agent header value.
+    pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
+        self.user_agent = Some(user_agent.into());
+        self
+    }
+    /// Maximum time in milliseconds for each request.
+    pub fn timeout(mut self, timeout: f64) -> Self {
+        self.timeout = Some(timeout);
+        self
+    }
 }
 
 /// Factory for creating standalone `APIRequestContext` instances.

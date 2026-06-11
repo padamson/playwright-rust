@@ -97,6 +97,7 @@ use std::sync::Arc;
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-bounding-box>
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct BoundingBox {
     /// The x coordinate of the top-left corner of the element in pixels.
     pub x: f64,
@@ -247,6 +248,7 @@ pub(crate) fn get_by_role_selector(role: AriaRole, options: Option<GetByRoleOpti
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-get-by-role>
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AriaRole {
     Alert,
     Alertdialog,
@@ -429,6 +431,7 @@ impl AriaRole {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-get-by-role>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct GetByRoleOptions {
     /// Whether the element is checked (for checkboxes, radio buttons).
     pub checked: Option<bool>,
@@ -454,8 +457,62 @@ pub struct GetByRoleOptions {
     pub pressed: Option<bool>,
 }
 
+impl GetByRoleOptions {
+    /// Match only checked / unchecked elements.
+    pub fn checked(mut self, checked: bool) -> Self {
+        self.checked = Some(checked);
+        self
+    }
+    /// Match only enabled / disabled elements.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = Some(disabled);
+        self
+    }
+    /// Match only selected / unselected elements.
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = Some(selected);
+        self
+    }
+    /// Match only expanded / collapsed elements.
+    pub fn expanded(mut self, expanded: bool) -> Self {
+        self.expanded = Some(expanded);
+        self
+    }
+    /// Include elements normally excluded from the accessibility tree.
+    pub fn include_hidden(mut self, include_hidden: bool) -> Self {
+        self.include_hidden = Some(include_hidden);
+        self
+    }
+    /// Match the aria-level (e.g. heading level).
+    pub fn level(mut self, level: u32) -> Self {
+        self.level = Some(level);
+        self
+    }
+    /// Match the accessible name.
+    pub fn name(mut self, name: impl Into<String>) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+    /// Match the accessible description.
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+    /// Whether `name`/`description` match exactly (case-sensitive whole string).
+    pub fn exact(mut self, exact: bool) -> Self {
+        self.exact = Some(exact);
+        self
+    }
+    /// Match only pressed / unpressed elements.
+    pub fn pressed(mut self, pressed: bool) -> Self {
+        self.pressed = Some(pressed);
+        self
+    }
+}
+
 /// Options for [`Locator::highlight()`].
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct HighlightOptions {
     /// Extra inline CSS applied to the debug highlight overlay.
     pub style: Option<String>,
@@ -468,6 +525,7 @@ pub struct HighlightOptions {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-filter>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct FilterOptions {
     /// Matches elements containing the specified text (case-insensitive substring by default).
     pub has_text: Option<String>,
@@ -480,6 +538,29 @@ pub struct FilterOptions {
     pub has: Option<Locator>,
     /// Narrows to elements that do **not** contain a descendant matching this locator.
     pub has_not: Option<Locator>,
+}
+
+impl FilterOptions {
+    /// Keep only elements containing the given text (case-insensitive substring).
+    pub fn has_text(mut self, has_text: impl Into<String>) -> Self {
+        self.has_text = Some(has_text.into());
+        self
+    }
+    /// Keep only elements NOT containing the given text.
+    pub fn has_not_text(mut self, has_not_text: impl Into<String>) -> Self {
+        self.has_not_text = Some(has_not_text.into());
+        self
+    }
+    /// Keep only elements containing a match for the inner locator.
+    pub fn has(mut self, has: Locator) -> Self {
+        self.has = Some(has);
+        self
+    }
+    /// Keep only elements NOT containing a match for the inner locator.
+    pub fn has_not(mut self, has_not: Locator) -> Self {
+        self.has_not = Some(has_not);
+        self
+    }
 }
 
 /// Locator represents a way to find element(s) on the page at any given moment.
@@ -806,10 +887,7 @@ impl Locator {
     ///
     /// // Filter rows to those containing "Apple"
     /// let rows = page.locator("tr").await;
-    /// let apple_row = rows.filter(FilterOptions {
-    ///     has_text: Some("Apple".to_string()),
-    ///     ..Default::default()
-    /// });
+    /// let apple_row = rows.filter(FilterOptions::default().has_text("Apple"));
     /// # browser.close().await?;
     /// # Ok(())
     /// # }
@@ -1985,10 +2063,7 @@ mod tests {
 
     #[test]
     fn test_get_by_role_selector_with_name() {
-        let opts = GetByRoleOptions {
-            name: Some("Submit".to_string()),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().name("Submit");
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(opts)),
             "internal:role=button[name=\"Submit\"i]"
@@ -1996,20 +2071,20 @@ mod tests {
     }
 
     #[test]
+    fn test_filter_options_setters() {
+        let opts = FilterOptions::default().has_text("a").has_not_text("b");
+        assert_eq!(opts.has_text.as_deref(), Some("a"));
+        assert_eq!(opts.has_not_text.as_deref(), Some("b"));
+    }
+
+    #[test]
     fn test_get_by_role_selector_with_description() {
-        let opts = GetByRoleOptions {
-            description: Some("Close dialog".to_string()),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().description("Close dialog");
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(opts)),
             "internal:role=button[description=\"Close dialog\"i]"
         );
-        let exact = GetByRoleOptions {
-            description: Some("Close".to_string()),
-            exact: Some(true),
-            ..Default::default()
-        };
+        let exact = GetByRoleOptions::default().description("Close").exact(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(exact)),
             "internal:role=button[description=\"Close\"s]"
@@ -2018,11 +2093,7 @@ mod tests {
 
     #[test]
     fn test_get_by_role_selector_with_name_exact() {
-        let opts = GetByRoleOptions {
-            name: Some("Submit".to_string()),
-            exact: Some(true),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().name("Submit").exact(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(opts)),
             "internal:role=button[name=\"Submit\"s]"
@@ -2031,10 +2102,7 @@ mod tests {
 
     #[test]
     fn test_get_by_role_selector_with_checked() {
-        let opts = GetByRoleOptions {
-            checked: Some(true),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().checked(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Checkbox, Some(opts)),
             "internal:role=checkbox[checked=true]"
@@ -2043,10 +2111,7 @@ mod tests {
 
     #[test]
     fn test_get_by_role_selector_with_level() {
-        let opts = GetByRoleOptions {
-            level: Some(2),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().level(2);
         assert_eq!(
             get_by_role_selector(AriaRole::Heading, Some(opts)),
             "internal:role=heading[level=2]"
@@ -2055,10 +2120,7 @@ mod tests {
 
     #[test]
     fn test_get_by_role_selector_with_disabled() {
-        let opts = GetByRoleOptions {
-            disabled: Some(true),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().disabled(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(opts)),
             "internal:role=button[disabled=true]"
@@ -2066,11 +2128,26 @@ mod tests {
     }
 
     #[test]
+    fn test_get_by_role_selector_with_selected() {
+        let opts = GetByRoleOptions::default().selected(true);
+        assert_eq!(
+            get_by_role_selector(AriaRole::Option, Some(opts)),
+            "internal:role=option[selected=true]"
+        );
+    }
+
+    #[test]
+    fn test_get_by_role_selector_with_expanded() {
+        let opts = GetByRoleOptions::default().expanded(true);
+        assert_eq!(
+            get_by_role_selector(AriaRole::Button, Some(opts)),
+            "internal:role=button[expanded=true]"
+        );
+    }
+
+    #[test]
     fn test_get_by_role_selector_include_hidden() {
-        let opts = GetByRoleOptions {
-            include_hidden: Some(true),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default().include_hidden(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(opts)),
             "internal:role=button[include-hidden=true]"
@@ -2080,13 +2157,11 @@ mod tests {
     #[test]
     fn test_get_by_role_selector_property_order() {
         // All properties: checked, disabled, selected, expanded, include-hidden, level, name, pressed
-        let opts = GetByRoleOptions {
-            pressed: Some(true),
-            name: Some("OK".to_string()),
-            checked: Some(false),
-            disabled: Some(true),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default()
+            .pressed(true)
+            .name("OK")
+            .checked(false)
+            .disabled(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Button, Some(opts)),
             "internal:role=button[checked=false][disabled=true][name=\"OK\"i][pressed=true]"
@@ -2095,11 +2170,9 @@ mod tests {
 
     #[test]
     fn test_get_by_role_selector_name_with_special_chars() {
-        let opts = GetByRoleOptions {
-            name: Some("Click \"here\" now".to_string()),
-            exact: Some(true),
-            ..Default::default()
-        };
+        let opts = GetByRoleOptions::default()
+            .name("Click \"here\" now")
+            .exact(true);
         assert_eq!(
             get_by_role_selector(AriaRole::Link, Some(opts)),
             "internal:role=link[name=\"Click \\\"here\\\" now\"s]"

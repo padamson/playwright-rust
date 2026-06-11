@@ -33,10 +33,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // base_url lets us pass relative paths to get() / post() / etc.
     let ctx = playwright
         .request()
-        .new_context(Some(APIRequestContextOptions {
-            base_url: Some("https://httpbin.org".to_string()),
-            ..Default::default()
-        }))
+        .new_context(Some(
+            APIRequestContextOptions::default().base_url("https://httpbin.org"),
+        ))
         .await?;
 
     // --- GET request returning JSON ---

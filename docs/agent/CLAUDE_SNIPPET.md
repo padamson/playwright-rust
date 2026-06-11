@@ -42,9 +42,11 @@ overlay.
 - **`expect()` assertions over manual polling.** They auto-retry within
   the default timeout — never sprinkle `tokio::time::sleep` between
   an action and a check.
-- **Builders for options.** `goto`, `click`, `screenshot`, `fill`,
-  `tracing().start`, etc. take an `Options` struct constructed with
-  `..Default::default()`.
+- **Builders / setters for options.** `goto`, `click`, `screenshot`,
+  `fill`, `tracing().start`, etc. take an `Options` struct. These are
+  `#[non_exhaustive]`, so struct literals won't compile — use the
+  type's `builder()` where it has one, otherwise chain setters off
+  `Default`/`new()` (e.g. `GetByRoleOptions::default().name("OK")`).
 - **`Result<T>` and `async/await` on `tokio`** throughout. One error
   type: `playwright_rs::Error`.
 - **No reimplemented browser protocols.** This crate is a thin

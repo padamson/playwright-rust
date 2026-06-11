@@ -2985,6 +2985,7 @@ pub struct Geolocation {
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Cookie {
     /// Cookie name
     pub name: String,
@@ -3005,10 +3006,58 @@ pub struct Cookie {
     pub same_site: Option<String>,
 }
 
+impl Cookie {
+    /// Create a session cookie (no expiry) with the given name and value.
+    /// Set `domain`+`path` (or serve it for a URL) before adding it.
+    pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            value: value.into(),
+            domain: String::new(),
+            path: "/".to_string(),
+            expires: -1.0,
+            http_only: false,
+            secure: false,
+            same_site: None,
+        }
+    }
+    /// Cookie domain (e.g. "example.com").
+    pub fn domain(mut self, domain: impl Into<String>) -> Self {
+        self.domain = domain.into();
+        self
+    }
+    /// Cookie path.
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.path = path.into();
+        self
+    }
+    /// Expiry as Unix time in seconds (-1 for a session cookie).
+    pub fn expires(mut self, expires: f64) -> Self {
+        self.expires = expires;
+        self
+    }
+    /// Mark the cookie HttpOnly.
+    pub fn http_only(mut self, http_only: bool) -> Self {
+        self.http_only = http_only;
+        self
+    }
+    /// Mark the cookie Secure.
+    pub fn secure(mut self, secure: bool) -> Self {
+        self.secure = secure;
+        self
+    }
+    /// SameSite attribute ("Strict", "Lax", or "None").
+    pub fn same_site(mut self, same_site: impl Into<String>) -> Self {
+        self.same_site = Some(same_site.into());
+        self
+    }
+}
+
 /// Local storage item for storage state.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct LocalStorageItem {
     /// Storage key
     pub name: String,
@@ -3016,16 +3065,37 @@ pub struct LocalStorageItem {
     pub value: String,
 }
 
+impl LocalStorageItem {
+    /// A single localStorage key/value pair.
+    pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            value: value.into(),
+        }
+    }
+}
+
 /// Origin with local storage items for storage state.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Origin {
     /// Origin URL (e.g., `https://example.com`)
     pub origin: String,
     /// Local storage items for this origin
     pub local_storage: Vec<LocalStorageItem>,
+}
+
+impl Origin {
+    /// Storage entries for one origin.
+    pub fn new(origin: impl Into<String>, local_storage: Vec<LocalStorageItem>) -> Self {
+        Self {
+            origin: origin.into(),
+            local_storage,
+        }
+    }
 }
 
 /// Storage state containing cookies and local storage.
@@ -3034,12 +3104,26 @@ pub struct Origin {
 /// enabling session persistence across context instances.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct StorageState {
     /// List of cookies
     pub cookies: Vec<Cookie>,
     /// List of origins with local storage
     pub origins: Vec<Origin>,
+}
+
+impl StorageState {
+    /// Cookies to seed the context with.
+    pub fn cookies(mut self, cookies: Vec<Cookie>) -> Self {
+        self.cookies = cookies;
+        self
+    }
+    /// Per-origin storage (localStorage) to seed the context with.
+    pub fn origins(mut self, origins: Vec<Origin>) -> Self {
+        self.origins = origins;
+        self
+    }
 }
 
 /// Options for filtering which cookies to clear with `BrowserContext::clear_cookies()`.
@@ -3049,6 +3133,7 @@ pub struct StorageState {
 /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-cookies>
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ClearCookiesOptions {
     /// Filter by cookie name (exact match).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3061,10 +3146,29 @@ pub struct ClearCookiesOptions {
     pub path: Option<String>,
 }
 
+impl ClearCookiesOptions {
+    /// Only clear cookies with this name.
+    pub fn name(mut self, name: impl Into<String>) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+    /// Only clear cookies for this domain.
+    pub fn domain(mut self, domain: impl Into<String>) -> Self {
+        self.domain = Some(domain.into());
+        self
+    }
+    /// Only clear cookies for this path.
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.path = Some(path.into());
+        self
+    }
+}
+
 /// Options for `BrowserContext::grant_permissions()`.
 ///
 /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-grant-permissions>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct GrantPermissionsOptions {
     /// Optional origin to restrict the permission grant to.
     ///
@@ -3072,11 +3176,20 @@ pub struct GrantPermissionsOptions {
     pub origin: Option<String>,
 }
 
+impl GrantPermissionsOptions {
+    /// Restrict the grant to the given origin.
+    pub fn origin(mut self, origin: impl Into<String>) -> Self {
+        self.origin = Some(origin.into());
+        self
+    }
+}
+
 /// Options for recording HAR.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-record-har>
 #[derive(Debug, Clone, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct RecordHar {
     /// Path on the filesystem to write the HAR file to.
     pub path: String,
@@ -3095,10 +3208,44 @@ pub struct RecordHar {
     pub url_filter: Option<String>,
 }
 
+impl RecordHar {
+    /// Record a HAR to the given path.
+    pub fn new(path: impl Into<String>) -> Self {
+        Self {
+            path: path.into(),
+            omit_content: None,
+            content: None,
+            mode: None,
+            url_filter: None,
+        }
+    }
+    /// Omit response bodies from the HAR.
+    pub fn omit_content(mut self, omit_content: bool) -> Self {
+        self.omit_content = Some(omit_content);
+        self
+    }
+    /// Content mode ("embed", "attach", or "omit").
+    pub fn content(mut self, content: impl Into<String>) -> Self {
+        self.content = Some(content.into());
+        self
+    }
+    /// Recording mode ("full" or "minimal").
+    pub fn mode(mut self, mode: impl Into<String>) -> Self {
+        self.mode = Some(mode.into());
+        self
+    }
+    /// Only record requests matching this URL glob.
+    pub fn url_filter(mut self, url_filter: impl Into<String>) -> Self {
+        self.url_filter = Some(url_filter.into());
+        self
+    }
+}
+
 /// Options for recording video.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-record-video>
 #[derive(Debug, Clone, Serialize, Default)]
+#[non_exhaustive]
 pub struct RecordVideo {
     /// Path to the directory to put videos into.
     pub dir: String,
@@ -3107,12 +3254,28 @@ pub struct RecordVideo {
     pub size: Option<Viewport>,
 }
 
+impl RecordVideo {
+    /// Record videos into the given directory.
+    pub fn new(dir: impl Into<String>) -> Self {
+        Self {
+            dir: dir.into(),
+            size: None,
+        }
+    }
+    /// Recorded video size.
+    pub fn size(mut self, size: Viewport) -> Self {
+        self.size = Some(size);
+        self
+    }
+}
+
 /// Options for creating a new browser context.
 ///
 /// Controls how downloads are handled in a [`BrowserContext`].
 ///
 /// See the `accept_downloads` field of [`BrowserContextOptions`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[non_exhaustive]
 pub enum AcceptDownloads {
     /// Allow and capture downloads via the `download` event.
     #[serde(rename = "accept")]
@@ -3137,6 +3300,7 @@ impl From<bool> for AcceptDownloads {
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context>
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct BrowserContextOptions {
     /// Sets consistent viewport for all pages in the context.
     /// Set to null via `no_viewport(true)` to disable viewport emulation.
@@ -3513,25 +3677,18 @@ impl BrowserContextOptionsBuilder {
     /// ```rust
     /// use playwright_rs::protocol::{BrowserContextOptions, Cookie, StorageState, Origin, LocalStorageItem};
     ///
-    /// let storage_state = StorageState {
-    ///     cookies: vec![Cookie {
-    ///         name: "session_id".to_string(),
-    ///         value: "abc123".to_string(),
-    ///         domain: ".example.com".to_string(),
-    ///         path: "/".to_string(),
-    ///         expires: -1.0,
-    ///         http_only: true,
-    ///         secure: true,
-    ///         same_site: Some("Lax".to_string()),
-    ///     }],
-    ///     origins: vec![Origin {
-    ///         origin: "https://example.com".to_string(),
-    ///         local_storage: vec![LocalStorageItem {
-    ///             name: "user_prefs".to_string(),
-    ///             value: "{\"theme\":\"dark\"}".to_string(),
-    ///         }],
-    ///     }],
-    /// };
+    /// let storage_state = StorageState::default()
+    ///     .cookies(vec![
+    ///         Cookie::new("session_id", "abc123")
+    ///             .domain(".example.com")
+    ///             .http_only(true)
+    ///             .secure(true)
+    ///             .same_site("Lax"),
+    ///     ])
+    ///     .origins(vec![Origin::new(
+    ///         "https://example.com",
+    ///         vec![LocalStorageItem::new("user_prefs", "{\"theme\":\"dark\"}")],
+    ///     )]);
     ///
     /// let options = BrowserContextOptions::builder()
     ///     .storage_state(storage_state)

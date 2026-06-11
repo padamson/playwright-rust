@@ -704,7 +704,7 @@ async fn test_page_clock_install_and_fast_forward() {
 
     // Install fake timers then pause at a known epoch to get deterministic time
     clock
-        .install(Some(ClockInstallOptions { time: Some(0) }))
+        .install(Some(ClockInstallOptions::default().time(0)))
         .await
         .expect("Failed to install clock");
 

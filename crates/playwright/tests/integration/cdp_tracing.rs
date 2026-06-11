@@ -292,12 +292,10 @@ async fn test_tracing_start_with_options() {
 
     // Start tracing with name and screenshot options
     use playwright_rs::protocol::TracingStartOptions;
-    let options = TracingStartOptions {
-        name: Some("test-trace".to_string()),
-        screenshots: Some(true),
-        snapshots: Some(true),
-        ..Default::default()
-    };
+    let options = TracingStartOptions::default()
+        .name("test-trace")
+        .screenshots(true)
+        .snapshots(true);
 
     tracing
         .start(Some(options))
@@ -337,12 +335,10 @@ async fn test_tracing_stop_with_path() {
 
     // Start tracing with snapshots so there's data to save
     use playwright_rs::protocol::TracingStartOptions;
-    let start_options = TracingStartOptions {
-        name: Some("path-test-trace".to_string()),
-        screenshots: Some(false),
-        snapshots: Some(true),
-        ..Default::default()
-    };
+    let start_options = TracingStartOptions::default()
+        .name("path-test-trace")
+        .screenshots(false)
+        .snapshots(true);
 
     tracing
         .start(Some(start_options))
@@ -367,9 +363,7 @@ async fn test_tracing_stop_with_path() {
     ));
 
     use playwright_rs::protocol::TracingStopOptions;
-    let stop_options = TracingStopOptions {
-        path: Some(temp_path.to_str().unwrap().to_string()),
-    };
+    let stop_options = TracingStopOptions::default().path(temp_path.to_str().unwrap());
 
     tracing
         .stop(Some(stop_options))
@@ -405,12 +399,11 @@ async fn test_tracing_start_with_live_option() {
     //   1. The option is accepted (no protocol error)
     //   2. A recording with `live: true` still produces a valid trace file
     use playwright_rs::protocol::{TracingStartOptions, TracingStopOptions};
-    let start_options = TracingStartOptions {
-        name: Some("live-trace".to_string()),
-        screenshots: Some(true),
-        snapshots: Some(true),
-        live: Some(true),
-    };
+    let start_options = TracingStartOptions::default()
+        .name("live-trace")
+        .screenshots(true)
+        .snapshots(true)
+        .live(true);
 
     tracing
         .start(Some(start_options))
@@ -432,9 +425,7 @@ async fn test_tracing_start_with_live_option() {
             .as_nanos()
     ));
 
-    let stop_options = TracingStopOptions {
-        path: Some(temp_path.to_str().unwrap().to_string()),
-    };
+    let stop_options = TracingStopOptions::default().path(temp_path.to_str().unwrap());
 
     tracing
         .stop(Some(stop_options))

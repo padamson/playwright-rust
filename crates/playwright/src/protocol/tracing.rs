@@ -27,21 +27,18 @@
 //!     let tracing = context.tracing()?;
 //!
 //!     // Start tracing with options
-//!     tracing.start(Some(TracingStartOptions {
-//!         name: Some("my-trace".to_string()),
-//!         screenshots: Some(true),
-//!         snapshots: Some(true),
-//!         ..Default::default()
-//!     })).await?;
+//!     tracing.start(Some(TracingStartOptions::default()
+//!         .name("my-trace")
+//!         .screenshots(true)
+//!         .snapshots(true))).await?;
 //!
 //!     let page = context.new_page().await?;
 //!     page.goto("https://example.com", None).await?;
 //!
 //!     // Stop and save the trace
 //!     use playwright_rs::protocol::TracingStopOptions;
-//!     tracing.stop(Some(TracingStopOptions {
-//!         path: Some("/tmp/trace.zip".to_string()),
-//!     })).await?;
+//!     tracing.stop(Some(TracingStopOptions::default()
+//!         .path("/tmp/trace.zip"))).await?;
 //!
 //!     context.close().await?;
 //!     browser.close().await?;
@@ -66,6 +63,7 @@ use std::sync::Arc;
 ///
 /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct TracingStartOptions {
     /// Custom name for the trace. Shown in trace viewer as the trace title.
     pub name: Option<String>,
@@ -83,14 +81,46 @@ pub struct TracingStartOptions {
     pub live: Option<bool>,
 }
 
+impl TracingStartOptions {
+    /// Trace name (affects file naming in the traces directory).
+    pub fn name(mut self, name: impl Into<String>) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+    /// Capture screenshots during tracing.
+    pub fn screenshots(mut self, screenshots: bool) -> Self {
+        self.screenshots = Some(screenshots);
+        self
+    }
+    /// Capture DOM snapshots during tracing.
+    pub fn snapshots(mut self, snapshots: bool) -> Self {
+        self.snapshots = Some(snapshots);
+        self
+    }
+    /// Enable live tracing (view in the trace viewer while running).
+    pub fn live(mut self, live: bool) -> Self {
+        self.live = Some(live);
+        self
+    }
+}
+
 /// Options for stopping a trace recording.
 ///
 /// See: <https://playwright.dev/docs/api/class-tracing#tracing-stop>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct TracingStopOptions {
     /// Path to export the trace file to. If not provided, the trace is discarded.
     /// The file is written as a `.zip` archive.
     pub path: Option<String>,
+}
+
+impl TracingStopOptions {
+    /// Export the trace to the given path.
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.path = Some(path.into());
+        self
+    }
 }
 
 /// In-flight HAR recording state, captured by `start_har` for `stop_har`.

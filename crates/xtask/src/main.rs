@@ -76,12 +76,12 @@ async fn regenerate_trace_fixture(out: &Path) -> Result<()> {
     let tracing = context.tracing().await.context("get tracing handle")?;
 
     tracing
-        .start(Some(TracingStartOptions {
-            name: Some("fixture".into()),
-            screenshots: Some(true),
-            snapshots: Some(true),
-            ..Default::default()
-        }))
+        .start(Some(
+            TracingStartOptions::default()
+                .name("fixture")
+                .screenshots(true)
+                .snapshots(true),
+        ))
         .await
         .context("start tracing")?;
 
@@ -102,9 +102,7 @@ async fn regenerate_trace_fixture(out: &Path) -> Result<()> {
 
     let out_str = out.to_string_lossy().into_owned();
     tracing
-        .stop(Some(TracingStopOptions {
-            path: Some(out_str.clone()),
-        }))
+        .stop(Some(TracingStopOptions::default().path(out_str.clone())))
         .await
         .context("stop tracing")?;
 

@@ -12,6 +12,7 @@ use serde_json::Value;
 /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start-har-option-content>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum HarContent {
     /// Do not store bodies (smallest HAR).
     Omit,
@@ -26,6 +27,7 @@ pub enum HarContent {
 /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start-har-option-mode>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum HarMode {
     /// Record everything (default).
     Full,
@@ -37,6 +39,7 @@ pub enum HarMode {
 ///
 /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start-har>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct StartHarOptions {
     /// How resource bodies are stored. Defaults to `Attach` for a `.zip` path,
     /// `Embed` otherwise.

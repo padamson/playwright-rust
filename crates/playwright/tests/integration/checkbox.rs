@@ -415,10 +415,9 @@ async fn test_set_checked_with_options() {
     let checkbox = page.locator("#checkbox").await;
 
     // Use timeout option (10 seconds in milliseconds)
-    let options = playwright_rs::protocol::CheckOptions {
-        timeout: Some(10000.0),
-        ..Default::default()
-    };
+    let options = playwright_rs::protocol::CheckOptions::builder()
+        .timeout(10000.0)
+        .build();
 
     checkbox
         .set_checked(true, Some(options))

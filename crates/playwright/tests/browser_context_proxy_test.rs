@@ -7,12 +7,10 @@ use playwright_rs::protocol::{BrowserContextOptions, ProxySettings, Viewport};
 #[test]
 fn test_proxy_settings_serialization() {
     // Verify ProxySettings serializes correctly to match Playwright's expected format
-    let proxy = ProxySettings {
-        server: "http://proxy.example.com:8080".to_string(),
-        bypass: Some(".example.com, localhost".to_string()),
-        username: Some("user".to_string()),
-        password: Some("secret".to_string()),
-    };
+    let proxy = ProxySettings::new("http://proxy.example.com:8080")
+        .bypass(".example.com, localhost")
+        .username("user")
+        .password("secret");
 
     let json = serde_json::to_value(&proxy).expect("Failed to serialize");
 
@@ -25,12 +23,7 @@ fn test_proxy_settings_serialization() {
 #[test]
 fn test_proxy_settings_minimal() {
     // Verify only server is required, optional fields are skipped
-    let proxy = ProxySettings {
-        server: "socks5://proxy:1080".to_string(),
-        bypass: None,
-        username: None,
-        password: None,
-    };
+    let proxy = ProxySettings::new("socks5://proxy:1080");
 
     let json = serde_json::to_value(&proxy).expect("Failed to serialize");
 
@@ -44,12 +37,7 @@ fn test_proxy_settings_minimal() {
 fn test_browser_context_options_with_proxy() {
     // Verify proxy can be set via builder pattern
     let options = BrowserContextOptions::builder()
-        .proxy(ProxySettings {
-            server: "http://localhost:8888".to_string(),
-            bypass: None,
-            username: None,
-            password: None,
-        })
+        .proxy(ProxySettings::new("http://localhost:8888"))
         .build();
 
     assert!(options.proxy.is_some());
@@ -64,12 +52,7 @@ fn test_browser_context_options_serialization_with_proxy() {
             width: 1920,
             height: 1080,
         })
-        .proxy(ProxySettings {
-            server: "http://proxy:3128".to_string(),
-            bypass: Some(".internal.com".to_string()),
-            username: None,
-            password: None,
-        })
+        .proxy(ProxySettings::new("http://proxy:3128").bypass(".internal.com"))
         .build();
 
     let json = serde_json::to_value(&options).expect("Failed to serialize");
@@ -88,12 +71,7 @@ fn test_proxy_settings_backward_compat_import() {
     // Verify ProxySettings can be imported from api module (backward compatibility)
     use playwright_rs::api::ProxySettings as ApiProxySettings;
 
-    let proxy = ApiProxySettings {
-        server: "http://test:8080".to_string(),
-        bypass: None,
-        username: None,
-        password: None,
-    };
+    let proxy = ApiProxySettings::new("http://test:8080");
 
     assert_eq!(proxy.server, "http://test:8080");
 }

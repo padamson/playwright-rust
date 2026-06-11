@@ -4105,7 +4105,7 @@ impl Page {
     /// for asserting page-wide accessibility structure without first selecting
     /// `body` explicitly.
     ///
-    /// Pass `Some(AriaSnapshotOptions { mode: Some(AriaSnapshotMode::Ai), .. })`
+    /// Pass `Some(AriaSnapshotOptions::default().mode(AriaSnapshotMode::Ai))`
     /// to get the AI-friendly form intended for LLM/codegen consumption.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-aria-snapshot>
@@ -5012,6 +5012,7 @@ impl std::fmt::Debug for Page {
 
 /// Options for page.goto() and page.reload()
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct GotoOptions {
     /// Maximum operation time in milliseconds
     pub timeout: Option<std::time::Duration>,
@@ -5049,6 +5050,7 @@ impl Default for GotoOptions {
 
 /// When to consider navigation succeeded
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum WaitUntil {
     /// Consider operation to be finished when the `load` event is fired
     Load,
@@ -5075,6 +5077,7 @@ impl WaitUntil {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-add-style-tag>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct AddStyleTagOptions {
     /// Raw CSS content to inject
     pub content: Option<String>,
@@ -5148,6 +5151,7 @@ impl AddStyleTagOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-add-script-tag>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct AddScriptTagOptions {
     /// Raw JavaScript content to inject
     pub content: Option<String>,
@@ -5230,6 +5234,7 @@ impl AddScriptTagOptionsBuilder {
 /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum Media {
     /// Emulate screen media type
     Screen,
@@ -5244,6 +5249,7 @@ pub enum Media {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[non_exhaustive]
 pub enum ColorScheme {
     /// Emulate light color scheme
     #[serde(rename = "light")]
@@ -5263,6 +5269,7 @@ pub enum ColorScheme {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[non_exhaustive]
 pub enum ReducedMotion {
     /// Emulate reduced motion preference
     #[serde(rename = "reduce")]
@@ -5279,6 +5286,7 @@ pub enum ReducedMotion {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[non_exhaustive]
 pub enum ForcedColors {
     /// Emulate active forced colors
     #[serde(rename = "active")]
@@ -5299,6 +5307,7 @@ pub enum ForcedColors {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct EmulateMediaOptions {
     /// Media type to emulate (screen, print, or no-override)
     pub media: Option<Media>,
@@ -5392,6 +5401,7 @@ pub struct PdfMargin {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-pdf>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct PdfOptions {
     /// If specified, the PDF will also be saved to this file path.
     pub path: Option<std::path::PathBuf>,
@@ -5881,6 +5891,7 @@ impl std::fmt::Debug for Response {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-route-from-har>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct RouteFromHarOptions {
     /// URL glob pattern — only requests matching this pattern are served from
     /// the HAR file.  All requests are intercepted when omitted.
@@ -5909,10 +5920,29 @@ pub struct RouteFromHarOptions {
     pub update_mode: Option<String>,
 }
 
+impl RouteFromHarOptions {
+    /// Only serve requests matching this URL glob from the HAR.
+    pub fn url(mut self, url: impl Into<String>) -> Self {
+        self.url = Some(url.into());
+        self
+    }
+    /// Behavior for requests not found in the HAR ("abort" or "fallback").
+    pub fn not_found(mut self, not_found: impl Into<String>) -> Self {
+        self.not_found = Some(not_found.into());
+        self
+    }
+    /// Record new entries into the HAR instead of serving from it.
+    pub fn update(mut self, update: bool) -> Self {
+        self.update = Some(update);
+        self
+    }
+}
+
 /// Options for `page.add_locator_handler()`.
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-add-locator-handler>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct AddLocatorHandlerOptions {
     /// Whether to keep the page frozen after the handler has been called.
     ///

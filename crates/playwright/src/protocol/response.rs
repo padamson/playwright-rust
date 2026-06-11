@@ -16,6 +16,7 @@ use std::sync::Arc;
 ///
 /// See: <https://playwright.dev/docs/api/class-response#response-security-details>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct SecurityDetails {
     /// Certificate issuer name.
     pub issuer: Option<String>,
@@ -33,6 +34,7 @@ pub struct SecurityDetails {
 ///
 /// See: <https://playwright.dev/docs/api/class-response#response-server-addr>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct RemoteAddr {
     /// Server IP address.
     pub ip_address: String,
@@ -44,6 +46,7 @@ pub struct RemoteAddr {
 ///
 /// See: <https://playwright.dev/docs/api/class-request#request-sizes>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct RequestSizes {
     /// Size of the request body in bytes. Set to 0 if there was no body.
     pub request_body_size: i64,
@@ -63,6 +66,7 @@ pub struct RequestSizes {
 ///
 /// See: <https://playwright.dev/docs/api/class-response#response-headers-array>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct HeaderEntry {
     /// Header name (lowercase)
     pub name: String,

@@ -230,6 +230,7 @@ impl WebSocketRoute {
 
 /// Options for [`WebSocketRoute::close`].
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct WebSocketRouteCloseOptions {
     /// WebSocket close code (e.g. 1000 for normal closure).
     pub code: Option<u16>,

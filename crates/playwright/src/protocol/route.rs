@@ -373,6 +373,7 @@ pub(crate) fn matches_pattern(pattern: &str, url: &str) -> bool {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-unroute-all>
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum UnrouteBehavior {
     /// Wait for in-flight handlers to complete before removing
     Wait,
@@ -386,6 +387,7 @@ pub enum UnrouteBehavior {
 ///
 /// See: <https://playwright.dev/docs/api/class-apiresponse>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct FetchResponse {
     /// HTTP status code
     pub status: u16,
@@ -445,6 +447,7 @@ impl FetchResponse {
 ///
 /// See: <https://playwright.dev/docs/api/class-route#route-continue>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct ContinueOptions {
     /// Modified request headers
     pub headers: Option<std::collections::HashMap<String, String>>,
@@ -524,6 +527,7 @@ impl ContinueOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-route#route-fulfill>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct FulfillOptions {
     /// HTTP status code (default: 200)
     pub status: Option<u16>,
@@ -607,6 +611,7 @@ impl FulfillOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-route#route-fetch>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct FetchOptions {
     /// Modified request headers
     pub headers: Option<std::collections::HashMap<String, String>>,

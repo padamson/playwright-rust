@@ -413,25 +413,16 @@ async fn test_context_with_storage_state_inline() {
         .expect("Failed to launch browser");
 
     // Create storage state with cookies and localStorage
-    let storage_state = StorageState {
-        cookies: vec![Cookie {
-            name: "test_cookie".to_string(),
-            value: "test_value".to_string(),
-            domain: ".example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: Some("Lax".to_string()),
-        }],
-        origins: vec![Origin {
-            origin: "https://example.com".to_string(),
-            local_storage: vec![LocalStorageItem {
-                name: "test_key".to_string(),
-                value: "test_storage_value".to_string(),
-            }],
-        }],
-    };
+    let storage_state = StorageState::default()
+        .cookies(vec![
+            Cookie::new("test_cookie", "test_value")
+                .domain(".example.com")
+                .same_site("Lax"),
+        ])
+        .origins(vec![Origin::new(
+            "https://example.com",
+            vec![LocalStorageItem::new("test_key", "test_storage_value")],
+        )]);
 
     let options = BrowserContextOptions::builder()
         .storage_state(storage_state)
@@ -600,25 +591,19 @@ async fn test_context_storage_state_cross_browser() {
         };
 
         // Create storage state with cookies
-        let storage_state = StorageState {
-            cookies: vec![Cookie {
-                name: "browser_test_cookie".to_string(),
-                value: format!("{}_value", browser_name),
-                domain: ".example.com".to_string(),
-                path: "/".to_string(),
-                expires: -1.0,
-                http_only: false,
-                secure: false,
-                same_site: Some("Lax".to_string()),
-            }],
-            origins: vec![Origin {
-                origin: "https://example.com".to_string(),
-                local_storage: vec![LocalStorageItem {
-                    name: "browser_key".to_string(),
-                    value: format!("{}_storage", browser_name),
-                }],
-            }],
-        };
+        let storage_state = StorageState::default()
+            .cookies(vec![
+                Cookie::new("browser_test_cookie", format!("{}_value", browser_name))
+                    .domain(".example.com")
+                    .same_site("Lax"),
+            ])
+            .origins(vec![Origin::new(
+                "https://example.com",
+                vec![LocalStorageItem::new(
+                    "browser_key",
+                    format!("{}_storage", browser_name),
+                )],
+            )]);
 
         let options = BrowserContextOptions::builder()
             .storage_state(storage_state)
@@ -675,10 +660,7 @@ async fn test_context_storage_state_empty() {
         .await
         .expect("Failed to launch browser");
 
-    let storage_state = StorageState {
-        cookies: vec![],
-        origins: vec![],
-    };
+    let storage_state = StorageState::default();
 
     let options = BrowserContextOptions::builder()
         .storage_state(storage_state)

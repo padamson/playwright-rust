@@ -117,18 +117,14 @@ async fn test_aria_snapshot_options_plumb_through() {
         .expect("default aria_snapshot should succeed");
 
     let ai_snapshot = body
-        .aria_snapshot(Some(AriaSnapshotOptions {
-            mode: Some(AriaSnapshotMode::Ai),
-            ..Default::default()
-        }))
+        .aria_snapshot(Some(
+            AriaSnapshotOptions::default().mode(AriaSnapshotMode::Ai),
+        ))
         .await
         .expect("aria_snapshot(mode=Ai) should succeed");
 
     let depth_snapshot = body
-        .aria_snapshot(Some(AriaSnapshotOptions {
-            depth: Some(1),
-            ..Default::default()
-        }))
+        .aria_snapshot(Some(AriaSnapshotOptions::default().depth(1)))
         .await
         .expect("aria_snapshot(depth=1) should succeed");
 
@@ -184,10 +180,7 @@ async fn test_aria_snapshot_boxes() {
     page.set_content("<h1>Hi</h1>", None)
         .await
         .expect("set content");
-    let opts = AriaSnapshotOptions {
-        boxes: Some(true),
-        ..Default::default()
-    };
+    let opts = AriaSnapshotOptions::default().boxes(true);
     let snap = page
         .locator("body")
         .await

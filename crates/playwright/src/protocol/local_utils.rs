@@ -106,6 +106,7 @@ impl LocalUtils {
 ///
 /// Describes whether the request was found in the HAR and how to respond.
 #[derive(Debug, Deserialize)]
+#[non_exhaustive]
 pub struct HarLookupResult {
     /// Action to take: `"fulfill"`, `"redirect"`, `"fallback"`, or `"error"`.
     pub action: String,

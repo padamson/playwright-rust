@@ -91,6 +91,11 @@ exclude_re = [
     # PressSequentiallyOptions — only exercised by integration tests
     "PressSequentiallyOptions",
 
+    # FilterOptions::has / has_not take a Locator, which needs a live Frame —
+    # only constructible in integration tests
+    "FilterOptions::has ",
+    "FilterOptions::has_not ",
+
     # serde_json cannot represent Infinity/NaN/-0, match arms are indistinguishable
     "delete match arm .*(Infinity|NaN|null.*undefined|ui8)",
     "replace == with != in serialize_value",

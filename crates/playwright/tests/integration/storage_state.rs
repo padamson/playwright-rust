@@ -17,16 +17,7 @@ async fn test_storage_state_retrieve() {
         .expect("Failed to set localStorage");
 
     // Set Cookie using add_cookies
-    let cookie = Cookie {
-        name: "my_cookie".into(),
-        value: "cookie_value".into(),
-        domain: "example.com".into(), // Or .example.com
-        path: "/".into(),
-        expires: -1.0,
-        http_only: false,
-        secure: false, // example.com might be strict, but we are setting locally
-        same_site: None,
-    };
+    let cookie = Cookie::new("my_cookie", "cookie_value").domain("example.com");
     context
         .add_cookies(&[cookie])
         .await
@@ -63,19 +54,8 @@ async fn test_storage_state_retrieve() {
 async fn test_set_storage_state() {
     let (_pw, browser, context) = crate::common::setup_context().await;
 
-    let state = StorageState {
-        cookies: vec![Cookie {
-            name: "session".to_string(),
-            value: "abc123".to_string(),
-            domain: "localhost".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        }],
-        origins: vec![],
-    };
+    let state =
+        StorageState::default().cookies(vec![Cookie::new("session", "abc123").domain("localhost")]);
     context
         .set_storage_state(state)
         .await
@@ -102,33 +82,14 @@ async fn test_set_storage_state_replaces_existing() {
 
     // Add an initial cookie via add_cookies
     context
-        .add_cookies(&[Cookie {
-            name: "old_cookie".to_string(),
-            value: "old_value".to_string(),
-            domain: "example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        }])
+        .add_cookies(&[Cookie::new("old_cookie", "old_value").domain("example.com")])
         .await
         .expect("add_cookies should succeed");
 
     // Now replace the storage state with a new one (different domain)
-    let new_state = StorageState {
-        cookies: vec![Cookie {
-            name: "new_cookie".to_string(),
-            value: "new_value".to_string(),
-            domain: "example.com".to_string(),
-            path: "/".to_string(),
-            expires: -1.0,
-            http_only: false,
-            secure: false,
-            same_site: None,
-        }],
-        origins: vec![],
-    };
+    let new_state = StorageState::default().cookies(vec![
+        Cookie::new("new_cookie", "new_value").domain("example.com"),
+    ]);
     context
         .set_storage_state(new_state)
         .await
@@ -155,16 +116,10 @@ async fn test_set_storage_state_with_origins() {
 
     let (_pw, browser, context) = crate::common::setup_context().await;
 
-    let state = StorageState {
-        cookies: vec![],
-        origins: vec![Origin {
-            origin: "https://example.com".to_string(),
-            local_storage: vec![LocalStorageItem {
-                name: "key1".to_string(),
-                value: "value1".to_string(),
-            }],
-        }],
-    };
+    let state = StorageState::default().origins(vec![Origin::new(
+        "https://example.com",
+        vec![LocalStorageItem::new("key1", "value1")],
+    )]);
     context
         .set_storage_state(state)
         .await

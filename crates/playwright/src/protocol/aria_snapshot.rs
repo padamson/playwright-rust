@@ -5,6 +5,7 @@
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AriaSnapshotMode {
     /// AI-friendly form intended for LLM and codegen consumption — the
     /// snapshot is shaped to be easy to parse from inside a model
@@ -25,6 +26,7 @@ impl AriaSnapshotMode {
 
 /// Options accepted by `aria_snapshot()` on both Locator and Page.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct AriaSnapshotOptions {
     /// Selects between human-readable (`Default`) and AI-friendly
     /// (`Ai`) snapshot output. Server default is `Default`.
@@ -40,4 +42,32 @@ pub struct AriaSnapshotOptions {
     pub boxes: Option<bool>,
     /// Override the default timeout (milliseconds).
     pub timeout: Option<f64>,
+}
+
+impl AriaSnapshotOptions {
+    /// Snapshot mode (e.g. AI-oriented output).
+    pub fn mode(mut self, mode: AriaSnapshotMode) -> Self {
+        self.mode = Some(mode);
+        self
+    }
+    /// Tracking identifier echoed back in the snapshot.
+    pub fn track(mut self, track: impl Into<String>) -> Self {
+        self.track = Some(track.into());
+        self
+    }
+    /// Limit the snapshot to the given tree depth.
+    pub fn depth(mut self, depth: i32) -> Self {
+        self.depth = Some(depth);
+        self
+    }
+    /// Append each element's bounding box as `[box=x,y,width,height]`.
+    pub fn boxes(mut self, boxes: bool) -> Self {
+        self.boxes = Some(boxes);
+        self
+    }
+    /// Maximum time in milliseconds.
+    pub fn timeout(mut self, timeout: f64) -> Self {
+        self.timeout = Some(timeout);
+        self
+    }
 }

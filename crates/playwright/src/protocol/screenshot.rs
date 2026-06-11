@@ -12,6 +12,7 @@ use serde::Serialize;
 /// See: <https://playwright.dev/docs/api/class-page#page-screenshot-option-animations>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum Animations {
     /// Allow animations to run normally.
     Allow,
@@ -30,6 +31,7 @@ pub enum Animations {
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum ScreenshotType {
     /// PNG format (lossless, supports transparency)
     Png,
@@ -42,6 +44,7 @@ pub enum ScreenshotType {
 /// See: <https://playwright.dev/docs/api/class-page#page-screenshot-option-caret>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum Caret {
     /// Hide the text caret before capturing (Playwright's default).
     Hide,
@@ -54,6 +57,7 @@ pub enum Caret {
 /// See: <https://playwright.dev/docs/api/class-page#page-screenshot-option-scale>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum Scale {
     /// One pixel per CSS pixel; keeps screenshots small (Playwright's default).
     Css,
@@ -115,6 +119,7 @@ pub struct ScreenshotClip {
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-screenshot>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct ScreenshotOptions {
     /// Image format (png or jpeg)
     pub screenshot_type: Option<ScreenshotType>,

@@ -531,6 +531,7 @@ impl Request {
 ///
 /// See: <https://playwright.dev/docs/api/class-request#request-timing>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ResourceTiming {
     /// Request start time in milliseconds since epoch.
     pub start_time: f64,

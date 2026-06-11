@@ -90,12 +90,12 @@ async fn landing_page_works_as_advertised() {
     // Trace the whole run; published as a downloadable receipt.
     let tracing = context.tracing().await.expect("tracing handle");
     tracing
-        .start(Some(TracingStartOptions {
-            name: Some("playwright-rust.dev dogfood".into()),
-            screenshots: Some(true),
-            snapshots: Some(true),
-            ..Default::default()
-        }))
+        .start(Some(
+            TracingStartOptions::default()
+                .name("playwright-rust.dev dogfood")
+                .screenshots(true)
+                .snapshots(true),
+        ))
         .await
         .expect("start trace");
 
@@ -141,10 +141,7 @@ async fn landing_page_works_as_advertised() {
     // Publish the full accessibility tree as a downloadable receipt, with each
     // element's bounding box appended (the 1.60 `boxes` option).
     let aria_tree = page
-        .aria_snapshot(Some(AriaSnapshotOptions {
-            boxes: Some(true),
-            ..Default::default()
-        }))
+        .aria_snapshot(Some(AriaSnapshotOptions::default().boxes(true)))
         .await
         .expect("aria snapshot");
     std::fs::write(receipts.join("aria-snapshot.txt"), aria_tree).expect("write aria receipt");
@@ -285,9 +282,9 @@ async fn landing_page_works_as_advertised() {
 
     // Save the trace zip as the deep-dive receipt.
     tracing
-        .stop(Some(TracingStopOptions {
-            path: Some(receipts.join("trace.zip").to_string_lossy().into_owned()),
-        }))
+        .stop(Some(TracingStopOptions::default().path(
+            receipts.join("trace.zip").to_string_lossy().into_owned(),
+        )))
         .await
         .expect("write trace receipt");
 

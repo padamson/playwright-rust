@@ -268,10 +268,10 @@ async fn test_browser_bind_and_unbind() {
     let result = browser
         .bind(
             "playwright-rs-bind-test",
-            Some(BindOptions {
-                host: Some("127.0.0.1".to_string()),
-                port: Some(0), // OS-assigned
-                ..Default::default()
+            Some({
+                let mut options = BindOptions::default().host("127.0.0.1");
+                options.port = Some(0); // OS-assigned
+                options
             }),
         )
         .await
@@ -441,11 +441,7 @@ async fn test_browser_tracing() {
 
     // Start tracing with screenshots enabled
     use playwright_rs::protocol::StartTracingOptions;
-    let options = StartTracingOptions {
-        screenshots: Some(true),
-        categories: None,
-        page: None,
-    };
+    let options = StartTracingOptions::default().screenshots(true);
     browser
         .start_tracing(Some(options))
         .await

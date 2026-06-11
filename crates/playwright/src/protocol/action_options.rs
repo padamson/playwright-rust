@@ -10,6 +10,7 @@ use super::click::{KeyboardModifier, Position};
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-fill>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct FillOptions {
     /// Whether to bypass actionability checks
     pub force: Option<bool>,
@@ -77,6 +78,7 @@ impl FillOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-press>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct PressOptions {
     /// Time to wait between keydown and keyup in milliseconds
     pub delay: Option<f64>,
@@ -144,6 +146,7 @@ impl PressOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-check>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct CheckOptions {
     /// Whether to bypass actionability checks
     pub force: Option<bool>,
@@ -240,6 +243,7 @@ impl CheckOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-hover>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct HoverOptions {
     /// Whether to bypass actionability checks
     pub force: Option<bool>,
@@ -351,6 +355,7 @@ impl HoverOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-press-sequentially>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct PressSequentiallyOptions {
     /// Delay between key presses in milliseconds. Defaults to 0.
     pub delay: Option<f64>,
@@ -402,6 +407,7 @@ impl PressSequentiallyOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-select-option>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct SelectOptions {
     /// Whether to bypass actionability checks
     pub force: Option<bool>,
@@ -469,6 +475,7 @@ impl SelectOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-keyboard#keyboard-press>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct KeyboardOptions {
     /// Time to wait between key presses in milliseconds
     pub delay: Option<f64>,
@@ -517,6 +524,7 @@ impl KeyboardOptionsBuilder {
 ///
 /// See: <https://playwright.dev/docs/api/class-mouse>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct MouseOptions {
     /// Mouse button to use
     pub button: Option<super::click::MouseButton>,

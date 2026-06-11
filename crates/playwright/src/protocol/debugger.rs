@@ -51,6 +51,7 @@ type PausedHandler =
 /// Details of the currently paused execution, surfaced via the
 /// `pausedStateChanged` event when the inspector overlay is active.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct PausedDetails {
     /// Source location the engine paused at, when available.
     pub location: PausedLocation,
@@ -62,6 +63,7 @@ pub struct PausedDetails {
 
 /// Source location for [`PausedDetails`].
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct PausedLocation {
     pub file: String,
     pub line: Option<i64>,

@@ -198,10 +198,11 @@ async fn test_page_touchscreen_tap() {
         .expect("setup: failed to launch Chromium");
 
     let context = browser
-        .new_context_with_options(playwright_rs::protocol::BrowserContextOptions {
-            has_touch: Some(true),
-            ..Default::default()
-        })
+        .new_context_with_options(
+            playwright_rs::protocol::BrowserContextOptions::builder()
+                .has_touch(true)
+                .build(),
+        )
         .await
         .expect("Failed to create context with touch");
 

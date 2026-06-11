@@ -28,7 +28,7 @@
 //!     let clock = context.clock();
 //!
 //!     // Install fake timers, optionally setting an initial time (ms since epoch)
-//!     clock.install(Some(ClockInstallOptions { time: Some(0) })).await?;
+//!     clock.install(Some(ClockInstallOptions::default().time(0))).await?;
 //!
 //!     // Freeze time at a fixed point
 //!     clock.set_fixed_time(1_000_000).await?;
@@ -61,10 +61,19 @@ use crate::server::channel::Channel;
 ///
 /// See: <https://playwright.dev/docs/api/class-clock#clock-install>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct ClockInstallOptions {
     /// Initial time for the fake clock in milliseconds since the Unix epoch.
     /// When `None`, the clock starts at the current real time.
     pub time: Option<u64>,
+}
+
+impl ClockInstallOptions {
+    /// Initial fake time, in milliseconds since the Unix epoch.
+    pub fn time(mut self, time: u64) -> Self {
+        self.time = Some(time);
+        self
+    }
 }
 
 /// Playwright Clock — provides fake timer control for deterministic tests.

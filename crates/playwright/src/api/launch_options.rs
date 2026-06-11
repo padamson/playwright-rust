@@ -13,6 +13,7 @@ use std::collections::HashMap;
 /// All options are optional and will use Playwright's defaults if not specified.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct LaunchOptions {
     /// Additional arguments to pass to browser instance
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -92,6 +93,7 @@ pub struct LaunchOptions {
 /// Filter or disable default browser arguments
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
+#[non_exhaustive]
 pub enum IgnoreDefaultArgs {
     /// Ignore all default arguments
     Bool(bool),

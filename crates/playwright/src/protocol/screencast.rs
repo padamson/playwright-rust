@@ -44,10 +44,8 @@
 //!         Ok(())
 //!     });
 //!
-//!     screencast.start(ScreencastStartOptions {
-//!         path: Some(std::path::PathBuf::from("/tmp/run.webm")),
-//!         ..Default::default()
-//!     }).await?;
+//!     screencast.start(ScreencastStartOptions::default()
+//!         .path(std::path::PathBuf::from("/tmp/run.webm"))).await?;
 //!
 //!     page.goto("https://example.com", None).await?;
 //!     screencast.show_chapter(
@@ -79,6 +77,7 @@ use std::path::PathBuf;
 /// `&frame.data[..]`, `tokio::fs::write(path, &frame.data)`) compile
 /// unchanged from the previous `Vec<u8>` shape.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ScreencastFrame {
     /// JPEG-encoded frame bytes.
     pub data: bytes::Bytes,
@@ -86,6 +85,7 @@ pub struct ScreencastFrame {
 
 /// Options for [`Screencast::start`].
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct ScreencastStartOptions {
     /// Output frame size. When `None`, Playwright uses the page's
     /// current viewport size.
@@ -101,6 +101,24 @@ pub struct ScreencastStartOptions {
     pub path: Option<PathBuf>,
 }
 
+impl ScreencastStartOptions {
+    /// Output video size.
+    pub fn size(mut self, size: ScreencastSize) -> Self {
+        self.size = Some(size);
+        self
+    }
+    /// Video quality (codec-specific).
+    pub fn quality(mut self, quality: i32) -> Self {
+        self.quality = Some(quality);
+        self
+    }
+    /// Output file path.
+    pub fn path(mut self, path: PathBuf) -> Self {
+        self.path = Some(path);
+        self
+    }
+}
+
 /// Pixel dimensions for a screencast frame.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ScreencastSize {
@@ -110,6 +128,7 @@ pub struct ScreencastSize {
 
 /// Position for the action-label overlay.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ActionPosition {
     TopLeft,
     Top,
@@ -134,6 +153,7 @@ impl ActionPosition {
 
 /// Options for [`Screencast::show_actions`].
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct ShowActionsOptions {
     /// How long each action label stays on screen (milliseconds).
     pub duration: Option<f64>,
@@ -143,8 +163,27 @@ pub struct ShowActionsOptions {
     pub font_size: Option<i32>,
 }
 
+impl ShowActionsOptions {
+    /// How long to show each action, in milliseconds.
+    pub fn duration(mut self, duration: f64) -> Self {
+        self.duration = Some(duration);
+        self
+    }
+    /// Where to render the action labels.
+    pub fn position(mut self, position: ActionPosition) -> Self {
+        self.position = Some(position);
+        self
+    }
+    /// Label font size in pixels.
+    pub fn font_size(mut self, font_size: i32) -> Self {
+        self.font_size = Some(font_size);
+        self
+    }
+}
+
 /// Options for [`Screencast::show_chapter`].
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct ChapterOptions {
     /// Optional second line under the chapter title.
     pub description: Option<String>,
@@ -152,11 +191,33 @@ pub struct ChapterOptions {
     pub duration: Option<f64>,
 }
 
+impl ChapterOptions {
+    /// Chapter description text.
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+    /// Chapter duration, in milliseconds.
+    pub fn duration(mut self, duration: f64) -> Self {
+        self.duration = Some(duration);
+        self
+    }
+}
+
 /// Options for [`Screencast::show_overlay`].
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct ShowOverlayOptions {
     /// How long the overlay stays on screen (milliseconds).
     pub duration: Option<f64>,
+}
+
+impl ShowOverlayOptions {
+    /// How long to show the overlay, in milliseconds.
+    pub fn duration(mut self, duration: f64) -> Self {
+        self.duration = Some(duration);
+        self
+    }
 }
 
 /// Identifier for an active HTML overlay; pass to

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 ///
 /// See: <https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct ConnectOverCdpOptions {
     /// Additional HTTP headers to be sent with the connection request.
     pub headers: Option<HashMap<String, String>>,
@@ -55,6 +56,7 @@ impl ConnectOverCdpOptions {
 
 /// Options for `BrowserType::connect`.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct ConnectOptions {
     /// Additional HTTP headers to send with the WebSocket handshake.
     pub headers: Option<HashMap<String, String>>,

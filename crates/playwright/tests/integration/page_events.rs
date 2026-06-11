@@ -835,10 +835,7 @@ async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&video_dir)?;
 
     let options = BrowserContextOptions::builder()
-        .record_video(RecordVideo {
-            dir: video_dir.to_str().unwrap().to_string(),
-            size: None,
-        })
+        .record_video(RecordVideo::new(video_dir.to_str().unwrap()))
         .build();
 
     let context = browser.new_context_with_options(options).await?;

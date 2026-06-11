@@ -79,10 +79,7 @@ async fn test_screencast_records_to_path() {
     let _ = std::fs::remove_file(&path);
 
     page.screencast()
-        .start(ScreencastStartOptions {
-            path: Some(path.clone()),
-            ..Default::default()
-        })
+        .start(ScreencastStartOptions::default().path(path.clone()))
         .await
         .expect("screencast start with path failed");
 
@@ -121,10 +118,7 @@ async fn test_screencast_overlay_and_chapter_calls_succeed() {
         .expect("start failed");
 
     screencast
-        .show_actions(ShowActionsOptions {
-            duration: Some(500.0),
-            ..Default::default()
-        })
+        .show_actions(ShowActionsOptions::default().duration(500.0))
         .await
         .expect("show_actions failed");
     screencast
@@ -135,10 +129,9 @@ async fn test_screencast_overlay_and_chapter_calls_succeed() {
     screencast
         .show_chapter(
             "Phase 1",
-            ChapterOptions {
-                description: Some("setting up".into()),
-                duration: Some(500.0),
-            },
+            ChapterOptions::default()
+                .description("setting up")
+                .duration(500.0),
         )
         .await
         .expect("show_chapter failed");
@@ -146,9 +139,7 @@ async fn test_screencast_overlay_and_chapter_calls_succeed() {
     let id = screencast
         .show_overlay(
             "<div style='color:white;background:black;padding:8px'>hi</div>",
-            ShowOverlayOptions {
-                duration: Some(500.0),
-            },
+            ShowOverlayOptions::default().duration(500.0),
         )
         .await
         .expect("show_overlay failed");

@@ -52,6 +52,7 @@
 ///
 /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-event>
 #[derive(Clone)]
+#[non_exhaustive]
 pub enum EventValue {
     /// A new page was created (popup or context "page" event).
     Page(crate::protocol::page::Page),

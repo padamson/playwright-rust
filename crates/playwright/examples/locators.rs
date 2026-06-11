@@ -42,10 +42,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // --- Filtering & Composition (new in v0.8.7) ---
 
     // filter() - narrow results by text content
-    let filtered = paragraphs.filter(playwright_rs::FilterOptions {
-        has_text: Some("More information".into()),
-        ..Default::default()
-    });
+    let filtered =
+        paragraphs.filter(playwright_rs::FilterOptions::default().has_text("More information"));
     println!(
         "Paragraphs containing 'More information': {}",
         filtered.count().await?
@@ -125,10 +123,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let target = page.locator("#target").await;
     println!("Waiting for element to become visible...");
     target
-        .wait_for(Some(playwright_rs::WaitForOptions {
-            state: Some(playwright_rs::WaitForState::Visible),
-            timeout: None,
-        }))
+        .wait_for(Some(
+            playwright_rs::WaitForOptions::builder()
+                .state(playwright_rs::WaitForState::Visible)
+                .build(),
+        ))
         .await?;
     println!("Element is now visible: {}", target.is_visible().await?);
 

@@ -10,6 +10,7 @@ use serde_json::Value;
 ///
 /// See: <https://playwright.dev/docs/api/class-accessibility#accessibility-snapshot>
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct AccessibilitySnapshotOptions {
     /// Whether to prune uninteresting nodes from the tree.
     ///

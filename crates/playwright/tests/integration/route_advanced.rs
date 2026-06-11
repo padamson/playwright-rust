@@ -597,13 +597,9 @@ async fn test_page_route_from_har() {
     });
     std::fs::write(&har_path, har_content.to_string()).expect("Failed to write HAR file");
 
-    let options = RouteFromHarOptions {
-        url: Some(format!("{}/api/har-test", server.url())),
-        not_found: Some("abort".to_string()),
-        update: None,
-        update_content: None,
-        update_mode: None,
-    };
+    let options = RouteFromHarOptions::default()
+        .url(format!("{}/api/har-test", server.url()))
+        .not_found("abort");
 
     page.route_from_har(har_path.to_str().unwrap(), Some(options))
         .await
@@ -680,13 +676,9 @@ async fn test_context_route_from_har() {
     });
     std::fs::write(&har_path, har_content.to_string()).expect("Failed to write HAR file");
 
-    let options = RouteFromHarOptions {
-        url: Some(format!("{}/api/har-test", server.url())),
-        not_found: Some("fallback".to_string()),
-        update: None,
-        update_content: None,
-        update_mode: None,
-    };
+    let options = RouteFromHarOptions::default()
+        .url(format!("{}/api/har-test", server.url()))
+        .not_found("fallback");
 
     context
         .route_from_har(har_path.to_str().unwrap(), Some(options))

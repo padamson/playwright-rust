@@ -9,6 +9,7 @@ use crate::protocol::page::Page;
 ///
 /// See: <https://playwright.dev/docs/api/class-coverage#coverage-start-js-coverage>
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct StartJSCoverageOptions {
     /// Whether to reset coverage on every navigation.
     ///
@@ -25,6 +26,7 @@ pub struct StartJSCoverageOptions {
 ///
 /// See: <https://playwright.dev/docs/api/class-coverage#coverage-start-css-coverage>
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct StartCSSCoverageOptions {
     /// Whether to reset coverage on every navigation.
     ///
@@ -36,6 +38,7 @@ pub struct StartCSSCoverageOptions {
 ///
 /// Used in [`CSSCoverageEntry`].
 #[derive(Debug, Clone, serde::Deserialize)]
+#[non_exhaustive]
 pub struct CoverageRange {
     /// Start byte offset (inclusive).
     pub start: usize,
@@ -47,6 +50,7 @@ pub struct CoverageRange {
 ///
 /// Used in [`JSFunctionCoverage`].
 #[derive(Debug, Clone, serde::Deserialize)]
+#[non_exhaustive]
 pub struct JSCoverageRange {
     /// Start byte offset (inclusive).
     #[serde(rename = "startOffset")]
@@ -60,6 +64,7 @@ pub struct JSCoverageRange {
 
 /// Per-function coverage data within a [`JSCoverageEntry`].
 #[derive(Debug, Clone, serde::Deserialize)]
+#[non_exhaustive]
 pub struct JSFunctionCoverage {
     /// The function name (empty string for anonymous functions).
     #[serde(rename = "functionName")]
@@ -75,6 +80,7 @@ pub struct JSFunctionCoverage {
 ///
 /// See: <https://playwright.dev/docs/api/class-coverage#coverage-stop-js-coverage>
 #[derive(Debug, Clone, serde::Deserialize)]
+#[non_exhaustive]
 pub struct JSCoverageEntry {
     /// The URL of the script.
     pub url: String,
@@ -91,6 +97,7 @@ pub struct JSCoverageEntry {
 ///
 /// See: <https://playwright.dev/docs/api/class-coverage#coverage-stop-css-coverage>
 #[derive(Debug, Clone, serde::Deserialize)]
+#[non_exhaustive]
 pub struct CSSCoverageEntry {
     /// The URL of the stylesheet.
     pub url: String,

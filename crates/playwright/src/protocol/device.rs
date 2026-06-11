@@ -46,6 +46,7 @@ pub struct DeviceViewport {
 /// See: <https://playwright.dev/docs/api/class-playwright#playwright-devices>
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DeviceDescriptor {
     /// The user-agent string for the device.
     pub user_agent: String,

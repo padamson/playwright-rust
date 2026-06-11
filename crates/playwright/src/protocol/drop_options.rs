@@ -37,6 +37,7 @@ use crate::protocol::click::Position;
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-drop>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct DropOptions {
     /// In-memory files to drop (serialized to the protocol's `payloads`).
     pub files: Vec<FilePayload>,

@@ -63,6 +63,7 @@ pub struct WebError {
 /// Source location of an uncaught exception: the script URL, 1-based line, and
 /// 0-based column.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct WebErrorLocation {
     /// URL of the script that threw.
     pub url: String,

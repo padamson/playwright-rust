@@ -3,13 +3,13 @@ use playwright_rs::protocol::{BrowserContextOptions, RecordHar, RecordVideo, Vie
 #[test]
 fn test_serialize_record_har_full() {
     let options = BrowserContextOptions::builder()
-        .record_har(RecordHar {
-            path: "/tmp/test.har".to_string(),
-            omit_content: Some(true),
-            mode: Some("minimal".to_string()),
-            content: Some("omit".to_string()),
-            url_filter: Some("**/api/**".to_string()),
-        })
+        .record_har(
+            RecordHar::new("/tmp/test.har")
+                .omit_content(true)
+                .mode("minimal")
+                .content("omit")
+                .url_filter("**/api/**"),
+        )
         .build();
 
     let json = serde_json::to_value(options).unwrap();
@@ -25,10 +25,7 @@ fn test_serialize_record_har_full() {
 #[test]
 fn test_serialize_record_har_minimal() {
     let options = BrowserContextOptions::builder()
-        .record_har(RecordHar {
-            path: "simple.har".to_string(),
-            ..Default::default()
-        })
+        .record_har(RecordHar::new("simple.har"))
         .build();
 
     let json = serde_json::to_value(options).unwrap();
@@ -42,13 +39,10 @@ fn test_serialize_record_har_minimal() {
 #[test]
 fn test_serialize_record_video() {
     let options = BrowserContextOptions::builder()
-        .record_video(RecordVideo {
-            dir: "/tmp/videos".to_string(),
-            size: Some(Viewport {
-                width: 800,
-                height: 600,
-            }),
-        })
+        .record_video(RecordVideo::new("/tmp/videos").size(Viewport {
+            width: 800,
+            height: 600,
+        }))
         .build();
 
     let json = serde_json::to_value(options).unwrap();

@@ -22,28 +22,26 @@ async fn main() -> Result<()> {
     let context = browser.new_context().await?;
     let tracing = context.tracing().await?;
 
+    // Optional: add .live(true) to allow attaching the trace viewer to an
+    // in-progress recording. Default false works for the typical post-mortem
+    // workflow used here.
     tracing
-        .start(Some(TracingStartOptions {
-            name: Some("trace-on-failure".into()),
-            screenshots: Some(true),
-            snapshots: Some(true),
-            // Optional: set live: Some(true) to allow attaching the trace
-            // viewer to an in-progress recording. Default false works for
-            // the typical post-mortem workflow used here.
-            ..Default::default()
-        }))
+        .start(Some(
+            TracingStartOptions::default()
+                .name("trace-on-failure")
+                .screenshots(true)
+                .snapshots(true),
+        ))
         .await?;
 
     let result = run_test(&context).await;
 
-    let trace_path = if result.is_err() {
-        Some("trace.zip".to_string())
+    let stop_options = if result.is_err() {
+        TracingStopOptions::default().path("trace.zip")
     } else {
-        None
+        TracingStopOptions::default()
     };
-    let _ = tracing
-        .stop(Some(TracingStopOptions { path: trace_path }))
-        .await;
+    let _ = tracing.stop(Some(stop_options)).await;
     let _ = browser.close().await;
 
     result.context("test failed")

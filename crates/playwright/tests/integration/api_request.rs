@@ -62,11 +62,10 @@ async fn test_api_request_post() {
     let url = format!("{}/api/echo", server.url());
 
     use playwright_rs::FetchOptions;
-    let opts = FetchOptions {
-        method: Some("POST".to_string()),
-        post_data: Some("hello post".to_string()),
-        ..Default::default()
-    };
+    let opts = FetchOptions::builder()
+        .method("POST".to_string())
+        .post_data("hello post".to_string())
+        .build();
 
     let response = ctx
         .post(&url, Some(opts))
@@ -94,10 +93,7 @@ async fn test_api_request_with_base_url() {
         .await
         .expect("setup: failed to launch Playwright");
 
-    let opts = APIRequestContextOptions {
-        base_url: Some(server.url()),
-        ..Default::default()
-    };
+    let opts = APIRequestContextOptions::default().base_url(server.url());
 
     let ctx = playwright
         .request()

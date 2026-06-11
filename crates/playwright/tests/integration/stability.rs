@@ -843,10 +843,7 @@ async fn test_error_quality_element_not_found() {
     let locator = page.locator("button.does-not-exist").await;
 
     // Use short timeout (1s instead of default 30s) to speed up test
-    let options = ClickOptions {
-        timeout: Some(1000.0), // 1 second in milliseconds
-        ..Default::default()
-    };
+    let options = ClickOptions::builder().timeout(1000.0).build();
     let result = locator.click(Some(options)).await;
 
     assert!(result.is_err(), "Expected error for non-existent element");
@@ -1071,10 +1068,7 @@ async fn test_error_quality_assertion_timeout() {
     let locator = page.locator("button.does-not-exist").await;
 
     // Try to click non-existent element with short timeout (1s instead of default 30s)
-    let options = ClickOptions {
-        timeout: Some(1000.0), // 1 second in milliseconds
-        ..Default::default()
-    };
+    let options = ClickOptions::builder().timeout(1000.0).build();
     let result = locator.click(Some(options)).await;
 
     if let Err(e) = result {

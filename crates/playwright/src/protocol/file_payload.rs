@@ -22,6 +22,7 @@
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-set-input-files>
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct FilePayload {
     /// File name
     pub name: String,

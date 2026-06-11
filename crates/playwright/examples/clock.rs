@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Install fake timers BEFORE navigating so page scripts see the fake clock.
     let clock = page.clock().expect("clock should be available");
     clock
-        .install(Some(ClockInstallOptions { time: Some(0) }))
+        .install(Some(ClockInstallOptions::default().time(0)))
         .await?;
 
     // Load a simple HTML page that displays the current time.

@@ -11,6 +11,7 @@ use serde::Serialize;
 /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum WaitForState {
     /// Wait for the element to be present in the DOM (attached).
     Attached,
@@ -48,6 +49,7 @@ pub enum WaitForState {
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct WaitForOptions {
     /// The element state to wait for (defaults to `Visible` if not set)
     pub state: Option<WaitForState>,

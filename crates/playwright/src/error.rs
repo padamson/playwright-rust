@@ -7,6 +7,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Errors that can occur when using playwright-core
 #[derive(Debug, Error)]
+#[non_exhaustive]
 pub enum Error {
     /// Playwright server binary was not found
     ///

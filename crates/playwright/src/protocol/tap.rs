@@ -29,6 +29,7 @@ use crate::protocol::click::{KeyboardModifier, Position};
 ///
 /// See: <https://playwright.dev/docs/api/class-locator#locator-tap>
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct TapOptions {
     /// Whether to bypass actionability checks
     pub force: Option<bool>,

@@ -1104,6 +1104,7 @@ use crate::protocol::Animations;
 /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-screenshot-1>
 #[cfg(feature = "screenshot-diff")]
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct ScreenshotAssertionOptions {
     /// Maximum number of different pixels allowed (default: 0)
     pub max_diff_pixels: Option<u32>,

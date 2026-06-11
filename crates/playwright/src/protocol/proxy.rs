@@ -33,6 +33,7 @@ use serde::{Deserialize, Serialize};
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context>
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ProxySettings {
     /// Proxy server URL (e.g., "http://proxy:8080" or "socks5://proxy:1080")
     pub server: String,
@@ -48,4 +49,31 @@ pub struct ProxySettings {
     /// Proxy password for HTTP proxy authentication
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
+}
+
+impl ProxySettings {
+    /// Proxy all traffic through the given server (e.g. "http://host:3128").
+    pub fn new(server: impl Into<String>) -> Self {
+        Self {
+            server: server.into(),
+            bypass: None,
+            username: None,
+            password: None,
+        }
+    }
+    /// Comma-separated domains to bypass the proxy for.
+    pub fn bypass(mut self, bypass: impl Into<String>) -> Self {
+        self.bypass = Some(bypass.into());
+        self
+    }
+    /// Proxy auth username.
+    pub fn username(mut self, username: impl Into<String>) -> Self {
+        self.username = Some(username.into());
+        self
+    }
+    /// Proxy auth password.
+    pub fn password(mut self, password: impl Into<String>) -> Self {
+        self.password = Some(password.into());
+        self
+    }
 }

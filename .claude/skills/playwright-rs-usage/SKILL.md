@@ -40,10 +40,14 @@ see docs.rs for the full list) and chain action / assertion methods.
 
 - **`Result<T>` and `async/await` on `tokio`.** One error type:
   `playwright_rs::Error`. Use `?` to propagate.
-- **Builders for option-heavy methods.** `goto`, `click`, `screenshot`,
-  `fill`, `tracing().start`, etc. take an `Options` struct constructed
-  with `..Default::default()`. The exact field names live on docs.rs;
-  don't memorize them.
+- **Builders / setters for option-heavy methods.** `goto`, `click`,
+  `screenshot`, `fill`, `tracing().start`, etc. take an `Options`
+  struct. These are `#[non_exhaustive]` (so upstream option additions
+  stay non-breaking) — struct literals won't compile. Construct with
+  the type's `builder()` where it has one, otherwise chain setters off
+  `Default`/`new()`: `GetByRoleOptions::default().name("OK").exact(true)`,
+  `Cookie::new(name, value).domain("example.com")`. The exact method
+  names live on docs.rs; don't memorize them.
 - **Auto-wait + auto-retry.** Locator-based actions wait until the
   element is actionable; `expect()` assertions retry until they hold
   or time out. **Never insert `tokio::time::sleep` between an action

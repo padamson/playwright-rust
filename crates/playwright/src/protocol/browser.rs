@@ -34,6 +34,7 @@ type ContextHandler = Arc<dyn Fn(BrowserContext) -> ContextHandlerFuture + Send 
 /// See: <https://playwright.dev/docs/api/class-browser#browser-bind>
 #[derive(Debug, Default, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct BindOptions {
     /// Working directory for the server, used by CLI tooling and MCP clients.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,8 +51,32 @@ pub struct BindOptions {
     pub port: Option<u16>,
 }
 
+impl BindOptions {
+    /// Workspace directory the bound browser should use.
+    pub fn workspace_dir(mut self, workspace_dir: impl Into<String>) -> Self {
+        self.workspace_dir = Some(workspace_dir.into());
+        self
+    }
+    /// Arbitrary metadata attached to the binding.
+    pub fn metadata(mut self, metadata: serde_json::Value) -> Self {
+        self.metadata = Some(metadata);
+        self
+    }
+    /// Host to bind on.
+    pub fn host(mut self, host: impl Into<String>) -> Self {
+        self.host = Some(host.into());
+        self
+    }
+    /// Port to bind on (0 picks a free port).
+    pub fn port(mut self, port: u16) -> Self {
+        self.port = Some(port);
+        self
+    }
+}
+
 /// Result of `Browser::bind()` — the endpoint other clients can connect to.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct BindResult {
     /// WebSocket URL (e.g. `"ws://127.0.0.1:PORT/GUID"`) or pipe endpoint
     /// that an MCP client, `playwright-cli`, or third-party agent tool can
@@ -63,6 +88,7 @@ pub struct BindResult {
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-start-tracing>
 #[derive(Debug, Default, Clone)]
+#[non_exhaustive]
 pub struct StartTracingOptions {
     /// If specified, tracing captures screenshots for this page.
     /// Pass `Some(page)` to associate the trace with a specific page.
@@ -71,6 +97,24 @@ pub struct StartTracingOptions {
     pub screenshots: Option<bool>,
     /// Trace categories to enable. If omitted, uses a default set.
     pub categories: Option<Vec<String>>,
+}
+
+impl StartTracingOptions {
+    /// Page whose tracing should be captured.
+    pub fn page(mut self, page: Page) -> Self {
+        self.page = Some(page);
+        self
+    }
+    /// Capture screenshots in the trace.
+    pub fn screenshots(mut self, screenshots: bool) -> Self {
+        self.screenshots = Some(screenshots);
+        self
+    }
+    /// Chromium tracing categories to include.
+    pub fn categories(mut self, categories: Vec<String>) -> Self {
+        self.categories = Some(categories);
+        self
+    }
 }
 
 /// Browser represents a browser instance.
