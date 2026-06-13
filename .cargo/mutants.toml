@@ -7,6 +7,7 @@
 examine_globs = [
     "crates/playwright/src/protocol/locator.rs",
     "crates/playwright/src/protocol/evaluate_conversion.rs",
+    "crates/playwright/src/protocol/glob.rs",
     "crates/playwright/src/protocol/action_options.rs",
     "crates/playwright/src/protocol/click.rs",
     "crates/playwright/src/protocol/screenshot.rs",

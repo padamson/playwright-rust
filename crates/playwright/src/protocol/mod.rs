@@ -41,6 +41,7 @@ pub mod file_chooser;
 pub mod file_payload;
 pub mod frame;
 pub mod frame_locator;
+pub mod glob;
 pub mod har_options;
 pub mod js_handle;
 pub mod keyboard;

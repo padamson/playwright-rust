@@ -733,7 +733,7 @@ impl Frame {
             let current_url = self.url();
 
             let matches = if is_glob {
-                glob_match(url, &current_url)
+                crate::protocol::glob::glob_match(url, &current_url)
             } else {
                 current_url == url
             };
@@ -2542,20 +2542,4 @@ impl std::fmt::Debug for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Frame").field("guid", &self.guid()).finish()
     }
-}
-
-/// Simple glob pattern matching for URL patterns.
-///
-/// Supports `*` (matches any characters except `/`) and `**` (matches any characters including `/`).
-/// This matches Playwright's URL glob pattern behavior.
-fn glob_match(pattern: &str, text: &str) -> bool {
-    let regex_str = pattern
-        .replace('.', "\\.")
-        .replace("**", "\x00") // placeholder for **
-        .replace('*', "[^/]*")
-        .replace('\x00', ".*"); // restore ** as .*
-    let regex_str = format!("^{}$", regex_str);
-    regex::Regex::new(&regex_str)
-        .map(|re| re.is_match(text))
-        .unwrap_or(false)
 }
