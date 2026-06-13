@@ -65,19 +65,15 @@ async fn test_to_be_visible_assertions() {
     .expect("Failed to inject script");
 
     let delayed = page.locator("#delayed-element").await;
-    let start = std::time::Instant::now();
 
+    // The element is display:none until the setTimeout above flips it, so a
+    // successful assertion proves to_be_visible() auto-retried. (No wall-clock
+    // lower bound: the JS timer starts during the inject, so measuring elapsed
+    // from here flakes on loaded CI.)
     expect(delayed)
         .to_be_visible()
         .await
         .expect("Delayed element should eventually be visible");
-
-    let elapsed = start.elapsed();
-    assert!(
-        elapsed.as_millis() >= 100,
-        "Should have waited at least 100ms, but was {:?}",
-        elapsed
-    );
 
     // Test 5: Custom timeout - element that appears after 200ms
     page.evaluate_expression(
@@ -139,19 +135,13 @@ async fn test_to_be_hidden_assertions() {
     .expect("Failed to inject script");
 
     let button = page.locator("#btn").await;
-    let start = std::time::Instant::now();
 
+    // Button is visible until the setTimeout hides it; a successful assertion
+    // proves to_be_hidden() auto-retried. No wall-clock bound (flaky on CI).
     expect(button)
         .to_be_hidden()
         .await
         .expect("Button should eventually be hidden");
-
-    let elapsed = start.elapsed();
-    assert!(
-        elapsed.as_millis() >= 100,
-        "Should have waited at least 100ms, but was {:?}",
-        elapsed
-    );
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -656,18 +646,13 @@ async fn test_to_have_text_assertions() {
     .expect("Failed to inject script");
 
     let div = page.locator("#changing-text").await;
-    let start = std::time::Instant::now();
 
+    // Text changes via setTimeout; a successful assertion proves to_have_text()
+    // auto-retried. No wall-clock bound (flaky on CI).
     expect(div)
         .to_have_text("Changed text")
         .await
         .expect("Should eventually have changed text");
-
-    let elapsed = start.elapsed();
-    assert!(
-        elapsed.as_millis() >= 100,
-        "Should have waited at least 100ms"
-    );
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();

@@ -244,11 +244,12 @@ async fn test_browser_is_connected() {
     // Note: close() waits for the server to process the close command,
     // which should trigger the "disconnected" event before returning or shortly after.
 
-    // Check immediately first.
-    if browser.is_connected() {
-        // Give it a moment for the event to arrive
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    }
+    // The "disconnected" event may arrive shortly after close(); poll for it
+    // rather than guessing a fixed delay.
+    crate::common::poll_until(std::time::Duration::from_secs(3), || {
+        !browser.is_connected()
+    })
+    .await;
 
     assert!(
         !browser.is_connected(),
@@ -348,8 +349,11 @@ async fn test_browser_contexts() {
 
     // Close first context
     ctx1.close().await.expect("Failed to close context 1");
-    // Give the event a moment to propagate
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    // Wait for the context-close event to propagate instead of a fixed sleep.
+    crate::common::poll_until(std::time::Duration::from_secs(3), || {
+        browser.contexts().len() == 1
+    })
+    .await;
     let after_close_first = browser.contexts();
     assert_eq!(
         after_close_first.len(),

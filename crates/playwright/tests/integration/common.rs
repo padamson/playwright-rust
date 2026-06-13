@@ -66,3 +66,20 @@ pub fn playwright_package_dir() -> Option<PathBuf> {
     let (_node, cli_js) = playwright_rs::server::driver::get_driver_executable().ok()?;
     cli_js.parent().map(PathBuf::from)
 }
+
+/// Poll `cond` until it returns `true` or `timeout` elapses; returns whether
+/// it became true. Replaces "sleep a fixed N ms, then assert state changed"
+/// patterns, which flake on loaded CI — this waits only as long as needed, up
+/// to a generous bound, checking every 25ms.
+pub async fn poll_until<F: FnMut() -> bool>(timeout: std::time::Duration, mut cond: F) -> bool {
+    let start = std::time::Instant::now();
+    loop {
+        if cond() {
+            return true;
+        }
+        if start.elapsed() >= timeout {
+            return false;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+    }
+}
