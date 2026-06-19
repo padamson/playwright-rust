@@ -38,7 +38,7 @@ audit-as-crates-io = true
 audit-as-crates-io = true
 
 [[exemptions.aes]]
-version = "0.9.0"
+version = "0.9.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum]]
