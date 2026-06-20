@@ -52,7 +52,7 @@ libc = "0.2"
 anyhow = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }
 tower = "0.5"
-tower-http = "0.6"
+tower-http = "0.7"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 urlencoding = "2"
