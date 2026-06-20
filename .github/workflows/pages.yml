@@ -33,7 +33,7 @@ jobs:
       # decoupling in build.rs); shared by the playwright-rs CLI and site-e2e.
       PLAYWRIGHT_DRIVER_CACHE_DIR: ${{ github.workspace }}/.playwright-driver
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

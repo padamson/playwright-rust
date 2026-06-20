@@ -19,7 +19,7 @@ jobs:
     env:
       PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Install MSRV toolchain
       uses: dtolnay/rust-toolchain@master
@@ -47,7 +47,7 @@ jobs:
       PLAYWRIGHT_DRIVER_CACHE_DIR: ${{ github.workspace }}/.playwright-driver
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@master
