@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Known limitation (Chromium 149 / headless Linux): a `Mouse::move` while a button is held hangs.** The browser bundled with 1.61.0 treats a button-held move as a native drag whose move RPC never returns under headless Linux. Use `Locator::drag_to` for drag-and-drop; discrete `Mouse::down` / `Mouse::up` (without an intervening move) are unaffected.
 - **`to_match_aria_snapshot` adapted to the 1.61.0 `expect` protocol change.** The driver's `expect` channel method no longer returns a `{ matches }` result; it returns nothing on success and reports a failed assertion through a top-level `errorDetails` object (carrying `timedOut` and `customErrorMessage`). The connection layer now reads `errorDetails` and maps it to `AssertionTimeout`/`AssertionFailed`, with genuine errors (without details) propagating unchanged. Without this, every aria-snapshot assertion failed to deserialize the now-`null` response.
 
 ## [0.14.0] - 2026-06-13
