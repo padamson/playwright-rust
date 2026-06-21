@@ -1,5 +1,0 @@
-error: selector is empty or whitespace-only
- --> tests/ui/whitespace_only.rs:4:22
-  |
-4 |     let _ = locator!("   ");
-  |                      ^^^^^
