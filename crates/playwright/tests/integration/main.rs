@@ -67,6 +67,7 @@ mod storage_state;
 mod tracing_emission;
 mod transport;
 mod web_error;
+mod web_storage;
 mod websocket;
 mod windows_cleanup;
 mod worker;

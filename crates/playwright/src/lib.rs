@@ -326,9 +326,12 @@ pub use protocol::{Animations, Caret, Scale, ScreenshotClip, ScreenshotOptions, 
 
 // Re-export screencast types
 pub use protocol::{
-    ActionPosition, ChapterOptions, OverlayId, Screencast, ScreencastFrame, ScreencastSize,
-    ScreencastStartOptions, ShowActionsOptions, ShowOverlayOptions,
+    ActionCursor, ActionPosition, ChapterOptions, OverlayId, Screencast, ScreencastFrame,
+    ScreencastSize, ScreencastStartOptions, ShowActionsOptions, ShowOverlayOptions,
 };
+
+// Re-export WebStorage (page.local_storage / session_storage)
+pub use protocol::{WebStorage, WebStorageKind};
 
 // Re-export new page method types
 pub use protocol::{
