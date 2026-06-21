@@ -26,6 +26,7 @@ pub mod click;
 pub mod clock;
 pub mod console_message;
 pub mod coverage;
+pub mod credentials;
 pub mod debugger;
 pub mod device;
 pub mod dialog;
@@ -96,6 +97,9 @@ pub use console_message::{ConsoleMessage, ConsoleMessageLocation};
 pub use coverage::{
     CSSCoverageEntry, Coverage, CoverageRange, JSCoverageEntry, JSCoverageRange,
     JSFunctionCoverage, StartCSSCoverageOptions, StartJSCoverageOptions,
+};
+pub use credentials::{
+    Credentials, CredentialsCreateOptions, CredentialsGetOptions, VirtualCredential,
 };
 pub use debugger::{Debugger, PausedDetails, PausedLocation};
 pub use device::{DeviceDescriptor, DeviceViewport};

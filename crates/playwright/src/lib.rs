@@ -333,6 +333,11 @@ pub use protocol::{
 // Re-export WebStorage (page.local_storage / session_storage)
 pub use protocol::{WebStorage, WebStorageKind};
 
+// Re-export WebAuthn credentials (browser_context.credentials)
+pub use protocol::{
+    Credentials, CredentialsCreateOptions, CredentialsGetOptions, VirtualCredential,
+};
+
 // Re-export new page method types
 pub use protocol::{
     AddScriptTagOptions, ColorScheme, EmulateMediaOptions, ForcedColors, Media, PdfMargin,

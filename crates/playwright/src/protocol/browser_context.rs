@@ -611,6 +611,15 @@ impl BrowserContext {
         crate::protocol::clock::Clock::new(self.channel().clone())
     }
 
+    /// Manage the context's virtual WebAuthn authenticator (Playwright 1.61.0+):
+    /// install it, then register / list / delete passkeys for
+    /// `navigator.credentials` testing.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-credentials>
+    pub fn credentials(&self) -> crate::protocol::Credentials {
+        crate::protocol::Credentials::new(self.channel().clone())
+    }
+
     /// Closes the browser context and all its pages.
     ///
     /// This is a graceful operation that sends a close command to the context

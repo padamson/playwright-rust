@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ConnectOverCdpOptions::artifacts_dir`** (Playwright 1.61.0) — set the directory where traces and downloads captured over a CDP connection are stored, via `BrowserType::connect_over_cdp`.
 - **Screencast `cursor` action decoration + frame `timestamp`** (Playwright 1.61.0) — `ShowActionsOptions::cursor(ActionCursor::Pointer)` draws a pointer cursor at each action point; `ScreencastFrame::timestamp` exposes the frame presentation time (seconds) when the driver supplies it.
 - **`WebStorage` via `Page::local_storage()` / `Page::session_storage()`** (Playwright 1.61.0) — read/write the current origin's `localStorage` and `sessionStorage` with `get_item` / `set_item` / `remove_item` / `clear` / `items`, talking to the Page channel directly (no `evaluate` round-trip). `WebStorage` and `WebStorageKind` are re-exported at the crate root.
+- **WebAuthn virtual credentials via `BrowserContext::credentials()`** (Playwright 1.61.0) — `Credentials::install` adds a virtual authenticator; `create` / `get` / `delete` register, list (with optional `rp_id`/`id` filters), and remove passkeys for `navigator.credentials` testing without hardware. `Credentials`, `VirtualCredential`, `CredentialsCreateOptions`, and `CredentialsGetOptions` are re-exported at the crate root.
 
 ### Changed
 

@@ -26,6 +26,7 @@ mod console_message;
 mod context_events;
 mod context_route;
 mod context_runtime_setters;
+mod credentials;
 mod debugger;
 mod downloads_dialogs;
 mod element_handle;
