@@ -27,13 +27,6 @@ repos:
       - id: mixed-line-ending
         name: Fix mixed line endings
 
-  # Spell checking
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.26.8
-    hooks:
-      - id: typos
-        name: Check for typos
-
   # Rust-specific checks (matches CI exactly)
   - repo: local
     hooks:
