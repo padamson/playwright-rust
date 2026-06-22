@@ -5,13 +5,13 @@
   - heading "Playwright for Rust" [level=1] [box=327,141,626,60]
   - paragraph [box=304,221,672,56]: Cross-browser end-to-end testing for Rust. The same Playwright API you already know from Python, Java, and .NET.
   - paragraph [box=421,289,438,16]: Unofficial, community-maintained Rust bindings for Microsoft Playwright.
-  - link "crates.io" [box=521,333,110,20]:
+  - 'link "crates.io: unreleased" [box=512,333,128,20]':
     - /url: https://crates.io/crates/playwright-rs
-    - img "crates.io" [box=521,333,110,20]
-  - link "docs.rs" [box=639,343,0,0]:
+    - 'img "crates.io: unreleased" [box=512,333,128,20]'
+  - link "docs.rs" [box=648,343,0,0]:
     - /url: https://docs.rs/playwright-rs
-    - img "docs.rs" [box=639,343,0,0]
-  - img "Playwright 1.60.0" [box=647,333,112,20]
+    - img "docs.rs" [box=648,343,0,0]
+  - img "Playwright 1.61.0" [box=656,333,112,20]
   - link "Docs" [box=432,390,111,44]:
     - /url: https://docs.rs/playwright-rs
   - link "GitHub" [box=555,389,133,46]:
@@ -19,7 +19,7 @@
   - link "crates.io" [box=700,389,149,46]:
     - /url: https://crates.io/crates/playwright-rs
 - heading "Install" [level=2] [box=280,547,720,32]
-- text: "[dependencies] playwright-rs = \"0.13\" # auto-updates within 0.13.x tokio = { version = \"1\", features = [\"full\"] }"
+- text: "[dependencies] playwright-rs = \"0.14\" # auto-updates within 0.14.x tokio = { version = \"1\", features = [\"full\"] }"
 - paragraph [box=280,713,720,42]:
   - text: The default
   - code [box=364,716,50,16]: macros
@@ -39,74 +39,87 @@
 - tabpanel [box=152,985,476,284]: "from playwright.sync_api import sync_playwright with sync_playwright() as p: browser = p.chromium.launch() page = browser.new_page() page.goto(\"https://example.com\") heading = page.locator(\"h1\") assert heading.text_content() == \"Example Domain\" browser.close()"
 - text: Rust use playwright_rs::Playwright; let pw = Playwright::launch().await?; let browser = pw.chromium().launch().await?; let page = browser.new_page().await?; page.goto("https://example.com", None).await?; let heading = page.locator("h1").await; assert_eq!(heading.text_content().await?, Some("Example Domain".into())); browser.close().await?;
 - heading "What you get" [level=2] [box=152,1366,976,32]
-- heading "Auto-waiting locators" [level=3] [box=173,1443,436,28]
+- heading "Auto-waiting locators" [level=3] [box=173,1443,219,28]
 - paragraph [box=173,1475,436,40]: Locators wait for elements to be actionable, so no sleeps and no flakes.
 - text: page.locator("button#save") .await .click(None) .await?;
-- heading "Auto-retrying assertions" [level=3] [box=671,1443,436,28]
+- heading "Auto-retrying assertions" [level=3] [box=671,1443,249,28]
 - paragraph [box=671,1475,436,40]: expect() retries until the DOM matches or the timeout elapses.
 - text: expect(page.locator("#status").await) .to_have_text("Ready") .await?;
-- heading "All three engines" [level=3] [box=173,1718,436,28]
+- heading "All three engines" [level=3] [box=173,1718,173,28]
 - paragraph [box=173,1750,436,40]: "Chromium, Firefox, and WebKit run the same code. Pick an engine:"
 - tablist [box=173,1806,436,30]:
   - tab "Chromium" [selected] [box=173,1806,93,30]
   - tab "Firefox" [box=270,1806,72,30]
   - tab "WebKit" [box=346,1806,73,30]
 - tabpanel [box=173,1836,436,102]: let browser = pw.chromium() .launch() .await?;
-- heading "Network interception" [level=3] [box=671,1718,436,28]
+- heading "Network interception" [level=3] [box=671,1718,216,28]
 - paragraph [box=671,1750,436,20]: Mock, block, or inspect any request from Rust.
 - text: "page.route(\"**/*.png\", |route| async move { route.abort(None).await }).await?;"
-- heading "Built-in observability" [level=3] [box=173,2000,436,28]
+- heading "Built-in observability" [level=3] [box=173,2000,213,28]
 - paragraph [box=173,2032,436,20]: Wire up tracing and every call emits structured spans.
 - text: tracing_subscriber::fmt().init(); page.goto(url, None).await?; // emits a span
-- heading "Responsive testing" [level=3] [box=671,2000,436,28]
+- heading "Responsive testing" [level=3] [box=671,2000,194,28]
 - paragraph [box=671,2032,436,20]: Drive any viewport to test responsive layouts.
 - text: "page.set_viewport_size(Viewport { width: 375, height: 667, }).await?;"
-- heading "Tested by the binding it advertises" [level=2] [box=185,2343,910,32]
-- paragraph [box=304,2387,672,48]: "This page is a Leptos app built in Rust, and playwright-rs drives it end to end in CI; it deploys only if the binding confirms it works. Every run leaves these receipts:"
-- heading "Trace" [level=3] [box=206,2480,251,24]
-- paragraph [box=206,2508,251,60]:
+- heading "Web storage" [level=3] [box=173,2255,128,28]
+- text: Unreleased
+- paragraph [box=173,2287,436,40]: Read and write the page's localStorage / sessionStorage directly.
+- text: let storage = page.local_storage(); storage.set_item("token", "abc123").await?; let token = storage.get_item("token").await?; let all = storage.items().await?; storage.clear().await?;
+- heading "WebAuthn passkeys" [level=3] [box=671,2255,204,28]
+- text: Unreleased
+- paragraph [box=671,2287,436,40]: Install a virtual authenticator and manage credentials for auth tests.
+- text: let creds = context.credentials(); creds.install().await?; // Register a passkey, then drive navigator.credentials in-page. let passkey = creds.create("example.com", None).await?; let registered = creds.get(None).await?; creds.delete(&passkey.id).await?;
+- heading "Tested by the binding it advertises" [level=2] [box=185,2663,910,32]
+- paragraph [box=304,2707,672,48]: "This page is a Leptos app built in Rust, and playwright-rs drives it end to end in CI; it deploys only if the binding confirms it works. Every run leaves these receipts:"
+- heading "Trace" [level=3] [box=206,2800,251,24]
+- paragraph [box=206,2828,251,60]:
   - text: Step-by-step timeline of the run. Open it in
-  - link "trace.playwright.dev" [box=279,2530,144,16]:
+  - link "trace.playwright.dev" [box=279,2850,144,16]:
     - /url: https://trace.playwright.dev
   - text: .
-- link "Download .zip" [box=206,2580,251,20]:
-  - /url: /receipts/trace.zip
-- heading "Network HAR" [level=3] [box=515,2480,251,24]
-- paragraph [box=515,2508,251,60]: Every request the run made. Open in browser devtools or replay it with playwright-rs.
-- link "Download .har" [box=515,2580,251,20]:
-  - /url: /receipts/dogfood.har
-- heading "Accessibility tree" [level=3] [box=823,2480,251,24]
-- paragraph [box=823,2508,251,60]: The ARIA snapshot the test asserts, so the page's semantic structure can't regress unnoticed.
-- link "Download .txt" [box=823,2580,251,20]:
-  - /url: /receipts/aria-snapshot.txt
-- paragraph [box=185,2645,910,20]:
-  - link "See the test that produces these" [box=510,2647,260,16]:
+- link "Download .zip" [box=206,2900,251,20]:
+  - /url: receipts/trace.zip
+- heading "Network HAR" [level=3] [box=515,2800,251,24]
+- paragraph [box=515,2828,251,60]: Every request the run made. Open in browser devtools or replay it with playwright-rs.
+- link "Download .har" [box=515,2900,251,20]:
+  - /url: receipts/dogfood.har
+- heading "Accessibility tree" [level=3] [box=823,2800,251,24]
+- paragraph [box=823,2828,251,60]: The ARIA snapshot the test asserts, so the page's semantic structure can't regress unnoticed.
+- link "Download .txt" [box=823,2900,251,20]:
+  - /url: receipts/aria-snapshot.txt
+- heading "Screencast frame" [level=3] [box=206,2978,145,48]
+- text: Unreleased
+- paragraph [box=206,3030,251,60]: A frame is captured with the new screencast API and cursor decoration.
+- link "Download .jpeg" [box=206,3102,251,20]:
+  - /url: receipts/screencast.jpeg
+- paragraph [box=185,3167,910,20]:
+  - link "See the test that produces these" [box=510,3169,260,16]:
     - /url: https://github.com/padamson/playwright-rust/blob/main/crates/site-e2e/tests/landing_page.rs
-- heading "Watch the test drive the page" [level=2] [box=152,2794,976,32]
-- paragraph [box=152,2834,672,40]: Every deploy, playwright-rs runs this test against the page. Step through it to see the code and what the browser saw at each step.
-- tablist [box=152,2898,476,236]:
-  - button "1. Wait for the app to render" [box=152,2898,476,36]
-  - button "2. Switch the comparison language" [box=152,2938,476,36]
-  - button "3. Switch the browser engine" [box=152,2978,476,36]
-  - button "4. Check every feature card" [box=152,3018,476,36]
-  - button "5. Verify the disclaimer" [box=152,3058,476,36]
-  - button "6. Redact elements with a mask" [box=152,3098,476,36]
+- heading "Watch the test drive the page" [level=2] [box=152,3316,976,32]
+- paragraph [box=152,3356,672,40]: Every deploy, playwright-rs runs this test against the page. Step through it to see the code and what the browser saw at each step.
+- tablist [box=152,3420,476,236]:
+  - button "1. Wait for the app to render" [box=152,3420,476,36]
+  - button "2. Switch the comparison language" [box=152,3460,476,36]
+  - button "3. Switch the browser engine" [box=152,3500,476,36]
+  - button "4. Check every feature card" [box=152,3540,476,36]
+  - button "5. Verify the disclaimer" [box=152,3580,476,36]
+  - button "6. Redact elements with a mask" [box=152,3620,476,36]
 - text: let page = context.new_page().await?; page.goto(url, None).await?; // Locators auto-wait for the WASM app to mount. No sleeps. expect(page.locator("#hero-title").await) .to_have_text("Playwright for Rust") .await?;
-- img "Wait for the app to render" [box=652,2898,476,288]
-- button "Prev" [disabled] [box=652,3198,60,32]
+- img "Wait for the app to render" [box=652,3420,476,288]
+- button "Prev" [disabled] [box=652,3720,60,32]
 - text: Step 1 of 6
-- button "Next" [box=1067,3198,61,32]
-- contentinfo [box=0,3514,1280,193]:
-  - navigation [box=128,3555,1024,20]:
-    - link "GitHub" [box=128,3555,49,20]:
+- button "Next" [box=1067,3720,61,32]
+- contentinfo [box=0,4036,1280,193]:
+  - navigation [box=128,4077,1024,20]:
+    - link "GitHub" [box=128,4077,49,20]:
       - /url: https://github.com/padamson/playwright-rust
-    - link "Docs" [box=197,3555,34,20]:
+    - link "Docs" [box=197,4077,34,20]:
       - /url: https://docs.rs/playwright-rs
-    - link "crates.io" [box=251,3555,60,20]:
+    - link "crates.io" [box=251,4077,60,20]:
       - /url: https://crates.io/crates/playwright-rs
-  - paragraph [box=128,3591,768,40]:
+  - paragraph [box=128,4113,768,40]:
     - text: playwright-rs is an unofficial, community-maintained project. It is not affiliated with or endorsed by Microsoft. "Playwright" is a trademark of Microsoft, and the official bindings live at
-    - link "playwright.dev" [box=636,3613,103,16]:
+    - link "playwright.dev" [box=636,4135,103,16]:
       - /url: https://playwright.dev
     - text: .
-  - paragraph [box=128,3647,1024,20]: Licensed under Apache-2.0. Built with Leptos and Trunk.
+  - paragraph [box=128,4169,1024,20]: Licensed under Apache-2.0. Built with Leptos and Trunk.
