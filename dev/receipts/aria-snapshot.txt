@@ -5,13 +5,13 @@
   - heading "Playwright for Rust" [level=1] [box=327,141,626,60]
   - paragraph [box=304,221,672,56]: Cross-browser end-to-end testing for Rust. The same Playwright API you already know from Python, Java, and .NET.
   - paragraph [box=421,289,438,16]: Unofficial, community-maintained Rust bindings for Microsoft Playwright.
-  - 'link "crates.io: unreleased" [box=512,333,128,20]':
+  - 'link "crates.io: unreleased" [box=469,333,128,20]':
     - /url: https://crates.io/crates/playwright-rs
-    - 'img "crates.io: unreleased" [box=512,333,128,20]'
-  - link "docs.rs" [box=648,343,0,0]:
+    - 'img "crates.io: unreleased" [box=469,333,128,20]'
+  - link "docs.rs" [box=605,333,86,20]:
     - /url: https://docs.rs/playwright-rs
-    - img "docs.rs" [box=648,343,0,0]
-  - img "Playwright 1.61.0" [box=656,333,112,20]
+    - img "docs.rs" [box=605,333,86,20]
+  - img "Playwright 1.61.0" [box=699,333,112,20]
   - link "Docs" [box=432,390,111,44]:
     - /url: https://docs.rs/playwright-rs
   - link "GitHub" [box=555,389,133,46]:
@@ -78,20 +78,20 @@
     - /url: https://trace.playwright.dev
   - text: .
 - link "Download .zip" [box=206,2900,251,20]:
-  - /url: /receipts/trace.zip
+  - /url: receipts/trace.zip
 - heading "Network HAR" [level=3] [box=515,2800,251,24]
 - paragraph [box=515,2828,251,60]: Every request the run made. Open in browser devtools or replay it with playwright-rs.
 - link "Download .har" [box=515,2900,251,20]:
-  - /url: /receipts/dogfood.har
+  - /url: receipts/dogfood.har
 - heading "Accessibility tree" [level=3] [box=823,2800,251,24]
 - paragraph [box=823,2828,251,60]: The ARIA snapshot the test asserts, so the page's semantic structure can't regress unnoticed.
 - link "Download .txt" [box=823,2900,251,20]:
-  - /url: /receipts/aria-snapshot.txt
+  - /url: receipts/aria-snapshot.txt
 - heading "Screencast frame" [level=3] [box=206,2978,145,48]
 - text: Unreleased
 - paragraph [box=206,3030,251,60]: A frame is captured with the new screencast API and cursor decoration.
 - link "Download .jpeg" [box=206,3102,251,20]:
-  - /url: /receipts/screencast.jpeg
+  - /url: receipts/screencast.jpeg
 - paragraph [box=185,3167,910,20]:
   - link "See the test that produces these" [box=510,3169,260,16]:
     - /url: https://github.com/padamson/playwright-rust/blob/main/crates/site-e2e/tests/landing_page.rs
