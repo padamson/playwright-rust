@@ -171,6 +171,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2022-01-04"
 end = "2027-05-23"
 
+[[trusted.quote]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-04-09"
+end = "2027-06-27"
+
 [[trusted.regex]]
 criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
