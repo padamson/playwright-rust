@@ -5,13 +5,13 @@
   - heading "Playwright for Rust" [level=1] [box=327,141,626,60]
   - paragraph [box=304,221,672,56]: Cross-browser end-to-end testing for Rust. The same Playwright API you already know from Python, Java, and .NET.
   - paragraph [box=421,289,438,16]: Unofficial, community-maintained Rust bindings for Microsoft Playwright.
-  - 'link "crates.io: unreleased" [box=469,333,128,20]':
+  - 'link "crates.io: unreleased" [box=512,333,128,20]':
     - /url: https://crates.io/crates/playwright-rs
-    - 'img "crates.io: unreleased" [box=469,333,128,20]'
-  - link "docs.rs" [box=605,333,86,20]:
+    - 'img "crates.io: unreleased" [box=512,333,128,20]'
+  - link "docs.rs" [box=648,343,0,0]:
     - /url: https://docs.rs/playwright-rs
-    - img "docs.rs" [box=605,333,86,20]
-  - img "Playwright 1.61.0" [box=699,333,112,20]
+    - img "docs.rs" [box=648,343,0,0]
+  - img "Playwright 1.61.0" [box=656,333,112,20]
   - link "Docs" [box=432,390,111,44]:
     - /url: https://docs.rs/playwright-rs
   - link "GitHub" [box=555,389,133,46]:
