@@ -60,14 +60,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Cache Playwright driver
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.playwright-driver
           key: ${{ runner.os }}-pw-driver-1.61.0
 
       - name: Cache Playwright Browsers (Linux/macOS)
         if: runner.os != 'Windows'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/ms-playwright
@@ -78,7 +78,7 @@ jobs:
 
       - name: Cache Playwright Browsers (Windows)
         if: runner.os == 'Windows'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~\AppData\Local\ms-playwright
           key: ${{ runner.os }}-playwright-browsers-1.61.0-v2

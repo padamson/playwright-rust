@@ -76,13 +76,13 @@ jobs:
           tool: trunk
 
       - name: Cache Playwright driver
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.playwright-driver
           key: ${{ runner.os }}-pw-driver-1.61.0
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-browsers-1.61.0-v2
