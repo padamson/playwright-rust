@@ -129,6 +129,14 @@ impl Credentials {
 
     /// Installs a virtual WebAuthn authenticator on the context. Call before
     /// registering credentials or driving `navigator.credentials` ceremonies.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The browser context has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-credentials#credentials-install>
     pub async fn install(&self) -> Result<()> {
         self.channel
             .send_no_result("credentialsInstall", json!({}))
@@ -137,6 +145,14 @@ impl Credentials {
 
     /// Registers a virtual credential scoped to `rp_id`, returning the created
     /// credential (with any authenticator-generated fields filled in).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The browser context has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-credentials#credentials-create>
     pub async fn create(
         &self,
         rp_id: &str,
@@ -166,6 +182,14 @@ impl Credentials {
     }
 
     /// Lists virtual credentials, optionally filtered by relying-party or ID.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The browser context has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-credentials#credentials-get>
     pub async fn get(
         &self,
         options: Option<CredentialsGetOptions>,
@@ -188,6 +212,14 @@ impl Credentials {
     }
 
     /// Deletes the credential with the given ID.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The browser context has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-credentials#credentials-delete>
     pub async fn delete(&self, id: &str) -> Result<()> {
         self.channel
             .send_no_result("credentialsDelete", json!({ "id": id }))

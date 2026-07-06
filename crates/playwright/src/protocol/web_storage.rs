@@ -63,6 +63,14 @@ impl WebStorage {
     }
 
     /// Returns the value for `name`, or `None` if the key is not set.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-webstorage#web-storage-get-item>
     pub async fn get_item(&self, name: &str) -> Result<Option<String>> {
         #[derive(serde::Deserialize)]
         struct R {
@@ -81,6 +89,14 @@ impl WebStorage {
     }
 
     /// Sets `name` to `value`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-webstorage#web-storage-set-item>
     pub async fn set_item(&self, name: &str, value: &str) -> Result<()> {
         self.page
             .channel()
@@ -92,6 +108,14 @@ impl WebStorage {
     }
 
     /// Removes `name` from storage (no-op if absent).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-webstorage#web-storage-remove-item>
     pub async fn remove_item(&self, name: &str) -> Result<()> {
         self.page
             .channel()
@@ -103,6 +127,14 @@ impl WebStorage {
     }
 
     /// Removes all entries from this storage area.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-webstorage#web-storage-clear>
     pub async fn clear(&self) -> Result<()> {
         self.page
             .channel()
@@ -111,6 +143,14 @@ impl WebStorage {
     }
 
     /// Returns all `(name, value)` entries currently in this storage area.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - The page has been closed
+    /// - Communication with the browser process fails
+    ///
+    /// See: <https://playwright.dev/docs/api/class-webstorage#web-storage-items>
     pub async fn items(&self) -> Result<Vec<(String, String)>> {
         #[derive(serde::Deserialize)]
         struct Item {
