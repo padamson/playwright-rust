@@ -130,7 +130,7 @@ jobs:
           SITE_VERSION="${{ steps.target.outputs.site_version }}" \
             trunk build --release --public-url "/${{ steps.target.outputs.dest }}/" --dist dist-snapshot
           rm -rf dist-snapshot/receipts
-          cp -r public/receipts dist-snapshot/receipts || true
+          cp -r public/receipts dist-snapshot/receipts
 
       - name: Check out gh-pages
         run: |

@@ -27,7 +27,15 @@ jobs:
       - name: Read currently bundled driver version
         id: current
         run: |
+          # pipefail: without it a grep miss (constant renamed/removed) still
+          # exits 0 through sed, yielding an empty version that reads as "behind"
+          # and opens a bogus tracking issue.
+          set -euo pipefail
           version=$(grep -E 'const PLAYWRIGHT_VERSION:' crates/playwright/build.rs | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$version" ]; then
+            echo "::error::could not read PLAYWRIGHT_VERSION from crates/playwright/build.rs"
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Bundled driver version: $version"
 
@@ -36,8 +44,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           # Latest non-prerelease tag; strip leading "v" to compare against build.rs
           latest=$(gh release view --repo microsoft/playwright --json tagName --jq '.tagName' | sed -E 's/^v//')
+          if [ -z "$latest" ]; then
+            echo "::error::could not read the latest microsoft/playwright release tag"
+            exit 1
+          fi
           echo "version=$latest" >> "$GITHUB_OUTPUT"
           echo "Latest upstream release: $latest"
 
