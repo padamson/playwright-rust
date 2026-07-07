@@ -23,6 +23,15 @@ impl Mouse {
 
     /// Dispatches a `mousemove` event.
     ///
+    /// # Note
+    ///
+    /// Under headless Linux with the bundled Chromium, a move dispatched while a
+    /// button is held (between [`down`](Self::down) and [`up`](Self::up)) can
+    /// hang: the browser treats it as a native drag whose move never returns.
+    /// Use [`Locator::drag_to`](crate::protocol::Locator::drag_to) for
+    /// drag-and-drop; discrete `down` / `up` without an intervening move are
+    /// unaffected.
+    ///
     /// See: <https://playwright.dev/docs/api/class-mouse#mouse-move>
     pub async fn move_to(
         &self,
