@@ -6,18 +6,14 @@
 //! up the build's `target/`. Running `playwright-rs install` populates
 //! `dirs::cache_dir()/playwright-rust/<version>/`, which the library's
 //! runtime resolution chain probes after the bundled lookup.
-//
-// TODO: the download/extract logic is duplicated from `build.rs` for
-// v0.x. Extract to a shared module (via `include!()` or an internal
-// crate) once the architecture stabilises.
 
 use clap::{Parser, Subcommand};
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
-const DRIVER_BASE_URL: &str = "https://playwright.azureedge.net/builds/driver";
+// Download + assembly logic shared with build.rs (see ADR 0006: the driver
+// is assembled from the npm `playwright-core` tarball + a pinned Node binary).
+include!("../build_support/driver_assembly.rs");
 
 #[derive(Parser)]
 #[command(name = "playwright-rs", version, about, long_about = None)]
@@ -104,7 +100,7 @@ async fn run_install(
 
 /// Ensure the Playwright driver exists at
 /// `<cache>/playwright-rust/<version>/playwright-<version>-<platform>/`.
-/// Downloads + extracts from Azure CDN if absent. Returns the driver dir.
+/// Assembles it from npm + nodejs.org if absent. Returns the driver dir.
 fn ensure_driver_in_user_cache(
     version: &str,
     platform: &str,
@@ -120,63 +116,8 @@ fn ensure_driver_in_user_cache(
         return Ok(driver_dir);
     }
 
-    let parent = driver_dir.parent().expect("driver_dir always has a parent");
-    fs::create_dir_all(parent)?;
-
-    let url = format!("{DRIVER_BASE_URL}/playwright-{version}-{platform}.zip");
-    eprintln!("Downloading driver from {url}");
-
-    let mut response = ureq::get(&url).call()?;
-    let status = response.status().as_u16();
-    if !(200..300).contains(&status) {
-        return Err(format!("download failed with status: {status}").into());
-    }
-
-    let bytes: Vec<u8> = response
-        .body_mut()
-        .with_config()
-        .limit(u64::MAX)
-        .read_to_vec()?;
-    eprintln!("Downloaded {} bytes", bytes.len());
-
-    let cursor = io::Cursor::new(bytes);
-    let mut archive = zip::ZipArchive::new(cursor)?;
-    extract_zip_to(&mut archive, &driver_dir)?;
+    eprintln!("Assembling driver {version} (Node {NODE_VERSION}) for {platform}...");
+    assemble_driver(&driver_dir, version, platform)?;
 
     Ok(driver_dir)
-}
-
-fn extract_zip_to(
-    archive: &mut zip::ZipArchive<io::Cursor<Vec<u8>>>,
-    dest: &Path,
-) -> io::Result<()> {
-    fs::create_dir_all(dest)?;
-    for i in 0..archive.len() {
-        let mut file = archive
-            .by_index(i)
-            .map_err(|e| io::Error::other(format!("zip read failed: {e}")))?;
-        let outpath = dest.join(file.name());
-        if file.is_dir() {
-            fs::create_dir_all(&outpath)?;
-        } else {
-            if let Some(parent) = outpath.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            let mut outfile = fs::File::create(&outpath)?;
-            io::copy(&mut file, &mut outfile)?;
-
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                if outpath.ends_with("node")
-                    || outpath.extension().and_then(|s| s.to_str()) == Some("sh")
-                {
-                    let mut perms = fs::metadata(&outpath)?.permissions();
-                    perms.set_mode(0o755);
-                    fs::set_permissions(&outpath, perms)?;
-                }
-            }
-        }
-    }
-    Ok(())
 }

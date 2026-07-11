@@ -402,3 +402,11 @@ pub use server::driver::{install_browsers, install_browsers_with_deps};
 // available can opt out.
 #[cfg(feature = "macros")]
 pub use playwright_rs_macros::locator;
+
+// The pure driver-acquisition mapping (platform → Node triple, download URLs)
+// that build.rs and the cli binary `include!`. std-only, so compiling it into
+// the lib's test suite costs nothing at runtime and keeps its unit tests in
+// the always-run `cargo nextest` pass.
+#[cfg(test)]
+#[path = "build_support/driver_urls.rs"]
+mod driver_urls;

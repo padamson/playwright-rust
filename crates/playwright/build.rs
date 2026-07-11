@@ -1,8 +1,12 @@
 //! Build script for playwright-rs
 //!
-//! Downloads and extracts the Playwright Node.js driver from Azure CDN.
-//! The runtime side (`src/server/driver.rs`) picks the path up via
-//! compile-time `option_env!()` lookups.
+//! Assembles the Playwright Node.js driver from two artifacts — the
+//! `playwright-core` npm tarball (registry.npmjs.org) and a pinned Node.js
+//! binary (nodejs.org) — into the same `node` + `package/` layout the old
+//! prebuilt CDN zip provided (see ADR 0006; the prebuilt zips were
+//! discontinued when the azureedge CDN shut down). The runtime side
+//! (`src/server/driver.rs`) picks the path up via compile-time
+//! `option_env!()` lookups.
 //!
 //! By default the driver lands in Cargo's `$OUT_DIR` (inside `target/`),
 //! which is fine for local dev. Two env knobs tune it for CI:
@@ -14,18 +18,22 @@
 //!   run. The driver belongs in its own `actions/cache`, like the browsers.
 //! - `PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD` skips the download entirely for
 //!   compile-only jobs (e.g. the MSRV `cargo check`) that never launch a
-//!   browser, saving a ~42 MB fetch.
+//!   browser, saving a ~90 MB fetch.
 
 use std::env;
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 const PLAYWRIGHT_VERSION: &str = "1.60.0";
-const DRIVER_BASE_URL: &str = "https://playwright.azureedge.net/builds/driver";
+
+// Download + assembly logic shared with the cli binary (`src/bin/
+// playwright_rs.rs`); pulls in the pure URL/platform mapping from
+// `driver_urls.rs`, which the lib test suite unit-tests.
+include!("src/build_support/driver_assembly.rs");
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=src/build_support/driver_assembly.rs");
+    println!("cargo:rerun-if-changed=src/build_support/driver_urls.rs");
     println!("cargo:rerun-if-env-changed=PLAYWRIGHT_DRIVER_CACHE_DIR");
     println!("cargo:rerun-if-env-changed=PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD");
 
@@ -33,10 +41,7 @@ fn main() {
     // (e.g. MSRV `cargo check`, mutation testing) that never launch a browser.
     if env::var_os("DOCS_RS").is_some() || env::var_os("PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD").is_some()
     {
-        println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR=");
-        println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_VERSION={PLAYWRIGHT_VERSION}");
-        println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_PLATFORM=skipped");
-        println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR_SOURCE=skipped");
+        set_skipped_env_vars("skipped");
         return;
     }
 
@@ -65,22 +70,29 @@ fn main() {
         return;
     }
 
-    println!("cargo:warning=Downloading Playwright driver {PLAYWRIGHT_VERSION} for {platform}...");
+    println!(
+        "cargo:warning=Assembling Playwright driver {PLAYWRIGHT_VERSION} (Node {NODE_VERSION}) for {platform}..."
+    );
 
-    match download_and_extract_driver(&drivers_dir, platform) {
-        Ok(extracted_dir) => {
+    match assemble_driver(&driver_dir, PLAYWRIGHT_VERSION, platform) {
+        Ok(()) => {
             println!(
-                "cargo:warning=Playwright driver downloaded to {}",
-                extracted_dir.display()
+                "cargo:warning=Playwright driver assembled at {}",
+                driver_dir.display()
             );
-            set_output_env_vars(&extracted_dir, platform);
+            set_output_env_vars(&driver_dir, platform);
         }
         Err(e) => {
-            println!("cargo:warning=Failed to download Playwright driver: {e}");
-            println!("cargo:warning=The driver will need to be installed manually or via npm.");
+            // Compile anyway (same shape as the skip path): the runtime
+            // resolution chain can still find a driver via PLAYWRIGHT_DRIVER_PATH
+            // or an npm-installed playwright, and a build without one fails at
+            // launch with ServerNotFound instead of a cryptic missing-env-var
+            // compile error in downstream crates.
+            println!("cargo:warning=Failed to assemble Playwright driver: {e}");
             println!(
-                "cargo:warning=You can set PLAYWRIGHT_DRIVER_PATH to specify driver location."
+                "cargo:warning=Set PLAYWRIGHT_DRIVER_PATH to a driver directory, or install one via npm."
             );
+            set_skipped_env_vars("failed");
         }
     }
 }
@@ -89,114 +101,28 @@ fn main() {
 fn detect_platform() -> &'static str {
     let os = env::consts::OS;
     let arch = env::consts::ARCH;
-
-    match (os, arch) {
-        ("macos", "x86_64") => "mac",
-        ("macos", "aarch64") => "mac-arm64",
-        ("linux", "x86_64") => "linux",
-        ("linux", "aarch64") => "linux-arm64",
-        ("windows", "x86_64") => "win32_x64",
-        ("windows", "aarch64") => "win32_arm64",
-        _ => {
-            println!("cargo:warning=Unsupported platform: {} {}", os, arch);
-            println!("cargo:warning=Defaulting to linux platform");
-            "linux"
-        }
-    }
+    playwright_platform(os, arch).unwrap_or_else(|| {
+        println!("cargo:warning=Unsupported platform: {os} {arch}");
+        println!("cargo:warning=Defaulting to linux platform");
+        "linux"
+    })
 }
 
-/// Download and extract the Playwright driver.
-//
-// TODO: this download/extract routine is duplicated in
-// `src/bin/playwright_rs.rs::ensure_driver_in_user_cache` for v0.x.
-// Extract to a shared module (via `include!()` or an internal crate)
-// once the architecture stabilizes.
-fn download_and_extract_driver(drivers_dir: &Path, platform: &str) -> io::Result<PathBuf> {
-    // Create drivers directory
-    fs::create_dir_all(drivers_dir)?;
-
-    // Download URL
-    let filename = format!("playwright-{}-{}.zip", PLAYWRIGHT_VERSION, platform);
-    let url = format!("{}/{}", DRIVER_BASE_URL, filename);
-
-    println!("cargo:warning=Downloading from: {}", url);
-
-    // Download the file via ureq (synchronous, minimal dep tree).
-    let mut response = ureq::get(&url)
-        .call()
-        .map_err(|e| io::Error::other(format!("Download failed: {}", e)))?;
-
-    let status = response.status().as_u16();
-    if !(200..300).contains(&status) {
-        return Err(io::Error::other(format!(
-            "Download failed with status: {}",
-            status
-        )));
-    }
-
-    // The driver archive is ~50 MB; ureq's default body limit is 10 MB.
-    // Lift the limit for this trusted Microsoft CDN download.
-    let bytes: Vec<u8> = response
-        .body_mut()
-        .with_config()
-        .limit(u64::MAX)
-        .read_to_vec()
-        .map_err(|e| io::Error::other(format!("Failed to read response: {}", e)))?;
-
-    println!("cargo:warning=Downloaded {} bytes", bytes.len());
-
-    // Extract ZIP file
-    let cursor = io::Cursor::new(bytes);
-    let mut archive = zip::ZipArchive::new(cursor)
-        .map_err(|e| io::Error::other(format!("Failed to open ZIP: {}", e)))?;
-
-    let extract_dir = drivers_dir.join(format!("playwright-{}-{}", PLAYWRIGHT_VERSION, platform));
-
-    println!("cargo:warning=Extracting to: {}", extract_dir.display());
-
-    for i in 0..archive.len() {
-        let mut file = archive
-            .by_index(i)
-            .map_err(|e| io::Error::other(format!("Failed to read ZIP entry: {}", e)))?;
-
-        let outpath = extract_dir.join(file.name());
-
-        if file.is_dir() {
-            fs::create_dir_all(&outpath)?;
-        } else {
-            if let Some(parent) = outpath.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            let mut outfile = fs::File::create(&outpath)?;
-            io::copy(&mut file, &mut outfile)?;
-
-            // Set executable permissions on Unix
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-
-                // Make executable: node binary and any shell scripts
-                if outpath.ends_with("node")
-                    || outpath.extension().and_then(|s| s.to_str()) == Some("sh")
-                {
-                    let mut perms = fs::metadata(&outpath)?.permissions();
-                    perms.set_mode(0o755);
-                    fs::set_permissions(&outpath, perms)?;
-                }
-            }
-        }
-    }
-
+/// Env vars for builds that have no driver on disk (skipped or failed
+/// download): the crate still compiles, and the runtime falls back through
+/// its resolution chain.
+fn set_skipped_env_vars(reason: &str) {
+    println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR=");
+    println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_VERSION={PLAYWRIGHT_VERSION}");
     println!(
-        "cargo:warning=Successfully extracted {} files",
-        archive.len()
+        "cargo:rustc-env=PLAYWRIGHT_DRIVER_PLATFORM={}",
+        detect_platform()
     );
-
-    Ok(extract_dir)
+    println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR_SOURCE={reason}");
 }
 
 /// Set environment variables for use at runtime
-fn set_output_env_vars(driver_dir: &Path, platform: &str) {
+fn set_output_env_vars(driver_dir: &std::path::Path, platform: &str) {
     // Set the driver directory for runtime
     println!(
         "cargo:rustc-env=PLAYWRIGHT_DRIVER_DIR={}",

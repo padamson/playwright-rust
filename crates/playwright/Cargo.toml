@@ -21,7 +21,7 @@ rustls-tls-native-roots = ["tokio-tungstenite/rustls-tls-native-roots"]
 rustls-tls-webpki-roots = ["tokio-tungstenite/rustls-tls-webpki-roots"]
 screenshot-diff = ["dep:image"]
 macros = ["dep:playwright-rs-macros"]
-cli = ["dep:clap", "dep:ureq", "dep:zip"]
+cli = ["dep:clap", "dep:ureq", "dep:zip", "dep:flate2", "dep:tar"]
 
 [dependencies]
 tokio = { workspace = true }
@@ -44,6 +44,10 @@ playwright-rs-macros = { version = "0.1.0", path = "../playwright-rs-macros", op
 clap = { version = "4", features = ["derive"], optional = true }
 ureq = { version = "3.3.0", optional = true }
 zip = { version = "8", optional = true, default-features = false, features = ["deflate"] }
+# .tar.gz handling for the assembled driver (npm playwright-core tarball +
+# the Node dist archive on non-Windows) — see ADR 0006.
+flate2 = { version = "1", optional = true }
+tar = { version = "0.4", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -70,6 +74,10 @@ ureq = "3.3.0"
 # skip zip's default codec set (aes-crypto/bzip2/zstd/lzma/...) — smaller
 # tree and no pull on the encryption stack. Mirrors playwright-rs-trace.
 zip = { version = "8", default-features = false, features = ["deflate"] }
+# .tar.gz for the npm playwright-core tarball + the non-Windows Node dist
+# archive (the driver is assembled from those two artifacts — ADR 0006).
+flate2 = "1"
+tar = "0.4"
 
 [package.metadata.docs.rs]
 # Pin nightly to avoid generic-array 0.14 breakage (doc_auto_cfg removed in Rust 1.92)

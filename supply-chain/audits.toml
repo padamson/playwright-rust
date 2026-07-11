@@ -93,6 +93,12 @@ user-id = 6743 # Ed Page (epage)
 start = "2023-04-13"
 end = "2027-05-16"
 
+[[trusted.filetime]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2019-04-23"
+end = "2027-07-11"
+
 [[trusted.flate2]]
 criteria = "safe-to-deploy"
 user-id = 980 # Sebastian Thiel (Byron)
@@ -212,6 +218,12 @@ criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-03-01"
 end = "2027-05-23"
+
+[[trusted.tar]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2019-03-04"
+end = "2027-07-11"
 
 [[trusted.target-triple]]
 criteria = "safe-to-deploy"

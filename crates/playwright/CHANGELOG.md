@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-07-10
+
+### Security
+
+- **Bumped `crossbeam-epoch` 0.9.18 → 0.9.20 ([RUSTSEC-2026-0204](https://rustsec.org/advisories/RUSTSEC-2026-0204)) and `anyhow` 1.0.102 → 1.0.103 ([RUSTSEC-2026-0190](https://rustsec.org/advisories/RUSTSEC-2026-0190)) in the repository lockfile.** Both reach this repo only through dev-dependencies (benchmarks and tests), so no consumer of `playwright-rs` was exposed.
+
+### Fixed
+
+- **Driver acquisition survives the shutdown of Microsoft's `playwright.azureedge.net` CDN.** The prebuilt `playwright-<version>-<platform>.zip` driver archives were discontinued with that CDN (they now 404), which broke every fresh build — cold caches, new machines, and CI failed with `environment variable PLAYWRIGHT_DRIVER_VERSION not defined` (issue [#116](https://github.com/padamson/playwright-rust/issues/116)). The build script (and the `cli` feature's `playwright-rs install`) now assemble the driver from two artifacts instead: the `playwright-core` npm tarball (registry.npmjs.org) and a pinned Node.js binary (nodejs.org, currently 24.17.0) — the same model playwright-python uses — laid out identically to the old bundle so runtime behavior is unchanged ([ADR 0006](https://github.com/padamson/playwright-rust/blob/main/docs/adr/0006-driver-acquisition-assemble-locally.md)). The bundled driver stays at 1.60.0; no API changes. A failed download now compiles anyway (the runtime falls back to `PLAYWRIGHT_DRIVER_PATH` or an npm-installed Playwright, failing at launch with `ServerNotFound`) instead of poisoning downstream builds with the missing-env-var compile error, and download errors name the exact URL that failed.
+
 ## [0.14.0] - 2026-06-13
 
 ### Added
