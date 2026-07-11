@@ -5,6 +5,13 @@ name: Upstream Playwright Check
 # not auto-bump because driver bumps can carry browser-binary changes,
 # protocol-schema deltas, or platform-support drops (e.g. macOS 14
 # WebKit removal in 1.59) that need human review.
+#
+# Also probes the driver-assembly download URLs (npm playwright-core +
+# the pinned Node binary for all six platforms) on the same cadence.
+# Upstream URL breakage arrives with zero change on our side — the
+# azureedge CDN shutdown broke fresh builds for weeks before a report
+# surfaced — so a scheduled probe, not a code-triggered job, is the
+# guard that actually fires.
 
 on:
   schedule:
@@ -117,3 +124,43 @@ jobs:
             --body-file /tmp/issue-body.md
 
           echo "Opened tracking issue for ${UPSTREAM}."
+
+  check-driver-sources:
+    name: Probe driver-assembly download URLs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve npm + Node URLs for every supported platform
+        run: |
+          set -euo pipefail
+          pw=$(grep -E 'const PLAYWRIGHT_VERSION:' crates/playwright/build.rs | sed -E 's/.*"([^"]+)".*/\1/')
+          node=$(grep -E 'const NODE_VERSION:' crates/playwright/src/build_support/driver_urls.rs | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$pw" ] || [ -z "$node" ]; then
+            echo "::error::could not read PLAYWRIGHT_VERSION or NODE_VERSION from source"
+            exit 1
+          fi
+          echo "Probing driver sources for playwright-core $pw + Node $node"
+
+          # URL scheme mirrors src/build_support/driver_urls.rs (unit-tested
+          # there); this probe checks the artifacts still exist upstream.
+          urls=(
+            "https://registry.npmjs.org/playwright-core/-/playwright-core-$pw.tgz"
+            "https://nodejs.org/dist/v$node/node-v$node-darwin-x64.tar.gz"
+            "https://nodejs.org/dist/v$node/node-v$node-darwin-arm64.tar.gz"
+            "https://nodejs.org/dist/v$node/node-v$node-linux-x64.tar.gz"
+            "https://nodejs.org/dist/v$node/node-v$node-linux-arm64.tar.gz"
+            "https://nodejs.org/dist/v$node/node-v$node-win-x64.zip"
+            "https://nodejs.org/dist/v$node/node-v$node-win-arm64.zip"
+          )
+          failed=0
+          for url in "${urls[@]}"; do
+            code=$(curl -sI -o /dev/null -w '%{http_code}' --max-time 30 --retry 2 "$url" || echo 000)
+            if [ "$code" = "200" ]; then
+              echo "ok   $code  $url"
+            else
+              echo "::error::driver source unreachable ($code): $url"
+              failed=1
+            fi
+          done
+          exit "$failed"
