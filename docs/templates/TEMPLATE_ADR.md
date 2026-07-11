@@ -32,7 +32,7 @@ Extract key technical requirements:
   - **Compatibility:** [e.g., macOS, iOS, Android device support]
   - **API Ergonomics:** [e.g., simple CLI for common tasks, composable for automation]
   - **Safety:** [e.g., never lose photo data, fail gracefully on corrupted files]
-  - **Maintainability:** [e.g., single developer, minimize complex dependencies]
+  - **Maintainability:** [e.g., community-maintained, minimize complex dependencies]
   - **Vendor Neutrality:** [e.g., metadata in open standards, tool-agnostic catalog]
 
 - **Constraints:**
