@@ -312,7 +312,7 @@ a duplicate of the API reference.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=padamson/playwright-rust&type=Date)](https://star-history.com/#padamson/playwright-rust&Date)
+[![Star History Chart](https://api.star-history.com/chart?repos=padamson/playwright-rust&type=date&legend=top-left&sealed_token=Op9aMPhRKMrLuxPN6Gm9tDlM5gQgFHjO9mtlrqq3qU6DWkO5nSao2tjUHuzC3m8RPGKZ0nVsg9Eo1l77UQ4E3t8XOIJfxFOlbWwI3EzojNG70cDCp2c28YVNRYSrl91Tnc-mvTs14Y5Aonm4ri8iI-CPCnPPHvYYNGJsOG8X-Ggt8TtYgQX_5VF_GENT)](https://www.star-history.com/?type=date&repos=padamson%2Fplaywright-rust)
 
 ## Contributing
 
