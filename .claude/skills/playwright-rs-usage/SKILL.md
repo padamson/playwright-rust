@@ -77,11 +77,11 @@ async fn login_flow() -> Result<()> {
     let page = context.new_page().await?;
 
     page.goto("https://example.com/login", None).await?;
-    page.locator(locator!("input[name='user']")).await.fill("alice", None).await?;
-    page.locator(locator!("input[name='pass']")).await.fill("hunter2", None).await?;
-    page.locator(locator!("text=Sign in")).await.click(None).await?;
+    page.locator(locator!("input[name='user']")).fill("alice", None).await?;
+    page.locator(locator!("input[name='pass']")).fill("hunter2", None).await?;
+    page.locator(locator!("text=Sign in")).click(None).await?;
 
-    expect(page.locator(locator!(".welcome")).await).to_be_visible().await?;
+    expect(page.locator(locator!(".welcome"))).to_be_visible().await?;
 
     browser.close().await?;
     Ok(())

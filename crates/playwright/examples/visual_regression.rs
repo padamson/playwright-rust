@@ -39,14 +39,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let locator = page.locator("body > div").await;
+    let locator = page.locator("body > div");
     expect(locator)
         .to_have_screenshot(baseline_dir.join("hero.png"), None)
         .await?;
     println!("✓ Baseline created (blue button, 'Get Started', green status)");
 
     // --- Example 2: Page-level screenshot with mask ---
-    let status_locator = page.locator("#status").await;
+    let status_locator = page.locator("#status");
     let options = ScreenshotAssertionOptions::builder()
         .mask(vec![status_locator])
         .animations(Animations::Disabled)
@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .threshold(0.3)
         .build();
 
-    let locator = page.locator("body > div").await;
+    let locator = page.locator("body > div");
     expect(locator)
         .to_have_screenshot(baseline_dir.join("hero.png"), Some(options))
         .await?;
@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let locator = page.locator("body > div").await;
+    let locator = page.locator("body > div");
     let result = expect(locator)
         .with_timeout(std::time::Duration::from_millis(500))
         .to_have_screenshot(baseline_dir.join("hero.png"), None)
@@ -125,7 +125,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .update_snapshots(true)
         .build();
 
-    let locator = page.locator("body > div").await;
+    let locator = page.locator("body > div");
     expect(locator)
         .to_have_screenshot(baseline_dir.join("hero.png"), Some(options))
         .await?;

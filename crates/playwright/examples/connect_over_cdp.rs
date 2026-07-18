@@ -82,12 +82,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     page.goto("https://example.com", None).await?;
 
     // Assert heading text using expect API
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     expect(heading).to_have_text("Example Domain").await?;
     println!("Heading assertion passed");
 
     // Find the "Learn more" link using get_by_text
-    let link = page.get_by_text("Learn more", false).await;
+    let link = page.get_by_text("Learn more", false);
     expect(link.clone()).to_be_visible().await?;
     println!("Link is visible");
 
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Navigate back to example.com
     page.goto("https://example.com", None).await?;
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     expect(heading).to_have_text("Example Domain").await?;
     println!("Back navigation assertion passed");
 

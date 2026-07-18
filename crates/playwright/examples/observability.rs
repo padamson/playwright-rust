@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
         page.goto("data:text/html,<button id='b'>Pay</button>", None)
             .await?;
 
-        let button = page.locator("#b").await;
+        let button = page.locator("#b");
         button.click(None).await?;
 
         let _shot = page.screenshot(None).await?;

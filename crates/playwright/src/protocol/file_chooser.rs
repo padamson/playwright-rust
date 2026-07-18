@@ -46,7 +46,7 @@ use std::sync::Arc;
 ///     let waiter = page.expect_file_chooser(None).await?;
 ///
 ///     // Click the file input to open the chooser
-///     page.locator("#f").await.click(None).await?;
+///     page.locator("#f").click(None).await?;
 ///
 ///     // Resolve the waiter and set files
 ///     let chooser = waiter.wait().await?;
@@ -134,7 +134,7 @@ impl FileChooser {
     /// # let browser = pw.chromium().launch().await?;
     /// # let page = browser.new_page().await?;
     /// let waiter = page.expect_file_chooser(None).await?;
-    /// page.locator("input[type=file]").await.click(None).await?;
+    /// page.locator("input[type=file]").click(None).await?;
     /// let chooser = waiter.wait().await?;
     /// chooser.set_files(&[PathBuf::from("/tmp/upload.txt")]).await?;
     /// # Ok(())

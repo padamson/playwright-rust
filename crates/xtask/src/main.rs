@@ -112,7 +112,6 @@ async fn regenerate_trace_fixture(out: &Path) -> Result<()> {
         .context("goto local fixture server")?;
 
     page.locator("#b")
-        .await
         .click(None)
         .await
         .context("click button")?;

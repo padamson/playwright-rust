@@ -523,7 +523,7 @@ async fn test_context_on_dialog() {
     .await
     .expect("evaluate_expression should succeed");
 
-    let locator = page.locator("button").await;
+    let locator = page.locator("button");
     locator.click(None).await.expect("click should succeed");
 
     notified_or_timeout(&notify, 5000, "on_dialog").await;
@@ -695,7 +695,7 @@ async fn test_context_on_download() {
     )
     .await
     .expect("set_content");
-    page.locator("#dl").await.click(None).await.expect("click");
+    page.locator("#dl").click(None).await.expect("click");
     assert!(
         wait_at_least(&count, 1, 5000).await,
         "context on_download should fire when a page starts a download"

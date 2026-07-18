@@ -12,10 +12,10 @@ async fn test_click_with_button_options() {
         .expect("Failed to navigate");
 
     // Test 1: Default click (left button)
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     button.click(None).await.expect("Failed to click");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(result.contains("left"), "Default should be left click");
 
     // Reset
@@ -30,7 +30,7 @@ async fn test_click_with_button_options() {
         .await
         .expect("Failed to right-click");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     // Right click can trigger contextmenu or auxclick event
     assert!(
         result.contains("contextmenu") || result.contains("right") || result.contains("auxclick"),
@@ -50,7 +50,7 @@ async fn test_click_with_button_options() {
         .await
         .expect("Failed to middle-click");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         result.contains("middle"),
         "Should register middle click: {}",
@@ -71,7 +71,7 @@ async fn test_click_with_modifiers() {
         .expect("Failed to navigate");
 
     // Click with Shift modifier
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     let options = ClickOptions::builder()
         .modifiers(vec![KeyboardModifier::Shift])
         .build();
@@ -80,7 +80,7 @@ async fn test_click_with_modifiers() {
         .await
         .expect("Failed to click with modifiers");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         result.contains("shiftKey:true"),
         "Should have Shift modifier: {}",
@@ -101,7 +101,7 @@ async fn test_click_with_position() {
         .expect("Failed to navigate");
 
     // Click at specific position
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     let options = ClickOptions::builder()
         .position(Position { x: 10.0, y: 10.0 })
         .build();
@@ -111,7 +111,7 @@ async fn test_click_with_position() {
         .expect("Failed to click with position");
 
     // Just verify click worked (position is relative to element)
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         !result.is_empty(),
         "Click with position should trigger event"
@@ -131,7 +131,7 @@ async fn test_click_with_force() {
         .expect("Failed to navigate");
 
     // Click button with force option (verifies option is passed correctly)
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     let options = ClickOptions::builder().force(true).build();
 
     let result = button.click(Some(options)).await;
@@ -140,7 +140,7 @@ async fn test_click_with_force() {
     assert!(result.is_ok(), "Force click should succeed");
 
     // Verify click was registered
-    let text = page.locator("#result").await.inner_text().await.unwrap();
+    let text = page.locator("#result").inner_text().await.unwrap();
     assert!(!text.is_empty(), "Click should have been registered");
 
     browser.close().await.expect("Failed to close browser");
@@ -157,7 +157,7 @@ async fn test_click_with_trial() {
         .expect("Failed to navigate");
 
     // Trial click (should not actually click)
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     let options = ClickOptions::builder().trial(true).build();
     button
         .click(Some(options))
@@ -165,7 +165,7 @@ async fn test_click_with_trial() {
         .expect("Failed to trial click");
 
     // Result should still be empty since trial doesn't actually click
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         result.is_empty(),
         "Trial click should not trigger event: {}",
@@ -186,10 +186,10 @@ async fn test_dblclick_with_options() {
         .expect("Failed to navigate");
 
     // Double-click
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     button.dblclick(None).await.expect("Failed to double-click");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         result.contains("dblclick"),
         "Should register double-click: {}",
@@ -220,14 +220,14 @@ async fn test_click_options_firefox() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     let options = ClickOptions::builder().button(MouseButton::Right).build();
     button
         .click(Some(options))
         .await
         .expect("Failed to right-click in Firefox");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         result.contains("contextmenu") || result.contains("right") || result.contains("auxclick"),
         "Firefox should register right click: {}",
@@ -258,14 +258,14 @@ async fn test_click_options_webkit() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#button").await;
+    let button = page.locator("#button");
     let options = ClickOptions::builder().button(MouseButton::Right).build();
     button
         .click(Some(options))
         .await
         .expect("Failed to right-click in WebKit");
 
-    let result = page.locator("#result").await.inner_text().await.unwrap();
+    let result = page.locator("#result").inner_text().await.unwrap();
     assert!(
         result.contains("contextmenu") || result.contains("right") || result.contains("auxclick"),
         "WebKit should register right click: {}",

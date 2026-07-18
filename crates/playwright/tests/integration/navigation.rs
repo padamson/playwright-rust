@@ -461,7 +461,7 @@ async fn test_url_includes_hash_after_anchor_click() {
     tracing::info!("Initial URL: {}", page.url());
 
     // Click anchor link to navigate to #section1
-    let anchor = page.locator("#link-to-section1").await;
+    let anchor = page.locator("#link-to-section1");
     let nav_waiter = page
         .expect_event("framenavigated", Some(5000.0))
         .await
@@ -484,7 +484,7 @@ async fn test_url_includes_hash_after_anchor_click() {
     );
 
     // Click another anchor to navigate to #section2
-    let anchor2 = page.locator("#link-to-section2").await;
+    let anchor2 = page.locator("#link-to-section2");
     let nav_waiter2 = page
         .expect_event("framenavigated", Some(5000.0))
         .await
@@ -592,7 +592,7 @@ async fn test_url_hash_cross_browser() {
         page.goto(&url, None).await.expect("Failed to navigate");
 
         // Click anchor link
-        let anchor = page.locator("#link-to-section1").await;
+        let anchor = page.locator("#link-to-section1");
         let nav_waiter = page
             .expect_event("framenavigated", Some(5000.0))
             .await
@@ -665,7 +665,7 @@ async fn test_url_workaround_with_evaluate() {
     page.goto(&url, None).await.expect("Failed to navigate");
 
     // Click anchor link
-    let anchor = page.locator("#link-to-section1").await;
+    let anchor = page.locator("#link-to-section1");
     let nav_waiter = page
         .expect_event("framenavigated", Some(5000.0))
         .await

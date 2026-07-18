@@ -58,7 +58,6 @@ async fn shot(page: &Page, steps: &Path, file: &str, selector: &str) {
         .build();
     let bytes = page
         .locator(selector)
-        .await
         .screenshot(Some(opts))
         .await
         .unwrap_or_else(|e| panic!("screenshot {selector}: {e:?}"));
@@ -123,7 +122,6 @@ async fn landing_page_works_as_advertised() {
     // gate serves at root (where both resolve), so guard the invariant directly.
     let abs_assets = page
         .locator("img[src^='/receipts'], a[href^='/receipts'], img[src^='/crates-io']")
-        .await
         .count()
         .await
         .expect("count root-absolute asset paths");
@@ -134,13 +132,13 @@ async fn landing_page_works_as_advertised() {
 
     // Step 1: the SPA renders. The locator auto-waits for the WASM app to mount
     // and paint the hero, so there is no sleep or readiness polling.
-    expect(page.locator("#hero-title").await)
+    expect(page.locator("#hero-title"))
         .to_have_text("Playwright for Rust")
         .await
         .expect("hero renders once the WASM app boots");
     // The primary CTA must point at the docs (a navigation contract: catches a
     // broken or wrong docs link).
-    expect(page.locator("#cta-docs").await)
+    expect(page.locator("#cta-docs"))
         .to_have_attribute("href", "https://docs.rs/playwright-rs")
         .await
         .expect("the Docs button links to docs.rs");
@@ -167,17 +165,16 @@ async fn landing_page_works_as_advertised() {
     // Step 2: switch the comparison language and assert the resulting state.
     // The default tab is Python; clicking Java must swap the snippet and mark
     // the Java tab selected.
-    let comparison = page.locator("#comparison").await;
+    let comparison = page.locator("#comparison");
     expect(comparison.clone())
         .to_contain_text("sync_playwright")
         .await
         .expect("comparison defaults to Python");
     page.locator("[data-lang='Java']")
-        .await
         .click(None)
         .await
         .expect("click the Java tab");
-    expect(page.locator("[data-lang='Java']").await)
+    expect(page.locator("[data-lang='Java']"))
         .to_have_attribute("aria-selected", "true")
         .await
         .expect("the Java tab becomes selected");
@@ -195,25 +192,22 @@ async fn landing_page_works_as_advertised() {
     // Step 3: a second interactive widget. Switch the cross-browser tile from
     // Chromium to Firefox, scoping the locator to that card.
     page.locator("#feature-cross-browser [data-lang='Firefox']")
-        .await
         .click(None)
         .await
         .expect("click the Firefox engine tab");
     expect(
-        page.locator("#feature-cross-browser [data-lang='Firefox']")
-            .await,
+        page.locator("#feature-cross-browser [data-lang='Firefox']"),
     )
     .to_have_attribute("aria-selected", "true")
     .await
     .expect("the Firefox tab becomes selected");
     expect(
-        page.locator("#feature-cross-browser [data-lang='Chromium']")
-            .await,
+        page.locator("#feature-cross-browser [data-lang='Chromium']"),
     )
     .to_have_attribute("aria-selected", "false")
     .await
     .expect("the Chromium tab deselects");
-    expect(page.locator("#feature-cross-browser").await)
+    expect(page.locator("#feature-cross-browser"))
         .to_contain_text("firefox")
         .await
         .expect("the Firefox snippet is shown");
@@ -233,17 +227,16 @@ async fn landing_page_works_as_advertised() {
         ("#feature-tracing", "tracing_subscriber"),
         ("#feature-responsive", "set_viewport_size"),
     ] {
-        expect(page.locator(id).await)
+        expect(page.locator(id))
             .to_be_visible()
             .await
             .unwrap_or_else(|e| panic!("feature card {id} should render: {e:?}"));
-        expect(page.locator(id).await)
+        expect(page.locator(id))
             .to_contain_text(token)
             .await
             .unwrap_or_else(|e| panic!("feature card {id} should show its snippet: {e:?}"));
         let colored = page
             .locator(&format!("{id} span[style*='color']"))
-            .await
             .count()
             .await
             .unwrap_or_else(|e| panic!("count colored spans in {id}: {e:?}"));
@@ -255,7 +248,7 @@ async fn landing_page_works_as_advertised() {
     shot(&page, &steps, "04.png", "#features").await;
 
     // Step 5: the footer is up front about being an unofficial binding.
-    let disclaimer = page.locator("#disclaimer").await;
+    let disclaimer = page.locator("#disclaimer");
     expect(disclaimer.clone())
         .to_contain_text("unofficial")
         .await
@@ -271,12 +264,11 @@ async fn landing_page_works_as_advertised() {
     // screenshot options that completed screenshot parity in playwright-rs.
     let masked = ScreenshotOptions::builder()
         .animations(Animations::Disabled)
-        .mask(vec![page.locator("#hero-badges img").await])
+        .mask(vec![page.locator("#hero-badges img")])
         .mask_color("#ce422b")
         .build();
     let bytes = page
         .locator("#hero")
-        .await
         .screenshot(Some(masked))
         .await
         .expect("masked hero screenshot");
@@ -285,11 +277,10 @@ async fn landing_page_works_as_advertised() {
     // The walkthrough is itself an interactive stepper. Driving it covers the
     // third interactive widget on the page.
     page.locator("#walk-next")
-        .await
         .click(None)
         .await
         .expect("click the walkthrough Next button");
-    expect(page.locator("#walkthrough").await)
+    expect(page.locator("#walkthrough"))
         .to_contain_text("Step 2 of 6")
         .await
         .expect("the walkthrough advances to the next step");
@@ -347,15 +338,15 @@ async fn version_switcher_lists_versions_and_warns_on_dev() {
 
     // The dropdown is always present; once the manifest loads it carries the
     // published versions, and the dev build shows the unreleased banner.
-    expect(page.locator("#version-select").await)
+    expect(page.locator("#version-select"))
         .to_be_visible()
         .await
         .expect("version dropdown visible");
-    expect(page.locator("#version-select").await)
+    expect(page.locator("#version-select"))
         .to_contain_text("v0.14.0")
         .await
         .expect("dropdown lists published version from manifest");
-    expect(page.locator("text=Unreleased dev build").await)
+    expect(page.locator("text=Unreleased dev build"))
         .to_be_visible()
         .await
         .expect("dev build shows the unreleased banner");
@@ -386,7 +377,7 @@ async fn dev_build_shows_unreleased_features() {
 
     // The dev build adds unreleased feature cards into the Features grid, each
     // carrying an "Unreleased" badge and a real (compile-checked) snippet.
-    let webstorage = page.locator("#feature-webstorage").await;
+    let webstorage = page.locator("#feature-webstorage");
     expect(webstorage.clone())
         .to_be_visible()
         .await
@@ -401,12 +392,12 @@ async fn dev_build_shows_unreleased_features() {
         .expect("WebStorage card shows the local_storage snippet");
 
     // The dev build installs from git (main HEAD), not the crates.io version.
-    expect(page.locator("#install").await)
+    expect(page.locator("#install"))
         .to_contain_text("git = \"https://github.com/padamson/playwright-rust\"")
         .await
         .expect("dev build's install block uses a git dependency");
 
-    let webauthn = page.locator("#feature-webauthn").await;
+    let webauthn = page.locator("#feature-webauthn");
     expect(webauthn.clone())
         .to_be_visible()
         .await
@@ -422,7 +413,6 @@ async fn dev_build_shows_unreleased_features() {
     // shields image not loading in CI).
     let crates_badge = page
         .locator("#hero-badges img[alt='crates.io: unreleased']")
-        .await
         .count()
         .await
         .expect("count crates.io badge");
@@ -432,7 +422,6 @@ async fn dev_build_shows_unreleased_features() {
     );
     let pw_badge = page
         .locator("#hero-badges img[alt='Playwright 1.61.1']")
-        .await
         .count()
         .await
         .expect("count Playwright badge");
@@ -463,7 +452,6 @@ async fn dev_build_shows_unreleased_features() {
         .expect("show_actions with pointer cursor");
     // An interaction makes the cursor overlay appear and drives fresh frames.
     page.locator("#cta-docs")
-        .await
         .hover(None)
         .await
         .expect("hover the docs CTA");

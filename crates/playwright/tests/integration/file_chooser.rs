@@ -48,7 +48,6 @@ async fn test_on_filechooser_single_fires() {
         .expect("Failed to create waiter");
 
     page.locator("#single-file")
-        .await
         .click(None)
         .await
         .expect("Failed to click file input");
@@ -81,7 +80,6 @@ async fn test_on_filechooser_multiple_flag() {
         .expect("Failed to create waiter");
 
     page.locator("#multi-file")
-        .await
         .click(None)
         .await
         .expect("Failed to click multi-file input");
@@ -123,7 +121,6 @@ async fn test_filechooser_set_files() {
         .expect("Failed to create waiter");
 
     page.locator("#single-file")
-        .await
         .click(None)
         .await
         .expect("Failed to click");
@@ -136,7 +133,7 @@ async fn test_filechooser_set_files() {
         .expect("set_files returned an error");
 
     // Auto-retry text assertion until the JS change handler updates the DOM
-    let info = page.locator("#file-info").await;
+    let info = page.locator("#file-info");
     playwright_rs::expect(info.clone())
         .to_contain_text("playwright_fc_test.txt")
         .await
@@ -165,7 +162,6 @@ async fn test_filechooser_page_back_reference() {
         .expect("Failed to create waiter");
 
     page.locator("#single-file")
-        .await
         .click(None)
         .await
         .expect("Failed to click");
@@ -198,7 +194,6 @@ async fn test_expect_file_chooser() {
 
     // Click file input to trigger the file chooser event
     page.locator("#single-file")
-        .await
         .click(None)
         .await
         .expect("Failed to click");
@@ -241,7 +236,6 @@ async fn test_expect_file_chooser_set_files() {
 
     // Trigger file chooser by clicking
     page.locator("#single-file")
-        .await
         .click(None)
         .await
         .expect("Failed to click");
@@ -255,7 +249,7 @@ async fn test_expect_file_chooser_set_files() {
         .expect("set_files failed");
 
     // Auto-retry text assertion until the JS change handler updates the DOM
-    let info = page.locator("#file-info").await;
+    let info = page.locator("#file-info");
     playwright_rs::expect(info.clone())
         .to_contain_text("playwright_expect_fc_test.txt")
         .await
@@ -296,7 +290,6 @@ async fn test_filechooser_cross_browser_smoke() {
             .expect("Failed to create waiter");
 
         page.locator("#single-file")
-            .await
             .click(None)
             .await
             .expect("Failed to click");
@@ -331,7 +324,6 @@ async fn test_filechooser_cross_browser_smoke() {
             .expect("Failed to create waiter");
 
         page.locator("#single-file")
-            .await
             .click(None)
             .await
             .expect("Failed to click");

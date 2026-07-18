@@ -15,11 +15,11 @@ async fn test_locator_query_methods() {
         .expect("Failed to navigate");
 
     // Test 1: Create a locator
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     assert_eq!(heading.selector(), "h1");
 
     // Test 2: Count elements
-    let paragraphs = page.locator("p").await;
+    let paragraphs = page.locator("p");
     let count = paragraphs.count().await.expect("Failed to get count");
     assert_eq!(count, 3); // locator.html has exactly 3 paragraphs
 
@@ -54,7 +54,7 @@ async fn test_locator_chaining_methods() {
         .await
         .expect("Failed to navigate");
 
-    let paragraphs = page.locator("p").await;
+    let paragraphs = page.locator("p");
 
     // Test 1: Get first paragraph
     let first = paragraphs.first();
@@ -84,7 +84,7 @@ async fn test_locator_chaining_methods() {
     assert_eq!(text, Some("Second paragraph".to_string()));
 
     // Test 4: Nested locators
-    let container = page.locator(".container").await;
+    let container = page.locator(".container");
     let nested = container.locator("#nested");
     assert_eq!(nested.selector(), ".container >> #nested");
     let text = nested
@@ -111,7 +111,7 @@ async fn test_locator_state_methods() {
         .expect("Failed to navigate");
 
     // Test 1: Check visibility for visible element
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let visible = heading
         .is_visible()
         .await
@@ -119,7 +119,7 @@ async fn test_locator_state_methods() {
     assert!(visible);
 
     // Test 2: Hidden element should not be visible
-    let hidden = page.locator("#hidden").await;
+    let hidden = page.locator("#hidden");
     let hidden_visible = hidden
         .is_visible()
         .await
@@ -142,7 +142,7 @@ async fn test_locator_state_methods() {
     tracing::info!("✓ is_hidden() works");
 
     // Test 5: is_disabled for disabled button
-    let disabled_btn = page.locator("button[disabled]").await;
+    let disabled_btn = page.locator("button[disabled]");
     let is_disabled = disabled_btn
         .is_disabled()
         .await
@@ -191,7 +191,7 @@ async fn test_get_by_text() {
         .expect("Failed to navigate");
 
     // Test 1: Substring match (exact=false) - "Submit" matches "Submit", "Submit Order", and "Submit Form"
-    let submit_buttons = page.get_by_text("Submit", false).await;
+    let submit_buttons = page.get_by_text("Submit", false);
     let count = submit_buttons
         .count()
         .await
@@ -202,7 +202,7 @@ async fn test_get_by_text() {
     );
 
     // Test 2: Exact match - "Submit" matches only the exact "Submit" button
-    let exact_submit = page.get_by_text("Submit", true).await;
+    let exact_submit = page.get_by_text("Submit", true);
     let count = exact_submit
         .count()
         .await
@@ -210,7 +210,7 @@ async fn test_get_by_text() {
     assert_eq!(count, 1, "Exact 'Submit' should match only one button");
 
     // Test 3: Case-insensitive substring match
-    let hello = page.get_by_text("hello world", false).await;
+    let hello = page.get_by_text("hello world", false);
     let count = hello.count().await.expect("Failed to count hello");
     assert_eq!(
         count, 2,
@@ -218,7 +218,7 @@ async fn test_get_by_text() {
     );
 
     // Test 4: Case-sensitive exact match
-    let hello_exact = page.get_by_text("Hello World", true).await;
+    let hello_exact = page.get_by_text("Hello World", true);
     let count = hello_exact
         .count()
         .await
@@ -226,13 +226,13 @@ async fn test_get_by_text() {
     assert_eq!(count, 1, "Exact 'Hello World' should match only one span");
 
     // Test 5: Locator chaining - get_by_text within a container
-    let container = page.locator(".text-container").await;
+    let container = page.locator(".text-container");
     let inner = container.get_by_text("Inner Text", false);
     let count = inner.count().await.expect("Failed to count inner text");
     assert_eq!(count, 1, "get_by_text should scope to container");
 
     // Test 6: get_by_text on a Locator (chained selector)
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     let submit_in_body = body.get_by_text("Submit", true);
     let count = submit_in_body
         .count()
@@ -259,12 +259,12 @@ async fn test_get_by_locator_methods() {
 
     // --- get_by_label ---
     // Substring match: "Address" matches "Email Address" label
-    let addr_input = page.get_by_label("Address", false).await;
+    let addr_input = page.get_by_label("Address", false);
     let count = addr_input.count().await.expect("Failed to count label");
     assert_eq!(count, 1, "Substring 'Address' should match email input");
 
     // Exact match: "Full Name" matches only its associated input
-    let exact_name = page.get_by_label("Full Name", true).await;
+    let exact_name = page.get_by_label("Full Name", true);
     let count = exact_name
         .count()
         .await
@@ -273,7 +273,7 @@ async fn test_get_by_locator_methods() {
 
     // --- get_by_placeholder ---
     // Substring match
-    let enter_inputs = page.get_by_placeholder("Enter", false).await;
+    let enter_inputs = page.get_by_placeholder("Enter", false);
     let count = enter_inputs
         .count()
         .await
@@ -281,7 +281,7 @@ async fn test_get_by_locator_methods() {
     assert_eq!(count, 2, "Substring 'Enter' should match both inputs");
 
     // Exact match
-    let email_input = page.get_by_placeholder("Enter your email", true).await;
+    let email_input = page.get_by_placeholder("Enter your email", true);
     let count = email_input
         .count()
         .await
@@ -290,12 +290,12 @@ async fn test_get_by_locator_methods() {
 
     // --- get_by_alt_text ---
     // Substring match: "Logo" matches "Company Logo"
-    let logo = page.get_by_alt_text("Logo", false).await;
+    let logo = page.get_by_alt_text("Logo", false);
     let count = logo.count().await.expect("Failed to count alt text");
     assert_eq!(count, 1, "'Logo' should match one image");
 
     // Exact match
-    let exact_banner = page.get_by_alt_text("Welcome Banner", true).await;
+    let exact_banner = page.get_by_alt_text("Welcome Banner", true);
     let count = exact_banner
         .count()
         .await
@@ -304,12 +304,12 @@ async fn test_get_by_locator_methods() {
 
     // --- get_by_title ---
     // Substring match: "More Info" matches both title attributes
-    let info = page.get_by_title("More Info", false).await;
+    let info = page.get_by_title("More Info", false);
     let count = info.count().await.expect("Failed to count title");
     assert_eq!(count, 2, "Substring 'More Info' should match both spans");
 
     // Exact match
-    let exact_info = page.get_by_title("More Info", true).await;
+    let exact_info = page.get_by_title("More Info", true);
     let count = exact_info
         .count()
         .await
@@ -317,11 +317,11 @@ async fn test_get_by_locator_methods() {
     assert_eq!(count, 1, "Exact 'More Info' should match one span");
 
     // --- get_by_test_id ---
-    let submit = page.get_by_test_id("submit-btn").await;
+    let submit = page.get_by_test_id("submit-btn");
     let count = submit.count().await.expect("Failed to count test id");
     assert_eq!(count, 1, "test id 'submit-btn' should match one button");
 
-    let cancel = page.get_by_test_id("cancel-btn").await;
+    let cancel = page.get_by_test_id("cancel-btn");
     let text = cancel
         .text_content()
         .await
@@ -329,7 +329,7 @@ async fn test_get_by_locator_methods() {
     assert_eq!(text, Some("Cancel".to_string()));
 
     // --- Locator chaining ---
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     let chained = body.get_by_test_id("submit-btn");
     let count = chained
         .count()
@@ -357,27 +357,23 @@ async fn test_get_by_role() {
     use playwright_rs::{AriaRole, GetByRoleOptions};
 
     // Test 1: Find buttons by role (Submit, Submit Order, Submit Form, Cancel, Disabled Button)
-    let buttons = page.get_by_role(AriaRole::Button, None).await;
+    let buttons = page.get_by_role(AriaRole::Button, None);
     let count = buttons.count().await.expect("Failed to count buttons");
     assert_eq!(count, 5, "Should find 5 buttons, got {}", count);
 
     // Test 2: Find button by role + exact name
-    let submit = page
-        .get_by_role(
-            AriaRole::Button,
-            Some(GetByRoleOptions::default().name("Submit").exact(true)),
-        )
-        .await;
+    let submit = page.get_by_role(
+        AriaRole::Button,
+        Some(GetByRoleOptions::default().name("Submit").exact(true)),
+    );
     let count = submit.count().await.expect("Failed to count submit");
     assert_eq!(count, 1, "Exact name 'Submit' should match one button");
 
     // Test 3: Find button by role + substring name
-    let submit_buttons = page
-        .get_by_role(
-            AriaRole::Button,
-            Some(GetByRoleOptions::default().name("Submit")),
-        )
-        .await;
+    let submit_buttons = page.get_by_role(
+        AriaRole::Button,
+        Some(GetByRoleOptions::default().name("Submit")),
+    );
     let count = submit_buttons
         .count()
         .await
@@ -389,54 +385,46 @@ async fn test_get_by_role() {
     );
 
     // Test 4: Find headings by level
-    let h2 = page
-        .get_by_role(
-            AriaRole::Heading,
-            Some(GetByRoleOptions::default().level(2)),
-        )
-        .await;
+    let h2 = page.get_by_role(
+        AriaRole::Heading,
+        Some(GetByRoleOptions::default().level(2)),
+    );
     let count = h2.count().await.expect("Failed to count h2");
     assert_eq!(count, 1, "Should find one h2 heading");
     let text = h2.text_content().await.expect("Failed to get h2 text");
     assert_eq!(text, Some("Section Title".to_string()));
 
     // Test 5: Find checked checkboxes
-    let checked = page
-        .get_by_role(
-            AriaRole::Checkbox,
-            Some(GetByRoleOptions::default().checked(true)),
-        )
-        .await;
+    let checked = page.get_by_role(
+        AriaRole::Checkbox,
+        Some(GetByRoleOptions::default().checked(true)),
+    );
     let count = checked.count().await.expect("Failed to count checked");
     assert_eq!(count, 1, "Should find one checked checkbox");
 
     // Test 6: Find unchecked checkboxes
-    let unchecked = page
-        .get_by_role(
-            AriaRole::Checkbox,
-            Some(GetByRoleOptions::default().checked(false)),
-        )
-        .await;
+    let unchecked = page.get_by_role(
+        AriaRole::Checkbox,
+        Some(GetByRoleOptions::default().checked(false)),
+    );
     let count = unchecked.count().await.expect("Failed to count unchecked");
     assert_eq!(count, 1, "Should find one unchecked checkbox");
 
     // Test 7: Find disabled buttons
-    let disabled = page
-        .get_by_role(
-            AriaRole::Button,
-            Some(GetByRoleOptions::default().disabled(true)),
-        )
-        .await;
+    let disabled = page.get_by_role(
+        AriaRole::Button,
+        Some(GetByRoleOptions::default().disabled(true)),
+    );
     let count = disabled.count().await.expect("Failed to count disabled");
     assert_eq!(count, 1, "Should find one disabled button");
 
     // Test 8: Find links
-    let links = page.get_by_role(AriaRole::Link, None).await;
+    let links = page.get_by_role(AriaRole::Link, None);
     let count = links.count().await.expect("Failed to count links");
     assert!(count >= 2, "Should find at least 2 links, got {}", count);
 
     // Test 9: Find alert role
-    let alert = page.get_by_role(AriaRole::Alert, None).await;
+    let alert = page.get_by_role(AriaRole::Alert, None);
     let text = alert
         .text_content()
         .await
@@ -444,18 +432,16 @@ async fn test_get_by_role() {
     assert_eq!(text, Some("Important message".to_string()));
 
     // Test 10: Locator chaining
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     let chained = body.get_by_role(AriaRole::Alert, None);
     let count = chained.count().await.expect("Failed to count chained");
     assert_eq!(count, 1, "Chained get_by_role should work");
 
     // Test 11: Case-insensitive name match (default)
-    let submit_ci = page
-        .get_by_role(
-            AriaRole::Button,
-            Some(GetByRoleOptions::default().name("submit")),
-        )
-        .await;
+    let submit_ci = page.get_by_role(
+        AriaRole::Button,
+        Some(GetByRoleOptions::default().name("submit")),
+    );
     let count = submit_ci.count().await.expect("Failed to count ci");
     assert!(count >= 1, "Case-insensitive name should match");
 
@@ -477,7 +463,7 @@ async fn test_locator_all_multiple_elements() {
         .expect("Failed to navigate");
 
     // locator.html has 3 <p> elements
-    let paragraphs = page.locator("p").await;
+    let paragraphs = page.locator("p");
     let all = paragraphs.all().await.expect("Failed to get all locators");
 
     assert_eq!(all.len(), 3, "Should have 3 paragraph locators");
@@ -506,7 +492,7 @@ async fn test_locator_all_empty_selector() {
         .expect("Failed to navigate");
 
     // Non-matching selector should return empty vec
-    let missing = page.locator(".does-not-exist").await;
+    let missing = page.locator(".does-not-exist");
     let all = missing.all().await.expect("Failed to get all locators");
     assert_eq!(
         all.len(),
@@ -533,7 +519,7 @@ async fn test_locator_error_includes_selector() {
 
     // Use the exact selector from issue #33 — should produce a clear error
     let selector = "div.page-number > span:last-child";
-    let missing = page.locator(selector).await;
+    let missing = page.locator(selector);
 
     // Use a short timeout to avoid waiting the default 30s
     let short_timeout_ms = 500.0;
@@ -575,7 +561,7 @@ async fn test_locator_filter_has_text() {
     use playwright_rs::FilterOptions;
 
     // filter with has_text should narrow rows to only those containing "Apple"
-    let rows = page.locator("tr").await;
+    let rows = page.locator("tr");
     let apple_rows = rows.filter(FilterOptions::default().has_text("Apple"));
     let count = apple_rows.count().await.expect("Failed to count");
     assert_eq!(count, 1, "Should find 1 row containing 'Apple'");
@@ -607,7 +593,7 @@ async fn test_locator_filter_has_not_text() {
 
     // filter with has_not_text should exclude rows containing "Apple"
     // The table has 3 data rows: Apple, Banana, Cherry
-    let rows = page.locator("tr.data-row").await;
+    let rows = page.locator("tr.data-row");
     let non_apple_rows = rows.filter(FilterOptions::default().has_not_text("Apple"));
     let count = non_apple_rows.count().await.expect("Failed to count");
     assert_eq!(count, 2, "Should find 2 rows not containing 'Apple'");
@@ -628,8 +614,8 @@ async fn test_locator_filter_has_child_locator() {
     use playwright_rs::FilterOptions;
 
     // filter with has should narrow to rows containing a button
-    let rows = page.locator("tr.data-row").await;
-    let button_child = page.locator("button.action-btn").await;
+    let rows = page.locator("tr.data-row");
+    let button_child = page.locator("button.action-btn");
     let rows_with_button = rows.filter(FilterOptions::default().has(button_child));
     let count = rows_with_button.count().await.expect("Failed to count");
     assert_eq!(count, 2, "Should find 2 rows containing a button");
@@ -650,8 +636,8 @@ async fn test_locator_filter_has_not_child_locator() {
     use playwright_rs::FilterOptions;
 
     // filter with has_not should narrow to rows that do NOT contain a button
-    let rows = page.locator("tr.data-row").await;
-    let button_child = page.locator("button.action-btn").await;
+    let rows = page.locator("tr.data-row");
+    let button_child = page.locator("button.action-btn");
     let rows_without_button = rows.filter(FilterOptions::default().has_not(button_child));
     let count = rows_without_button.count().await.expect("Failed to count");
     assert_eq!(count, 1, "Should find 1 row without a button");
@@ -671,8 +657,8 @@ async fn test_locator_and() {
 
     // and_() should match only elements satisfying BOTH locators
     // Find buttons that also have class "action-btn" (subset)
-    let buttons = page.locator("button").await;
-    let action_buttons = page.locator(".action-btn").await;
+    let buttons = page.locator("button");
+    let action_buttons = page.locator(".action-btn");
     let combined = buttons.and_(&action_buttons);
 
     let count = combined.count().await.expect("Failed to count");
@@ -696,8 +682,8 @@ async fn test_locator_or() {
 
     // or_() should match elements satisfying EITHER locator
     // Find either buttons or links
-    let buttons = page.locator("button").await;
-    let links = page.locator("a.nav-link").await;
+    let buttons = page.locator("button");
+    let links = page.locator("a.nav-link");
     let either = buttons.or_(&links);
 
     let count = either.count().await.expect("Failed to count");
@@ -723,8 +709,8 @@ async fn test_locator_filter_chain() {
     use playwright_rs::FilterOptions;
 
     // Chain filter() then and_(): first filter by text, then narrow further
-    let rows = page.locator("tr.data-row").await;
-    let button_child = page.locator("button.action-btn").await;
+    let rows = page.locator("tr.data-row");
+    let button_child = page.locator("button.action-btn");
 
     // Get rows that contain "Banana" AND also have an action button
     let filtered = rows
@@ -789,7 +775,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_heading = firefox_page.locator("h1").await;
+    let firefox_heading = firefox_page.locator("h1");
     let text = firefox_heading
         .text_content()
         .await
@@ -811,7 +797,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_heading = webkit_page.locator("h1").await;
+    let webkit_heading = webkit_page.locator("h1");
     let visible = webkit_heading
         .is_visible()
         .await
@@ -835,8 +821,8 @@ async fn test_locator_focus_and_blur() {
         .await
         .expect("Failed to navigate");
 
-    let input1 = page.locator("#input1").await;
-    let input2 = page.locator("#input2").await;
+    let input1 = page.locator("#input1");
+    let input2 = page.locator("#input2");
 
     // Initially neither should be focused
     let initially_focused = input1
@@ -896,7 +882,7 @@ async fn test_locator_press_sequentially() {
         .await
         .expect("Failed to navigate");
 
-    let input = page.locator("#input1").await;
+    let input = page.locator("#input1");
 
     // press_sequentially() should type each character individually
     input
@@ -923,7 +909,7 @@ async fn test_locator_press_sequentially_with_delay() {
         .await
         .expect("Failed to navigate");
 
-    let input = page.locator("#input1").await;
+    let input = page.locator("#input1");
 
     use playwright_rs::PressSequentiallyOptions;
 
@@ -957,7 +943,7 @@ async fn test_locator_all_inner_texts() {
         .await
         .expect("Failed to navigate");
 
-    let items = page.locator(".item").await;
+    let items = page.locator(".item");
 
     let texts = items
         .all_inner_texts()
@@ -988,7 +974,7 @@ async fn test_locator_all_text_contents() {
         .await
         .expect("Failed to navigate");
 
-    let items = page.locator(".item").await;
+    let items = page.locator(".item");
 
     let texts = items
         .all_text_contents()
@@ -1019,7 +1005,7 @@ async fn test_locator_all_texts_empty_when_no_match() {
         .await
         .expect("Failed to navigate");
 
-    let no_match = page.locator(".nonexistent").await;
+    let no_match = page.locator(".nonexistent");
 
     let inner_texts = no_match
         .all_inner_texts()
@@ -1060,7 +1046,7 @@ async fn test_locator_dispatch_event() {
     .await
     .expect("Failed to navigate");
 
-    let btn = page.locator("#btn").await;
+    let btn = page.locator("#btn");
 
     // Dispatch a click event — handler should fire
     btn.dispatch_event("click", None)
@@ -1103,7 +1089,7 @@ async fn test_locator_dispatch_event_with_init() {
     .await
     .expect("Failed to navigate");
 
-    let target = page.locator("#target").await;
+    let target = page.locator("#target");
 
     // Dispatch a mousemove event with clientX in eventInit
     let event_init = serde_json::json!({ "clientX": 42 });
@@ -1138,7 +1124,7 @@ async fn test_locator_bounding_box() {
     .await
     .expect("Failed to navigate");
 
-    let locator = page.locator("#box").await;
+    let locator = page.locator("#box");
     let bbox = locator
         .bounding_box()
         .await
@@ -1180,7 +1166,7 @@ async fn test_locator_bounding_box_hidden() {
     .await
     .expect("Failed to navigate");
 
-    let locator = page.locator("#hidden").await;
+    let locator = page.locator("#hidden");
     let bbox = locator
         .bounding_box()
         .await
@@ -1208,7 +1194,7 @@ async fn test_locator_scroll_into_view_if_needed() {
     .await
     .expect("Failed to navigate");
 
-    let target = page.locator("#target").await;
+    let target = page.locator("#target");
 
     // The element should be below the viewport initially
     // After scroll_into_view_if_needed, it should be visible
@@ -1275,7 +1261,7 @@ async fn test_locator_tap() {
     .await
     .expect("Failed to navigate");
 
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
 
     // tap() with no options should succeed on a visible element
     button.tap(None).await.expect("tap() should succeed");
@@ -1321,7 +1307,7 @@ async fn test_locator_tap_with_options() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
 
     // tap() with TapOptions (force=true) should succeed
     let opts = playwright_rs::TapOptions::builder().force(true).build();
@@ -1347,7 +1333,7 @@ async fn test_locator_evaluate() {
         .expect("Failed to navigate");
 
     // evaluate a JS function that receives the element and returns its textContent
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let text: String = heading
         .evaluate("(el) => el.textContent", None::<()>)
         .await
@@ -1368,7 +1354,7 @@ async fn test_locator_evaluate_with_arg() {
         .expect("Failed to navigate");
 
     // evaluate with an argument
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let result: String = heading
         .evaluate("(el, suffix) => el.textContent + suffix", Some("!"))
         .await
@@ -1390,7 +1376,7 @@ async fn test_locator_evaluate_returns_number() {
     .await
     .expect("Failed to navigate");
 
-    let div = page.locator("#box").await;
+    let div = page.locator("#box");
 
     // evaluate a JS function that returns a number
     let width: f64 = div
@@ -1416,7 +1402,7 @@ async fn test_locator_evaluate_all() {
         .expect("Failed to navigate");
 
     // evaluate_all: collect textContent of all matching elements
-    let items = page.locator(".item").await;
+    let items = page.locator(".item");
     let texts: Vec<String> = items
         .evaluate_all("(elements) => elements.map(e => e.textContent)", None::<()>)
         .await
@@ -1440,7 +1426,7 @@ async fn test_locator_evaluate_all_with_arg() {
     .expect("Failed to navigate");
 
     // evaluate_all with an argument (prefix each item)
-    let items = page.locator(".item").await;
+    let items = page.locator(".item");
     let texts: Vec<String> = items
         .evaluate_all(
             "(elements, prefix) => elements.map(e => prefix + e.textContent)",
@@ -1465,7 +1451,7 @@ async fn test_locator_evaluate_all_returns_count() {
     .await
     .expect("Failed to navigate");
 
-    let spans = page.locator(".x").await;
+    let spans = page.locator(".x");
     let count: f64 = spans
         .evaluate_all("(elements) => elements.length", None::<()>)
         .await
@@ -1489,8 +1475,8 @@ async fn test_locator_drag_to() {
         .await
         .expect("Failed to navigate");
 
-    let source = page.locator("#source").await;
-    let target = page.locator("#target").await;
+    let source = page.locator("#source");
+    let target = page.locator("#target");
 
     // Perform the drag operation
     source
@@ -1501,7 +1487,6 @@ async fn test_locator_drag_to() {
     // Verify the drop occurred by checking the result text
     let result_text = page
         .locator("#result")
-        .await
         .text_content()
         .await
         .expect("Failed to get result text");
@@ -1526,8 +1511,8 @@ async fn test_locator_drop_data_and_file() {
         .await
         .expect("Failed to navigate");
 
-    let zone = page.locator("#zone").await;
-    let result = page.locator("#result").await;
+    let zone = page.locator("#zone");
+    let result = page.locator("#result");
 
     // Drop MIME-typed data; the zone reports what its DataTransfer received.
     zone.drop(
@@ -1569,8 +1554,8 @@ async fn test_locator_drag_to_with_options() {
 
     use playwright_rs::{DragToOptions, Position};
 
-    let source = page.locator("#source").await;
-    let target = page.locator("#target").await;
+    let source = page.locator("#source");
+    let target = page.locator("#target");
 
     // Perform drag with explicit source and target positions
     let options = DragToOptions::builder()
@@ -1585,7 +1570,6 @@ async fn test_locator_drag_to_with_options() {
 
     let result_text = page
         .locator("#result")
-        .await
         .text_content()
         .await
         .expect("Failed to get result text");
@@ -1619,7 +1603,6 @@ async fn test_page_drag_and_drop() {
 
     let result_text = page
         .locator("#result")
-        .await
         .text_content()
         .await
         .expect("Failed to get result text");
@@ -1654,7 +1637,7 @@ async fn test_locator_wait_for_visible() {
         .expect("Failed to schedule element show");
 
     // Wait for the hidden element to become visible
-    let hidden_el = page.locator("#hidden-element").await;
+    let hidden_el = page.locator("#hidden-element");
     hidden_el
         .wait_for(Some(
             WaitForOptions::builder()
@@ -1694,7 +1677,7 @@ async fn test_locator_wait_for_hidden() {
         .expect("Failed to schedule element hide");
 
     // Wait for the visible element to become hidden
-    let visible_el = page.locator("#visible-element").await;
+    let visible_el = page.locator("#visible-element");
     visible_el
         .wait_for(Some(
             WaitForOptions::builder()
@@ -1734,7 +1717,7 @@ async fn test_locator_wait_for_attached() {
         .expect("Failed to schedule element append");
 
     // Wait for the dynamically added element to be attached to the DOM
-    let dynamic_el = page.locator("#dynamic-element").await;
+    let dynamic_el = page.locator("#dynamic-element");
     dynamic_el
         .wait_for(Some(
             WaitForOptions::builder()
@@ -1772,7 +1755,7 @@ async fn test_locator_wait_for_detached() {
         .expect("Failed to schedule element remove");
 
     // Wait for the element to be removed from DOM
-    let visible_el = page.locator("#visible-element").await;
+    let visible_el = page.locator("#visible-element");
     visible_el
         .wait_for(Some(
             WaitForOptions::builder()
@@ -1803,7 +1786,7 @@ async fn test_locator_wait_for_default_state() {
         .expect("Failed to navigate");
 
     // Default state is Visible - element is already visible, should resolve immediately
-    let visible_el = page.locator("#visible-element").await;
+    let visible_el = page.locator("#visible-element");
     visible_el
         .wait_for(None)
         .await
@@ -1833,7 +1816,7 @@ async fn test_locator_page_property() {
     page.goto(&url, None).await.expect("Failed to navigate");
 
     // Create a locator, then get its page and verify it's the same page
-    let locator = page.locator("h1").await;
+    let locator = page.locator("h1");
     let locator_page = locator.page().expect("locator.page() should succeed");
 
     // The page returned by locator.page() should have the same URL as the original page
@@ -1862,7 +1845,7 @@ async fn test_locator_aria_snapshot() {
         .await
         .expect("Failed to set content");
 
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     let snapshot = body
         .aria_snapshot(None)
         .await
@@ -1882,7 +1865,7 @@ async fn test_locator_describe() {
         .await
         .expect("Failed to set content");
 
-    let described = page.locator("button").await.describe("submit button");
+    let described = page.locator("button").describe("submit button");
     assert!(described.selector().contains("internal:describe"));
 
     browser.close().await.expect("Failed to close browser");
@@ -1897,7 +1880,6 @@ async fn test_locator_highlight() {
         .expect("Failed to set content");
 
     page.locator("h1")
-        .await
         .highlight(None)
         .await
         .expect("highlight should succeed");
@@ -1916,7 +1898,7 @@ async fn test_locator_content_frame() {
     .await
     .expect("Failed to set content");
 
-    let frame = page.locator("iframe#myframe").await.content_frame();
+    let frame = page.locator("iframe#myframe").content_frame();
     let text = frame
         .locator("h1")
         .text_content()
@@ -1945,7 +1927,7 @@ async fn test_locator_normalize_returns_robust_selector() {
     .expect("Failed to set content");
 
     // Start with a CSS selector that's structurally fragile.
-    let fragile = page.locator("button").await;
+    let fragile = page.locator("button");
     let normalized = fragile.normalize().await.expect("normalize should succeed");
 
     let original_selector = fragile.selector().to_string();

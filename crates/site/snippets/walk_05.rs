@@ -1,3 +1,3 @@
-expect(page.locator("#disclaimer").await)
+expect(page.locator("#disclaimer"))
     .to_contain_text("unofficial")
     .await?;

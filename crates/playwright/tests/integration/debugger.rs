@@ -42,7 +42,7 @@ async fn test_debugger_pause_resume_around_action() {
     // Spawn an action that will hit the pause.
     let page_for_click = page.clone();
     let click_task = tokio::spawn(async move {
-        let btn = page_for_click.locator("#b").await;
+        let btn = page_for_click.locator("#b");
         btn.click(None).await
     });
 

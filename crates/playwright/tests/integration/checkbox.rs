@@ -11,7 +11,7 @@ async fn test_check_unchecked_checkbox() {
         .expect("Failed to navigate");
 
     // Test: Check an unchecked checkbox
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     // Verify it's initially unchecked
     let is_checked = checkbox.is_checked().await.expect("Failed to check state");
@@ -40,7 +40,7 @@ async fn test_check_is_idempotent() {
         .await
         .expect("Failed to navigate");
 
-    let checkbox = page.locator("#checked-checkbox").await;
+    let checkbox = page.locator("#checked-checkbox");
 
     // Verify it's already checked
     let is_checked = checkbox.is_checked().await.expect("Failed to check state");
@@ -69,7 +69,7 @@ async fn test_uncheck_checked_checkbox() {
         .await
         .expect("Failed to navigate");
 
-    let checkbox = page.locator("#checked-checkbox").await;
+    let checkbox = page.locator("#checked-checkbox");
 
     // Verify it's initially checked
     let is_checked = checkbox.is_checked().await.expect("Failed to check state");
@@ -98,7 +98,7 @@ async fn test_uncheck_is_idempotent() {
         .await
         .expect("Failed to navigate");
 
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     // Verify it's initially unchecked
     let is_checked = checkbox.is_checked().await.expect("Failed to check state");
@@ -128,7 +128,7 @@ async fn test_check_radio_button() {
         .expect("Failed to navigate");
 
     // Test: Check a radio button
-    let radio = page.locator("#radio1").await;
+    let radio = page.locator("#radio1");
 
     // Verify it's initially unchecked
     let is_checked = radio.is_checked().await.expect("Failed to check state");
@@ -155,8 +155,8 @@ async fn test_hover() {
         .expect("Failed to navigate");
 
     // Test: Hover shows hidden element
-    let button = page.locator("#hover-button").await;
-    let tooltip = page.locator("#tooltip").await;
+    let button = page.locator("#hover-button");
+    let tooltip = page.locator("#tooltip");
 
     // Verify tooltip is initially hidden
     let is_visible = tooltip
@@ -200,7 +200,7 @@ async fn test_check_firefox() {
         .await
         .expect("Failed to navigate");
 
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
     checkbox
         .check(None)
         .await
@@ -232,11 +232,11 @@ async fn test_hover_webkit() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#hover-button").await;
+    let button = page.locator("#hover-button");
     button.hover(None).await.expect("Failed to hover");
 
     // Verify hover worked (tooltip should be visible)
-    let tooltip = page.locator("#tooltip").await;
+    let tooltip = page.locator("#tooltip");
     let is_visible = tooltip
         .is_visible()
         .await
@@ -257,7 +257,7 @@ async fn test_set_checked_true_on_checkbox() {
         .expect("Failed to navigate");
 
     // Test: set_checked(true) should check the checkbox
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     // Verify it starts unchecked
     let initially_checked = checkbox.is_checked().await.expect("Failed to check state");
@@ -290,7 +290,7 @@ async fn test_set_checked_false_on_checkbox() {
         .expect("Failed to navigate");
 
     // Test: set_checked(false) should uncheck the checkbox
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     // First check it
     checkbox.check(None).await.expect("Failed to check");
@@ -324,7 +324,7 @@ async fn test_set_checked_idempotent() {
         .expect("Failed to navigate");
 
     // Test: set_checked() should be idempotent
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     // Set to checked twice
     checkbox
@@ -366,8 +366,8 @@ async fn test_set_checked_on_radio_button() {
         .expect("Failed to navigate");
 
     // Test: set_checked() works on radio buttons
-    let radio1 = page.locator("#radio1").await;
-    let radio2 = page.locator("#radio2").await;
+    let radio1 = page.locator("#radio1");
+    let radio2 = page.locator("#radio2");
 
     // Set radio1 to checked
     radio1
@@ -412,7 +412,7 @@ async fn test_set_checked_with_options() {
         .expect("Failed to navigate");
 
     // Test: set_checked() accepts CheckOptions
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     // Use timeout option (10 seconds in milliseconds)
     let options = playwright_rs::protocol::CheckOptions::builder()
@@ -453,7 +453,7 @@ async fn test_set_checked_firefox() {
         .expect("Failed to navigate");
 
     // Test set_checked on Firefox
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     checkbox
         .set_checked(true, None)
@@ -493,7 +493,7 @@ async fn test_set_checked_webkit() {
         .expect("Failed to navigate");
 
     // Test set_checked on WebKit
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
 
     checkbox
         .set_checked(true, None)

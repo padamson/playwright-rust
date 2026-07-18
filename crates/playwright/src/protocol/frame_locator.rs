@@ -18,7 +18,7 @@
 //!     page.goto("https://example.com", None).await?;
 //!
 //!     // Locate elements inside an iframe
-//!     let frame = page.frame_locator("iframe#my-frame").await;
+//!     let frame = page.frame_locator("iframe#my-frame");
 //!     frame.locator("button").click(None).await?;
 //!
 //!     // Use get_by_* methods inside the iframe

@@ -91,7 +91,7 @@ async fn test_dialog_page_back_reference() -> Result<(), Box<dyn std::error::Err
     )
     .await?;
 
-    let locator = page.locator("button").await;
+    let locator = page.locator("button");
     locator.click(None).await?;
 
     tokio::time::timeout(Duration::from_millis(5000), dialog_notify.notified())
@@ -143,7 +143,7 @@ async fn test_download_page_back_reference() -> Result<(), Box<dyn std::error::E
 
     let download_waiter = page.expect_event("download", Some(5000.0)).await?;
 
-    let locator = page.locator("#dl").await;
+    let locator = page.locator("#dl");
     locator.click(None).await?;
 
     download_waiter

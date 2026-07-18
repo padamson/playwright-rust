@@ -92,12 +92,12 @@
 //!     ).await;
 //!
 //!     // Query elements with locators
-//!     let heading = page.locator("#title").await;
+//!     let heading = page.locator("#title");
 //!     let text = heading.text_content().await?;
 //!     assert_eq!(text, Some("Welcome".to_string()));
 //!
 //!     // Click button and verify result
-//!     let button = page.locator("#btn").await;
+//!     let button = page.locator("#btn");
 //!     button.click(None).await?;
 //!     let button_text = button.text_content().await?;
 //!     assert_eq!(button_text, Some("Clicked".to_string()));
@@ -133,17 +133,17 @@
 //!     ).await;
 //!
 //!     // Fill text input
-//!     let name = page.locator("#name").await;
+//!     let name = page.locator("#name");
 //!     name.fill("John Doe", None).await?;
 //!     assert_eq!(name.input_value(None).await?, "John Doe");
 //!
 //!     // Check checkbox
-//!     let checkbox = page.locator("#agree").await;
+//!     let checkbox = page.locator("#agree");
 //!     checkbox.set_checked(true, None).await?;
 //!     assert!(checkbox.is_checked().await?);
 //!
 //!     // Select option
-//!     let select = page.locator("#country").await;
+//!     let select = page.locator("#country");
 //!     select.select_option("uk", None).await?;
 //!     assert_eq!(select.input_value(None).await?, "uk");
 //!
@@ -172,7 +172,7 @@
 //!     ).await;
 //!
 //!     // Take screenshot of specific element
-//!     let element = page.locator("#box").await;
+//!     let element = page.locator("#box");
 //!     let screenshot = element.screenshot(None).await?;
 //!     assert!(!screenshot.is_empty());
 //!
@@ -202,14 +202,14 @@
 //!     ).await;
 //!
 //!     // Assert button states with auto-retry
-//!     let enabled_btn = page.locator("#enabled").await;
+//!     let enabled_btn = page.locator("#enabled");
 //!     expect(enabled_btn.clone()).to_be_enabled().await?;
 //!
-//!     let disabled_btn = page.locator("#disabled").await;
+//!     let disabled_btn = page.locator("#disabled");
 //!     expect(disabled_btn).to_be_disabled().await?;
 //!
 //!     // Assert checkbox state
-//!     let checkbox = page.locator("#checked").await;
+//!     let checkbox = page.locator("#checked");
 //!     expect(checkbox).to_be_checked().await?;
 //!
 //!     browser.close().await?;

@@ -73,7 +73,7 @@ use tracing::Instrument;
 ///     assert!(content.contains("Hello World"));
 ///
 ///     // Demonstrate locator()
-///     let heading = page.locator("#heading").await;
+///     let heading = page.locator("#heading");
 ///     let text = heading.text_content().await?;
 ///     assert_eq!(text, Some("Hello World".to_string()));
 ///
@@ -1055,7 +1055,7 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-locator>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = tracing::field::Empty))]
-    pub async fn locator(&self, selector: impl Into<String>) -> crate::protocol::Locator {
+    pub fn locator(&self, selector: impl Into<String>) -> crate::protocol::Locator {
         let selector = selector.into();
         tracing::Span::current().record("selector", selector.as_str());
         let frame = self.main_frame_wired();
@@ -1069,7 +1069,7 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-frame-locator>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = %selector))]
-    pub async fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
+    pub fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
         let frame = self.main_frame_wired();
         crate::protocol::FrameLocator::new(Arc::new(frame), selector.to_string(), self.clone())
     }
@@ -1081,53 +1081,44 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-text>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_text_selector(text, exact))
-            .await
+    pub fn get_by_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(crate::protocol::locator::get_by_text_selector(text, exact))
     }
 
     /// Returns a locator that matches elements by their associated label text.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-label>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_label(&self, text: &str, exact: bool) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_label_selector(
-            text, exact,
-        ))
-        .await
+    pub fn get_by_label(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(crate::protocol::locator::get_by_label_selector(text, exact))
     }
 
     /// Returns a locator that matches elements by their placeholder text.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-placeholder>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_placeholder(&self, text: &str, exact: bool) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_placeholder_selector(
+    pub fn get_by_placeholder(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(crate::protocol::locator::get_by_placeholder_selector(
             text, exact,
         ))
-        .await
     }
 
     /// Returns a locator that matches elements by their alt text.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-alt-text>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_alt_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_alt_text_selector(
+    pub fn get_by_alt_text(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(crate::protocol::locator::get_by_alt_text_selector(
             text, exact,
         ))
-        .await
     }
 
     /// Returns a locator that matches elements by their title attribute.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-title>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_title(&self, text: &str, exact: bool) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_title_selector(
-            text, exact,
-        ))
-        .await
+    pub fn get_by_title(&self, text: &str, exact: bool) -> crate::protocol::Locator {
+        self.locator(crate::protocol::locator::get_by_title_selector(text, exact))
     }
 
     /// Returns a locator that matches elements by their test ID attribute.
@@ -1140,25 +1131,25 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-test-id>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
+    pub fn get_by_test_id(&self, test_id: &str) -> crate::protocol::Locator {
         let attr = self.connection().selectors().test_id_attribute();
-        self.locator(&crate::protocol::locator::get_by_test_id_selector_with_attr(test_id, &attr))
-            .await
+        self.locator(crate::protocol::locator::get_by_test_id_selector_with_attr(
+            test_id, &attr,
+        ))
     }
 
     /// Returns a locator that matches elements by their ARIA role.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-get-by-role>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn get_by_role(
+    pub fn get_by_role(
         &self,
         role: crate::protocol::locator::AriaRole,
         options: Option<crate::protocol::locator::GetByRoleOptions>,
     ) -> crate::protocol::Locator {
-        self.locator(&crate::protocol::locator::get_by_role_selector(
+        self.locator(crate::protocol::locator::get_by_role_selector(
             role, options,
         ))
-        .await
     }
 
     /// Returns the keyboard instance for low-level keyboard control.
@@ -2199,7 +2190,7 @@ impl Page {
     /// # let page = browser.new_page().await?;
     /// // Set up waiter BEFORE triggering the file chooser
     /// let waiter = page.expect_file_chooser(None).await?;
-    /// page.locator("input[type=file]").await.click(None).await?;
+    /// page.locator("input[type=file]").click(None).await?;
     /// let chooser = waiter.wait().await?;
     /// chooser.set_files(&[PathBuf::from("/tmp/file.txt")]).await?;
     /// # Ok(())
@@ -3746,7 +3737,7 @@ impl Page {
             .channel()
             .send("pickLocator", serde_json::json!({}))
             .await?;
-        Ok(self.locator(&response.selector).await)
+        Ok(self.locator(&response.selector))
     }
 
     /// Cancels an in-progress [`Page::pick_locator`] call. Has no effect
@@ -4966,7 +4957,7 @@ impl ChannelOwner for Page {
                             };
 
                             // Build a Locator for the handler to receive
-                            let locator = self_clone.locator(&selector).await;
+                            let locator = self_clone.locator(&selector);
 
                             // Run the handler
                             if let Err(e) = handler(locator).await {

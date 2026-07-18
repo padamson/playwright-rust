@@ -7,7 +7,7 @@
 //! ```rust,ignore
 //! use playwright_rs::locator;
 //!
-//! let l = page.locator(locator!("#submit")).await;
+//! let l = page.locator(locator!("#submit"));
 //! ```
 //!
 //! See the `playwright-rs` crate root for the broader Observability /

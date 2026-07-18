@@ -840,7 +840,7 @@ async fn test_error_quality_element_not_found() {
         .expect("Navigation failed");
 
     // Test: Element not found error should include selector
-    let locator = page.locator("button.does-not-exist").await;
+    let locator = page.locator("button.does-not-exist");
 
     // Use short timeout (1s instead of default 30s) to speed up test
     let options = ClickOptions::builder().timeout(1000.0).build();
@@ -1065,7 +1065,7 @@ async fn test_error_quality_assertion_timeout() {
         .expect("Navigation failed");
 
     // Test: Assertion timeout should include what was being asserted
-    let locator = page.locator("button.does-not-exist").await;
+    let locator = page.locator("button.does-not-exist");
 
     // Try to click non-existent element with short timeout (1s instead of default 30s)
     let options = ClickOptions::builder().timeout(1000.0).build();

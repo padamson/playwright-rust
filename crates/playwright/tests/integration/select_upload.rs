@@ -17,7 +17,7 @@ async fn test_select_option_methods() {
         .expect("Failed to navigate");
 
     // Test 1: Select option by value
-    let select = page.locator("#single-select").await;
+    let select = page.locator("#single-select");
     let selected = select
         .select_option("banana", None)
         .await
@@ -39,7 +39,7 @@ async fn test_select_option_methods() {
     assert_eq!(selected, vec!["cherry"]);
 
     // Test 4: Select option by index when options have no value attribute
-    let select_no_value = page.locator("#select-by-index").await;
+    let select_no_value = page.locator("#select-by-index");
     let selected = select_no_value
         .select_option(SelectOption::Index(1), None)
         .await
@@ -65,7 +65,7 @@ async fn test_select_multiple_options() {
         .expect("Failed to navigate");
 
     // Test 1: Select multiple options with string values
-    let select = page.locator("#multi-select").await;
+    let select = page.locator("#multi-select");
     let selected = select
         .select_option_multiple(&["red", "blue"], None)
         .await
@@ -108,14 +108,14 @@ async fn test_file_upload_methods() {
     file.write_all(b"Test file content")
         .expect("Failed to write to test file");
 
-    let input = page.locator("#single-file").await;
+    let input = page.locator("#single-file");
     input
         .set_input_files(&test_file, None)
         .await
         .expect("Failed to set input file");
 
     // Verify file was uploaded by checking the displayed info
-    let info = page.locator("#file-info").await;
+    let info = page.locator("#file-info");
     let text = info.text_content().await.expect("Failed to get text");
     assert!(text.unwrap().contains("playwright_test_file.txt"));
 
@@ -133,14 +133,14 @@ async fn test_file_upload_methods() {
         .write_all(b"Test file 2 content")
         .expect("Failed to write to test file 2");
 
-    let multi_input = page.locator("#multi-file").await;
+    let multi_input = page.locator("#multi-file");
     multi_input
         .set_input_files_multiple(&[&test_file1, &test_file2], None)
         .await
         .expect("Failed to set multiple input files");
 
     // Verify files were uploaded
-    let info = page.locator("#file-info").await;
+    let info = page.locator("#file-info");
     let text = info.text_content().await.expect("Failed to get text");
     let text_content = text.unwrap();
     assert!(text_content.contains("playwright_test_file1.txt"));
@@ -190,7 +190,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_select = firefox_page.locator("#single-select").await;
+    let firefox_select = firefox_page.locator("#single-select");
     let selected = firefox_select
         .select_option("cherry", None)
         .await
@@ -218,7 +218,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_select = webkit_page.locator("#single-select").await;
+    let webkit_select = webkit_page.locator("#single-select");
     let selected = webkit_select
         .select_option(SelectOption::Index(2), None)
         .await
@@ -237,7 +237,7 @@ async fn test_cross_browser_smoke() {
     file.write_all(b"WebKit test content")
         .expect("Failed to write to test file");
 
-    let webkit_input = webkit_page.locator("#single-file").await;
+    let webkit_input = webkit_page.locator("#single-file");
     webkit_input
         .set_input_files(&test_file, None)
         .await

@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     page.goto("https://www.google.com", None).await?;
 
     // Find search input and interact
-    let search = page.locator("textarea[name=q]").await;
+    let search = page.locator("textarea[name=q]");
 
     // Click to focus
     search.click(None).await?;

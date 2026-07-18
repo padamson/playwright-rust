@@ -20,7 +20,6 @@ async fn test_page_timeout_frames_and_is_closed() {
     let start = std::time::Instant::now();
     let result = page
         .locator("#nonexistent-element-for-timeout-test")
-        .await
         .click(None)
         .await;
     let elapsed = start.elapsed();
@@ -126,7 +125,6 @@ async fn test_context_timeout_methods() {
     let start = std::time::Instant::now();
     let result = page
         .locator("#nonexistent-context-timeout-element")
-        .await
         .click(None)
         .await;
     let elapsed = start.elapsed();

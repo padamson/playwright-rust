@@ -51,7 +51,7 @@ async fn run_test(context: &BrowserContext) -> Result<()> {
     let page = context.new_page().await?;
     page.goto("https://example.com", None).await?;
 
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let content = heading
         .text_content()
         .await

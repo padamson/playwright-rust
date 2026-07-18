@@ -304,7 +304,7 @@ async fn test_page_set_content() {
     tracing::info!("✓ set_content() replaces existing content");
 
     // Verify locator works on set_content page
-    let heading = page.locator("div").await;
+    let heading = page.locator("div");
     let text = heading
         .text_content()
         .await
@@ -627,7 +627,7 @@ async fn test_page_add_locator_handler() {
     let handler_ran_clone = Arc::clone(&handler_ran);
 
     // Register a locator handler: when #overlay appears, remove it and mark the flag.
-    let overlay_locator = page.locator("#overlay").await;
+    let overlay_locator = page.locator("#overlay");
     page.add_locator_handler(
         &overlay_locator,
         move |_locator| {
@@ -650,7 +650,6 @@ async fn test_page_add_locator_handler() {
 
     // Clicking the target must now succeed (overlay gone).
     page.locator("#target")
-        .await
         .click(None)
         .await
         .expect("Failed to click target button");

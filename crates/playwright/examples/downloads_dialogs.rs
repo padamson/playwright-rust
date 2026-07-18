@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let checkbox = page.locator("#terms").await;
+    let checkbox = page.locator("#terms");
 
     // Set to checked using boolean
     println!("  Setting checkbox to checked...");

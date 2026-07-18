@@ -55,7 +55,7 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let locator = page.locator("#download-link").await;
+    let locator = page.locator("#download-link");
     let waiter = page.expect_download(Some(5000.0)).await?;
     locator.click(None).await?;
     waiter.wait().await.expect("download event did not fire");
@@ -100,7 +100,7 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let locator = page.locator("#dl").await;
+    let locator = page.locator("#dl");
     let waiter2 = page.expect_download(Some(5000.0)).await?;
     locator.click(None).await?;
     waiter2.wait().await.expect("download event did not fire");
@@ -172,7 +172,7 @@ async fn test_dialog_alert_methods() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let locator = page.locator("button").await;
+    let locator = page.locator("button");
     locator.click(None).await?;
 
     notified_or_timeout(&notify, 5000, "alert dialog").await;
@@ -237,7 +237,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
         )
         .await?;
 
-    let locator = page1.locator("button").await;
+    let locator = page1.locator("button");
     locator.click(None).await?;
 
     notified_or_timeout(&notify, 5000, "confirm dialog").await;
@@ -285,7 +285,7 @@ async fn test_dialog_confirm_methods() -> Result<(), Box<dyn std::error::Error>>
         )
         .await?;
 
-    let locator = page2.locator("button").await;
+    let locator = page2.locator("button");
     locator.click(None).await?;
 
     notified_or_timeout(&notify3, 5000, "confirm dismiss dialog").await;
@@ -350,7 +350,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
         )
         .await?;
 
-    let locator = page1.locator("button").await;
+    let locator = page1.locator("button");
     locator.click(None).await?;
 
     notified_or_timeout(&notify, 5000, "prompt dialog").await;
@@ -405,7 +405,7 @@ async fn test_dialog_prompt_methods() -> Result<(), Box<dyn std::error::Error>> 
         )
         .await?;
 
-    let locator = page2.locator("button").await;
+    let locator = page2.locator("button");
     locator.click(None).await?;
 
     notified_or_timeout(&notify3, 5000, "prompt dismiss dialog").await;
@@ -467,7 +467,7 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await?;
 
-    let locator = firefox_page.locator("button").await;
+    let locator = firefox_page.locator("button");
     locator.click(None).await?;
 
     notified_or_timeout(&notify, 5000, "Firefox dialog").await;
@@ -511,7 +511,7 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await?;
 
-    let locator = webkit_page.locator("#dl").await;
+    let locator = webkit_page.locator("#dl");
     let waiter = webkit_page.expect_download(Some(5000.0)).await?;
     locator.click(None).await?;
     waiter

@@ -19,7 +19,7 @@ async fn test_click_actions() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
     button.click(None).await.expect("Failed to click button");
 
     let text = button.text_content().await.expect("Failed to get text");
@@ -30,7 +30,7 @@ async fn test_click_actions() {
         .await
         .expect("Failed to navigate");
 
-    let div = page.locator("#target").await;
+    let div = page.locator("#target");
     div.dblclick(None).await.expect("Failed to double-click");
 
     let text = div.text_content().await.expect("Failed to get text");
@@ -54,7 +54,7 @@ async fn test_fill_and_clear_actions() {
         .expect("Failed to navigate");
 
     // Test 1: Fill input field
-    let input = page.locator("#name").await;
+    let input = page.locator("#name");
     input
         .fill("John Doe", None)
         .await
@@ -67,7 +67,7 @@ async fn test_fill_and_clear_actions() {
     assert_eq!(value, "John Doe");
 
     // Test 2: Fill textarea
-    let textarea = page.locator("#bio").await;
+    let textarea = page.locator("#bio");
     textarea
         .fill("Hello\nWorld", None)
         .await
@@ -84,7 +84,7 @@ async fn test_fill_and_clear_actions() {
         .await
         .expect("Failed to navigate");
 
-    let clear_input = page.locator("#input").await;
+    let clear_input = page.locator("#input");
 
     // Verify initial value
     let initial_value = clear_input
@@ -124,7 +124,7 @@ async fn test_keyboard_actions() {
         .expect("Failed to navigate");
 
     // Test: Press Enter key changes input value via JavaScript
-    let input = page.locator("#input").await;
+    let input = page.locator("#input");
     input.click(None).await.expect("Failed to focus input");
     input
         .press("Enter", None)
@@ -175,7 +175,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_button = firefox_page.locator("#btn").await;
+    let firefox_button = firefox_page.locator("#btn");
     firefox_button
         .click(None)
         .await
@@ -205,7 +205,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_input = webkit_page.locator("#name").await;
+    let webkit_input = webkit_page.locator("#name");
     webkit_input
         .fill("Test", None)
         .await
@@ -236,7 +236,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to navigate");
 
-    let input = page.locator("#input").await;
+    let input = page.locator("#input");
     let options = FillOptions::builder().force(true).build();
     input
         .fill("Hello World", Some(options))
@@ -253,7 +253,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to navigate");
 
-    let input = page.locator("#input").await;
+    let input = page.locator("#input");
     input.click(None).await.expect("Failed to click");
 
     let options = PressOptions::builder().delay(50.0).build();
@@ -272,7 +272,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to navigate");
 
-    let checkbox = page.locator("#checkbox").await;
+    let checkbox = page.locator("#checkbox");
     let options = CheckOptions::builder().force(true).build();
     checkbox
         .check(Some(options))
@@ -284,7 +284,7 @@ async fn test_action_options_methods() {
         "Checkbox should be checked"
     );
 
-    let checked_checkbox = page.locator("#checked-checkbox").await;
+    let checked_checkbox = page.locator("#checked-checkbox");
     let trial_options = CheckOptions::builder().trial(true).build();
     checked_checkbox
         .uncheck(Some(trial_options))
@@ -303,7 +303,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#hover-button").await;
+    let button = page.locator("#hover-button");
     let options = HoverOptions::builder()
         .position(Position { x: 5.0, y: 5.0 })
         .build();
@@ -312,7 +312,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to hover with position");
 
-    let tooltip = page.locator("#tooltip").await;
+    let tooltip = page.locator("#tooltip");
     assert!(
         tooltip.is_visible().await.unwrap(),
         "Tooltip should be visible after hover"
@@ -325,7 +325,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to navigate");
 
-    let select = page.locator("#single-select").await;
+    let select = page.locator("#single-select");
     let options = SelectOptions::builder().force(true).build();
     let selected = select
         .select_option("apple", Some(options))
@@ -341,7 +341,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to navigate");
 
-    let input = page.locator("#keyboard-input").await;
+    let input = page.locator("#keyboard-input");
     input.click(None).await.expect("Failed to click input");
 
     let keyboard = page.keyboard();
@@ -367,12 +367,7 @@ async fn test_action_options_methods() {
         .await
         .expect("Failed to click with options");
 
-    let result = page
-        .locator("#mouse-result")
-        .await
-        .inner_text()
-        .await
-        .unwrap();
+    let result = page.locator("#mouse-result").inner_text().await.unwrap();
     assert_eq!(result, "Clicked");
 
     tracing::info!("✓ Mouse click with options works");
@@ -414,7 +409,7 @@ async fn test_action_options_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_input = firefox_page.locator("#input").await;
+    let firefox_input = firefox_page.locator("#input");
     let options = FillOptions::builder().force(true).build();
     firefox_input
         .fill("Firefox Test", Some(options))
@@ -444,7 +439,7 @@ async fn test_action_options_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_checkbox = webkit_page.locator("#checkbox").await;
+    let webkit_checkbox = webkit_page.locator("#checkbox");
     let options = CheckOptions::builder().force(true).build();
     webkit_checkbox
         .check(Some(options))

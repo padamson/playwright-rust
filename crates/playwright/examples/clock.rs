@@ -68,7 +68,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The #clock element should reflect the advanced time (setInterval ran)
     let displayed = page
         .locator("#clock")
-        .await
         .text_content()
         .await?
         .unwrap_or_default();

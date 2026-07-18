@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Example 5: Element screenshot
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let element_bytes = heading.screenshot(None).await?;
     println!("✓ Element screenshot: {} bytes", element_bytes.len());
 
@@ -86,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 9: Mask elements — overpaint matched locators with a solid box to
     // redact dynamic or sensitive content.
     let masked = ScreenshotOptions::builder()
-        .mask(vec![page.locator("h1").await])
+        .mask(vec![page.locator("h1")])
         .mask_color("#FF00FF")
         .build();
     let masked_bytes = page.screenshot(Some(masked)).await?;

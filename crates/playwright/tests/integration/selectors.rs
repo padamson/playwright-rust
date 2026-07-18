@@ -55,7 +55,7 @@ async fn test_set_test_id_attribute() {
     .expect("goto should succeed");
 
     // get_by_test_id should now use data-custom-id
-    let button = page.get_by_test_id("my-button").await;
+    let button = page.get_by_test_id("my-button");
     let text = button
         .text_content()
         .await
@@ -113,7 +113,7 @@ async fn test_register_custom_selector() {
     // passed as an owned `String` — `locator` takes `impl Into<String>`, so
     // no `&format!(...)` borrow is needed at the call site.
     let engine = "tag";
-    let locator = page.locator(format!("{engine}=article")).await;
+    let locator = page.locator(format!("{engine}=article"));
     let text = locator
         .text_content()
         .await
@@ -156,7 +156,7 @@ async fn test_register_custom_selector_with_content_script() {
     .await
     .expect("goto should succeed");
 
-    let locator = page.locator("cstag=section").await;
+    let locator = page.locator("cstag=section");
     let text = locator
         .text_content()
         .await

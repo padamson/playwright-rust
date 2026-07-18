@@ -557,7 +557,7 @@ async fn test_page_expect_download() -> Result<(), Box<dyn std::error::Error>> {
     let waiter = page.expect_download(Some(5000.0)).await?;
 
     // Trigger the download
-    page.locator("#dl").await.click(None).await?;
+    page.locator("#dl").click(None).await?;
 
     // Resolve the waiter
     let download = waiter.wait().await?;

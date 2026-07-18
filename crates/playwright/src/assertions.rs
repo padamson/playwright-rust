@@ -34,60 +34,60 @@ const DEFAULT_POLL_INTERVAL: Duration = Duration::from_millis(100);
 ///
 ///     // Test to_be_visible and to_be_hidden
 ///     page.goto("data:text/html,<button id='btn'>Click me</button><div id='hidden' style='display:none'>Hidden</div>", None).await?;
-///     expect(page.locator("#btn").await).to_be_visible().await?;
-///     expect(page.locator("#hidden").await).to_be_hidden().await?;
+///     expect(page.locator("#btn")).to_be_visible().await?;
+///     expect(page.locator("#hidden")).to_be_hidden().await?;
 ///
 ///     // Test not() negation
-///     expect(page.locator("#btn").await).not().to_be_hidden().await?;
-///     expect(page.locator("#hidden").await).not().to_be_visible().await?;
+///     expect(page.locator("#btn")).not().to_be_hidden().await?;
+///     expect(page.locator("#hidden")).not().to_be_visible().await?;
 ///
 ///     // Test with_timeout()
 ///     page.goto("data:text/html,<div id='element'>Visible</div>", None).await?;
-///     expect(page.locator("#element").await)
+///     expect(page.locator("#element"))
 ///         .with_timeout(Duration::from_secs(10))
 ///         .to_be_visible()
 ///         .await?;
 ///
 ///     // Test to_be_enabled and to_be_disabled
 ///     page.goto("data:text/html,<button id='enabled'>Enabled</button><button id='disabled' disabled>Disabled</button>", None).await?;
-///     expect(page.locator("#enabled").await).to_be_enabled().await?;
-///     expect(page.locator("#disabled").await).to_be_disabled().await?;
+///     expect(page.locator("#enabled")).to_be_enabled().await?;
+///     expect(page.locator("#disabled")).to_be_disabled().await?;
 ///
 ///     // Test to_be_checked and to_be_unchecked
 ///     page.goto("data:text/html,<input type='checkbox' id='checked' checked><input type='checkbox' id='unchecked'>", None).await?;
-///     expect(page.locator("#checked").await).to_be_checked().await?;
-///     expect(page.locator("#unchecked").await).to_be_unchecked().await?;
+///     expect(page.locator("#checked")).to_be_checked().await?;
+///     expect(page.locator("#unchecked")).to_be_unchecked().await?;
 ///
 ///     // Test to_be_editable
 ///     page.goto("data:text/html,<input type='text' id='editable'>", None).await?;
-///     expect(page.locator("#editable").await).to_be_editable().await?;
+///     expect(page.locator("#editable")).to_be_editable().await?;
 ///
 ///     // Test to_be_focused
 ///     page.goto("data:text/html,<input type='text' id='input'>", None).await?;
 ///     page.evaluate::<(), ()>("document.getElementById('input').focus()", None).await?;
-///     expect(page.locator("#input").await).to_be_focused().await?;
+///     expect(page.locator("#input")).to_be_focused().await?;
 ///
 ///     // Test to_contain_text
 ///     page.goto("data:text/html,<div id='content'>Hello World</div>", None).await?;
-///     expect(page.locator("#content").await).to_contain_text("Hello").await?;
-///     expect(page.locator("#content").await).to_contain_text("World").await?;
+///     expect(page.locator("#content")).to_contain_text("Hello").await?;
+///     expect(page.locator("#content")).to_contain_text("World").await?;
 ///
 ///     // Test to_have_text
-///     expect(page.locator("#content").await).to_have_text("Hello World").await?;
+///     expect(page.locator("#content")).to_have_text("Hello World").await?;
 ///
 ///     // Test to_have_value
 ///     page.goto("data:text/html,<input type='text' id='input' value='test value'>", None).await?;
-///     expect(page.locator("#input").await).to_have_value("test value").await?;
+///     expect(page.locator("#input")).to_have_value("test value").await?;
 ///
 ///     // Test to_have_attribute / to_have_class / to_have_css / to_have_count
 ///     page.goto(
 ///         "data:text/html,<a id='link' class='primary' href='/x' style='color:red'>A</a><a class='primary'>B</a>",
 ///         None,
 ///     ).await?;
-///     expect(page.locator("#link").await).to_have_attribute("href", "/x").await?;
-///     expect(page.locator("#link").await).to_have_class("primary").await?;
-///     expect(page.locator("#link").await).to_have_css("color", "rgb(255, 0, 0)").await?;
-///     expect(page.locator(".primary").await).to_have_count(2).await?;
+///     expect(page.locator("#link")).to_have_attribute("href", "/x").await?;
+///     expect(page.locator("#link")).to_have_class("primary").await?;
+///     expect(page.locator("#link")).to_have_css("color", "rgb(255, 0, 0)").await?;
+///     expect(page.locator(".primary")).to_have_count(2).await?;
 ///
 ///     browser.close().await?;
 ///     Ok(())
@@ -986,7 +986,7 @@ impl Expectation {
     /// # let pw = Playwright::launch().await?;
     /// # let browser = pw.chromium().launch().await?;
     /// # let page = browser.new_page().await?;
-    /// expect(page.locator("body").await)
+    /// expect(page.locator("body"))
     ///     .to_match_aria_snapshot("- heading \"Hello\" [level=1]\n- button \"Click me\"")
     ///     .await?;
     /// # Ok(())

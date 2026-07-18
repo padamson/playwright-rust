@@ -65,12 +65,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     // Example 1: Assert button is enabled
-    let enabled_btn = page.locator("#enabled-btn").await;
+    let enabled_btn = page.locator("#enabled-btn");
     expect(enabled_btn.clone()).to_be_enabled().await?;
     println!("✓ Enabled button is enabled");
 
     // Example 2: Assert button is disabled
-    let disabled_btn = page.locator("#disabled-btn").await;
+    let disabled_btn = page.locator("#disabled-btn");
     expect(disabled_btn.clone()).to_be_disabled().await?;
     println!("✓ Disabled button is disabled");
 
@@ -79,12 +79,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Enabled button is NOT disabled (negation)");
 
     // Example 4: Assert checkbox is checked
-    let checked_box = page.locator("#checked-box").await;
+    let checked_box = page.locator("#checked-box");
     expect(checked_box.clone()).to_be_checked().await?;
     println!("✓ Checked checkbox is checked");
 
     // Example 5: Assert checkbox is unchecked
-    let unchecked_box = page.locator("#unchecked-box").await;
+    let unchecked_box = page.locator("#unchecked-box");
     expect(unchecked_box.clone()).to_be_unchecked().await?;
     println!("✓ Unchecked checkbox is unchecked");
 
@@ -93,12 +93,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Checked checkbox is NOT unchecked (negation)");
 
     // Example 7: Assert input is editable
-    let editable_input = page.locator("#editable-input").await;
+    let editable_input = page.locator("#editable-input");
     expect(editable_input.clone()).to_be_editable().await?;
     println!("✓ Editable input is editable");
 
     // Example 8: Assert readonly input is NOT editable
-    let readonly_input = page.locator("#readonly-input").await;
+    let readonly_input = page.locator("#readonly-input");
     expect(readonly_input.clone())
         .not()
         .to_be_editable()
@@ -122,7 +122,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     // This will auto-retry for up to 5 seconds, waiting for button to become enabled
-    let delayed_btn = page.locator("#delayed-btn").await;
+    let delayed_btn = page.locator("#delayed-btn");
     expect(delayed_btn).to_be_enabled().await?;
     println!("✓ Delayed button became enabled (auto-retry)");
 
@@ -141,7 +141,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let delayed_box = page.locator("#delayed-box").await;
+    let delayed_box = page.locator("#delayed-box");
     expect(delayed_box).to_be_checked().await?;
     println!("✓ Delayed checkbox became checked (auto-retry)");
 
@@ -160,7 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let slow_btn = page.locator("#slow-btn").await;
+    let slow_btn = page.locator("#slow-btn");
     expect(slow_btn)
         .with_timeout(std::time::Duration::from_secs(10))
         .to_be_enabled()
@@ -178,7 +178,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let forever_disabled = page.locator("#forever-disabled").await;
+    let forever_disabled = page.locator("#forever-disabled");
     let result = expect(forever_disabled)
         .with_timeout(std::time::Duration::from_millis(500))
         .to_be_enabled()

@@ -14,7 +14,7 @@ async fn test_frame_locator_click_button() -> Result<(), Box<dyn std::error::Err
         .await?;
 
     // Click button inside the "content" iframe
-    let frame = page.frame_locator("iframe[name='content']").await;
+    let frame = page.frame_locator("iframe[name='content']");
     frame.locator("#frame-btn").click(None).await?;
 
     // Verify button text changed
@@ -35,7 +35,7 @@ async fn test_frame_locator_text_content() -> Result<(), Box<dyn std::error::Err
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
 
-    let frame = page.frame_locator("iframe[name='content']").await;
+    let frame = page.frame_locator("iframe[name='content']");
     let heading = frame.locator("h1").text_content().await?;
     assert_eq!(heading, Some("Inside Frame".to_string()));
 
@@ -57,7 +57,7 @@ async fn test_frame_locator_get_by_text() -> Result<(), Box<dyn std::error::Erro
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
 
-    let frame = page.frame_locator("iframe[name='content']").await;
+    let frame = page.frame_locator("iframe[name='content']");
     let btn = frame.get_by_text("Click Me", false);
     let text = btn.text_content().await?;
     assert_eq!(text, Some("Click Me".to_string()));
@@ -76,7 +76,7 @@ async fn test_frame_locator_get_by_label() -> Result<(), Box<dyn std::error::Err
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
 
-    let frame = page.frame_locator("iframe[name='content']").await;
+    let frame = page.frame_locator("iframe[name='content']");
     let input = frame.get_by_label("Email", false);
     input.fill("test@example.com", None).await?;
     let value = input.input_value(None).await?;
@@ -96,7 +96,7 @@ async fn test_frame_locator_get_by_test_id() -> Result<(), Box<dyn std::error::E
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
 
-    let frame = page.frame_locator("iframe[name='content']").await;
+    let frame = page.frame_locator("iframe[name='content']");
     let btn = frame.get_by_test_id("frame-submit");
     let text = btn.text_content().await?;
     assert_eq!(text, Some("Submit".to_string()));
@@ -120,10 +120,7 @@ async fn test_frame_locator_nested() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     // Navigate: outer page → #outer iframe → #innermost iframe → h1
-    let inner = page
-        .frame_locator("#outer")
-        .await
-        .frame_locator("#innermost");
+    let inner = page.frame_locator("#outer").frame_locator("#innermost");
     let heading = inner.locator("h1").text_content().await?;
     assert_eq!(heading, Some("Inside Frame".to_string()));
 
@@ -145,7 +142,7 @@ async fn test_frame_locator_owner() -> Result<(), Box<dyn std::error::Error>> {
     page.goto(&format!("{}/iframe-test.html", server.url()), None)
         .await?;
 
-    let frame = page.frame_locator("iframe[name='content']").await;
+    let frame = page.frame_locator("iframe[name='content']");
     let iframe_element = frame.owner();
     let name = iframe_element.get_attribute("name").await?;
     assert_eq!(name, Some("content".to_string()));
@@ -171,7 +168,6 @@ async fn test_locator_frame_locator() -> Result<(), Box<dyn std::error::Error>> 
     // Use locator("body") to scope, then frame_locator into iframe
     let heading = page
         .locator("body")
-        .await
         .frame_locator("iframe[name='content']")
         .locator("h1")
         .text_content()

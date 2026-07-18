@@ -110,7 +110,7 @@ fn element_query_benchmark(c: &mut Criterion) {
     group.bench_function("locator_by_id", |b| {
         b.iter(|| {
             runtime.block_on(async {
-                let locator = page.locator("#button1").await;
+                let locator = page.locator("#button1");
                 black_box(locator);
             });
         });
@@ -120,7 +120,7 @@ fn element_query_benchmark(c: &mut Criterion) {
     group.bench_function("locator_by_class", |b| {
         b.iter(|| {
             runtime.block_on(async {
-                let locator = page.locator(".btn").await;
+                let locator = page.locator(".btn");
                 black_box(locator);
             });
         });
@@ -130,7 +130,7 @@ fn element_query_benchmark(c: &mut Criterion) {
     group.bench_function("locator_count", |b| {
         b.iter(|| {
             runtime.block_on(async {
-                let locator = page.locator(".item").await;
+                let locator = page.locator(".item");
                 let count = locator.count().await;
                 let _ = black_box(count);
             });
@@ -141,7 +141,7 @@ fn element_query_benchmark(c: &mut Criterion) {
     group.bench_function("is_visible", |b| {
         b.iter(|| {
             runtime.block_on(async {
-                let locator = page.locator("#title").await;
+                let locator = page.locator("#title");
                 let is_visible = locator.is_visible().await;
                 let _ = black_box(is_visible);
             });

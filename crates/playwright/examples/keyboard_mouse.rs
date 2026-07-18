@@ -13,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     page.goto("https://www.google.com", None).await?;
 
     // Keyboard example - type into search box
-    let search = page.locator("textarea[name=q]").await;
+    let search = page.locator("textarea[name=q]");
     search.click(None).await?;
 
     let keyboard = page.keyboard();

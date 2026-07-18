@@ -14,7 +14,7 @@ async fn test_keyboard_methods() {
         .await
         .expect("Failed to navigate");
 
-    let input = page.locator("#keyboard-input").await;
+    let input = page.locator("#keyboard-input");
     let keyboard = page.keyboard();
 
     // Test 1: Type text using keyboard API
@@ -36,7 +36,7 @@ async fn test_keyboard_methods() {
         .await
         .expect("Failed to press Enter");
 
-    let result = page.locator("#keyboard-result").await;
+    let result = page.locator("#keyboard-result");
     let text = result.text_content().await.expect("Failed to get text");
     assert_eq!(text, Some("Enter pressed".to_string()));
 
@@ -140,7 +140,7 @@ async fn test_mouse_methods() {
         .expect("Failed to move mouse");
 
     // Verify mouse moved (page would show coordinates in real scenario)
-    let coords = page.locator("#mouse-coords").await;
+    let coords = page.locator("#mouse-coords");
     let text = coords.text_content().await.expect("Failed to get text");
     assert!(text.is_some());
 
@@ -150,7 +150,7 @@ async fn test_mouse_methods() {
         .await
         .expect("Failed to click mouse");
 
-    let result = page.locator("#mouse-result").await;
+    let result = page.locator("#mouse-result");
     let text = result.text_content().await.expect("Failed to get text");
     assert_eq!(text, Some("Clicked".to_string()));
 
@@ -219,7 +219,7 @@ async fn test_page_touchscreen_tap() {
     .expect("Failed to navigate");
 
     // Get the button bounding box so we can tap its center
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
     let bbox = button
         .bounding_box()
         .await
@@ -277,7 +277,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_input = firefox_page.locator("#keyboard-input").await;
+    let firefox_input = firefox_page.locator("#keyboard-input");
     firefox_input
         .click(None)
         .await
@@ -316,7 +316,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to click mouse");
 
-    let webkit_result = webkit_page.locator("#mouse-result").await;
+    let webkit_result = webkit_page.locator("#mouse-result");
     let text = webkit_result
         .text_content()
         .await

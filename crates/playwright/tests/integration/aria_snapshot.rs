@@ -10,7 +10,7 @@ async fn test_to_match_aria_snapshot_basic() {
         .await
         .expect("Failed to set content");
 
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     expect(body)
         .to_match_aria_snapshot("- heading \"Hello\" [level=1]\n- button \"Click me\"")
         .await
@@ -27,7 +27,7 @@ async fn test_to_match_aria_snapshot_negation() {
         .await
         .expect("Failed to set content");
 
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     // A snapshot that does NOT match should pass with .not()
     expect(body)
         .not()
@@ -46,7 +46,7 @@ async fn test_to_match_aria_snapshot_mismatch_fails() {
         .await
         .expect("Failed to set content");
 
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     let result = expect(body)
         .with_timeout(std::time::Duration::from_millis(500))
         .to_match_aria_snapshot("- heading \"Goodbye\" [level=1]")
@@ -85,7 +85,6 @@ async fn test_page_aria_snapshot_matches_body_locator() {
         .expect("Page::aria_snapshot should succeed");
     let from_locator = page
         .locator("body")
-        .await
         .aria_snapshot(None)
         .await
         .expect("Locator::aria_snapshot should succeed");
@@ -119,7 +118,7 @@ async fn test_aria_snapshot_options_plumb_through() {
     .await
     .expect("Failed to set content");
 
-    let body = page.locator("body").await;
+    let body = page.locator("body");
 
     let default_snapshot = body
         .aria_snapshot(None)
@@ -193,7 +192,6 @@ async fn test_aria_snapshot_boxes() {
     let opts = AriaSnapshotOptions::default().boxes(true);
     let snap = page
         .locator("body")
-        .await
         .aria_snapshot(Some(opts))
         .await
         .expect("aria snapshot with boxes");

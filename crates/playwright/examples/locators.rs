@@ -15,13 +15,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     page.goto("https://example.com", None).await?;
 
     // Basic locator - find and query element
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let heading_text = heading.text_content().await?;
     let is_visible = heading.is_visible().await?;
     println!("Heading: {:?} (visible: {})", heading_text, is_visible);
 
     // Count matching elements
-    let paragraphs = page.locator("p").await;
+    let paragraphs = page.locator("p");
     let count = paragraphs.count().await?;
     println!("Found {} paragraphs", count);
 
@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Nested locators - scope search within element
-    let body = page.locator("body").await;
+    let body = page.locator("body");
     let links = body.locator("a");
     let link_count = links.count().await?;
     println!("Found {} links in body", link_count);
@@ -50,14 +50,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // and_() - match elements satisfying both locators
-    let h1 = page.locator("h1").await;
-    let visible = page.locator(":visible").await;
+    let h1 = page.locator("h1");
+    let visible = page.locator(":visible");
     let visible_heading = h1.and_(&visible);
     println!("Visible h1 elements: {}", visible_heading.count().await?);
 
     // or_() - match elements satisfying either locator
-    let h1 = page.locator("h1").await;
-    let anchors = page.locator("a").await;
+    let h1 = page.locator("h1");
+    let anchors = page.locator("a");
     let h1_or_a = h1.or_(&anchors);
     println!("h1 or <a> elements: {}", h1_or_a.count().await?);
 
@@ -99,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // --- get_by_* methods ---
 
-    let heading = page.get_by_text("Example Domain", false).await;
+    let heading = page.get_by_text("Example Domain", false);
     println!(
         "Found heading by text (visible: {})",
         heading.is_visible().await?
@@ -120,7 +120,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let target = page.locator("#target").await;
+    let target = page.locator("#target");
     println!("Waiting for element to become visible...");
     target
         .wait_for(Some(
@@ -148,12 +148,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let source = page.locator("#source").await;
-    let drop_zone = page.locator("#drop").await;
+    let source = page.locator("#source");
+    let drop_zone = page.locator("#drop");
     source.drag_to(&drop_zone, None).await?;
     let result: String = page
         .locator("#result")
-        .await
         .text_content()
         .await?
         .unwrap_or_default();
@@ -181,12 +180,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let upload = FilePayload::new("report.csv", "text/csv", b"a,b,c\n1,2,3\n".to_vec());
     page.locator("#zone")
-        .await
         .drop(DropOptions::builder().file(upload).build())
         .await?;
     let dropped: String = page
         .locator("#dropped")
-        .await
         .text_content()
         .await?
         .unwrap_or_default();
@@ -194,7 +191,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // --- page property - navigate from locator back to its page ---
 
-    let locator = page.locator("body").await;
+    let locator = page.locator("body");
     let owner = locator.page()?;
     println!("Locator's page URL: {}", owner.url());
 

@@ -19,13 +19,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✓ Navigated to example.com");
 
     // Example 1: Assert element is visible
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     expect(heading.clone()).to_be_visible().await?;
     println!("✓ Heading is visible");
 
     // Example 2: Assert element is hidden
     // (nonexistent elements are considered hidden)
-    let dialog = page.locator("#dialog").await;
+    let dialog = page.locator("#dialog");
     expect(dialog.clone()).to_be_hidden().await?;
     println!("✓ Dialog is hidden");
 
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     // This will auto-retry for up to 5 seconds, waiting for element to become visible
-    let delayed = page.locator("#delayed-element").await;
+    let delayed = page.locator("#delayed-element");
     expect(delayed).to_be_visible().await?;
     println!("✓ Delayed element became visible (auto-retry)");
 
@@ -90,7 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let email_input = page.locator("#email-input").await;
+    let email_input = page.locator("#email-input");
     expect(email_input.clone())
         .to_have_value("user@example.com")
         .await?;
@@ -113,7 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let hidden = page.locator("#hidden-element").await;
+    let hidden = page.locator("#hidden-element");
     let result = expect(hidden)
         .with_timeout(Duration::from_millis(500))
         .to_be_visible()

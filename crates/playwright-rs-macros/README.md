@@ -9,7 +9,7 @@ on it directly:
 ```rust,ignore
 use playwright_rs::locator;
 
-let locator = page.locator(locator!("#submit-button")).await;
+let locator = page.locator(locator!("#submit-button"));
 ```
 
 The `locator!()` macro validates the selector string at compile time —

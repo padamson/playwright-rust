@@ -56,7 +56,7 @@ async fn test_element_handle_methods() {
     );
 
     // locator.screenshot() delegates to ElementHandle
-    let locator = page.locator("h1").await;
+    let locator = page.locator("h1");
     let bytes = locator
         .screenshot(None)
         .await

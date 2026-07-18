@@ -77,7 +77,7 @@ async fn test_tracing_debug_span_emitted_for_interior_op() {
         .await
         .expect("set_content failed");
 
-    let _ = page.locator("#x").await.text_content().await;
+    let _ = page.locator("#x").text_content().await;
 
     browser.close().await.expect("close failed");
 
@@ -100,12 +100,7 @@ async fn test_tracing_records_completion_field_via_span_record() {
         .await
         .expect("set_content failed");
 
-    let n = page
-        .locator("li")
-        .await
-        .count()
-        .await
-        .expect("count failed");
+    let n = page.locator("li").count().await.expect("count failed");
     assert_eq!(n, 3);
 
     browser.close().await.expect("close failed");

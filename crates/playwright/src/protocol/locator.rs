@@ -33,19 +33,18 @@
 //!     ).await?;
 //!
 //!     // Basic locator + action
-//!     page.locator("button").await.click(None).await?;
+//!     page.locator("button").click(None).await?;
 //!
 //!     // Robust locator from a fragile starting point: normalize() asks
 //!     // Playwright for the canonical equivalent (test-id / role / text).
 //!     let stable = page
 //!         .locator("body button:nth-child(1)")
-//!         .await
 //!         .normalize()
 //!         .await?;
 //!     assert!(!stable.selector().is_empty());
 //!
 //!     // Chain primitives: filter, count, nth
-//!     let items = page.locator(".item").await;
+//!     let items = page.locator(".item");
 //!     assert_eq!(items.count().await?, 2);
 //!     items.nth(0).click(None).await?;
 //!
@@ -584,7 +583,7 @@ impl FilterOptions {
 ///         "data:text/html,<input type='checkbox' id='cb'>",
 ///         None
 ///     ).await;
-///     let checkbox = page.locator("#cb").await;
+///     let checkbox = page.locator("#cb");
 ///     checkbox.set_checked(true, None).await?;
 ///     assert!(checkbox.is_checked().await?);
 ///     checkbox.set_checked(false, None).await?;
@@ -599,7 +598,7 @@ impl FilterOptions {
 ///         </select>",
 ///         None
 ///     ).await;
-///     let select = page.locator("#fruits").await;
+///     let select = page.locator("#fruits");
 ///     select.select_option("banana", None).await?;
 ///     assert_eq!(select.input_value(None).await?, "banana");
 ///     select.select_option(SelectOption::Label("Apple".to_string()), None).await?;
@@ -617,7 +616,7 @@ impl FilterOptions {
 ///         </select>",
 ///         None
 ///     ).await;
-///     let multi = page.locator("#colors").await;
+///     let multi = page.locator("#colors");
 ///     let selected = multi.select_option_multiple(&["red", "blue"], None).await?;
 ///     assert_eq!(selected.len(), 2);
 ///     assert!(selected.contains(&"red".to_string()));
@@ -628,9 +627,9 @@ impl FilterOptions {
 ///         "data:text/html,<button>Submit</button><button>Submit Order</button>",
 ///         None
 ///     ).await;
-///     let all_submits = page.get_by_text("Submit", false).await;
+///     let all_submits = page.get_by_text("Submit", false);
 ///     assert_eq!(all_submits.count().await?, 2); // case-insensitive substring
-///     let exact_submit = page.get_by_text("Submit", true).await;
+///     let exact_submit = page.get_by_text("Submit", true);
 ///     assert_eq!(exact_submit.count().await?, 1); // exact match only
 ///
 ///     // Demonstrate get_by_label, get_by_placeholder, get_by_test_id
@@ -639,11 +638,11 @@ impl FilterOptions {
 ///             <input id='email' placeholder='you@example.com' data-testid='email-input' />",
 ///         None
 ///     ).await;
-///     let by_label = page.get_by_label("Email", false).await;
+///     let by_label = page.get_by_label("Email", false);
 ///     assert_eq!(by_label.count().await?, 1);
-///     let by_placeholder = page.get_by_placeholder("you@example.com", true).await;
+///     let by_placeholder = page.get_by_placeholder("you@example.com", true);
 ///     assert_eq!(by_placeholder.count().await?, 1);
-///     let by_test_id = page.get_by_test_id("email-input").await;
+///     let by_test_id = page.get_by_test_id("email-input");
 ///     assert_eq!(by_test_id.count().await?, 1);
 ///
 ///     // Demonstrate screenshot() - element screenshot
@@ -651,7 +650,7 @@ impl FilterOptions {
 ///         "data:text/html,<h1 id='title'>Hello World</h1>",
 ///         None
 ///     ).await;
-///     let heading = page.locator("#title").await;
+///     let heading = page.locator("#title");
 ///     let screenshot = heading.screenshot(None).await?;
 ///     assert!(!screenshot.is_empty());
 ///
@@ -732,7 +731,7 @@ impl Locator {
     /// let page = browser.new_page().await?;
     /// page.goto("https://example.com", None).await?;
     ///
-    /// let locator = page.locator("h1").await;
+    /// let locator = page.locator("h1");
     /// let locator_page = locator.page()?;
     /// assert_eq!(locator_page.url(), page.url());
     /// # Ok(())
@@ -886,7 +885,7 @@ impl Locator {
     /// let page = browser.new_page().await?;
     ///
     /// // Filter rows to those containing "Apple"
-    /// let rows = page.locator("tr").await;
+    /// let rows = page.locator("tr");
     /// let apple_row = rows.filter(FilterOptions::default().has_text("Apple"));
     /// # browser.close().await?;
     /// # Ok(())
@@ -938,8 +937,8 @@ impl Locator {
     /// let page = browser.new_page().await?;
     ///
     /// // Find a button that also has a specific title
-    /// let button = page.locator("button").await;
-    /// let titled = page.locator("[title='Subscribe']").await;
+    /// let button = page.locator("button");
+    /// let titled = page.locator("[title='Subscribe']");
     /// let subscribe_btn = button.and_(&titled);
     /// # browser.close().await?;
     /// # Ok(())
@@ -973,8 +972,8 @@ impl Locator {
     /// let page = browser.new_page().await?;
     ///
     /// // Find any element that is either a button or a link
-    /// let buttons = page.locator("button").await;
-    /// let links = page.locator("a").await;
+    /// let buttons = page.locator("button");
+    /// let links = page.locator("a");
     /// let interactive = buttons.or_(&links);
     /// # browser.close().await?;
     /// # Ok(())
@@ -1728,7 +1727,7 @@ impl Locator {
     /// let page = browser.new_page().await?;
     /// let _ = page.goto("data:text/html,<h1>Hello</h1>", None).await;
     ///
-    /// let heading = page.locator("h1").await;
+    /// let heading = page.locator("h1");
     /// let text: String = heading.evaluate("(el) => el.textContent", None::<()>).await?;
     /// assert_eq!(text, "Hello");
     ///
@@ -1794,7 +1793,7 @@ impl Locator {
     ///     None
     /// ).await;
     ///
-    /// let items = page.locator(".item").await;
+    /// let items = page.locator(".item");
     /// let texts: Vec<String> = items
     ///     .evaluate_all("(elements) => elements.map(e => e.textContent)", None::<()>)
     ///     .await?;

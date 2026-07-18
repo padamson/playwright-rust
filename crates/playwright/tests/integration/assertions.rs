@@ -15,14 +15,14 @@ async fn test_to_be_visible_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: Element that is already visible should pass immediately
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
     expect(button)
         .to_be_visible()
         .await
         .expect("Button should be visible");
 
     // Test 2: Negation - element should NOT be visible
-    let nonexistent = page.locator("#does-not-exist").await;
+    let nonexistent = page.locator("#does-not-exist");
     expect(nonexistent.clone())
         .not()
         .to_be_visible()
@@ -64,7 +64,7 @@ async fn test_to_be_visible_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let delayed = page.locator("#delayed-element").await;
+    let delayed = page.locator("#delayed-element");
 
     // The element is display:none until the setTimeout above flips it, so a
     // successful assertion proves to_be_visible() auto-retried. (No wall-clock
@@ -92,7 +92,7 @@ async fn test_to_be_visible_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let slow = page.locator("#slow-element").await;
+    let slow = page.locator("#slow-element");
     expect(slow)
         .to_be_visible()
         .await
@@ -116,7 +116,7 @@ async fn test_to_be_hidden_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: Element that doesn't exist should be considered hidden
-    let nonexistent = page.locator("#does-not-exist").await;
+    let nonexistent = page.locator("#does-not-exist");
     expect(nonexistent)
         .to_be_hidden()
         .await
@@ -134,7 +134,7 @@ async fn test_to_be_hidden_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
 
     // Button is visible until the setTimeout hides it; a successful assertion
     // proves to_be_hidden() auto-retried. No wall-clock bound (flaky on CI).
@@ -177,7 +177,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_button = firefox_page.locator("#btn").await;
+    let firefox_button = firefox_page.locator("#btn");
     expect(firefox_button)
         .to_be_visible()
         .await
@@ -198,7 +198,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_nonexistent = webkit_page.locator("#does-not-exist").await;
+    let webkit_nonexistent = webkit_page.locator("#does-not-exist");
     expect(webkit_nonexistent)
         .to_be_hidden()
         .await
@@ -227,7 +227,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to inject script");
 
-    let webkit_delayed = webkit_page.locator("#delayed-webkit").await;
+    let webkit_delayed = webkit_page.locator("#delayed-webkit");
     expect(webkit_delayed)
         .to_be_visible()
         .await
@@ -251,7 +251,7 @@ async fn test_button_state_assertions() {
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#btn").await;
+    let button = page.locator("#btn");
     expect(button)
         .to_be_enabled()
         .await
@@ -274,7 +274,7 @@ async fn test_button_state_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let disabled_button = page.locator("#disabled-btn").await;
+    let disabled_button = page.locator("#disabled-btn");
     expect(disabled_button.clone())
         .to_be_disabled()
         .await
@@ -297,7 +297,7 @@ async fn test_button_state_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let delayed_button = page.locator("#delayed-btn").await;
+    let delayed_button = page.locator("#delayed-btn");
     expect(delayed_button)
         .to_be_enabled()
         .await
@@ -340,7 +340,7 @@ async fn test_checkbox_state_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let checked_checkbox = page.locator("#checked-box").await;
+    let checked_checkbox = page.locator("#checked-box");
     expect(checked_checkbox)
         .to_be_checked()
         .await
@@ -359,7 +359,7 @@ async fn test_checkbox_state_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let unchecked_checkbox = page.locator("#unchecked-box").await;
+    let unchecked_checkbox = page.locator("#unchecked-box");
     expect(unchecked_checkbox)
         .to_be_unchecked()
         .await
@@ -382,7 +382,7 @@ async fn test_checkbox_state_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let delayed_checkbox = page.locator("#delayed-checkbox").await;
+    let delayed_checkbox = page.locator("#delayed-checkbox");
     expect(delayed_checkbox)
         .to_be_checked()
         .await
@@ -417,7 +417,7 @@ async fn test_editable_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let editable_input = page.locator("#editable-input").await;
+    let editable_input = page.locator("#editable-input");
     expect(editable_input)
         .to_be_editable()
         .await
@@ -436,7 +436,7 @@ async fn test_editable_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let readonly_input = page.locator("#readonly-input").await;
+    let readonly_input = page.locator("#readonly-input");
     expect(readonly_input)
         .not()
         .to_be_editable()
@@ -473,7 +473,7 @@ async fn test_focus_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let focused_input = page.locator("#focused-input").await;
+    let focused_input = page.locator("#focused-input");
     expect(focused_input)
         .to_be_focused()
         .await
@@ -491,7 +491,7 @@ async fn test_focus_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let unfocused_input = page.locator("#unfocused-input").await;
+    let unfocused_input = page.locator("#unfocused-input");
     expect(unfocused_input)
         .not()
         .to_be_focused()
@@ -514,7 +514,7 @@ async fn test_focus_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let delayed_focused_input = page.locator("#delayed-focused-input").await;
+    let delayed_focused_input = page.locator("#delayed-focused-input");
     expect(delayed_focused_input)
         .to_be_focused()
         .await
@@ -554,7 +554,7 @@ async fn test_state_assertions_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_button = firefox_page.locator("#btn").await;
+    let firefox_button = firefox_page.locator("#btn");
     expect(firefox_button)
         .to_be_enabled()
         .await
@@ -575,7 +575,7 @@ async fn test_state_assertions_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_button = webkit_page.locator("#btn").await;
+    let webkit_button = webkit_page.locator("#btn");
     expect(webkit_button)
         .to_be_enabled()
         .await
@@ -599,14 +599,14 @@ async fn test_to_have_text_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: Exact text match
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     expect(heading.clone())
         .to_have_text("Welcome to Playwright")
         .await
         .expect("Heading should have exact text");
 
     // Test 2: Text with whitespace trimming
-    let paragraph = page.locator("#whitespace").await;
+    let paragraph = page.locator("#whitespace");
     expect(paragraph)
         .to_have_text("Text with whitespace")
         .await
@@ -645,7 +645,7 @@ async fn test_to_have_text_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let div = page.locator("#changing-text").await;
+    let div = page.locator("#changing-text");
 
     // Text changes via setTimeout; a successful assertion proves to_have_text()
     // auto-retried. No wall-clock bound (flaky on CI).
@@ -672,7 +672,7 @@ async fn test_to_contain_text_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: Substring match
-    let paragraph = page.locator("#long-text").await;
+    let paragraph = page.locator("#long-text");
     expect(paragraph.clone())
         .to_contain_text("middle of the text")
         .await
@@ -709,14 +709,14 @@ async fn test_to_have_value_assertions() {
         .expect("Failed to navigate");
 
     // Test 1: Input with value should match
-    let input = page.locator("#name-input").await;
+    let input = page.locator("#name-input");
     expect(input.clone())
         .to_have_value("John Doe")
         .await
         .expect("Input should have value");
 
     // Test 2: Empty input should have empty value
-    let empty_input = page.locator("#empty-input").await;
+    let empty_input = page.locator("#empty-input");
     expect(empty_input)
         .to_have_value("")
         .await
@@ -748,7 +748,7 @@ async fn test_to_have_value_assertions() {
     .await
     .expect("Failed to inject script");
 
-    let changing_input = page.locator("#changing-input").await;
+    let changing_input = page.locator("#changing-input");
     expect(changing_input)
         .to_have_value("updated")
         .await
@@ -773,7 +773,7 @@ async fn test_to_have_attribute_assertions() {
     .await
     .expect("Failed to navigate");
 
-    let link = page.locator("#link").await;
+    let link = page.locator("#link");
 
     expect(link.clone())
         .to_have_attribute("href", "/path")
@@ -825,23 +825,23 @@ async fn test_to_have_class_assertions() {
     .await
     .expect("Failed to navigate");
 
-    expect(page.locator("#a").await)
+    expect(page.locator("#a"))
         .to_have_class("primary")
         .await
         .expect("Single class should match");
 
-    expect(page.locator("#b").await)
+    expect(page.locator("#b"))
         .to_have_class("primary large")
         .await
         .expect("Multi-class string should match exactly");
 
-    expect(page.locator("#b").await)
+    expect(page.locator("#b"))
         .not()
         .to_have_class("primary")
         .await
         .expect("Multi-class element should NOT equal single-class string");
 
-    expect(page.locator("#b").await)
+    expect(page.locator("#b"))
         .to_have_class_regex(r"\blarge\b")
         .await
         .expect("Class regex should match");
@@ -860,7 +860,7 @@ async fn test_to_have_css_assertions() {
     .await
     .expect("Failed to navigate");
 
-    let el = page.locator("#styled").await;
+    let el = page.locator("#styled");
 
     expect(el.clone())
         .to_have_css("color", "rgb(255, 0, 0)")
@@ -897,17 +897,17 @@ async fn test_to_have_count_assertions() {
     .await
     .expect("Failed to navigate");
 
-    expect(page.locator(".item").await)
+    expect(page.locator(".item"))
         .to_have_count(3)
         .await
         .expect("Should have 3 items");
 
-    expect(page.locator(".missing").await)
+    expect(page.locator(".missing"))
         .to_have_count(0)
         .await
         .expect("Missing selector should have count 0");
 
-    expect(page.locator(".item").await)
+    expect(page.locator(".item"))
         .not()
         .to_have_count(5)
         .await
@@ -927,7 +927,7 @@ async fn test_to_have_count_assertions() {
     .await
     .expect("Failed to inject script");
 
-    expect(page.locator(".item").await)
+    expect(page.locator(".item"))
         .to_have_count(4)
         .await
         .expect("Should auto-retry until count reaches 4");
@@ -965,7 +965,7 @@ async fn test_text_assertions_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let firefox_heading = firefox_page.locator("h1").await;
+    let firefox_heading = firefox_page.locator("h1");
     expect(firefox_heading)
         .to_have_text("Welcome to Playwright")
         .await
@@ -986,13 +986,13 @@ async fn test_text_assertions_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let webkit_paragraph = webkit_page.locator("#long-text").await;
+    let webkit_paragraph = webkit_page.locator("#long-text");
     expect(webkit_paragraph.clone())
         .to_contain_text("middle of the text")
         .await
         .expect("to_contain_text should work in WebKit");
 
-    let webkit_input = webkit_page.locator("#name-input").await;
+    let webkit_input = webkit_page.locator("#name-input");
     expect(webkit_input)
         .to_have_value("John Doe")
         .await
@@ -1022,7 +1022,7 @@ async fn test_to_have_screenshot_creates_baseline() {
     let baseline_path = temp_dir.path().join("baseline.png");
 
     // First run: no baseline exists, should create it
-    let locator = page.locator("h1").await;
+    let locator = page.locator("h1");
     expect(locator)
         .to_have_screenshot(&baseline_path, None)
         .await
@@ -1053,7 +1053,7 @@ async fn test_to_have_screenshot_matches_baseline() {
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
     let baseline_path = temp_dir.path().join("match.png");
 
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
 
     // Create baseline
     expect(locator.clone())
@@ -1088,7 +1088,7 @@ async fn test_to_have_screenshot_detects_difference() {
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
     let baseline_path = temp_dir.path().join("diff.png");
 
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
     expect(locator)
         .to_have_screenshot(&baseline_path, None)
         .await
@@ -1102,7 +1102,7 @@ async fn test_to_have_screenshot_detects_difference() {
     .await
     .expect("Failed to set content");
 
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
     let result = expect(locator)
         .with_timeout(std::time::Duration::from_millis(500))
         .to_have_screenshot(&baseline_path, None)
@@ -1136,7 +1136,7 @@ async fn test_to_have_screenshot_max_diff_pixels() {
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
     let baseline_path = temp_dir.path().join("tolerance.png");
 
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
     expect(locator)
         .to_have_screenshot(&baseline_path, None)
         .await
@@ -1148,7 +1148,7 @@ async fn test_to_have_screenshot_max_diff_pixels() {
         .expect("Failed to modify");
 
     // With generous tolerance, should pass
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
     let options = playwright_rs::ScreenshotAssertionOptions::builder()
         .max_diff_pixels(5000)
         .build();
@@ -1177,7 +1177,7 @@ async fn test_to_have_screenshot_update_snapshots() {
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
     let baseline_path = temp_dir.path().join("update.png");
 
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
     expect(locator)
         .to_have_screenshot(&baseline_path, None)
         .await
@@ -1191,7 +1191,7 @@ async fn test_to_have_screenshot_update_snapshots() {
     .await
     .expect("Failed to set content");
 
-    let locator = page.locator("#test").await;
+    let locator = page.locator("#test");
     let options = playwright_rs::ScreenshotAssertionOptions::builder()
         .update_snapshots(true)
         .build();
@@ -1226,7 +1226,7 @@ async fn test_to_have_screenshot_animations_disabled() {
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
     let baseline_path = temp_dir.path().join("animation.png");
 
-    let locator = page.locator("#spinner").await;
+    let locator = page.locator("#spinner");
     let options = playwright_rs::ScreenshotAssertionOptions::builder()
         .animations(playwright_rs::Animations::Disabled)
         .build();
@@ -1291,7 +1291,7 @@ async fn test_to_have_css_pseudo() {
     )
     .await
     .expect("set content");
-    expect(page.locator("#x").await)
+    expect(page.locator("#x"))
         .to_have_css_pseudo("color", "rgb(1, 2, 3)", "::before")
         .await
         .expect("pseudo-element CSS should match");

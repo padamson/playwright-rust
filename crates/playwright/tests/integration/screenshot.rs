@@ -94,7 +94,7 @@ async fn test_locator_screenshot() {
         .expect("Failed to navigate");
 
     // Test: Element screenshot via locator
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let bytes = heading
         .screenshot(None)
         .await
@@ -281,7 +281,7 @@ async fn test_screenshot_element_and_locator_with_options() {
     assert_eq!(&bytes[0..2], &[0xFF, 0xD8], "Should be JPEG");
 
     // Test 2: Locator screenshot with options
-    let locator = page.locator("h1").await;
+    let locator = page.locator("h1");
     let options = ScreenshotOptions::builder()
         .screenshot_type(ScreenshotType::Jpeg)
         .quality(85)
@@ -410,7 +410,7 @@ async fn test_screenshot_mask_accepted() {
 
     // Mask locators serialize to `{ frame, selector }` channel refs; a
     // successful capture confirms that shape (and maskColor) is accepted.
-    let masked = page.locator("h1").await;
+    let masked = page.locator("h1");
     let options = ScreenshotOptions::builder()
         .mask(vec![masked])
         .mask_color("#FF00FF")

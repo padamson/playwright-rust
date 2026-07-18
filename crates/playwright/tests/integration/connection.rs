@@ -461,7 +461,7 @@ async fn test_connect_over_cdp_real_chrome() {
         .await
         .expect("Failed to navigate");
 
-    let heading = page.locator("h1").await;
+    let heading = page.locator("h1");
     let text = heading.text_content().await.expect("Failed to get text");
     assert_eq!(text, Some("CDP Connection Works!".to_string()));
 
@@ -839,7 +839,7 @@ async fn test_connect_to_real_server() {
         .expect("Failed to navigate");
 
     // Verify the page loaded by checking content
-    let locator = page.locator("h1").await;
+    let locator = page.locator("h1");
     let content = locator.text_content().await.expect("Failed to get text");
     assert_eq!(
         content,
