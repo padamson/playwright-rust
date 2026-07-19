@@ -137,6 +137,63 @@ async fn test_save_then_reopen_round_trip() {
     browser.close().await.expect("browser close");
 }
 
+/// A fake handle survives being persisted to IndexedDB (the spec-recommended
+/// pattern for apps that reopen the last file on startup) and rehydrates into a
+/// working handle. Without structured-clone-safe handles, `indexedDB.put(handle)`
+/// throws `DataCloneError` and an app's save flow silently breaks while the fake
+/// still records the write — a false green.
+#[tokio::test]
+async fn test_handle_persists_to_indexeddb() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let fs = page.fake_file_system().await.expect("install");
+
+    // IndexedDB is denied on opaque origins (about:blank / set_content), so
+    // serve a real http:// origin — the same condition under which the bug
+    // manifests for real apps.
+    let server = crate::test_server::TestServer::start().await;
+    page.goto(&server.url(), None).await.expect("navigate");
+    fs.set_open_file("plan.json", b"saved bytes")
+        .await
+        .expect("seed");
+
+    let round_trip: String = page
+        .evaluate(
+            r#"async () => {
+                const [handle] = await window.showOpenFilePicker();
+                const db = await new Promise((res, rej) => {
+                    const r = indexedDB.open("pw-rs-fake-fs-test", 1);
+                    r.onupgradeneeded = () => r.result.createObjectStore("handles");
+                    r.onsuccess = () => res(r.result);
+                    r.onerror = () => rej(r.error);
+                });
+                // Persist the handle the way real apps do (it is [Serializable]).
+                await new Promise((res, rej) => {
+                    const tx = db.transaction("handles", "readwrite");
+                    tx.objectStore("handles").put(handle, "last");
+                    tx.oncomplete = res;
+                    tx.onerror = () => rej(tx.error);
+                });
+                const restored = await new Promise((res, rej) => {
+                    const tx = db.transaction("handles", "readonly");
+                    const rq = tx.objectStore("handles").get("last");
+                    rq.onsuccess = () => res(rq.result);
+                    rq.onerror = () => rej(rq.error);
+                });
+                const perm = await restored.queryPermission({ mode: "readwrite" });
+                const text = await (await restored.getFile()).text();
+                return restored.name + "|" + perm + "|" + text;
+            }"#,
+            None::<&()>,
+        )
+        .await
+        .expect("persist round-trip should not DataCloneError");
+
+    assert_eq!(round_trip, "plan.json|granted|saved bytes");
+
+    server.shutdown();
+    browser.close().await.expect("browser close");
+}
+
 /// The fake is opt-in: a page that never asked for it sees no shim state.
 #[tokio::test]
 async fn test_fake_is_opt_in() {

@@ -65,6 +65,9 @@ const SHIM: &str = r#"(() => {
         throw new TypeError('fake fs: unsupported write payload');
     };
     const makeHandle = (name) => ({
+        // Marks the object as a fake handle so the IndexedDB interception below
+        // can swap it for a serializable placeholder before structuredClone.
+        __pwRsFakeFsHandle: true,
         kind: 'file',
         name,
         isSameEntry: async (other) => !!other && other.name === name,
@@ -102,6 +105,37 @@ const SHIM: &str = r#"(() => {
         setOpenFile: (name, b64) => { state.openFiles.set(name, b64); },
         setPermission: (p) => { state.permission = p; },
     };
+    // Real FileSystemFileHandle is [Serializable], so apps persist it in
+    // IndexedDB and re-query permission on the next load. Our fake carries
+    // methods that structuredClone rejects (DataCloneError), which would break
+    // that flow. Intercept put/add to store a serializable placeholder keyed by
+    // name, and get to rehydrate it into a live handle. Non-handle values pass
+    // through untouched, so the app's other IndexedDB usage is unaffected.
+    if (window.IDBObjectStore) {
+        const MARK = '__pwRsFakeFsHandleName';
+        const placeholder = (v) =>
+            (v && typeof v === 'object' && v.__pwRsFakeFsHandle) ? { [MARK]: v.name } : v;
+        const wrapWrite = (orig) =>
+            function (value, ...rest) { return orig.call(this, placeholder(value), ...rest); };
+        IDBObjectStore.prototype.put = wrapWrite(IDBObjectStore.prototype.put);
+        IDBObjectStore.prototype.add = wrapWrite(IDBObjectStore.prototype.add);
+        const realGet = IDBObjectStore.prototype.get;
+        IDBObjectStore.prototype.get = function (...args) {
+            const req = realGet.apply(this, args);
+            // Registered here, before the caller sets onsuccess, so the
+            // rehydrated value is in place when their handler reads req.result.
+            req.addEventListener('success', () => {
+                const val = req.result;
+                if (val && typeof val === 'object' && MARK in val) {
+                    Object.defineProperty(req, 'result', {
+                        configurable: true,
+                        value: makeHandle(val[MARK]),
+                    });
+                }
+            });
+            return req;
+        };
+    }
     window.showSaveFilePicker = async (options) => {
         if (state.permission === 'denied') {
             throw new DOMException('fake fs: permission denied', 'NotAllowedError');
@@ -125,9 +159,21 @@ const SHIM: &str = r#"(() => {
 ///
 /// See the [module docs](self) for the pattern and a usage example. Scope of
 /// the fake: `showSaveFilePicker`, `showOpenFilePicker`, per-handle
-/// `getFile`/`createWritable`/`queryPermission`/`requestPermission`. The fake
-/// lives in page JS, so its state does not survive a full page reload; seed
-/// again after navigating. `showDirectoryPicker` is not faked.
+/// `getFile`/`createWritable`/`queryPermission`/`requestPermission`, and
+/// persisting a handle to IndexedDB — apps that stash the picker handle in
+/// IndexedDB and re-`queryPermission` on the next load (the standard
+/// startup-reopen pattern) work, because the fake stores a serializable
+/// placeholder in place of the method-bearing handle and rehydrates it on read
+/// (real `FileSystemFileHandle` is `[Serializable]`; the fake is not, so a raw
+/// `put` would otherwise throw `DataCloneError`). The in-memory file *content*
+/// still lives in page JS, so it resets on a full page reload — re-seed content
+/// with [`set_open_file`](Self::set_open_file) after navigating.
+/// `showDirectoryPicker` is not faked.
+///
+/// IndexedDB access requires a real origin: install the fake, then
+/// [`goto`](crate::protocol::Page::goto) an `http(s)://` page rather than using
+/// `set_content` (opaque origins deny IndexedDB) if the flow under test
+/// persists handles.
 #[derive(Debug, Clone)]
 pub struct FakeFileSystem {
     page: Page,
