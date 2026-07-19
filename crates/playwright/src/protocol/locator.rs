@@ -1144,7 +1144,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-click>
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
-    pub async fn click(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
+    pub async fn click(
+        &self,
+        options: impl Into<Option<crate::protocol::ClickOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_click(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1178,7 +1182,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-dblclick>
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
-    pub async fn dblclick(&self, options: Option<crate::protocol::ClickOptions>) -> Result<()> {
+    pub async fn dblclick(
+        &self,
+        options: impl Into<Option<crate::protocol::ClickOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_dblclick(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1192,8 +1200,9 @@ impl Locator {
     pub async fn fill(
         &self,
         text: &str,
-        options: Option<crate::protocol::FillOptions>,
+        options: impl Into<Option<crate::protocol::FillOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_fill(&self.selector, text, Some(self.with_timeout(options)))
             .await
@@ -1204,7 +1213,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-clear>
     #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
-    pub async fn clear(&self, options: Option<crate::protocol::FillOptions>) -> Result<()> {
+    pub async fn clear(
+        &self,
+        options: impl Into<Option<crate::protocol::FillOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_clear(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1218,8 +1231,9 @@ impl Locator {
     pub async fn press(
         &self,
         key: &str,
-        options: Option<crate::protocol::PressOptions>,
+        options: impl Into<Option<crate::protocol::PressOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_press(&self.selector, key, Some(self.with_timeout(options)))
             .await
@@ -1270,8 +1284,9 @@ impl Locator {
     pub async fn press_sequentially(
         &self,
         text: &str,
-        options: Option<crate::protocol::PressSequentiallyOptions>,
+        options: impl Into<Option<crate::protocol::PressSequentiallyOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_press_sequentially(&self.selector, text, options)
             .await
@@ -1312,7 +1327,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-check>
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
-    pub async fn check(&self, options: Option<crate::protocol::CheckOptions>) -> Result<()> {
+    pub async fn check(
+        &self,
+        options: impl Into<Option<crate::protocol::CheckOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_check(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1325,7 +1344,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-uncheck>
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
-    pub async fn uncheck(&self, options: Option<crate::protocol::CheckOptions>) -> Result<()> {
+    pub async fn uncheck(
+        &self,
+        options: impl Into<Option<crate::protocol::CheckOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_uncheck(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1342,8 +1365,9 @@ impl Locator {
     pub async fn set_checked(
         &self,
         checked: bool,
-        options: Option<crate::protocol::CheckOptions>,
+        options: impl Into<Option<crate::protocol::CheckOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         if checked {
             self.check(options).await
         } else {
@@ -1355,7 +1379,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-hover>
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
-    pub async fn hover(&self, options: Option<crate::protocol::HoverOptions>) -> Result<()> {
+    pub async fn hover(
+        &self,
+        options: impl Into<Option<crate::protocol::HoverOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_hover(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1366,7 +1394,7 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-input-value>
     #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
-    pub async fn input_value(&self, _options: Option<()>) -> Result<String> {
+    pub async fn input_value(&self, _options: impl Into<Option<()>>) -> Result<String> {
         self.frame
             .locator_input_value(&self.selector)
             .await
@@ -1382,8 +1410,9 @@ impl Locator {
     pub async fn select_option(
         &self,
         value: impl Into<crate::protocol::SelectOption>,
-        options: Option<crate::protocol::SelectOptions>,
+        options: impl Into<Option<crate::protocol::SelectOptions>>,
     ) -> Result<Vec<String>> {
+        let options = options.into();
         self.frame
             .locator_select_option(
                 &self.selector,
@@ -1403,8 +1432,9 @@ impl Locator {
     pub async fn select_option_multiple(
         &self,
         values: &[impl Into<crate::protocol::SelectOption> + Clone],
-        options: Option<crate::protocol::SelectOptions>,
+        options: impl Into<Option<crate::protocol::SelectOptions>>,
     ) -> Result<Vec<String>> {
+        let options = options.into();
         let select_options: Vec<crate::protocol::SelectOption> =
             values.iter().map(|v| v.clone().into()).collect();
         self.frame
@@ -1424,7 +1454,7 @@ impl Locator {
     pub async fn set_input_files(
         &self,
         file: &std::path::PathBuf,
-        _options: Option<()>,
+        _options: impl Into<Option<()>>,
     ) -> Result<()> {
         self.frame
             .locator_set_input_files(&self.selector, file)
@@ -1439,7 +1469,7 @@ impl Locator {
     pub async fn set_input_files_multiple(
         &self,
         files: &[&std::path::PathBuf],
-        _options: Option<()>,
+        _options: impl Into<Option<()>>,
     ) -> Result<()> {
         self.frame
             .locator_set_input_files_multiple(&self.selector, files)
@@ -1454,7 +1484,7 @@ impl Locator {
     pub async fn set_input_files_payload(
         &self,
         file: crate::protocol::FilePayload,
-        _options: Option<()>,
+        _options: impl Into<Option<()>>,
     ) -> Result<()> {
         self.frame
             .locator_set_input_files_payload(&self.selector, file)
@@ -1469,7 +1499,7 @@ impl Locator {
     pub async fn set_input_files_payload_multiple(
         &self,
         files: &[crate::protocol::FilePayload],
-        _options: Option<()>,
+        _options: impl Into<Option<()>>,
     ) -> Result<()> {
         self.frame
             .locator_set_input_files_payload_multiple(&self.selector, files)
@@ -1557,8 +1587,9 @@ impl Locator {
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector, bytes_len = tracing::field::Empty))]
     pub async fn screenshot(
         &self,
-        options: Option<crate::protocol::ScreenshotOptions>,
+        options: impl Into<Option<crate::protocol::ScreenshotOptions>>,
     ) -> Result<Vec<u8>> {
+        let options = options.into();
         // Query for the element using strict mode (should return exactly one)
         let element = self
             .frame
@@ -1600,7 +1631,8 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-tap>
     #[tracing::instrument(level = "info", skip_all, fields(selector = %self.selector))]
-    pub async fn tap(&self, options: Option<crate::protocol::TapOptions>) -> Result<()> {
+    pub async fn tap(&self, options: impl Into<Option<crate::protocol::TapOptions>>) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_tap(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1660,8 +1692,9 @@ impl Locator {
     pub async fn drag_to(
         &self,
         target: &Locator,
-        options: Option<crate::protocol::DragToOptions>,
+        options: impl Into<Option<crate::protocol::DragToOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_drag_to(
                 &self.selector,
@@ -1720,7 +1753,11 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-wait-for>
     #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
-    pub async fn wait_for(&self, options: Option<crate::protocol::WaitForOptions>) -> Result<()> {
+    pub async fn wait_for(
+        &self,
+        options: impl Into<Option<crate::protocol::WaitForOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.frame
             .locator_wait_for(&self.selector, Some(self.with_timeout(options)))
             .await
@@ -1868,8 +1905,9 @@ impl Locator {
     #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector, mode = tracing::field::Empty))]
     pub async fn aria_snapshot(
         &self,
-        options: Option<crate::protocol::AriaSnapshotOptions>,
+        options: impl Into<Option<crate::protocol::AriaSnapshotOptions>>,
     ) -> Result<String> {
+        let options = options.into();
         self.frame
             .locator_aria_snapshot(&self.selector, options.as_ref())
             .await
@@ -1939,7 +1977,8 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-highlight>
     #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
-    pub async fn highlight(&self, options: Option<HighlightOptions>) -> Result<()> {
+    pub async fn highlight(&self, options: impl Into<Option<HighlightOptions>>) -> Result<()> {
+        let options = options.into();
         let style = options.and_then(|o| o.style);
         self.frame
             .locator_highlight(&self.selector, style.as_deref())

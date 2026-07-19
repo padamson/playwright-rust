@@ -69,8 +69,9 @@ impl ElementHandle {
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
     pub async fn screenshot(
         &self,
-        options: Option<crate::protocol::ScreenshotOptions>,
+        options: impl Into<Option<crate::protocol::ScreenshotOptions>>,
     ) -> Result<Vec<u8>> {
+        let options = options.into();
         let params = if let Some(opts) = options {
             opts.to_json()
         } else {

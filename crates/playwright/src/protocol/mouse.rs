@@ -37,8 +37,9 @@ impl Mouse {
         &self,
         x: f64,
         y: f64,
-        options: Option<crate::protocol::MouseOptions>,
+        options: impl Into<Option<crate::protocol::MouseOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.page.mouse_move(x, y, options).await
     }
 
@@ -49,8 +50,9 @@ impl Mouse {
         &self,
         x: f64,
         y: f64,
-        options: Option<crate::protocol::MouseOptions>,
+        options: impl Into<Option<crate::protocol::MouseOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.page.mouse_click(x, y, options).await
     }
 
@@ -61,22 +63,31 @@ impl Mouse {
         &self,
         x: f64,
         y: f64,
-        options: Option<crate::protocol::MouseOptions>,
+        options: impl Into<Option<crate::protocol::MouseOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.page.mouse_dblclick(x, y, options).await
     }
 
     /// Dispatches a `mousedown` event.
     ///
     /// See: <https://playwright.dev/docs/api/class-mouse#mouse-down>
-    pub async fn down(&self, options: Option<crate::protocol::MouseOptions>) -> Result<()> {
+    pub async fn down(
+        &self,
+        options: impl Into<Option<crate::protocol::MouseOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.page.mouse_down(options).await
     }
 
     /// Dispatches a `mouseup` event.
     ///
     /// See: <https://playwright.dev/docs/api/class-mouse#mouse-up>
-    pub async fn up(&self, options: Option<crate::protocol::MouseOptions>) -> Result<()> {
+    pub async fn up(
+        &self,
+        options: impl Into<Option<crate::protocol::MouseOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.page.mouse_up(options).await
     }
 

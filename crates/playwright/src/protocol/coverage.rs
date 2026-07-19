@@ -135,7 +135,11 @@ impl Coverage {
     /// Chromium, or if the RPC call fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-coverage#coverage-start-js-coverage>
-    pub async fn start_js_coverage(&self, options: Option<StartJSCoverageOptions>) -> Result<()> {
+    pub async fn start_js_coverage(
+        &self,
+        options: impl Into<Option<StartJSCoverageOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.page.coverage_start_js(options).await
     }
 
@@ -158,7 +162,11 @@ impl Coverage {
     /// Chromium, or if the RPC call fails.
     ///
     /// See: <https://playwright.dev/docs/api/class-coverage#coverage-start-css-coverage>
-    pub async fn start_css_coverage(&self, options: Option<StartCSSCoverageOptions>) -> Result<()> {
+    pub async fn start_css_coverage(
+        &self,
+        options: impl Into<Option<StartCSSCoverageOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         self.page.coverage_start_css(options).await
     }
 

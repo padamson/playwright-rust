@@ -113,7 +113,8 @@ impl Clock {
     /// - Communication with browser process fails
     ///
     /// See: <https://playwright.dev/docs/api/class-clock#clock-install>
-    pub async fn install(&self, options: Option<ClockInstallOptions>) -> Result<()> {
+    pub async fn install(&self, options: impl Into<Option<ClockInstallOptions>>) -> Result<()> {
+        let options = options.into();
         let mut params = serde_json::json!({});
         if let Some(opts) = options
             && let Some(time) = opts.time

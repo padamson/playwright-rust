@@ -248,7 +248,8 @@ impl Route {
     /// or wait for a newer Playwright version that supports response body fulfillment.
     ///
     /// See: <https://playwright.dev/docs/api/class-route#route-fulfill>
-    pub async fn fulfill(&self, options: Option<FulfillOptions>) -> Result<()> {
+    pub async fn fulfill(&self, options: impl Into<Option<FulfillOptions>>) -> Result<()> {
+        let options = options.into();
         self.handled.store(true, Ordering::SeqCst);
         let opts = options.unwrap_or_default();
 
@@ -314,7 +315,8 @@ impl Route {
     /// * `options` - Optional overrides for the fetch request
     ///
     /// See: <https://playwright.dev/docs/api/class-route#route-fetch>
-    pub async fn fetch(&self, options: Option<FetchOptions>) -> Result<FetchResponse> {
+    pub async fn fetch(&self, options: impl Into<Option<FetchOptions>>) -> Result<FetchResponse> {
+        let options = options.into();
         self.handled.store(true, Ordering::SeqCst);
 
         let api_ctx = self

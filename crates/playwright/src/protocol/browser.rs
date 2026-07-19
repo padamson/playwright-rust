@@ -550,7 +550,12 @@ impl Browser {
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-bind>
     #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name, title = %title))]
-    pub async fn bind(&self, title: &str, options: Option<BindOptions>) -> Result<BindResult> {
+    pub async fn bind(
+        &self,
+        title: &str,
+        options: impl Into<Option<BindOptions>>,
+    ) -> Result<BindResult> {
+        let options = options.into();
         let mut params = serde_json::to_value(options.unwrap_or_default())
             .unwrap_or_else(|_| serde_json::json!({}));
         params["title"] = serde_json::json!(title);
@@ -588,7 +593,11 @@ impl Browser {
     ///
     /// See: <https://playwright.dev/docs/api/class-browser#browser-start-tracing>
     #[tracing::instrument(level = "debug", skip_all, fields(name = %self.name))]
-    pub async fn start_tracing(&self, options: Option<StartTracingOptions>) -> Result<()> {
+    pub async fn start_tracing(
+        &self,
+        options: impl Into<Option<StartTracingOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         #[derive(serde::Serialize)]
         struct StartTracingParams {
             #[serde(skip_serializing_if = "Option::is_none")]

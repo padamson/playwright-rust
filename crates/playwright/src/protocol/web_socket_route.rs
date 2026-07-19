@@ -142,7 +142,11 @@ impl WebSocketRoute {
     /// * `options` — Optional close code and reason.
     ///
     /// See: <https://playwright.dev/docs/api/class-websocketroute#web-socket-route-close>
-    pub async fn close(&self, options: Option<WebSocketRouteCloseOptions>) -> Result<()> {
+    pub async fn close(
+        &self,
+        options: impl Into<Option<WebSocketRouteCloseOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let opts = options.unwrap_or_default();
         let mut params = serde_json::Map::new();
         if let Some(code) = opts.code {

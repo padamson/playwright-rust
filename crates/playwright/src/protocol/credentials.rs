@@ -156,8 +156,9 @@ impl Credentials {
     pub async fn create(
         &self,
         rp_id: &str,
-        options: Option<CredentialsCreateOptions>,
+        options: impl Into<Option<CredentialsCreateOptions>>,
     ) -> Result<VirtualCredential> {
+        let options = options.into();
         let mut params = json!({ "rpId": rp_id });
         if let Some(o) = options {
             if let Some(id) = o.id {
@@ -192,8 +193,9 @@ impl Credentials {
     /// See: <https://playwright.dev/docs/api/class-credentials#credentials-get>
     pub async fn get(
         &self,
-        options: Option<CredentialsGetOptions>,
+        options: impl Into<Option<CredentialsGetOptions>>,
     ) -> Result<Vec<VirtualCredential>> {
+        let options = options.into();
         let mut params = json!({});
         if let Some(o) = options {
             if let Some(rp_id) = o.rp_id {

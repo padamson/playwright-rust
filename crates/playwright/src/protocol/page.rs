@@ -880,7 +880,12 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-goto>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), url = %url, status = tracing::field::Empty))]
-    pub async fn goto(&self, url: &str, options: Option<GotoOptions>) -> Result<Option<Response>> {
+    pub async fn goto(
+        &self,
+        url: &str,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<Option<Response>> {
+        let options = options.into();
         // Inject the page-level navigation timeout when no explicit timeout is given
         let options = self.with_navigation_timeout(options);
 
@@ -982,7 +987,12 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-set-content>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn set_content(&self, html: &str, options: Option<GotoOptions>) -> Result<()> {
+    pub async fn set_content(
+        &self,
+        html: &str,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let frame = self.main_frame().await?;
         frame.set_content(html, options).await
     }
@@ -1004,7 +1014,12 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-wait-for-url>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %url))]
-    pub async fn wait_for_url(&self, url: &str, options: Option<GotoOptions>) -> Result<()> {
+    pub async fn wait_for_url(
+        &self,
+        url: &str,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let frame = self.main_frame().await?;
         frame.wait_for_url(url, options).await
     }
@@ -1409,8 +1424,9 @@ impl Page {
         &self,
         source: &str,
         target: &str,
-        options: Option<crate::protocol::DragToOptions>,
+        options: impl Into<Option<crate::protocol::DragToOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         let frame = self.main_frame().await?;
         frame.locator_drag_to(source, target, options).await
     }
@@ -1426,7 +1442,11 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-reload>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
-    pub async fn reload(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
+    pub async fn reload(
+        &self,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<Option<Response>> {
+        let options = options.into();
         self.navigate_history("reload", options).await
     }
 
@@ -1437,7 +1457,11 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-go-back>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
-    pub async fn go_back(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
+    pub async fn go_back(
+        &self,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<Option<Response>> {
+        let options = options.into();
         self.navigate_history("goBack", options).await
     }
 
@@ -1448,7 +1472,11 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-go-forward>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
-    pub async fn go_forward(&self, options: Option<GotoOptions>) -> Result<Option<Response>> {
+    pub async fn go_forward(
+        &self,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<Option<Response>> {
+        let options = options.into();
         self.navigate_history("goForward", options).await
     }
 
@@ -1569,8 +1597,9 @@ impl Page {
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
     pub async fn screenshot(
         &self,
-        options: Option<crate::protocol::ScreenshotOptions>,
+        options: impl Into<Option<crate::protocol::ScreenshotOptions>>,
     ) -> Result<Vec<u8>> {
+        let options = options.into();
         let params = if let Some(opts) = options {
             opts.to_json()
         } else {
@@ -1606,8 +1635,9 @@ impl Page {
     pub async fn screenshot_to_file(
         &self,
         path: &std::path::Path,
-        options: Option<crate::protocol::ScreenshotOptions>,
+        options: impl Into<Option<crate::protocol::ScreenshotOptions>>,
     ) -> Result<Vec<u8>> {
+        let options = options.into();
         // Get the screenshot bytes
         let bytes = self.screenshot(options).await?;
 
@@ -1818,8 +1848,9 @@ impl Page {
     pub async fn route_from_har(
         &self,
         har_path: &str,
-        options: Option<RouteFromHarOptions>,
+        options: impl Into<Option<RouteFromHarOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         let opts = options.unwrap_or_default();
         let not_found = opts.not_found.unwrap_or_else(|| "abort".to_string());
         let url_filter = opts.url.clone();
@@ -3268,12 +3299,13 @@ impl Page {
         &self,
         locator: &crate::protocol::Locator,
         handler: F,
-        options: Option<AddLocatorHandlerOptions>,
+        options: impl Into<Option<AddLocatorHandlerOptions>>,
     ) -> Result<()>
     where
         F: Fn(crate::protocol::Locator) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
+        let options = options.into();
         let selector = locator.selector().to_string();
         let no_wait_after = options
             .as_ref()
@@ -3885,7 +3917,11 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-emulate-media>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn emulate_media(&self, options: Option<EmulateMediaOptions>) -> Result<()> {
+    pub async fn emulate_media(
+        &self,
+        options: impl Into<Option<EmulateMediaOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let mut params = serde_json::json!({});
 
         if let Some(opts) = options {
@@ -3959,7 +3995,8 @@ impl Page {
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-pdf>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
-    pub async fn pdf(&self, options: Option<PdfOptions>) -> Result<Vec<u8>> {
+    pub async fn pdf(&self, options: impl Into<Option<PdfOptions>>) -> Result<Vec<u8>> {
+        let options = options.into();
         let mut params = serde_json::json!({});
         let mut save_path: Option<std::path::PathBuf> = None;
 
@@ -4083,8 +4120,9 @@ impl Page {
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn add_script_tag(
         &self,
-        options: Option<AddScriptTagOptions>,
+        options: impl Into<Option<AddScriptTagOptions>>,
     ) -> Result<Arc<crate::protocol::ElementHandle>> {
+        let options = options.into();
         let opts = options.ok_or_else(|| {
             Error::InvalidArgument(
                 "At least one of content, url, or path must be specified".to_string(),
@@ -4147,8 +4185,9 @@ impl Page {
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
     pub async fn aria_snapshot(
         &self,
-        options: Option<crate::protocol::AriaSnapshotOptions>,
+        options: impl Into<Option<crate::protocol::AriaSnapshotOptions>>,
     ) -> Result<String> {
+        let options = options.into();
         let frame = self.main_frame().await?;
         let timeout = options
             .as_ref()

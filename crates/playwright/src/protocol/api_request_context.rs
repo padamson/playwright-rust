@@ -51,7 +51,12 @@ impl APIRequestContext {
     /// Sends a GET request.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-get>
-    pub async fn get(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn get(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let mut opts = options.unwrap_or_default();
         opts.method = Some("GET".to_string());
         self.fetch(url, Some(opts)).await
@@ -60,7 +65,12 @@ impl APIRequestContext {
     /// Sends a POST request.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-post>
-    pub async fn post(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn post(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let mut opts = options.unwrap_or_default();
         opts.method = Some("POST".to_string());
         self.fetch(url, Some(opts)).await
@@ -69,7 +79,12 @@ impl APIRequestContext {
     /// Sends a PUT request.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-put>
-    pub async fn put(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn put(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let mut opts = options.unwrap_or_default();
         opts.method = Some("PUT".to_string());
         self.fetch(url, Some(opts)).await
@@ -78,7 +93,12 @@ impl APIRequestContext {
     /// Sends a DELETE request.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-delete>
-    pub async fn delete(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn delete(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let mut opts = options.unwrap_or_default();
         opts.method = Some("DELETE".to_string());
         self.fetch(url, Some(opts)).await
@@ -87,7 +107,12 @@ impl APIRequestContext {
     /// Sends a PATCH request.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-patch>
-    pub async fn patch(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn patch(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let mut opts = options.unwrap_or_default();
         opts.method = Some("PATCH".to_string());
         self.fetch(url, Some(opts)).await
@@ -96,7 +121,12 @@ impl APIRequestContext {
     /// Sends a HEAD request.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-head>
-    pub async fn head(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn head(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let mut opts = options.unwrap_or_default();
         opts.method = Some("HEAD".to_string());
         self.fetch(url, Some(opts)).await
@@ -108,7 +138,12 @@ impl APIRequestContext {
     /// The response body is not fetched until `body()`, `text()`, or `json()` is called.
     ///
     /// See: <https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-fetch>
-    pub async fn fetch(&self, url: &str, options: Option<FetchOptions>) -> Result<APIResponse> {
+    pub async fn fetch(
+        &self,
+        url: &str,
+        options: impl Into<Option<FetchOptions>>,
+    ) -> Result<APIResponse> {
+        let options = options.into();
         let opts = options.unwrap_or_default();
 
         let mut params = json!({
@@ -539,10 +574,11 @@ impl APIRequest {
     /// See: <https://playwright.dev/docs/api/class-apirequest#api-request-new-context>
     pub async fn new_context(
         &self,
-        options: Option<APIRequestContextOptions>,
+        options: impl Into<Option<APIRequestContextOptions>>,
     ) -> Result<APIRequestContext> {
         use crate::server::connection::ConnectionExt;
 
+        let options = options.into();
         let mut params = json!({});
 
         if let Some(opts) = options {

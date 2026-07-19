@@ -891,7 +891,11 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-clear-cookies>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn clear_cookies(&self, options: Option<ClearCookiesOptions>) -> Result<()> {
+    pub async fn clear_cookies(
+        &self,
+        options: impl Into<Option<ClearCookiesOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let params = match options {
             None => serde_json::json!({}),
             Some(opts) => serde_json::to_value(opts).unwrap_or(serde_json::json!({})),
@@ -955,8 +959,9 @@ impl BrowserContext {
     pub async fn grant_permissions(
         &self,
         permissions: &[&str],
-        options: Option<GrantPermissionsOptions>,
+        options: impl Into<Option<GrantPermissionsOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         let mut params = serde_json::json!({ "permissions": permissions });
         if let Some(opts) = options
             && let Some(origin) = opts.origin
@@ -1123,8 +1128,9 @@ impl BrowserContext {
     pub async fn route_from_har(
         &self,
         har_path: &str,
-        options: Option<crate::protocol::RouteFromHarOptions>,
+        options: impl Into<Option<crate::protocol::RouteFromHarOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         let opts = options.unwrap_or_default();
         let not_found = opts.not_found.unwrap_or_else(|| "abort".to_string());
         let url_filter = opts.url.clone();

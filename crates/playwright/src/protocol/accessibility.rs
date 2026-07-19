@@ -49,7 +49,11 @@ impl Accessibility {
     /// Returns error if the RPC call fails or the browser has been closed.
     ///
     /// See: <https://playwright.dev/docs/api/class-accessibility#accessibility-snapshot>
-    pub async fn snapshot(&self, options: Option<AccessibilitySnapshotOptions>) -> Result<Value> {
+    pub async fn snapshot(
+        &self,
+        options: impl Into<Option<AccessibilitySnapshotOptions>>,
+    ) -> Result<Value> {
+        let options = options.into();
         self.page.accessibility_snapshot(options).await
     }
 }

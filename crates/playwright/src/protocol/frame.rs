@@ -478,7 +478,12 @@ impl Frame {
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-goto>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid(), url = %url, status = tracing::field::Empty))]
-    pub async fn goto(&self, url: &str, options: Option<GotoOptions>) -> Result<Option<Response>> {
+    pub async fn goto(
+        &self,
+        url: &str,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<Option<Response>> {
+        let options = options.into();
         // Build params manually using json! macro
         let mut params = serde_json::json!({
             "url": url,
@@ -615,7 +620,12 @@ impl Frame {
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-set-content>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
-    pub async fn set_content(&self, html: &str, options: Option<GotoOptions>) -> Result<()> {
+    pub async fn set_content(
+        &self,
+        html: &str,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let mut params = serde_json::json!({
             "html": html,
         });
@@ -712,7 +722,12 @@ impl Frame {
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-wait-for-url>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %url))]
-    pub async fn wait_for_url(&self, url: &str, options: Option<GotoOptions>) -> Result<()> {
+    pub async fn wait_for_url(
+        &self,
+        url: &str,
+        options: impl Into<Option<GotoOptions>>,
+    ) -> Result<()> {
+        let options = options.into();
         let timeout_ms = options
             .as_ref()
             .and_then(|o| o.timeout)

@@ -179,7 +179,8 @@ impl Tracing {
     ///
     /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
-    pub async fn start(&self, options: Option<TracingStartOptions>) -> Result<()> {
+    pub async fn start(&self, options: impl Into<Option<TracingStartOptions>>) -> Result<()> {
+        let options = options.into();
         let opts = options.unwrap_or_default();
 
         // Step 1: tracingStart — configure the trace
@@ -232,7 +233,8 @@ impl Tracing {
     ///
     /// See: <https://playwright.dev/docs/api/class-tracing#tracing-stop>
     #[tracing::instrument(level = "info", skip_all, fields(guid = %self.guid()))]
-    pub async fn stop(&self, options: Option<TracingStopOptions>) -> Result<()> {
+    pub async fn stop(&self, options: impl Into<Option<TracingStopOptions>>) -> Result<()> {
+        let options = options.into();
         let path = options.and_then(|o| o.path);
 
         // Step 1: tracingStopChunk — mode "entries" collects trace data
@@ -293,8 +295,9 @@ impl Tracing {
     pub async fn start_har(
         &self,
         path: impl Into<String>,
-        options: Option<StartHarOptions>,
+        options: impl Into<Option<StartHarOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         let path = path.into();
         let opts = options.unwrap_or_default();
         let rec_options = opts.to_record_har_json(&path);

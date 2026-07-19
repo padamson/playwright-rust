@@ -39,8 +39,9 @@ impl Keyboard {
     pub async fn press(
         &self,
         key: &str,
-        options: Option<crate::protocol::KeyboardOptions>,
+        options: impl Into<Option<crate::protocol::KeyboardOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.page.keyboard_press(key, options).await
     }
 
@@ -50,8 +51,9 @@ impl Keyboard {
     pub async fn type_text(
         &self,
         text: &str,
-        options: Option<crate::protocol::KeyboardOptions>,
+        options: impl Into<Option<crate::protocol::KeyboardOptions>>,
     ) -> Result<()> {
+        let options = options.into();
         self.page.keyboard_type(text, options).await
     }
 

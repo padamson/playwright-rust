@@ -429,11 +429,12 @@ impl BrowserType {
     pub async fn connect(
         &self,
         ws_endpoint: &str,
-        options: Option<ConnectOptions>,
+        options: impl Into<Option<ConnectOptions>>,
     ) -> Result<Browser> {
         use crate::server::connection::Connection;
         use crate::server::transport::WebSocketTransport;
 
+        let options = options.into();
         let options = options.unwrap_or_default();
 
         // Get timeout (default 30 seconds, 0 = no timeout)
@@ -518,8 +519,9 @@ impl BrowserType {
     pub async fn connect_over_cdp(
         &self,
         endpoint_url: &str,
-        options: Option<ConnectOverCdpOptions>,
+        options: impl Into<Option<ConnectOverCdpOptions>>,
     ) -> Result<Browser> {
+        let options = options.into();
         // connect_over_cdp is Chromium-only
         if self.name() != "chromium" {
             return Err(crate::error::Error::ProtocolError(
