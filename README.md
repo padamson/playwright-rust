@@ -144,7 +144,22 @@ tokio = { version = "1", features = ["full"] }
 
 The default-on `macros` feature re-exports the
 [`locator!()`](https://docs.rs/playwright-rs-macros) compile-time
-selector macro. Opt-in features: `cli` (installer binary, see below),
+selector macro. The default-on `ring` feature selects the crypto backend for
+driver downloads (and for rustls WebSocket connections); use `aws-lc` instead
+when AWS-LC is required:
+
+```toml
+playwright-rs = { version = "0.14", default-features = false, features = [
+    "aws-lc",
+    "native-tls",
+    "macros",
+] }
+```
+
+Disabling default features requires selecting either `ring` or `aws-lc`.
+If both are enabled through feature unification, the downloader uses AWS-LC;
+disable default features as above to remove `ring` from the dependency graph.
+Other opt-in features are `cli` (installer binary, see below) and
 `screenshot-diff` (pixel-diff assertions). For programmatic trace-zip
 inspection (CI bots, agent feedback loops), add
 [`playwright-rs-trace`](https://docs.rs/playwright-rs-trace) as a
