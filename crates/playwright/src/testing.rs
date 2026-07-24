@@ -166,8 +166,12 @@ const SHIM: &str = r#"(() => {
 /// placeholder in place of the method-bearing handle and rehydrates it on read
 /// (real `FileSystemFileHandle` is `[Serializable]`; the fake is not, so a raw
 /// `put` would otherwise throw `DataCloneError`). The in-memory file *content*
-/// still lives in page JS, so it resets on a full page reload — re-seed content
-/// with [`set_open_file`](Self::set_open_file) after navigating.
+/// and permission state still live in page JS, so they reset on a full page
+/// reload. To test an app that reads its last file on *startup* (reading before
+/// any test code could re-seed), use
+/// [`seed_on_navigation`](Self::seed_on_navigation), which re-establishes
+/// content and permission before the app mounts on the next navigation;
+/// [`set_open_file`](Self::set_open_file) only takes effect at call time.
 /// `showDirectoryPicker` is not faked.
 ///
 /// IndexedDB access requires a real origin: install the fake, then
@@ -273,5 +277,51 @@ impl FakeFileSystem {
     /// Returns an error if the page is closed or the evaluation fails.
     pub async fn grant_permission(&self) -> Result<()> {
         self.set_permission("granted").await
+    }
+
+    /// Re-establishes openable-file content and permission state *before the app
+    /// mounts on the next navigation* (including `reload`).
+    ///
+    /// [`set_open_file`](Self::set_open_file) and
+    /// [`set_permission`](Self::set_permission) take effect at call time, which
+    /// is too late for an app that reads its last file on startup: a full page
+    /// reload clears the fake's in-memory content and resets permission to
+    /// `"granted"`, and by the time a test could re-seed, the app has already
+    /// mounted and read. This registers an init script (running after the fake's
+    /// own, so `window` state exists) that re-seeds the given file and
+    /// permission on every subsequent navigation — making the "reopen the last
+    /// file on startup" flow testable across a reload. The persisted *handle*
+    /// already survives a reload on its own (the fake stores it in IndexedDB and
+    /// rehydrates it); only content and permission need re-seeding.
+    ///
+    /// The seed persists for all later navigations in this context, so seed the
+    /// state the app should observe on its next load. `permission` takes the
+    /// same values as [`set_permission`](Self::set_permission).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the page is closed or registering the script fails.
+    pub async fn seed_on_navigation(
+        &self,
+        name: &str,
+        bytes: &[u8],
+        permission: &str,
+    ) -> Result<()> {
+        // JSON-encode each value into a safe JS string literal (handles quotes
+        // and other characters in names). Serializing a &str/String to JSON is
+        // infallible for valid UTF-8, which Rust strings always are.
+        let to_js = |s: &str| {
+            serde_json::to_string(s).map_err(|e| {
+                crate::error::Error::ProtocolError(format!("fake fs seed encode: {e}"))
+            })
+        };
+        let name = to_js(name)?;
+        let b64 = to_js(&BASE64.encode(bytes))?;
+        let perm = to_js(permission)?;
+        let script = format!(
+            "(() => {{ const fs = window.__pwRsFakeFs; if (!fs) return; \
+             fs.setOpenFile({name}, {b64}); fs.setPermission({perm}); }})()"
+        );
+        self.page.add_init_script(&script).await
     }
 }
