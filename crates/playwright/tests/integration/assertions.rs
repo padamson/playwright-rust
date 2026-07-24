@@ -658,6 +658,76 @@ async fn test_to_have_text_assertions() {
     server.shutdown();
 }
 
+/// Text assertions normalize whitespace like upstream toHaveText/toContainText:
+/// runs of whitespace (including newlines) in both the actual DOM text and the
+/// expected string collapse to single spaces before comparison, so multi-line
+/// rendered text matches a single-line expectation. The regex variants keep
+/// matching the raw (non-normalized) text, per upstream.
+#[tokio::test]
+async fn test_text_assertions_normalize_whitespace() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content(
+        r#"<div id="steps">Scan<br>→<br>Group<br>→<br>Name<br>→<br>Review<br>→<br>Copy</div>
+           <pre id="spaced">Hello    world</pre>"#,
+        None,
+    )
+    .await
+    .expect("set_content");
+
+    // Multi-line rendered text matches a single-line expectation (the exact
+    // scenario from downstream: inner_text is "Scan\n→\nGroup\n...").
+    let steps = page.locator("#steps");
+    expect(steps.clone())
+        .to_contain_text("Scan → Group → Name → Review → Copy")
+        .await
+        .expect("to_contain_text should match across rendered line breaks");
+    expect(steps.clone())
+        .to_have_text("Scan → Group → Name → Review → Copy")
+        .await
+        .expect("to_have_text should match across rendered line breaks");
+
+    // Irregular whitespace in the EXPECTED string also normalizes.
+    expect(steps.clone())
+        .to_contain_text("Group   →\nName")
+        .await
+        .expect("expected-side whitespace should normalize too");
+
+    // Runs of spaces in the actual text (pre-formatted) collapse for matching.
+    expect(page.locator("#spaced"))
+        .to_have_text("Hello world")
+        .await
+        .expect("space runs in actual text should collapse");
+
+    // Regex variants match the RAW text (upstream does not normalize for
+    // regex), so a pattern spanning the real newline still matches.
+    expect(steps.clone())
+        .to_have_text_regex(r"Scan\n→")
+        .await
+        .expect("regex should still see the raw newlines");
+
+    // Normal negative path is unaffected: absent text still fails.
+    let missing = expect(steps.clone())
+        .with_timeout(std::time::Duration::from_millis(500))
+        .to_contain_text("Missing entirely")
+        .await;
+    assert!(missing.is_err(), "absent text must still fail");
+
+    // Negated assertion respects normalization: the normalized text DOES
+    // contain the phrase, so not() must fail.
+    let negated = expect(steps)
+        .not()
+        .with_timeout(std::time::Duration::from_millis(500))
+        .to_contain_text("Scan → Group")
+        .await;
+    assert!(
+        negated.is_err(),
+        "not().to_contain_text must fail when normalized text contains the phrase"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+}
+
 // ============================================================================
 // to_contain_text() Assertions
 // ============================================================================

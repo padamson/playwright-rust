@@ -99,6 +99,14 @@ pub fn expect(locator: Locator) -> Expectation {
     Expectation::new(locator)
 }
 
+/// Collapses runs of whitespace (spaces, tabs, newlines) to single spaces and
+/// trims the ends, matching upstream Playwright's whitespace normalization for
+/// the string-argument text assertions. The regex assertion variants match the
+/// raw text and must not use this.
+fn normalize_whitespace(s: &str) -> String {
+    s.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 /// Expectation wraps a locator and provides assertion methods with auto-retry.
 pub struct Expectation {
     locator: Locator,
@@ -204,18 +212,22 @@ impl Expectation {
     /// Asserts that the element has the specified text content (exact match).
     ///
     /// This assertion will retry until the element has the exact text or timeout.
-    /// Text is trimmed before comparison.
+    /// Whitespace is normalized in both the element text and the expected string
+    /// before comparison (runs of whitespace, including newlines, collapse to
+    /// single spaces), matching upstream Playwright — so multi-line rendered
+    /// text matches a single-line expectation. Use
+    /// [`to_have_text_regex`](Self::to_have_text_regex) to match the raw text.
     ///
     /// See: <https://playwright.dev/docs/test-assertions#locator-assertions-to-have-text>
     pub async fn to_have_text(self, expected: &str) -> Result<()> {
         let start = std::time::Instant::now();
         let selector = self.locator.selector().to_string();
-        let expected = expected.trim();
+        let expected = normalize_whitespace(expected);
 
         loop {
             // Get text content (using inner_text for consistency with Playwright)
             let actual_text = self.locator.inner_text().await?;
-            let actual = actual_text.trim();
+            let actual = normalize_whitespace(&actual_text);
 
             // Check if condition matches (with negation support)
             let matches = if self.negate {
@@ -297,21 +309,28 @@ impl Expectation {
     /// Asserts that the element contains the specified text (substring match).
     ///
     /// This assertion will retry until the element contains the text or timeout.
+    /// Whitespace is normalized in both the element text and the expected string
+    /// before comparison (runs of whitespace, including newlines, collapse to
+    /// single spaces), matching upstream Playwright — so multi-line rendered
+    /// text matches a single-line expectation. Use
+    /// [`to_contain_text_regex`](Self::to_contain_text_regex) to match the raw
+    /// text.
     ///
     /// See: <https://playwright.dev/docs/test-assertions#locator-assertions-to-contain-text>
     pub async fn to_contain_text(self, expected: &str) -> Result<()> {
         let start = std::time::Instant::now();
         let selector = self.locator.selector().to_string();
+        let expected = normalize_whitespace(expected);
 
         loop {
             let actual_text = self.locator.inner_text().await?;
-            let actual = actual_text.trim();
+            let actual = normalize_whitespace(&actual_text);
 
             // Check if condition matches (with negation support)
             let matches = if self.negate {
-                !actual.contains(expected)
+                !actual.contains(&expected)
             } else {
-                actual.contains(expected)
+                actual.contains(&expected)
             };
 
             if matches {
@@ -1774,5 +1793,17 @@ mod tests {
         // Verify default timeout and poll interval constants
         assert_eq!(DEFAULT_ASSERTION_TIMEOUT, Duration::from_secs(5));
         assert_eq!(DEFAULT_POLL_INTERVAL, Duration::from_millis(100));
+    }
+
+    #[test]
+    fn test_normalize_whitespace_collapses_runs_and_trims() {
+        assert_eq!(
+            normalize_whitespace("Scan\n→\nGroup\n→\nName"),
+            "Scan → Group → Name"
+        );
+        assert_eq!(normalize_whitespace("  Hello \t  world \n"), "Hello world");
+        assert_eq!(normalize_whitespace("already normal"), "already normal");
+        assert_eq!(normalize_whitespace("   "), "");
+        assert_eq!(normalize_whitespace(""), "");
     }
 }

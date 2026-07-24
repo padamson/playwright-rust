@@ -194,6 +194,51 @@ async fn test_handle_persists_to_indexeddb() {
     browser.close().await.expect("browser close");
 }
 
+/// `seed_on_navigation` re-establishes file content and permission state before
+/// the app mounts on the next navigation, so the "reopen last file on startup"
+/// pattern is testable across a `reload()` — the fake's in-memory content and
+/// permission otherwise reset when the page reloads.
+#[tokio::test]
+async fn test_seed_on_navigation_survives_reload() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let fs = page.fake_file_system().await.expect("install");
+
+    page.set_content("<html><body></body></html>", None)
+        .await
+        .expect("set_content");
+
+    // A plain reload loses the in-memory content: seed now, reload, and without
+    // seed_on_navigation the file would come back empty.
+    fs.set_open_file("plan.json", b"before reload")
+        .await
+        .expect("seed");
+
+    // Arrange for content + a lapsed ("prompt") permission to be present BEFORE
+    // any app code runs on the next navigation — the auto-reopen-on-startup case.
+    fs.seed_on_navigation("plan.json", b"seeded on nav", "prompt")
+        .await
+        .expect("seed_on_navigation");
+
+    page.reload(None).await.expect("reload");
+
+    let after: String = page
+        .evaluate(
+            r#"async () => {
+                const [handle] = await window.showOpenFilePicker();
+                const perm = await handle.queryPermission({ mode: "readwrite" });
+                const text = await (await handle.getFile()).text();
+                return handle.name + "|" + perm + "|" + text;
+            }"#,
+            None::<&()>,
+        )
+        .await
+        .expect("post-reload read");
+
+    assert_eq!(after, "plan.json|prompt|seeded on nav");
+
+    browser.close().await.expect("browser close");
+}
+
 /// The fake is opt-in: a page that never asked for it sees no shim state.
 #[tokio::test]
 async fn test_fake_is_opt_in() {

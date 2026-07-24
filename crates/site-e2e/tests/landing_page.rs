@@ -58,7 +58,7 @@ async fn shot(page: &Page, steps: &Path, file: &str, selector: &str) {
         .build();
     let bytes = page
         .locator(selector)
-        .screenshot(Some(opts))
+        .screenshot(opts)
         .await
         .unwrap_or_else(|e| panic!("screenshot {selector}: {e:?}"));
     std::fs::write(steps.join(file), bytes)
