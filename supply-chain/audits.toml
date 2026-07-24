@@ -51,6 +51,18 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-07-23"
 end = "2027-05-23"
 
+[[trusted.aws-lc-rs]]
+criteria = "safe-to-deploy"
+user-id = 156764 # Justin W Smith (justsmth)
+start = "2023-04-11"
+end = "2027-07-24"
+
+[[trusted.aws-lc-sys]]
+criteria = "safe-to-deploy"
+user-id = 156764 # Justin W Smith (justsmth)
+start = "2022-11-09"
+end = "2027-07-24"
+
 [[trusted.block-buffer]]
 criteria = "safe-to-deploy"
 trusted-publisher = "github:RustCrypto/utils"
@@ -113,7 +125,7 @@ end = "2027-05-16"
 
 [[trusted.const-oid]]
 criteria = "safe-to-deploy"
-user-id = 267
+user-id = 267 # Tony Arcieri (tarcieri)
 start = "2020-08-04"
 end = "2027-07-18"
 

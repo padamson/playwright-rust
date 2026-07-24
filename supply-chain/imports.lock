@@ -57,6 +57,25 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.aws-lc-rs]]
+version = "1.17.3"
+when = "2026-07-17"
+user-id = 156764
+user-login = "justsmth"
+user-name = "Justin W Smith"
+
+[[publisher.aws-lc-sys]]
+version = "0.43.0"
+when = "2026-07-17"
+user-id = 156764
+user-login = "justsmth"
+user-name = "Justin W Smith"
+
+[[publisher.block-buffer]]
+version = "0.12.1"
+when = "2026-06-11"
+trusted-publisher = "github:RustCrypto/utils"
+
 [[publisher.bumpalo]]
 version = "3.20.2"
 when = "2026-02-19"
@@ -78,16 +97,21 @@ user-id = 6741
 user-login = "Darksonn"
 user-name = "Alice Ryhl"
 
+[[publisher.chacha20]]
+version = "0.10.1"
+when = "2026-06-24"
+trusted-publisher = "github:RustCrypto/stream-ciphers"
+
 [[publisher.clap]]
-version = "4.6.1"
-when = "2026-04-15"
+version = "4.6.2"
+when = "2026-07-15"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.clap_builder]]
-version = "4.6.0"
-when = "2026-03-12"
+version = "4.6.2"
+when = "2026-07-15"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -113,6 +137,23 @@ user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
+[[publisher.const-oid]]
+version = "0.10.2"
+when = "2026-01-07"
+user-id = 267
+user-login = "tarcieri"
+user-name = "Tony Arcieri"
+
+[[publisher.crypto-common]]
+version = "0.2.2"
+when = "2026-05-19"
+trusted-publisher = "github:RustCrypto/traits"
+
+[[publisher.digest]]
+version = "0.11.3"
+when = "2026-05-03"
+trusted-publisher = "github:RustCrypto/traits"
+
 [[publisher.filetime]]
 version = "0.2.29"
 when = "2026-05-12"
@@ -127,16 +168,37 @@ user-id = 980
 user-login = "Byron"
 user-name = "Sebastian Thiel"
 
+[[publisher.futures-core]]
+version = "0.3.33"
+when = "2026-07-18"
+user-id = 33035
+user-login = "taiki-e"
+user-name = "Taiki Endo"
+
+[[publisher.futures-macro]]
+version = "0.3.33"
+when = "2026-07-18"
+user-id = 33035
+user-login = "taiki-e"
+user-name = "Taiki Endo"
+
+[[publisher.futures-sink]]
+version = "0.3.33"
+when = "2026-07-18"
+user-id = 33035
+user-login = "taiki-e"
+user-name = "Taiki Endo"
+
 [[publisher.futures-task]]
-version = "0.3.32"
-when = "2026-02-15"
+version = "0.3.33"
+when = "2026-07-18"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.futures-util]]
-version = "0.3.32"
-when = "2026-02-15"
+version = "0.3.33"
+when = "2026-07-18"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
@@ -161,6 +223,11 @@ when = "2025-03-03"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
+
+[[publisher.hybrid-array]]
+version = "0.4.13"
+when = "2026-06-27"
+trusted-publisher = "github:RustCrypto/hybrid-array"
 
 [[publisher.hyper]]
 version = "1.9.0"
@@ -230,16 +297,26 @@ version = "0.9.3"
 when = "2026-04-11"
 trusted-publisher = "github:rust-random/rand"
 
+[[publisher.rand]]
+version = "0.10.2"
+when = "2026-07-02"
+trusted-publisher = "github:rust-random/rand"
+
+[[publisher.rand_core]]
+version = "0.10.1"
+when = "2026-04-13"
+trusted-publisher = "github:rust-random/rand_core"
+
 [[publisher.regex]]
-version = "1.13.0"
-when = "2026-07-09"
+version = "1.13.1"
+when = "2026-07-15"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.regex-automata]]
-version = "0.4.14"
-when = "2026-02-03"
+version = "0.4.16"
+when = "2026-07-15"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
@@ -279,9 +356,14 @@ user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
+[[publisher.sha1]]
+version = "0.11.0"
+when = "2026-03-27"
+trusted-publisher = "github:RustCrypto/hashes"
+
 [[publisher.syn]]
-version = "2.0.118"
-when = "2026-06-16"
+version = "2.0.119"
+when = "2026-07-15"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -315,8 +397,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.tokio]]
-version = "1.52.3"
-when = "2026-05-08"
+version = "1.53.0"
+when = "2026-07-17"
 user-id = 6741
 user-login = "Darksonn"
 user-name = "Alice Ryhl"
@@ -324,6 +406,13 @@ user-name = "Alice Ryhl"
 [[publisher.tokio-tungstenite]]
 version = "0.29.0"
 when = "2026-03-17"
+user-id = 96974
+user-login = "daniel-abramov"
+user-name = "Daniel Abramov"
+
+[[publisher.tokio-tungstenite]]
+version = "0.30.0"
+when = "2026-07-11"
 user-id = 96974
 user-login = "daniel-abramov"
 user-name = "Daniel Abramov"
@@ -371,8 +460,8 @@ user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.trybuild]]
-version = "1.0.117"
-when = "2026-06-22"
+version = "1.0.118"
+when = "2026-07-11"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -380,6 +469,13 @@ user-name = "David Tolnay"
 [[publisher.tungstenite]]
 version = "0.29.0"
 when = "2026-03-17"
+user-id = 96974
+user-login = "daniel-abramov"
+user-name = "Daniel Abramov"
+
+[[publisher.tungstenite]]
+version = "0.30.0"
+when = "2026-07-11"
 user-id = 96974
 user-login = "daniel-abramov"
 user-name = "Daniel Abramov"
@@ -563,20 +659,7 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
-[[audits.ariel-os.audits.futures-core]]
-who = "Nils Ponsard <nils.ponsard@inria.fr>"
-criteria = "safe-to-deploy"
-delta = "0.3.31 -> 0.3.32"
-
-[[audits.ariel-os.audits.futures-macro]]
-who = "Nils Ponsard <nils.ponsard@inria.fr>"
-criteria = "safe-to-deploy"
-delta = "0.3.31 -> 0.3.32"
-
-[[audits.ariel-os.audits.futures-sink]]
-who = "Nils Ponsard <nils.ponsard@inria.fr>"
-criteria = "safe-to-deploy"
-delta = "0.3.31 -> 0.3.32"
+[audits.ariel-os.audits]
 
 [[audits.bytecode-alliance.wildcard-audits.bumpalo]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
@@ -758,32 +841,6 @@ notes = "This crate defined a macro-rules which creates wrappers working with FF
 who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"
 version = "0.1.1"
-
-[[audits.bytecode-alliance.audits.futures-core]]
-who = "Pat Hickey <phickey@fastly.com>"
-criteria = "safe-to-deploy"
-version = "0.3.27"
-notes = "Unsafe used to implement a concurrency primitive AtomicWaker. Well-commented and not obviously incorrect. Like my other audits of these concurrency primitives inside the futures family, I couldn't certify that it is correct without formal methods, but that is out of scope for this vetting."
-
-[[audits.bytecode-alliance.audits.futures-core]]
-who = "Pat Hickey <pat@moreproductive.org>"
-criteria = "safe-to-deploy"
-delta = "0.3.28 -> 0.3.31"
-
-[[audits.bytecode-alliance.audits.futures-macro]]
-who = "Joel Dice <joel.dice@gmail.com>"
-criteria = "safe-to-deploy"
-version = "0.3.31"
-
-[[audits.bytecode-alliance.audits.futures-sink]]
-who = "Pat Hickey <phickey@fastly.com>"
-criteria = "safe-to-deploy"
-version = "0.3.27"
-
-[[audits.bytecode-alliance.audits.futures-sink]]
-who = "Pat Hickey <pat@moreproductive.org>"
-criteria = "safe-to-deploy"
-delta = "0.3.28 -> 0.3.31"
 
 [[audits.bytecode-alliance.audits.getrandom]]
 who = "Alex Crichton <alex@alexcrichton.com>"
@@ -1896,6 +1953,11 @@ who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.3 -> 1.0.4"
 
+[[audits.isrg.audits.cpufeatures]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.17 -> 0.3.0"
+
 [[audits.isrg.audits.criterion-plot]]
 who = "J.C. Jones <jc@divviup.org>"
 criteria = "safe-to-run"
@@ -2134,18 +2196,6 @@ aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-ch
 who = "edgul <ed.guloien@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "1.2.1 -> 1.2.2"
-aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.futures-core]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.3.27 -> 0.3.28"
-aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.futures-sink]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.3.27 -> 0.3.28"
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.hashbrown]]

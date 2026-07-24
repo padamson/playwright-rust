@@ -37,14 +37,6 @@ audit-as-crates-io = true
 [policy.playwright-rs-trace]
 audit-as-crates-io = true
 
-[[exemptions.aws-lc-rs]]
-version = "1.17.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.aws-lc-sys]]
-version = "0.43.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.axum]]
 version = "0.8.9"
 criteria = "safe-to-deploy"
