@@ -95,6 +95,17 @@ jobs:
     - name: Run clippy
       run: cargo clippy --all-targets --all-features -- -D warnings
 
+    - name: Check AWS-LC backend without ring
+      if: runner.os == 'Linux'
+      env:
+        PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
+      run: |
+        cargo check -p playwright-rs --no-default-features --features aws-lc,native-tls,macros,cli
+        if cargo tree -p playwright-rs --no-default-features --features aws-lc,native-tls,macros,cli --prefix none | grep -q '^ring v'; then
+          echo 'ring unexpectedly present in the AWS-LC-only dependency graph' >&2
+          exit 1
+        fi
+
     - name: Install expect (issue #59 reproducer harness)
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y expect

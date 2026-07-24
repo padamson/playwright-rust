@@ -9,6 +9,25 @@
 
 include!("driver_urls.rs");
 
+#[cfg(not(any(feature = "aws-lc", feature = "ring")))]
+compile_error!("enable either the `aws-lc` or `ring` feature to select a TLS crypto backend");
+
+/// Builds the crypto provider used by the driver's HTTP client.
+///
+/// `aws-lc` wins when both features are present so `--all-features` and
+/// dependency feature unification remain usable. Consumers that need to keep
+/// `ring` out of their dependency graph must disable default features before
+/// enabling `aws-lc`.
+#[cfg(feature = "aws-lc")]
+fn tls_crypto_provider() -> rustls::crypto::CryptoProvider {
+    rustls::crypto::aws_lc_rs::default_provider()
+}
+
+#[cfg(all(not(feature = "aws-lc"), feature = "ring"))]
+fn tls_crypto_provider() -> rustls::crypto::CryptoProvider {
+    rustls::crypto::ring::default_provider()
+}
+
 /// Downloads and assembles the driver into `driver_dir` for a Playwright
 /// `platform` identifier (e.g. `mac-arm64`).
 ///
@@ -89,8 +108,20 @@ fn assemble_driver(
 #[allow(dead_code)]
 fn http_get(url: &str) -> std::io::Result<Vec<u8>> {
     use std::io;
+    use std::sync::Arc;
 
-    let mut response = ureq::get(url)
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .tls_config(
+            ureq::tls::TlsConfig::builder()
+                .provider(ureq::tls::TlsProvider::Rustls)
+                .unversioned_rustls_crypto_provider(Arc::new(tls_crypto_provider()))
+                .build(),
+        )
+        .build()
+        .into();
+
+    let mut response = agent
+        .get(url)
         .call()
         .map_err(|e| io::Error::other(format!("download of {url} failed: {e}")))?;
     let status = response.status().as_u16();
