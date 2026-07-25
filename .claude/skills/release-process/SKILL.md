@@ -71,8 +71,26 @@ table above; the workflow is otherwise identical.
    `[Unreleased]` CHANGELOG has been previewing — feature flags table,
    install/CI snippets, Testing & Debugging additions, etc. Also bump the
    install snippet's pinned `"0.X"` (line 136 area) if this is a minor or
-   major bump.
-8. **Verify locally**:
+   major bump. Also bump the Playwright driver version if this release
+   carries a driver bump (README badge + the `npx playwright@X.Y.Z install`
+   lines).
+8. **Sync the landing site's release-facing constants** — applies to
+   `playwright-rs` only, and these are **not** covered by
+   `cargo xtask verify-driver-version` (that guard deliberately anchors
+   only on `PLAYWRIGHT_DEV`, since the released values legitimately lag
+   `main` between releases). Easy to miss, and both are rendered on the
+   published `/vX.Y.Z` snapshot:
+   - `crates/site/src/components/hero.rs` — `PLAYWRIGHT_RELEASED` must
+     become the driver version this release bundles (i.e. match
+     `PLAYWRIGHT_DEV` at release time).
+   - `crates/site/snippets/install.toml` — the crates.io pin (`"0.X"` and
+     its `0.X.y` comment).
+   Also drop `unreleased=true` from any `FeatureCard` in
+   `crates/site/src/components/features.rs` whose feature ships in this
+   release (unreleased cards render **only** on the dev build, so they
+   would be missing from the release snapshot), and prune the matching
+   assertions in `crates/site-e2e/tests/landing_page.rs`.
+9. **Verify locally**:
    - `cargo nextest run --workspace`
    - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
    - `cargo test --doc --workspace`
