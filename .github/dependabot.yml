@@ -9,6 +9,19 @@ updates:
       time: "04:00"
       timezone: "America/New_York"
     open-pull-requests-limit: 10
+    # Wait before opening a PR for a freshly published version. Without this,
+    # bumps arrive the moment a crate publishes — necessarily before any of the
+    # cargo-vet import sets (Mozilla, Google, ISRG, ...) has audited it, so
+    # `cargo vet` fails on the PR by construction and gets waved through with an
+    # exemption. A cooldown lets those audits land first (most bumps then vet
+    # clean with no exemption at all) and lets yanks/advisories surface before
+    # we adopt a release. Longer for majors, which are the riskiest and least
+    # urgent.
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
     # Group minor and patch updates to reduce noise
     groups:
       start-dependencies:
