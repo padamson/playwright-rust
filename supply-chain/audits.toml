@@ -183,6 +183,12 @@ user-id = 33035 # Taiki Endo (taiki-e)
 start = "2020-10-05"
 end = "2027-07-18"
 
+[[trusted.glob]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2023-01-06"
+end = "2027-07-25"
+
 [[trusted.http]]
 criteria = "safe-to-deploy"
 user-id = 359 # Sean McArthur (seanmonstar)
@@ -231,6 +237,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-05-02"
 end = "2027-05-23"
 
+[[trusted.libc]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2024-08-15"
+end = "2027-07-25"
+
 [[trusted.memchr]]
 criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
@@ -254,6 +266,12 @@ criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2022-01-04"
 end = "2027-05-23"
+
+[[trusted.proc-macro2]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-04-23"
+end = "2027-07-25"
 
 [[trusted.quote]]
 criteria = "safe-to-deploy"

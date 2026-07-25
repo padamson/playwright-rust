@@ -265,6 +265,12 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.libc]]
+version = "0.2.186"
+when = "2026-04-23"
+user-id = 55123
+user-login = "rust-lang-owner"
+
 [[publisher.memchr]]
 version = "2.8.0"
 when = "2026-02-06"
@@ -372,6 +378,13 @@ trusted-publisher = "github:RustCrypto/hashes"
 [[publisher.syn]]
 version = "2.0.119"
 when = "2026-07-15"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.syn]]
+version = "3.0.3"
+when = "2026-07-22"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
