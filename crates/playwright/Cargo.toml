@@ -40,7 +40,7 @@ thiserror = { workspace = true }
 async-trait = "0.1"
 tracing = "0.1"
 parking_lot = "0.12"
-base64 = "0.22"
+base64 = "0.23"
 bytes = "1.11.1"
 regex = "1.10"
 glob = "0.3"
