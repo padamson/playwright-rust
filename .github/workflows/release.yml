@@ -86,7 +86,7 @@ jobs:
             ${{ runner.os }}-playwright-browsers-1.61.1-
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@v2.85.4
+        uses: taiki-e/install-action@v2.85.6
         with:
           tool: cargo-nextest
 
@@ -136,7 +136,7 @@ jobs:
           esac
 
       - name: Install parse-changelog
-        uses: taiki-e/install-action@v2.85.4
+        uses: taiki-e/install-action@v2.85.6
         with:
           tool: parse-changelog
 
@@ -171,7 +171,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-semver-checks
-        uses: taiki-e/install-action@v2.85.4
+        uses: taiki-e/install-action@v2.85.6
         with:
           tool: cargo-semver-checks
 
