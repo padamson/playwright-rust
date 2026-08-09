@@ -11,7 +11,7 @@
   - link "docs.rs" [box=605,333,86,20]:
     - /url: https://docs.rs/playwright-rs
     - img "docs.rs" [box=605,333,86,20]
-  - img "Playwright 1.61.1" [box=699,333,112,20]
+  - img "Playwright 1.62.1" [box=699,333,112,20]
   - link "Docs" [box=432,390,111,44]:
     - /url: https://docs.rs/playwright-rs
   - link "GitHub" [box=555,389,133,46]:
