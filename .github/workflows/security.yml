@@ -145,7 +145,7 @@ jobs:
     # coverage forever. The rolling key means each run restores the newest
     # prior corpus and saves the grown one under a fresh key.
     - name: Restore fuzz corpus
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: crates/playwright/fuzz/corpus
         key: fuzz-corpus-${{ github.run_id }}
