@@ -1,6 +1,12 @@
 
 # cargo-vet audits file
 
+[[audits.base64]]
+who = "Paul Adamson <paul@seekingeta.ai>"
+criteria = "safe-to-deploy"
+delta = "0.22.1 -> 0.23.1"
+notes = "Delta is edition/MSRV housekeeping plus the new simd-unsafe feature (on by default): AVX2/NEON base64 kernels (Mula-Lemire algorithm) selected via runtime CPU feature detection. All unsafe is confined to src/engine/simd.rs intrinsics with loop-guard bounds checks before every load/store; invalid input falls back to the scalar decoder for exact error reporting. No new dependencies, no build script, no fs/net/process/env access. SIMD engines run the same property-test suite as the scalar engine."
+
 [[audits.rustls]]
 who = "Paul Adamson <paul@seekingeta.ai>"
 criteria = "safe-to-deploy"

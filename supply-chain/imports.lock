@@ -63,8 +63,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.async-trait]]
-version = "0.1.91"
-when = "2026-07-18"
+version = "0.1.92"
+when = "2026-08-08"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -115,15 +115,15 @@ when = "2026-06-24"
 trusted-publisher = "github:RustCrypto/stream-ciphers"
 
 [[publisher.clap]]
-version = "4.6.5"
-when = "2026-07-31"
+version = "4.6.6"
+when = "2026-08-06"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.clap_builder]]
-version = "4.6.5"
-when = "2026-07-31"
+version = "4.6.6"
+when = "2026-08-06"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -181,36 +181,36 @@ user-login = "Byron"
 user-name = "Sebastian Thiel"
 
 [[publisher.futures-core]]
-version = "0.3.33"
-when = "2026-07-18"
+version = "0.3.34"
+when = "2026-08-11"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.futures-macro]]
-version = "0.3.33"
-when = "2026-07-18"
+version = "0.3.34"
+when = "2026-08-11"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.futures-sink]]
-version = "0.3.33"
-when = "2026-07-18"
+version = "0.3.34"
+when = "2026-08-11"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.futures-task]]
-version = "0.3.33"
-when = "2026-07-18"
+version = "0.3.34"
+when = "2026-08-11"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.futures-util]]
-version = "0.3.33"
-when = "2026-07-18"
+version = "0.3.34"
+when = "2026-08-11"
 user-id = 33035
 user-login = "taiki-e"
 user-name = "Taiki Endo"
@@ -421,15 +421,15 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.thiserror]]
-version = "2.0.19"
-when = "2026-07-18"
+version = "2.0.20"
+when = "2026-08-08"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.thiserror-impl]]
-version = "2.0.19"
-when = "2026-07-18"
+version = "2.0.20"
+when = "2026-08-08"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -1056,6 +1056,12 @@ criteria = "safe-to-deploy"
 delta = "0.103.12 -> 0.103.13"
 notes = "Minor fixes for the bug being fixed in this release, nothing awry."
 
+[[audits.bytecode-alliance.audits.semver]]
+who = "Pat Hickey <phickey@fastly.com>"
+criteria = "safe-to-deploy"
+version = "1.0.17"
+notes = "plenty of unsafe pointer and vec tricks, but in well-structured and commented code that appears to be correct"
+
 [[audits.bytecode-alliance.audits.sha1]]
 who = "Andrew Brown <andrew.brown@intel.com>"
 criteria = "safe-to-deploy"
@@ -1410,6 +1416,31 @@ who = "George Burgess IV <gbiv@google.com>"
 criteria = "safe-to-deploy"
 version = "1.0.3"
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
+
+[[audits.google.audits.indexmap]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "2.7.1"
+notes = '''
+Grepped for `-i cipher`, `-i crypto`, `'\bfs\b'`, `'\bnet\b'`
+and there were no hits.
+
+There is a little bit of `unsafe` Rust code - the audit can be found at
+https://chromium-review.googlesource.com/c/chromium/src/+/6187726/2
+'''
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.indexmap]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "2.7.1 -> 2.8.0"
+notes = """
+No `unsafe` introduced or affected in:
+* `indexmap_with_default!` and `indexset_with_default!` macros
+* New `PartialEq` implementations
+* `fn slice_eq` in `util.rs`
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
 
 [[audits.google.audits.itertools]]
 who = "ChromeOS"
@@ -2239,6 +2270,19 @@ criteria = "safe-to-deploy"
 delta = "1.2.0 -> 1.2.1"
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.indexmap]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "2.8.0 -> 2.11.4"
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.indexmap]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "2.11.4 -> 2.14.0"
+notes = "Mostly internal refactorings.  No new unsafe code."
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.log]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
@@ -2293,6 +2337,19 @@ aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-ch
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.5.3 -> 1.6.1"
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.semver]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.16 -> 1.0.28"
+notes = "Very few changes, mostly removes support for older Rust versions.  Some unsafe code refactored, but it seemed to be functionally equivalent to me."
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.semver]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.17 -> 1.0.16"
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.serde]]
