@@ -66,7 +66,7 @@
 //! If you're using this crate with Claude Code or another coding agent,
 //! see [`docs/agent/`](https://github.com/padamson/playwright-rust/tree/main/docs/agent)
 //! for a copy-paste CLAUDE.md snippet and the
-//! [`playwright-rs-usage` skill](https://github.com/padamson/playwright-rust/tree/main/.claude/skills/playwright-rs-usage)
+//! [`playwright-rs-usage` skill](https://github.com/padamson/playwright-rust/tree/main/skills/playwright-rs-usage)
 //! you can drop into your project's `.claude/skills/`.
 //!
 //! # Examples

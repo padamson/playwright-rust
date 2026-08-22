@@ -7,7 +7,7 @@
 //!   parser tests consume.
 //! - `verify-agent-docs` — extracts ` ```rust,no_run ` code blocks
 //!   from `docs/agent/CLAUDE_SNIPPET.md` and
-//!   `.claude/skills/playwright-rs-usage/SKILL.md`, then runs
+//!   `skills/playwright-rs-usage/SKILL.md`, then runs
 //!   `cargo check` against them so they can't silently drift from the
 //!   crate API.
 //! - `verify-site-snippets` — wraps each `crates/site/snippets/*.rs`
@@ -46,7 +46,7 @@ enum Cmd {
     },
     /// Compile-check the `rust,no_run` blocks in the agent-integration
     /// docs (`docs/agent/CLAUDE_SNIPPET.md` and
-    /// `.claude/skills/playwright-rs-usage/SKILL.md`) so they can't
+    /// `skills/playwright-rs-usage/SKILL.md`) so they can't
     /// drift from the real `playwright-rs` API.
     VerifyAgentDocs,
     /// Compile-check the Rust snippets rendered on the landing page
@@ -158,7 +158,7 @@ fn verify_agent_docs() -> Result<()> {
     let workspace_root = workspace_root();
     let inputs = [
         workspace_root.join("docs/agent/CLAUDE_SNIPPET.md"),
-        workspace_root.join(".claude/skills/playwright-rs-usage/SKILL.md"),
+        workspace_root.join("skills/playwright-rs-usage/SKILL.md"),
     ];
 
     let mut blocks: Vec<ExtractedBlock> = Vec::new();

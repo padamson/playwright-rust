@@ -10,7 +10,7 @@ Source of truth for the API itself stays on
 "what to reach for, what to avoid" overlay.
 
 For a richer, auto-discovered version of the same guidance, see the
-companion [`playwright-rs-usage` skill](../../.claude/skills/playwright-rs-usage/),
+companion [`playwright-rs-usage` skill](../../skills/playwright-rs-usage/),
 which Claude Code can also install directly:
 
 ```bash
