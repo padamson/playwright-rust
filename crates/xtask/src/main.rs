@@ -9,7 +9,10 @@
 //!   from `docs/agent/CLAUDE_SNIPPET.md` and
 //!   `skills/playwright-rs-usage/SKILL.md`, then runs
 //!   `cargo check` against them so they can't silently drift from the
-//!   crate API.
+//!   crate API. Then asserts the shipped skill still *names* every
+//!   API-gating cargo feature and browser engine, so a capability
+//!   can't ship undocumented — the compile check only proves the code
+//!   the skill does show is valid, never that something is missing.
 //! - `verify-site-snippets` — wraps each `crates/site/snippets/*.rs`
 //!   fragment shown on the landing page in a binding prelude and runs
 //!   `cargo check`, so the site can't advertise code that doesn't
@@ -169,8 +172,11 @@ fn verify_agent_docs() -> Result<()> {
     }
 
     if blocks.is_empty() {
-        println!("verify-agent-docs: no `rust,no_run` blocks found — nothing to check");
-        return Ok(());
+        // Still run the capability guard: it reads the skill directly and
+        // must not be skipped just because the prose currently carries no
+        // compilable block.
+        println!("verify-agent-docs: no `rust,no_run` blocks found — nothing to compile");
+        return verify_skill_covers_capabilities(&workspace_root);
     }
 
     let check_dir = workspace_root.join("target/agent-docs-verify");
@@ -234,7 +240,143 @@ playwright-rs = {{ path = {playwright_path:?} }}
         "verify-agent-docs: {} block(s) compile cleanly against playwright-rs",
         blocks.len()
     );
+
+    verify_skill_covers_capabilities(&workspace_root)?;
     Ok(())
+}
+
+/// Cargo features that gate build/transport configuration rather than API
+/// surface. An agent writing test code never picks between these, so the
+/// skill is not required to name them.
+///
+/// This list is the reason the check is worth having: anything *not* named
+/// here must be documented, so a new capability cannot ship without the
+/// skill mentioning it. Adding a feature here is a deliberate act, not a
+/// default.
+const NON_API_FEATURES: &[&str] = &[
+    "native-tls",
+    "rustls-tls-native-roots",
+    "rustls-tls-webpki-roots",
+    "ring",
+    "aws-lc",
+];
+
+/// Assert the shipped skill still names every capability the crate exposes.
+///
+/// The compile check above proves the skill's code is *valid*; it says
+/// nothing about what the skill left out. This is the other half: each
+/// API-gating cargo feature and each browser engine must appear somewhere in
+/// the text, so shipping one without documenting it fails the build.
+///
+/// Neither half checks that the surrounding prose is *accurate*. That
+/// residue is real and is stated in the skill itself.
+fn verify_skill_covers_capabilities(workspace_root: &Path) -> Result<()> {
+    let skill_path = workspace_root.join("skills/playwright-rs-usage/SKILL.md");
+    let skill = std::fs::read_to_string(&skill_path)
+        .with_context(|| format!("read {}", skill_path.display()))?;
+
+    let manifest_path = workspace_root.join("crates/playwright/Cargo.toml");
+    let manifest = std::fs::read_to_string(&manifest_path)
+        .with_context(|| format!("read {}", manifest_path.display()))?;
+
+    let mut missing: Vec<String> = Vec::new();
+
+    // Both extractors are text scrapers, so they fail open: if a rename or a
+    // rustfmt rewrap stops them matching, an empty list would sail through
+    // and print success. Refuse to pass on nothing found.
+    let features = feature_names(&manifest);
+    if features.is_empty() {
+        bail!(
+            "verify-agent-docs: found no features in {} -- the [features] parser has drifted, \
+             not the docs.",
+            manifest_path.display()
+        );
+    }
+
+    for feature in features {
+        if feature == "default" || NON_API_FEATURES.contains(&feature.as_str()) {
+            continue;
+        }
+        if !mentions(&skill, &feature) {
+            missing.push(format!("cargo feature `{feature}`"));
+        }
+    }
+
+    let playwright_rs = workspace_root.join("crates/playwright/src/protocol/playwright.rs");
+    let engines_src = std::fs::read_to_string(&playwright_rs)
+        .with_context(|| format!("read {}", playwright_rs.display()))?;
+    let engines = browser_engines(&engines_src);
+    if engines.is_empty() {
+        bail!(
+            "verify-agent-docs: found no browser engines in {} -- the accessor parser has \
+             drifted, not the docs.",
+            playwright_rs.display()
+        );
+    }
+    for engine in engines {
+        if !mentions(&skill, &engine) {
+            missing.push(format!("browser engine `{engine}`"));
+        }
+    }
+
+    if !missing.is_empty() {
+        bail!(
+            "verify-agent-docs: {} shipped capability/capabilities are absent from {}:\n  {}\n\
+             Document them, or -- for a build/transport knob an agent never chooses -- \
+             add the feature to NON_API_FEATURES in crates/xtask/src/main.rs.",
+            missing.len(),
+            skill_path
+                .strip_prefix(workspace_root)
+                .unwrap_or(&skill_path)
+                .display(),
+            missing.join("\n  "),
+        );
+    }
+
+    println!("verify-agent-docs: skill names every API-gating feature and browser engine");
+    Ok(())
+}
+
+/// Whether `needle` appears in `haystack` as a whole token.
+///
+/// A plain `contains` is wrong here: the `cli` feature would match "click"
+/// and "client" and silently pass, which it did on the first run of this
+/// check. Identifier characters on either side disqualify a hit.
+fn mentions(haystack: &str, needle: &str) -> bool {
+    let is_ident = |c: char| c.is_alphanumeric() || c == '-' || c == '_';
+    haystack.match_indices(needle).any(|(i, m)| {
+        let before = haystack[..i].chars().next_back();
+        let after = haystack[i + m.len()..].chars().next();
+        !before.is_some_and(is_ident) && !after.is_some_and(is_ident)
+    })
+}
+
+/// Feature names from a manifest's `[features]` table.
+fn feature_names(manifest: &str) -> Vec<String> {
+    manifest
+        .lines()
+        .skip_while(|l| l.trim() != "[features]")
+        .skip(1)
+        .take_while(|l| !l.trim_start().starts_with('['))
+        .filter_map(|l| l.split_once('=').map(|(name, _)| name.trim()))
+        .filter(|name| !name.is_empty() && !name.starts_with('#'))
+        .map(str::to_string)
+        .collect()
+}
+
+/// Browser-engine accessors on `Playwright` (`pub fn x(&self) -> &BrowserType`).
+fn browser_engines(source: &str) -> Vec<String> {
+    source
+        .lines()
+        .filter_map(|l| {
+            let l = l.trim();
+            let rest = l.strip_prefix("pub fn ")?;
+            if !rest.contains("-> &BrowserType") {
+                return None;
+            }
+            rest.split_once('(').map(|(name, _)| name.to_string())
+        })
+        .collect()
 }
 
 fn verify_site_snippets() -> Result<()> {
@@ -841,5 +983,84 @@ mod changelog_link_tests {
             let problems = changelog_link_problems(&content, prefix);
             assert!(problems.is_empty(), "{rel}:\n{}", problems.join("\n"));
         }
+    }
+}
+
+#[cfg(test)]
+mod skill_coverage_tests {
+    use super::*;
+
+    const MANIFEST: &str = "\
+[package]
+name = \"playwright-rs\"
+
+[features]
+default = [\"native-tls\", \"macros\", \"ring\"]
+native-tls = [\"tokio-tungstenite/native-tls\"]
+# retired-feature = [\"dep:gone\"]
+ = \"malformed\"
+screenshot-diff = [\"dep:image\"]
+cli = [
+    \"dep:clap\",
+    \"dep:ureq\",
+]
+
+[dependencies]
+anyhow = \"1\"
+";
+
+    #[test]
+    fn feature_names_reads_the_table_and_stops_at_the_next_section() {
+        assert_eq!(
+            feature_names(MANIFEST),
+            vec!["default", "native-tls", "screenshot-diff", "cli"],
+            "multi-line feature arrays must not leak their entries, \
+             [dependencies] must not be read as features, and a commented-out \
+             or nameless line must not become a feature the skill has to document"
+        );
+    }
+
+    #[test]
+    fn feature_names_is_empty_without_a_features_table() {
+        assert!(feature_names("[package]\nname = \"x\"\n").is_empty());
+    }
+
+    #[test]
+    fn browser_engines_finds_accessors_by_return_type() {
+        let src = "\
+    pub fn chromium(&self) -> &BrowserType {
+    pub fn firefox(&self) -> &BrowserType {
+    pub fn chromium_sandbox(mut self, enabled: bool) -> Self {
+    fn private_engine(&self) -> &BrowserType {
+";
+        assert_eq!(
+            browser_engines(src),
+            vec!["chromium", "firefox"],
+            "only public accessors returning &BrowserType count"
+        );
+    }
+
+    #[test]
+    fn mentions_requires_a_whole_token() {
+        // The bug this guards: `contains` let the `cli` feature match
+        // "click"/"client" in the prose, so it passed while undocumented.
+        assert!(!mentions("use page.click() on the client", "cli"));
+        assert!(mentions("the `cli` feature builds an installer", "cli"));
+        assert!(mentions("cli", "cli"));
+    }
+
+    #[test]
+    fn mentions_does_not_treat_a_hyphen_as_a_boundary() {
+        // `screenshot-diff` must not be satisfied by a bare "screenshot",
+        // nor "ring" by "rustls-tls-native-roots".
+        assert!(!mentions(
+            "take a screenshot of the page",
+            "screenshot-diff"
+        ));
+        assert!(mentions(
+            "enable `screenshot-diff` for baselines",
+            "screenshot-diff"
+        ));
+        assert!(!mentions("aws-lc-rs is the backend", "aws-lc"));
     }
 }

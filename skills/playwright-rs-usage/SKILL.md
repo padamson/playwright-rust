@@ -1,6 +1,9 @@
 ---
 name: playwright-rs-usage
-description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml; can also be copied into downstream projects at `.claude/skills/playwright-rs-usage/`.
+description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
+license: Apache-2.0
+metadata:
+  version: "0.3.0"
 ---
 
 # Using playwright-rs
@@ -20,6 +23,62 @@ reference. The one Rust code block below is compile-checked by
 `cargo xtask verify-agent-docs`; the rest is prose that ages well
 because it talks in concepts (auto-wait, builder pattern) rather
 than specific method names.
+
+## Before any of this works
+
+Two things, and the second one is the one that surprises people.
+
+**The crate.** `playwright-rs` in `[dependencies]`, or `[dev-dependencies]`
+if it is test-only, alongside `tokio` with the `full` feature. Defaults are
+`native-tls`, `macros` and `ring`: transport, the `locator!()` macro, and
+the crypto backend respectively.
+
+Prefer leaving them on. `default-features = false` is only needed to swap
+`ring` for `aws-lc`, and it drops all three, so the replacements have to be
+listed back explicitly or `locator!()` disappears and no TLS transport
+remains:
+
+```toml
+playwright-rs = { version = "0.16", default-features = false, features = [
+    "aws-lc",
+    "native-tls",
+    "macros",
+] }
+```
+
+Two capabilities are opt-in and off unless asked for. `screenshot-diff`
+turns on pixel-diff screenshot assertions, so reach for it when the task
+calls for comparing a rendering against a baseline rather than asserting on
+the DOM. `cli` builds an installer binary for use outside a Cargo project;
+inside one, prefer the example below, because `cargo install` compiles a
+second copy of the crate that then has to be kept in sync with the
+project's lockfile.
+
+**The browsers, which are a separate install and are required.** A fresh
+checkout that only adds the dependency will fail at launch. The crate
+bundles one pinned Playwright driver and each driver expects matching
+browser builds, so install them *through the crate* rather than through a
+global `npx playwright install`. That way the browser version rides
+`Cargo.lock` and cannot drift from the driver. Copy
+[`examples/install-browsers.rs`](https://github.com/padamson/playwright-rust/blob/main/crates/playwright/examples/install-browsers.rs)
+into the project's `examples/` and run it once:
+
+```bash
+cargo run --example install-browsers                        # all
+cargo run --example install-browsers -- chromium firefox    # or a subset
+```
+
+The same line belongs in CI before the test step. Never pin a Playwright
+version in a workflow or a `package.json`: dependabot cannot see the
+former and bumps the latter on npm's cadence rather than the crate's, and
+either way the driver and browsers stop matching. The driver ships its own
+Node runtime, so no `setup-node` step is needed. In a setup script or
+Dockerfile, call
+[`install_browsers`](https://docs.rs/playwright-rs/latest/playwright_rs/fn.install_browsers.html)
+directly instead.
+
+On Linux the driver also installs the system libraries the browsers need,
+and may invoke sudo to do it.
 
 ## Object model
 
