@@ -80,26 +80,38 @@ async fn test_wait_for_function_polling_interval_sees_off_frame_state() {
 async fn test_locator_wait_for_function_receives_the_matched_element() {
     let (_pw, browser, page) = crate::common::setup().await;
 
+    // The flag flips in the same synchronous callback as the state, so any
+    // poll that observes `done` necessarily observes `__flipped` too.
     page.set_content(
         "<div id='target' data-state='pending'>x</div>\
-         <script>setTimeout(() => \
-           document.getElementById('target').dataset.state = 'done', 300);</script>",
+         <script>window.__flipped = false; \
+           setTimeout(() => { \
+             document.getElementById('target').dataset.state = 'done'; \
+             window.__flipped = true; \
+           }, 300);</script>",
         None,
     )
     .await
     .expect("set_content");
 
     // Bare arrow on purpose: a client-side isFunction guess resolves this
-    // vacuously; the elapsed check pins that the wait actually waited.
-    let start = std::time::Instant::now();
+    // vacuously. Asking the page whether the flip had happened pins that the
+    // wait actually waited, without measuring wall-clock here: the timer
+    // starts when set_content runs the script, not when set_content returns,
+    // so a host-side elapsed check silently loses whatever the round trip
+    // cost and fails under load.
     page.locator("#target")
         .wait_for_function("el => el.dataset.state === 'done'", None)
         .await
         .expect("should resolve once the bound element reaches the state");
+
+    let flipped: bool = page
+        .evaluate("() => window.__flipped", None::<&()>)
+        .await
+        .expect("probe the flip flag");
     assert!(
-        start.elapsed() >= std::time::Duration::from_millis(250),
-        "resolved in {:?}, before the 300ms state flip: the expression cannot have run against the element",
-        start.elapsed()
+        flipped,
+        "resolved before the state flip: the expression cannot have run against the element"
     );
 
     browser.close().await.expect("close");
