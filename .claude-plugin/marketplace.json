@@ -9,7 +9,7 @@
     {
       "name": "playwright-rs",
       "source": "./",
-      "description": "Procedural reference for writing Rust browser automation with playwright-rs: object model, the locator!() macro, builder options, auto-wait semantics, and trace capture.",
+      "description": "Procedural reference for writing Rust browser automation with playwright-rs: adding the crate and installing its browsers, object model, the locator!() macro, builder options, auto-wait semantics, and trace capture.",
       "homepage": "https://playwright-rust.dev",
       "license": "Apache-2.0"
     }

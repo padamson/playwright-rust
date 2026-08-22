@@ -93,7 +93,7 @@ repos:
         pass_filenames: false
         # Run when the snippet sources change OR when the crate API
         # surface changes.
-        files: (docs/agent/|skills/playwright-rs-usage/|crates/playwright/src/|crates/playwright-rs-macros/src/|crates/xtask/src/)
+        files: (docs/agent/|skills/playwright-rs-usage/|crates/playwright/src/|crates/playwright/Cargo\.toml|crates/playwright-rs-macros/src/|crates/xtask/src/)
 
       # 5b. Verify every source/CI reference to the bundled Playwright
       # version matches build.rs PLAYWRIGHT_VERSION (README excluded —
