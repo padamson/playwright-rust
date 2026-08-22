@@ -63,11 +63,11 @@
 //!
 //! ## For AI coding agents
 //!
-//! If you're using this crate with Claude Code or another coding agent,
-//! see [`docs/agent/`](https://github.com/padamson/playwright-rust/tree/main/docs/agent)
-//! for a copy-paste CLAUDE.md snippet and the
+//! If you're using this crate with a coding agent, install the
 //! [`playwright-rs-usage` skill](https://github.com/padamson/playwright-rust/tree/main/skills/playwright-rs-usage)
-//! you can drop into your project's `.claude/skills/`.
+//! with `npx skills add padamson/playwright-rust`. It works with Claude
+//! Code, Codex, Cursor and other skills-compatible agents, and gives the
+//! agent this crate's API model instead of generic Playwright knowledge.
 //!
 //! # Examples
 //!

@@ -5,6 +5,7 @@
 [![CI](https://github.com/padamson/playwright-rust/actions/workflows/test.yml/badge.svg)](https://github.com/padamson/playwright-rust/actions/workflows/test.yml)
 [![License](https://img.shields.io/crates/l/playwright-rs)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-1.62.1-45ba4b)](https://playwright.dev)
+[![skills.sh](https://skills.sh/b/padamson/playwright-rust)](https://skills.sh/padamson/playwright-rust)
 
 > Rust language bindings for [Microsoft Playwright](https://playwright.dev) — the industry standard for cross-browser end-to-end testing.
 
@@ -333,12 +334,22 @@ for a runnable end-to-end example. Open the resulting `trace.zip` at
 
 ## Using with Claude Code / AI agents
 
-If you're writing playwright-rs tests with Claude Code or another
-coding agent, this repo ships the API model in three forms so the
-agent isn't guessing from generic Playwright knowledge.
+This repo ships an [Agent Skill](https://agentskills.io) so your agent
+writes against this crate's actual API model instead of guessing from
+generic Playwright knowledge. It covers adding the dependency and
+installing browsers, the object model, the builder and `locator!()`
+conventions, auto-wait semantics, and capturing a trace when something
+fails.
 
-The quickest is to install it as a Claude Code plugin, which tracks
-this repo and updates in place:
+```bash
+npx skills add padamson/playwright-rust
+```
+
+Works with [Claude Code](https://claude.ai/code),
+[Codex](https://openai.com/codex/), [Cursor](https://cursor.com), and any
+other [compatible agent](https://agentskills.io/clients).
+
+Claude Code can also install it as a plugin, which tracks this repo:
 
 ```bash
 /plugin marketplace add padamson/playwright-rust
@@ -353,22 +364,14 @@ version with both commands, catalog first:
 /plugin update playwright-rs@playwright-rust
 ```
 
-The other two are copied into your downstream project:
-
-- [**`docs/agent/CLAUDE_SNIPPET.md`**](docs/agent/CLAUDE_SNIPPET.md) —
-  a ~50-line section to paste into your project's `CLAUDE.md`. Covers
-  the object model, conventions (builder pattern, `locator!()`,
-  auto-wait), and the trace-on-failure pattern. Zero-friction install:
-  one paste.
-- [**`skills/playwright-rs-usage/`**](skills/playwright-rs-usage/) —
-  the same content in skill form (auto-loads when the trigger
-  description matches the user's request). Install with
-  `npx skills add padamson/playwright-rust`.
-
-Both point back at [docs.rs](https://docs.rs/playwright-rs) and the
-[examples](crates/playwright/examples/) for the API surface itself —
-they're a thin "what to reach for, what to avoid" overlay rather than
-a duplicate of the API reference.
+The skill lives at
+[`skills/playwright-rs-usage/`](skills/playwright-rs-usage/). It points back
+at [docs.rs](https://docs.rs/playwright-rs) and the
+[examples](crates/playwright/examples/) for the API surface itself, being a
+thin "what to reach for, what to avoid" overlay rather than a duplicate of
+the API reference. A build gate keeps it honest: its code compiles against
+the real crate, and it cannot omit a cargo feature or browser engine the
+crate exposes.
 
 ## Star History
 
