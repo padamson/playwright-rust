@@ -2,16 +2,28 @@
 # cargo-vet audits file
 
 [[audits.base64]]
-who = "Paul Adamson <paul@seekingeta.ai>"
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.22.1 -> 0.23.1"
 notes = "Delta is edition/MSRV housekeeping plus the new simd-unsafe feature (on by default): AVX2/NEON base64 kernels (Mula-Lemire algorithm) selected via runtime CPU feature detection. All unsafe is confined to src/engine/simd.rs intrinsics with loop-guard bounds checks before every load/store; invalid input falls back to the scalar decoder for exact error reporting. No new dependencies, no build script, no fs/net/process/env access. SIMD engines run the same property-test suite as the scalar engine."
 
 [[audits.rustls]]
-who = "Paul Adamson <paul@seekingeta.ai>"
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.23.42 -> 0.23.43"
 notes = "Defensive hardening release. Threads Protocol (Tcp/Quic) through supports_version and find_cipher_suite so a QUIC connection cannot negotiate a TLS1.2-only suite. Replaces two attacker-reachable subtractions on handshake input with saturating_sub (encoding_for_binder_signing, and the server TLS1.3 binder plaintext slice), removing a panic path on a malformed ClientHello. Replaces an as-cast multiply on session ticket age with checked conversion. No new unsafe, no new ambient capabilities, no I/O changes."
+
+[[audits.ureq]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "3.3.0 -> 3.4.0"
+notes = "No new unsafe (the crate has none in either version), no build script, no new ambient capabilities. The TLS delta is two lines: rustls.rs and native_tls.rs switch .host() to .host_bare() so RFC 3986 bracketed IPv6 literals are stripped before use as SNI/ServerName, which rustls rejects in bracketed form; host_bare strips only a leading [ and trailing ], leaving DNS and IPv4 authorities untouched, and is covered by new unit tests. Remaining changes match the changelog: HTTPS CONNECT proxy support and canonical Basic auth scheme for CONNECT (connect.rs), a max_idle_age pooling fix, sealing RequestExt, and rustls-platform-verifier 0.6 -> 0.7. One disable_verification(true) is added but sits inside #[cfg(test)] behind the private _test/_ring features, exercising the new proxy path against a self-signed fixture; it is not reachable from shipped code."
+
+[[audits.ureq-proto]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.6.0 -> 0.6.1"
+notes = "No source changes whatsoever. The delta is a newly added LICENSE-APACHE.txt (which accounts for nearly all of the reported line count), packaging metadata, and a base64 0.22.1 -> 0.23.1 dependency bump that is already audited in this file."
 
 [[trusted.aho-corasick]]
 criteria = "safe-to-deploy"
