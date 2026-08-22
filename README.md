@@ -360,10 +360,10 @@ The other two are copied into your downstream project:
   the object model, conventions (builder pattern, `locator!()`,
   auto-wait), and the trace-on-failure pattern. Zero-friction install:
   one paste.
-- [**`.claude/skills/playwright-rs-usage/`**](.claude/skills/playwright-rs-usage/) —
+- [**`skills/playwright-rs-usage/`**](skills/playwright-rs-usage/) —
   the same content in skill form (auto-loads when the trigger
   description matches the user's request). Install with
-  `cp -r path/to/playwright-rust/.claude/skills/playwright-rs-usage your-project/.claude/skills/`.
+  `npx skills add padamson/playwright-rust`.
 
 Both point back at [docs.rs](https://docs.rs/playwright-rs) and the
 [examples](crates/playwright/examples/) for the API surface itself —

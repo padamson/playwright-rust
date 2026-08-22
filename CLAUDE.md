@@ -36,7 +36,8 @@ crates/site-e2e/        dogfoods the bindings against that site; also the deploy
 supply-chain/           cargo-vet audit config (see skill)
 docs/                   roadmap, ADRs, implementation plans, technical notes
 docs/agent/             agent-integration guidance for downstream users
-.claude/skills/         procedural reference (see below)
+skills/                 the skill we ship to downstream users
+.claude/skills/         contributor-only skills, plus a symlink to the above
 ```
 
 **`crates/site` and `crates/site-e2e` are excluded from the workspace**
@@ -65,8 +66,16 @@ consequences worth knowing before they cost you time:
 
 ## Skills (procedural reference)
 
-Load these (`.claude/skills/<name>/SKILL.md`) when the task touches
-their domain:
+Two audiences, kept apart by directory. `skills/` is what this repo
+ships to the world; `.claude/skills/` is contributor-only and never
+distributed. Claude Code auto-discovers only the latter, so the shipped
+skill is symlinked into it (`.claude/skills/playwright-rs-usage ->
+../../skills/playwright-rs-usage`) and there is still one source of
+truth. On a Windows checkout without symlink support that link lands as
+a stray text file and the skill simply does not auto-load in-repo, which
+costs nothing else.
+
+Load these when the task touches their domain:
 
 - **supply-chain** — `cargo audit` / `cargo deny` / `cargo vet`
   workflow. Read before bumping our own version, before resolving a
@@ -80,9 +89,9 @@ their domain:
 - **playwright-rs-usage** — procedural reference for using
   playwright-rs as a downstream Rust dependency (object model,
   `locator!()` macro, builder pattern, auto-wait semantics, trace
-  capture). Mirrors the artifact we ship for downstream copy (see
-  "Agent-integration artifacts" below). Loaded automatically in
-  sessions running in this repo.
+  capture). This is the shipped one, canonical at
+  `skills/playwright-rs-usage/`. Loaded automatically in sessions
+  running in this repo, via the symlink.
 
 ## Documentation Hierarchy
 
@@ -105,16 +114,17 @@ Just-in-time philosophy — write the right thing in the right file:
 6. **`docs/agent/`** — guidance distributed to downstream Rust
    projects that consume this crate from a Claude Code / agent
    workflow. `CLAUDE_SNIPPET.md` is the copy-paste version;
-   `.claude/skills/playwright-rs-usage/SKILL.md` is the in-repo
-   canonical that downstream users can also `cp -r` into their own
-   `.claude/skills/`. Keep both in sync — the snippet is the
+   `skills/playwright-rs-usage/SKILL.md` is the canonical skill, which
+   downstream users install with `npx skills add padamson/playwright-rust`
+   or as a Claude Code plugin. Keep both in sync — the snippet is the
    short-form version of the skill.
 
    The same skill is also installable as a Claude Code plugin:
    [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
-   makes this repo a marketplace, and its explicit `skills` path
-   exposes `playwright-rs-usage` and nothing else, so the
-   contributor-facing skills alongside it stay in-repo. **Editing the
+   makes this repo a marketplace. Default discovery picks up `skills/`
+   and nothing else, so the contributor-facing skills in
+   `.claude/skills/` stay in-repo without the manifest naming paths.
+   **Editing the
    skill means bumping `version` in
    [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)** — that
    version is the update gate, and until it moves `/plugin update`
