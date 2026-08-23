@@ -1,6 +1,6 @@
 {
   "name": "playwright-rs",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Procedural reference for writing Rust browser automation with playwright-rs: adding the crate and installing its browsers, object model, the locator!() macro, builder options, auto-wait semantics, and trace capture.",
   "author": {
     "name": "Paul Adamson",

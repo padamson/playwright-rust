@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Using playwright-rs
@@ -19,10 +19,16 @@ authoritative reference.
 rustdoc at <https://docs.rs/playwright-rs> — that's compile-checked
 against the actual code. This skill is the "what to reach for, what
 to avoid" overlay: durable conventions, not a method-by-method
-reference. The one Rust code block below is compile-checked by
-`cargo xtask verify-agent-docs`; the rest is prose that ages well
-because it talks in concepts (auto-wait, builder pattern) rather
-than specific method names.
+reference. Two build gates hold it to the crate: the Rust code block
+below is compiled against the real API, and every cargo feature and
+browser engine the crate exposes must be named somewhere in this file,
+so a capability cannot ship here undocumented.
+
+Neither gate checks that this prose is *accurate*. That residue is
+real. The text is written in concepts (auto-wait, builder pattern)
+rather than specific method names so it ages slowly, but when it and
+the crate disagree, the crate wins: check
+<https://docs.rs/playwright-rs> for the version you actually have.
 
 ## Before any of this works
 

@@ -111,13 +111,21 @@ Just-in-time philosophy — write the right thing in the right file:
    docs (`See: <https://playwright.dev/...>`), errors section, and any
    Rust-specific behavior notes. Examples go in module-level doctests
    per the doctest-conventions skill, not on individual functions.
-6. **`docs/agent/`** — guidance distributed to downstream Rust
-   projects that consume this crate from a Claude Code / agent
-   workflow. `CLAUDE_SNIPPET.md` is the copy-paste version;
-   `skills/playwright-rs-usage/SKILL.md` is the canonical skill, which
-   downstream users install with `npx skills add padamson/playwright-rust`
-   or as a Claude Code plugin. Keep both in sync — the snippet is the
-   short-form version of the skill.
+6. **`skills/playwright-rs-usage/SKILL.md`** — the single agent-facing
+   artifact distributed to downstream Rust projects. Installed with
+   `npx skills add padamson/playwright-rust` or as a Claude Code plugin.
+   `docs/agent/CLAUDE_SNIPPET.md` is now only a pointer to it: it used
+   to be a hand-synced copy-paste duplicate, which is exactly the shape
+   that goes stale and then teaches the old API. There is no second
+   copy to keep in sync any more, so don't reintroduce one.
+
+   Two build gates hold the skill to the code, and they check different
+   things. `cargo xtask verify-agent-docs` compiles its `rust,no_run`
+   blocks against the real crate, catching code that stopped working;
+   it then asserts the skill *names* every API-gating cargo feature and
+   browser engine, catching a capability that shipped undocumented.
+   Neither checks that the surrounding prose is accurate. That residue
+   is real, and the skill says so itself.
 
    The same skill is also installable as a Claude Code plugin:
    [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
