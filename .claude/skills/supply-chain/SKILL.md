@@ -1,6 +1,8 @@
 ---
 name: supply-chain
 description: Procedure for keeping playwright-rust's cargo audit / cargo deny / cargo vet checks green when bumping the project's own version, when external crates change, and when a security advisory drops.
+metadata:
+  internal: true
 ---
 
 # Supply Chain & Release Hygiene
