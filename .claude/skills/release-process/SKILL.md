@@ -1,6 +1,8 @@
 ---
 name: release-process
 description: End-to-end release runbook for playwright-rust — version bump, supply-chain refresh, per-crate CHANGELOGs, tag-prefix routing for the three workspace crates, the safer push-then-tag workflow that waits for CI before publishing, and the post-release follow-ups.
+metadata:
+  internal: true
 ---
 
 # Release Process

@@ -1,6 +1,8 @@
 ---
 name: doctest-conventions
 description: Conventions for authoring rustdoc doctests in playwright-rust — the `no_run` annotation, module-level placement, hidden scaffolding lines, and how doctests are exercised in CI vs pre-commit.
+metadata:
+  internal: true
 ---
 
 # Doctest Conventions

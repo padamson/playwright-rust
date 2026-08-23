@@ -67,13 +67,26 @@ consequences worth knowing before they cost you time:
 ## Skills (procedural reference)
 
 Two audiences, kept apart by directory. `skills/` is what this repo
-ships to the world; `.claude/skills/` is contributor-only and never
-distributed. Claude Code auto-discovers only the latter, so the shipped
-skill is symlinked into it (`.claude/skills/playwright-rs-usage ->
-../../skills/playwright-rs-usage`) and there is still one source of
-truth. On a Windows checkout without symlink support that link lands as
-a stray text file and the skill simply does not auto-load in-repo, which
-costs nothing else.
+ships to the world; `.claude/skills/` is contributor-only. Claude Code
+auto-discovers only the latter, so the shipped skill is symlinked into it
+(`.claude/skills/playwright-rs-usage -> ../../skills/playwright-rs-usage`)
+and there is still one source of truth. On a Windows checkout without
+symlink support that link lands as a stray text file and the skill simply
+does not auto-load in-repo, which costs nothing else.
+
+**The directory split alone does not keep the contributor skills
+unpublished.** It gates the Claude Code plugin, whose default discovery
+reads `skills/` only, but the Agent Skills CLI scans `.claude/skills/`
+too and happily offered all four to downstream users. Each
+contributor-only skill therefore carries `metadata.internal: true`, which
+hides it from `npx skills add` unless the caller sets
+`INSTALL_INTERNAL_SKILLS=1`. **Any new skill added under
+`.claude/skills/` needs that line**, or it ships to everyone who installs
+from this repo. Note the value must be the boolean `true`, not the string
+`"true"`: the CLI ignores the quoted form, even though the Agent Skills
+spec describes `metadata` as string-to-string. Verify with
+`npx skills add <path-to-this-repo> --list`, which should report exactly
+one skill.
 
 Load these when the task touches their domain:
 
