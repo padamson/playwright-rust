@@ -133,7 +133,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.16"  # Auto-updates to latest 0.16.x
+playwright-rs = "0.17"  # Auto-updates to latest 0.17.x
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -144,7 +144,7 @@ downloads (and for rustls WebSocket connections); use `aws-lc` instead when
 AWS-LC is required:
 
 ```toml
-playwright-rs = { version = "0.16", default-features = false, features = [
+playwright-rs = { version = "0.17", default-features = false, features = [
     "aws-lc",
     "native-tls",
     "macros",

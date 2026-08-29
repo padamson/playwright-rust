@@ -1,6 +1,10 @@
 
 # cargo-vet imports lock
 
+[[unpublished.playwright-rs]]
+version = "0.17.0"
+audited_as = "0.16.0"
+
 [[publisher.aho-corasick]]
 version = "1.1.4"
 when = "2025-10-28"
@@ -388,8 +392,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.syn]]
-version = "3.0.3"
-when = "2026-07-22"
+version = "3.0.4"
+when = "2026-08-24"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"

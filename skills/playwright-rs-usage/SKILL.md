@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # Using playwright-rs
@@ -45,7 +45,7 @@ listed back explicitly or `locator!()` disappears and no TLS transport
 remains:
 
 ```toml
-playwright-rs = { version = "0.16", default-features = false, features = [
+playwright-rs = { version = "0.17", default-features = false, features = [
     "aws-lc",
     "native-tls",
     "macros",

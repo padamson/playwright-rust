@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-23
+
 ### Changed
 
 - **BREAKING: `install_browsers` no longer implicitly appends `--with-deps` on Linux.** The flag is opt-in on every platform, matching `npx playwright install`. The implicit append meant a call that asked only for browsers ran `apt-get` under `sudo`, made the CLI's own `--with-deps` flag a no-op on Linux, and offered no opt-out at all since `cfg!` is compile-time. Migration: Linux callers that want the system libraries installed alongside the browsers call `install_browsers_with_deps` (or pass `--with-deps` to the `install-browsers` example / the `cli` binary) — which is what CI workflows following the README already do.
@@ -840,7 +842,8 @@ Public-API type-consistency sweep — within the crate, the same conceptual quan
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/padamson/playwright-rust/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/padamson/playwright-rust/compare/v0.15.1...v0.16.0
 [0.15.1]: https://github.com/padamson/playwright-rust/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/padamson/playwright-rust/compare/v0.14.1...v0.15.0
