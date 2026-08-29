@@ -79,7 +79,7 @@ jobs:
             crates/site-e2e
 
       - name: Install Trunk
-        uses: taiki-e/install-action@v2.86.1
+        uses: taiki-e/install-action@v2.86.5
         with:
           tool: trunk
 

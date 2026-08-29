@@ -98,7 +98,7 @@ jobs:
     # Prebuilt binary — `cargo install` fails when a cache restore
     # leaves an existing binary in ~/.cargo/bin/.
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@v2.86.1
+      uses: taiki-e/install-action@v2.86.5
       with:
         tool: cargo-mutants
 
@@ -131,7 +131,7 @@ jobs:
       uses: dtolnay/rust-toolchain@nightly
 
     - name: Install cargo-fuzz
-      uses: taiki-e/install-action@v2.86.1
+      uses: taiki-e/install-action@v2.86.5
       with:
         tool: cargo-fuzz
 
@@ -221,7 +221,7 @@ jobs:
       uses: taiki-e/install-action@nextest
 
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@v2.86.1
+      uses: taiki-e/install-action@v2.86.5
       with:
         tool: cargo-mutants
 
