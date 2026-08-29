@@ -142,6 +142,14 @@ mod tests {
         Arc::new(|_| Box::pin(async { Err(crate::error::Error::ProtocolError("nope".into())) }))
     }
 
+    #[test]
+    fn the_name_survives_construction() {
+        // Load-bearing, not cosmetic: subscribe_if_idle passes this to
+        // update_subscription, so a corrupted name subscribes to the wrong
+        // server event and the real one never arrives.
+        assert_eq!(EventRegistry::<u32>::new("console").name(), "console");
+    }
+
     #[tokio::test]
     async fn idle_until_someone_registers() {
         let reg = EventRegistry::<u32>::new("test");
