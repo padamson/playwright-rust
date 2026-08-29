@@ -314,10 +314,10 @@ fn find_node_executable() -> Result<PathBuf> {
 ///   `Some(&[])` sends the same bare `install`, so it also installs the default
 ///   browsers; it is not a no-op probe.
 ///
-/// On Linux, `--with-deps` is automatically appended so that required system
-/// libraries (libgtk, libnss, etc.) are installed alongside the browser binaries.
-/// This runs the system package manager under `sudo`. Use
-/// [`install_browsers_with_deps`] to force the flag on other platforms.
+/// Installs browsers only, on every platform — matching `npx playwright
+/// install`. On Linux the browsers also need system libraries (libgtk,
+/// libnss, etc.); use [`install_browsers_with_deps`] to install those
+/// alongside, which runs the system package manager under `sudo`.
 ///
 /// # Output
 ///
@@ -450,14 +450,10 @@ async fn install_browsers_impl(browsers: Option<&[&str]>, with_deps_forced: bool
 
     let mut cmd = tokio::process::Command::new(&node_exe);
     cmd.arg(&cli_js);
-    // Linux still gets --with-deps implicitly; upstream treats it as opt-in on
-    // every platform, and reconciling that is a breaking change held for the
-    // next one. Keeping the decision here (not inside `install_args`) is what
-    // makes it a one-line change when that lands.
-    cmd.args(install_args(
-        browsers,
-        with_deps_forced || cfg!(target_os = "linux"),
-    ));
+    // --with-deps is opt-in on every platform, matching upstream. Linux used
+    // to get it implicitly, which ran sudo apt-get for a call that only asked
+    // for browsers and made the CLI's own --with-deps flag a no-op there.
+    cmd.args(install_args(browsers, with_deps_forced));
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
     let mut child = cmd.spawn().map_err(|e| {

@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # Using playwright-rs
@@ -83,8 +83,10 @@ Dockerfile, call
 [`install_browsers`](https://docs.rs/playwright-rs/latest/playwright_rs/fn.install_browsers.html)
 directly instead.
 
-On Linux the driver also installs the system libraries the browsers need,
-and may invoke sudo to do it.
+On Linux the browsers also need system libraries: pass `--with-deps` to
+the example (CI usually wants this; it runs the package manager under
+sudo), or call `install_browsers_with_deps` instead. Without it only
+browsers install, on every platform.
 
 ## Object model
 

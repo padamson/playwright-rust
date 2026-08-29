@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING: `install_browsers` no longer implicitly appends `--with-deps` on Linux.** The flag is opt-in on every platform, matching `npx playwright install`. The implicit append meant a call that asked only for browsers ran `apt-get` under `sudo`, made the CLI's own `--with-deps` flag a no-op on Linux, and offered no opt-out at all since `cfg!` is compile-time. Migration: Linux callers that want the system libraries installed alongside the browsers call `install_browsers_with_deps` (or pass `--with-deps` to the `install-browsers` example / the `cli` binary) — which is what CI workflows following the README already do.
+
 - **Console event delivery is now consistent with every other event, on `Page` and `BrowserContext` alike.** Two observable changes. First, when a message arrives, registered `on_console` handlers now run **before** a pending `expect_console_message()` resumes — the order every other page event already used — so code that awaits the expectation can rely on handler side effects having happened. Previously console alone — at both page and context level — woke the waiter first. Second, when several `expect_console_message()` calls are pending on the same page, they are now served **oldest-first**, which is what the documentation always said; the previous implementation served the newest caller first. A waiter that timed out or was cancelled no longer consumes an event that a still-live waiter behind it was owed.
 
 - **Queued `expect_*` waiters are now served oldest-first**, matching their documentation; previously the newest caller was served first. This covers `expect_request` / `expect_response` / `expect_download` / `expect_popup` / `expect_file_chooser` on `Page`, the typed `expect_event(..)` waiters on both `Page` and `BrowserContext`, and `expect_page` / `expect_console_message` on `BrowserContext`. As with console events, a waiter that timed out or was cancelled no longer consumes an event a still-live waiter behind it was owed. Handler-before-waiter ordering was already the shipped behavior for these events and is unchanged.
@@ -16,10 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`install_browsers` / `install_browsers_with_deps` now stream the installer's output** instead of swallowing it until the process exits. The old implementation captured stdout and stderr and replayed them only on failure, so the install the README recommends for CI printed nothing for the several minutes browsers download, and a stall was indistinguishable from progress. That is not hypothetical: a contended `apt` blocked the 0.16.0 release twice, each time appearing as a silent 20-minute hang. Output is copied through byte-wise rather than line-wise, so Playwright's `\r`-updated progress bars render live, and a copy is still kept so the failure message keeps the detail it always had.
 
   Enabling this required tokio's `io-std` feature, which the crate had trimmed.
-
-### Fixed
-
-- **`test_install_browsers_driver_found` no longer fails when the host package manager is busy.** On Linux `install_browsers` appends `--with-deps`, so a test whose stated purpose is to check plumbing "without modifying system state" shells out to `apt-get` under sudo and races the runner's own package activity. Losing that lock now counts as a pass, because reaching `apt` at all proves the driver was found and the command ran, which is the test's entire claim.
 
 ## [0.16.0] - 2026-08-17
 

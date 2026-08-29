@@ -7,8 +7,10 @@
 // moves the crate, driver, and browsers together with no workflow edit.
 // Requires tokio with the `macros` and `rt-multi-thread` features.
 //
-// On Linux, required system libraries install automatically alongside the
-// browsers; pass `--with-deps` to force that on other platforms.
+// Pass `--with-deps` to also install the system libraries the browsers
+// need (Linux CI typically wants this; it runs the package manager under
+// sudo). Without it, only browsers install — matching `npx playwright
+// install` on every platform.
 
 use playwright_rs::{install_browsers, install_browsers_with_deps};
 

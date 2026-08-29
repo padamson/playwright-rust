@@ -188,10 +188,11 @@ cargo run --example install-browsers
 cargo run --example install-browsers -- chromium firefox webkit
 ```
 
-On Linux, required system libraries install automatically alongside the
-browsers (the driver may invoke sudo for them). Pass `--with-deps` to
-force that on other platforms; it is a no-op on macOS and needs elevation
-on Windows.
+Pass `--with-deps` to also install the system libraries the browsers
+need — Linux CI typically wants this, and it runs the package manager
+under sudo. Without the flag only browsers install, on every platform,
+matching `npx playwright install`. (It is a no-op on macOS and needs
+elevation on Windows.)
 
 **In CI/CD:** Add this to your GitHub Actions workflow:
 
