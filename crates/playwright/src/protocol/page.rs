@@ -18,6 +18,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
+
+use crate::protocol::event_registry::{EventRegistry, Handler};
 use tracing::Instrument;
 
 /// Page represents a web page within a browser context.
@@ -210,8 +212,6 @@ pub struct Page {
     default_navigation_timeout_ms: Arc<AtomicU64>,
     /// Page-level binding callbacks registered via expose_function / expose_binding
     binding_callbacks: Arc<Mutex<HashMap<String, PageBindingCallback>>>,
-    /// Console event handlers
-    console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
     /// Screencast frame handlers
     screencast_frame_handlers: Arc<Mutex<Vec<ScreencastFrameHandler>>>,
     /// Active screencast Artifact GUID (set when `screencastStart` was
@@ -232,8 +232,8 @@ pub struct Page {
     response_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<ResponseObject>>>>,
     /// One-shot senders waiting for the next "request" event (expect_request)
     request_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Request>>>>,
-    /// One-shot senders waiting for the next "console" event (expect_console_message)
-    console_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::ConsoleMessage>>>>,
+    /// Console event handlers and one-shot `expect_console_message` waiters.
+    console: Arc<EventRegistry<crate::protocol::ConsoleMessage>>,
     /// close event handlers (fires when page is closed)
     close_handlers: Arc<Mutex<Vec<CloseHandler>>>,
     /// load event handlers (fires when page fully loads)
@@ -338,13 +338,6 @@ type ScreencastFrameHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Se
 /// Screencast frame handler
 type ScreencastFrameHandler =
     Arc<dyn Fn(crate::protocol::ScreencastFrame) -> ScreencastFrameHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed console handler future
-type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Console event handler
-type ConsoleHandler =
-    Arc<dyn Fn(crate::protocol::ConsoleMessage) -> ConsoleHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed filechooser handler future
 type FileChooserHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -539,7 +532,6 @@ impl Page {
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
-            console_handlers: Arc::new(Mutex::new(Vec::new())),
             screencast_frame_handlers: Arc::new(Mutex::new(Vec::new())),
             screencast_artifact_guid: Arc::new(Mutex::new(None)),
             screencast_save_path: Arc::new(Mutex::new(None)),
@@ -549,7 +541,7 @@ impl Page {
             download_waiters: Arc::new(Mutex::new(Vec::new())),
             response_waiters: Arc::new(Mutex::new(Vec::new())),
             request_waiters: Arc::new(Mutex::new(Vec::new())),
-            console_waiters: Arc::new(Mutex::new(Vec::new())),
+            console: EventRegistry::new("console"),
             close_handlers: Arc::new(Mutex::new(Vec::new())),
             load_handlers: Arc::new(Mutex::new(Vec::new())),
             crash_handlers: Arc::new(Mutex::new(Vec::new())),
@@ -2248,21 +2240,11 @@ impl Page {
         F: Fn(crate::protocol::ConsoleMessage) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |msg: crate::protocol::ConsoleMessage| -> ConsoleHandlerFuture {
-                Box::pin(handler(msg))
-            },
-        );
+        let handler: Handler<crate::protocol::ConsoleMessage> =
+            Arc::new(move |msg| Box::pin(handler(msg)));
 
-        let needs_subscription = {
-            let handlers = self.console_handlers.lock().unwrap();
-            let waiters = self.console_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self.channel().update_subscription("console", true).await;
-        }
-        self.console_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.console).await;
+        self.console.add_handler(handler);
 
         Ok(())
     }
@@ -2537,17 +2519,8 @@ impl Page {
         &self,
         timeout: Option<f64>,
     ) -> Result<crate::protocol::EventWaiter<crate::protocol::ConsoleMessage>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-
-        let needs_subscription = {
-            let handlers = self.console_handlers.lock().unwrap();
-            let waiters = self.console_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self.channel().update_subscription("console", true).await;
-        }
-        self.console_waiters.lock().unwrap().push(tx);
+        self.subscribe_if_idle(&self.console).await;
+        let rx = self.console.wait();
 
         Ok(crate::protocol::EventWaiter::new(
             rx,
@@ -2678,23 +2651,27 @@ impl Page {
             }
 
             "console" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::ConsoleMessage>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = {
-                    let handlers = self.console_handlers.lock().unwrap();
-                    let waiters = self.console_waiters.lock().unwrap();
-                    handlers.is_empty() && waiters.is_empty()
-                };
-                if needs_subscription {
-                    _ = self.channel().update_subscription("console", true).await;
-                }
-                self.console_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.console).await;
+                let inner_rx = self.console.wait();
 
+                // The select is load-bearing: with FIFO waiters, a forwarding
+                // task that merely awaits `inner_rx` keeps the registry's
+                // sender alive after the caller's EventWaiter times out, and
+                // that stale front-of-queue waiter would swallow the next
+                // event, starving the live waiter behind it. Dropping
+                // `inner_rx` the moment the outer receiver goes away lets the
+                // registry's dead-sender skip do its job.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::ConsoleMessage(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v {
+                                    let _ = tx.send(EventValue::ConsoleMessage(v));
+                                }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -3531,19 +3508,22 @@ impl Page {
         self.on_console_event(msg).await;
     }
 
+    /// Subscribe to `reg`'s event if nothing is listening yet.
+    ///
+    /// The server only pushes an event once we ask for it, so the first
+    /// handler or `expect_*` on a given event has to turn the subscription on.
+    /// The event name comes from the registry, so it is written once at
+    /// construction instead of restated at every registration site.
+    async fn subscribe_if_idle<T>(&self, reg: &EventRegistry<T>) {
+        if reg.is_idle() {
+            _ = self.channel().update_subscription(reg.name(), true).await;
+        }
+    }
+
     async fn on_console_event(&self, msg: crate::protocol::ConsoleMessage) {
         // Accumulate message for console_messages() accessor
         self.console_messages_log.lock().unwrap().push(msg.clone());
-        // Notify the first expect_console_message() waiter (FIFO order)
-        if let Some(tx) = self.console_waiters.lock().unwrap().pop() {
-            let _ = tx.send(msg.clone());
-        }
-        let handlers = self.console_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(msg.clone()).await {
-                tracing::warn!("Console handler error: {}", e);
-            }
-        }
+        self.console.dispatch(msg).await;
     }
 
     /// Dispatches a FileChooser event to registered handlers and one-shot waiters.

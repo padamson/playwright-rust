@@ -50,6 +50,7 @@ pub mod drop_options;
 pub mod electron;
 pub mod element_handle;
 pub mod evaluate_conversion;
+pub(crate) mod event_registry;
 pub mod event_value;
 pub mod event_waiter;
 pub mod file_chooser;
