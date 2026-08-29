@@ -29,6 +29,12 @@ leak-timeout = "1s"
 filter = "test(/cross_browser/) | test(/firefox/) | test(/webkit/)"
 slow-timeout = { period = "60s", terminate-after = 3 }
 
+# The stress step runs `--profile ci`, so the stability stress tests need
+# their headroom here too, not only on `default` (same trap as above).
+[[profile.ci.overrides]]
+filter = "test(/test_no_memory_leak/) | test(test_rapid_browser) | test(test_file_descriptor) | test(test_resource_limit_stress) | test(test_concurrent_browser_cleanup) | test(test_multiple_server_cycles) | test(test_error_recovery_stress)"
+slow-timeout = { period = "60s", terminate-after = 2 }
+
 # Longer timeouts for stability stress tests
 [[profile.default.overrides]]
 filter = "test(/test_no_memory_leak/) | test(test_rapid_browser) | test(test_file_descriptor) | test(test_resource_limit_stress) | test(test_concurrent_browser_cleanup) | test(test_multiple_server_cycles) | test(test_error_recovery_stress)"

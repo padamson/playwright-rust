@@ -1582,53 +1582,68 @@ async fn test_error_recovery_stress() {
         .expect("Failed to launch browser");
     let page = browser.new_page().await.expect("Failed to create page");
 
-    // Rapidly alternate between errors and successes
-    const CYCLES: usize = 10;
-    let mut successful_navigations = 0;
+    // Each pair forces a navigation error and then requires the page to
+    // recover. A failed navigation leaves Chromium committing a
+    // `chrome-error://chromewebdata/` page *after* goto has already returned
+    // Err, and that commit legitimately interrupts an immediately-following
+    // goto (upstream behavior, not a bug) — so recovery is asserted as "a
+    // valid navigation succeeds within a bounded window, retried past
+    // interrupts". Only the interrupt is retryable; any other error fails the
+    // test at once, so a real goto regression cannot hide inside the window.
+    const PAIRS: usize = 5;
+    const RECOVERY_WINDOW: Duration = Duration::from_secs(10);
+    // Per-attempt cap. Without it each attempt inherits the 30s default
+    // navigation timeout, one slow attempt eats the whole window with zero
+    // retries, and a fully wedged page outlives nextest's terminate-after.
+    const ATTEMPT_TIMEOUT: Duration = Duration::from_secs(2);
 
-    for i in 0..CYCLES {
-        if i % 2 == 0 {
-            // Cause error (invalid port)
-            let _ = page.goto("http://localhost:59999/", None).await;
+    let url = format!("{}/locators.html", server.url());
+    for pair in 0..PAIRS {
+        // Force the error. Asserted, not assumed: port 1 needs privileges to
+        // bind and nothing listens on it in CI, so if this ever succeeds the
+        // test has stopped exercising error recovery and must say so. A tight
+        // timeout keeps a blackholed (rather than refused) connect bounded.
+        page.goto(
+            "http://127.0.0.1:1/",
+            Some(GotoOptions::new().timeout(Duration::from_millis(500))),
+        )
+        .await
+        .expect_err("navigation to port 1 must fail; recovery is untested otherwise");
 
-            // Give a tiny bit of breathing room for the error to propagate
-            tokio::time::sleep(Duration::from_millis(50)).await;
-        } else {
-            // Attempt successful navigation
-            let result = page
-                .goto(&format!("{}/locators.html", server.url()), None)
-                .await;
-
-            if result.is_ok() {
-                successful_navigations += 1;
-            } else {
-                tracing::warn!("Navigation failed in cycle {}: {:?}", i, result.err());
+        // Recover, retrying only past the error-page-commit interrupt.
+        let start = tokio::time::Instant::now();
+        let mut attempts = 0u32;
+        loop {
+            attempts += 1;
+            match page
+                .goto(&url, Some(GotoOptions::new().timeout(ATTEMPT_TIMEOUT)))
+                .await
+            {
+                Ok(_) => break,
+                Err(e) => {
+                    let msg = format!("{e:?}");
+                    assert!(
+                        msg.contains("interrupted by another navigation"),
+                        "Pair {pair}: navigation failed for a non-interrupt reason \
+                         after {attempts} attempt(s) in {:?}: {e:?}",
+                        start.elapsed()
+                    );
+                    assert!(
+                        start.elapsed() < RECOVERY_WINDOW,
+                        "Pair {pair}: page did not recover from the error-page \
+                         interrupt after {attempts} attempt(s) in {:?}: {e:?}",
+                        start.elapsed()
+                    );
+                    tracing::warn!("Pair {pair} attempt {attempts} interrupted; retrying: {e:?}");
+                    tokio::time::sleep(Duration::from_millis(25)).await;
+                }
             }
         }
-
-        if i % 5 == 4 {
-            tracing::info!("Completed {} error/success cycles", i + 1);
-        }
+        tracing::info!(
+            "Pair {pair}: recovered in {attempts} attempt(s), {:?}",
+            start.elapsed()
+        );
     }
-
-    // Verify at least 30% of valid attempts succeeded (allow some flakiness)
-    // We attempt CYCLES/2 valid navigations.
-    let attempts = CYCLES / 2;
-    tracing::info!(
-        "Successful navigations: {}/{}",
-        successful_navigations,
-        attempts
-    );
-
-    // We expect most to succeed with the small delay, but CI can be slow.
-    // 30% success rate is enough to prove recovery works.
-    let min_successful = (attempts as f64 * 0.3).ceil() as usize;
-    assert!(
-        successful_navigations >= min_successful,
-        "Too few successful navigations: {} (expected at least {})",
-        successful_navigations,
-        min_successful
-    );
 
     tracing::info!("✓ Error recovery stress test passed");
 
