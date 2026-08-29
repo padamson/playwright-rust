@@ -5,6 +5,7 @@
 # Only mutate source files with unit test coverage.
 # Integration tests (requiring Playwright server) are too slow for mutation testing.
 examine_globs = [
+    "crates/playwright/src/protocol/event_registry.rs",
     "crates/playwright/src/protocol/locator.rs",
     "crates/playwright/src/protocol/evaluate_conversion.rs",
     "crates/playwright/src/protocol/glob.rs",
