@@ -184,10 +184,10 @@ pub struct Page {
     main_frame: crate::protocol::Frame,
     /// Route handlers for network interception
     route_handlers: Arc<Mutex<Vec<RouteHandlerEntry>>>,
-    /// Download event handlers
-    download_handlers: Arc<Mutex<Vec<DownloadHandler>>>,
-    /// Dialog event handlers
-    dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
+    /// Download event handlers and one-shot `expect_download` waiters.
+    download: Arc<EventRegistry<Download>>,
+    /// Dialog event handlers (no `expect_*`; waiter queue stays empty).
+    dialog: Arc<EventRegistry<Dialog>>,
     /// Request event handlers and one-shot `expect_request` waiters.
     request: Arc<EventRegistry<Request>>,
     /// RequestFinished event handlers (the event has no `expect_*`, so its
@@ -220,15 +220,8 @@ pub struct Page {
     screencast_artifact_guid: Arc<Mutex<Option<String>>>,
     /// Path to save the screencast Artifact to on stop.
     screencast_save_path: Arc<Mutex<Option<std::path::PathBuf>>>,
-    /// FileChooser event handlers
-    filechooser_handlers: Arc<Mutex<Vec<FileChooserHandler>>>,
-    /// One-shot senders waiting for the next "fileChooser" event (expect_file_chooser)
-    filechooser_waiters:
-        Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::FileChooser>>>>,
-    /// One-shot senders waiting for the next "popup" event (expect_popup)
-    popup_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Page>>>>,
-    /// One-shot senders waiting for the next "download" event (expect_download)
-    download_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Download>>>>,
+    /// FileChooser event handlers and one-shot `expect_file_chooser` waiters.
+    filechooser: Arc<EventRegistry<crate::protocol::FileChooser>>,
     /// Console event handlers and one-shot `expect_console_message` waiters.
     console: Arc<EventRegistry<crate::protocol::ConsoleMessage>>,
     /// close event handlers (fires when page is closed)
@@ -239,8 +232,8 @@ pub struct Page {
     crash_handlers: Arc<Mutex<Vec<CrashHandler>>>,
     /// pageError event handlers (fires on uncaught JS exceptions)
     pageerror_handlers: Arc<Mutex<Vec<PageErrorHandler>>>,
-    /// popup event handlers (fires when a popup window opens)
-    popup_handlers: Arc<Mutex<Vec<PopupHandler>>>,
+    /// Popup event handlers and one-shot `expect_popup` waiters.
+    popup: Arc<EventRegistry<Page>>,
     /// frameAttached event handlers
     frameattached_handlers: Arc<Mutex<Vec<FrameAttachedHandler>>>,
     /// frameDetached event handlers
@@ -281,12 +274,6 @@ pub struct Page {
 /// Type alias for boxed route handler future
 type RouteHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
-/// Type alias for boxed download handler future
-type DownloadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Type alias for boxed dialog handler future
-type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
 /// Type alias for boxed websocket handler future
 type WebSocketHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
@@ -308,12 +295,6 @@ struct RouteHandlerEntry {
     handler: Arc<dyn Fn(Route) -> RouteHandlerFuture + Send + Sync>,
 }
 
-/// Download event handler
-type DownloadHandler = Arc<dyn Fn(Download) -> DownloadHandlerFuture + Send + Sync>;
-
-/// Dialog event handler
-type DialogHandler = Arc<dyn Fn(Dialog) -> DialogHandlerFuture + Send + Sync>;
-
 /// WebSocket event handler
 type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
 
@@ -323,13 +304,6 @@ type ScreencastFrameHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Se
 /// Screencast frame handler
 type ScreencastFrameHandler =
     Arc<dyn Fn(crate::protocol::ScreencastFrame) -> ScreencastFrameHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed filechooser handler future
-type FileChooserHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// FileChooser event handler
-type FileChooserHandler =
-    Arc<dyn Fn(crate::protocol::FileChooser) -> FileChooserHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed close handler future
 type CloseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -354,12 +328,6 @@ type PageErrorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 /// pageError event handler — receives the error message as a String
 type PageErrorHandler = Arc<dyn Fn(String) -> PageErrorHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed popup handler future
-type PopupHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// popup event handler — receives the new popup Page
-type PopupHandler = Arc<dyn Fn(Page) -> PopupHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed frameAttached/Detached/Navigated handler future
 type FrameEventHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -455,8 +423,6 @@ impl Page {
         let route_handlers = Arc::new(Mutex::new(Vec::new()));
 
         // Initialize empty event handlers
-        let download_handlers = Arc::new(Mutex::new(Vec::new()));
-        let dialog_handlers = Arc::new(Mutex::new(Vec::new()));
         let websocket_handlers = Arc::new(Mutex::new(Vec::new()));
         let ws_route_handlers = Arc::new(Mutex::new(Vec::new()));
 
@@ -502,8 +468,8 @@ impl Page {
             base,
             main_frame,
             route_handlers,
-            download_handlers,
-            dialog_handlers,
+            download: EventRegistry::new("download"),
+            dialog: EventRegistry::new("dialog"),
             request: EventRegistry::new("request"),
             request_finished: EventRegistry::new("requestFinished"),
             request_failed: EventRegistry::new("requestFailed"),
@@ -520,16 +486,13 @@ impl Page {
             screencast_frame_handlers: Arc::new(Mutex::new(Vec::new())),
             screencast_artifact_guid: Arc::new(Mutex::new(None)),
             screencast_save_path: Arc::new(Mutex::new(None)),
-            filechooser_handlers: Arc::new(Mutex::new(Vec::new())),
-            filechooser_waiters: Arc::new(Mutex::new(Vec::new())),
-            popup_waiters: Arc::new(Mutex::new(Vec::new())),
-            download_waiters: Arc::new(Mutex::new(Vec::new())),
+            filechooser: EventRegistry::new("fileChooser"),
             console: EventRegistry::new("console"),
             close_handlers: Arc::new(Mutex::new(Vec::new())),
             load_handlers: Arc::new(Mutex::new(Vec::new())),
             crash_handlers: Arc::new(Mutex::new(Vec::new())),
             pageerror_handlers: Arc::new(Mutex::new(Vec::new())),
-            popup_handlers: Arc::new(Mutex::new(Vec::new())),
+            popup: EventRegistry::new("popup"),
             frameattached_handlers: Arc::new(Mutex::new(Vec::new())),
             framedetached_handlers: Arc::new(Mutex::new(Vec::new())),
             framenavigated_handlers: Arc::new(Mutex::new(Vec::new())),
@@ -2165,13 +2128,9 @@ impl Page {
         F: Fn(Download) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        // Wrap handler with type erasure
-        let handler = Arc::new(move |download: Download| -> DownloadHandlerFuture {
-            Box::pin(handler(download))
-        });
-
-        // Store handler
-        self.download_handlers.lock().unwrap().push(handler);
+        let handler: Handler<Download> = Arc::new(move |download| Box::pin(handler(download)));
+        // "download" events are auto-emitted; no subscription needed.
+        self.download.add_handler(handler);
 
         Ok(())
     }
@@ -2192,14 +2151,9 @@ impl Page {
         F: Fn(Dialog) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        // Wrap handler with type erasure
-        let handler =
-            Arc::new(move |dialog: Dialog| -> DialogHandlerFuture { Box::pin(handler(dialog)) });
-
-        // Store handler
-        self.dialog_handlers.lock().unwrap().push(handler);
-
-        // Dialog events are auto-emitted (no subscription needed)
+        let handler: Handler<Dialog> = Arc::new(move |dialog| Box::pin(handler(dialog)));
+        // Dialog events are auto-emitted (no subscription needed).
+        self.dialog.add_handler(handler);
 
         Ok(())
     }
@@ -2269,24 +2223,11 @@ impl Page {
         F: Fn(crate::protocol::FileChooser) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |chooser: crate::protocol::FileChooser| -> FileChooserHandlerFuture {
-                Box::pin(handler(chooser))
-            },
-        );
+        let handler: Handler<crate::protocol::FileChooser> =
+            Arc::new(move |chooser| Box::pin(handler(chooser)));
 
-        let needs_subscription = {
-            let handlers = self.filechooser_handlers.lock().unwrap();
-            let waiters = self.filechooser_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self
-                .channel()
-                .update_subscription("fileChooser", true)
-                .await;
-        }
-        self.filechooser_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.filechooser).await;
+        self.filechooser.add_handler(handler);
 
         Ok(())
     }
@@ -2329,20 +2270,8 @@ impl Page {
         &self,
         timeout: Option<f64>,
     ) -> Result<crate::protocol::EventWaiter<crate::protocol::FileChooser>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-
-        let needs_subscription = {
-            let handlers = self.filechooser_handlers.lock().unwrap();
-            let waiters = self.filechooser_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self
-                .channel()
-                .update_subscription("fileChooser", true)
-                .await;
-        }
-        self.filechooser_waiters.lock().unwrap().push(tx);
+        self.subscribe_if_idle(&self.filechooser).await;
+        let rx = self.filechooser.wait();
 
         Ok(crate::protocol::EventWaiter::new(
             rx,
@@ -2370,8 +2299,7 @@ impl Page {
         &self,
         timeout: Option<f64>,
     ) -> Result<crate::protocol::EventWaiter<Page>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.popup_waiters.lock().unwrap().push(tx);
+        let rx = self.popup.wait();
         Ok(crate::protocol::EventWaiter::new(
             rx,
             timeout.or(Some(30_000.0)),
@@ -2398,8 +2326,7 @@ impl Page {
         &self,
         timeout: Option<f64>,
     ) -> Result<crate::protocol::EventWaiter<Download>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.download_waiters.lock().unwrap().push(tx);
+        let rx = self.download.wait();
         Ok(crate::protocol::EventWaiter::new(
             rx,
             timeout.or(Some(30_000.0)),
@@ -2579,14 +2506,19 @@ impl Page {
             }
 
             "popup" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<Page>();
-                self.popup_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.popup.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Page(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v {
+                                    let _ = tx.send(EventValue::Page(v));
+                                }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2596,14 +2528,19 @@ impl Page {
             }
 
             "download" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Download>();
-                self.download_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.download.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Download(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v {
+                                    let _ = tx.send(EventValue::Download(v));
+                                }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2643,26 +2580,21 @@ impl Page {
             }
 
             "filechooser" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::FileChooser>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = {
-                    let handlers = self.filechooser_handlers.lock().unwrap();
-                    let waiters = self.filechooser_waiters.lock().unwrap();
-                    handlers.is_empty() && waiters.is_empty()
-                };
-                if needs_subscription {
-                    _ = self
-                        .channel()
-                        .update_subscription("fileChooser", true)
-                        .await;
-                }
-                self.filechooser_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.filechooser).await;
+                let inner_rx = self.filechooser.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::FileChooser(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v {
+                                    let _ = tx.send(EventValue::FileChooser(v));
+                                }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -3029,9 +2961,9 @@ impl Page {
         F: Fn(Page) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |page: Page| -> PopupHandlerFuture { Box::pin(handler(page)) });
+        let handler: Handler<Page> = Arc::new(move |page| Box::pin(handler(page)));
         // "popup" events arrive via BrowserContext's "page" event when a page has an opener.
-        self.popup_handlers.lock().unwrap().push(handler);
+        self.popup.add_handler(handler);
         Ok(())
     }
 
@@ -3203,28 +3135,12 @@ impl Page {
 
     /// Handles a download event from the protocol
     async fn on_download_event(&self, download: Download) {
-        let handlers = self.download_handlers.lock().unwrap().clone();
-
-        for handler in handlers {
-            if let Err(e) = handler(download.clone()).await {
-                tracing::warn!("Download handler error: {}", e);
-            }
-        }
-        // Notify the first expect_download() waiter (FIFO order)
-        if let Some(tx) = self.download_waiters.lock().unwrap().pop() {
-            let _ = tx.send(download);
-        }
+        self.download.dispatch(download).await;
     }
 
     /// Handles a dialog event from the protocol
     async fn on_dialog_event(&self, dialog: Dialog) {
-        let handlers = self.dialog_handlers.lock().unwrap().clone();
-
-        for handler in handlers {
-            if let Err(e) = handler(dialog.clone()).await {
-                tracing::warn!("Dialog handler error: {}", e);
-            }
-        }
+        self.dialog.dispatch(dialog).await;
     }
 
     async fn on_request_event(&self, request: Request) {
@@ -3425,18 +3341,7 @@ impl Page {
 
     /// Dispatches a FileChooser event to registered handlers and one-shot waiters.
     async fn on_filechooser_event(&self, chooser: crate::protocol::FileChooser) {
-        // Dispatch to persistent handlers
-        let handlers = self.filechooser_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(chooser.clone()).await {
-                tracing::warn!("FileChooser handler error: {}", e);
-            }
-        }
-
-        // Notify the first expect_file_chooser() waiter (FIFO order)
-        if let Some(tx) = self.filechooser_waiters.lock().unwrap().pop() {
-            let _ = tx.send(chooser);
-        }
+        self.filechooser.dispatch(chooser).await;
     }
 
     /// Triggers load event (called by Frame when loadstate "load" is added)
@@ -3517,16 +3422,7 @@ impl Page {
     }
 
     async fn on_popup_event(&self, popup: Page) {
-        let handlers = self.popup_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(popup.clone()).await {
-                tracing::warn!("Popup handler error: {}", e);
-            }
-        }
-        // Notify the first expect_popup() waiter (FIFO order)
-        if let Some(tx) = self.popup_waiters.lock().unwrap().pop() {
-            let _ = tx.send(popup);
-        }
+        self.popup.dispatch(popup).await;
     }
 
     async fn on_frameattached_event(&self, frame: crate::protocol::Frame) {
