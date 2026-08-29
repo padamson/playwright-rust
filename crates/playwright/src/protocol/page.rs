@@ -224,36 +224,24 @@ pub struct Page {
     filechooser: Arc<EventRegistry<crate::protocol::FileChooser>>,
     /// Console event handlers and one-shot `expect_console_message` waiters.
     console: Arc<EventRegistry<crate::protocol::ConsoleMessage>>,
-    /// close event handlers (fires when page is closed)
-    close_handlers: Arc<Mutex<Vec<CloseHandler>>>,
-    /// load event handlers (fires when page fully loads)
-    load_handlers: Arc<Mutex<Vec<LoadHandler>>>,
-    /// crash event handlers (fires when page crashes)
-    crash_handlers: Arc<Mutex<Vec<CrashHandler>>>,
-    /// pageError event handlers (fires on uncaught JS exceptions)
-    pageerror_handlers: Arc<Mutex<Vec<PageErrorHandler>>>,
+    /// `close` event: one-time transition; `dispatch_all` wakes every waiter.
+    close: Arc<EventRegistry<()>>,
+    /// `load` event: one-time transition; `dispatch_all` wakes every waiter.
+    load: Arc<EventRegistry<()>>,
+    /// `crash` event: one-time transition; `dispatch_all` wakes every waiter.
+    crash: Arc<EventRegistry<()>>,
+    /// `pageError` event: handlers and one-shot waiters.
+    pageerror: Arc<EventRegistry<String>>,
     /// Popup event handlers and one-shot `expect_popup` waiters.
     popup: Arc<EventRegistry<Page>>,
-    /// frameAttached event handlers
-    frameattached_handlers: Arc<Mutex<Vec<FrameAttachedHandler>>>,
-    /// frameDetached event handlers
-    framedetached_handlers: Arc<Mutex<Vec<FrameDetachedHandler>>>,
-    /// frameNavigated event handlers
-    framenavigated_handlers: Arc<Mutex<Vec<FrameNavigatedHandler>>>,
+    /// `frameAttached` event: handlers and one-shot waiters.
+    frameattached: Arc<EventRegistry<crate::protocol::Frame>>,
+    /// `frameDetached` event: handlers and one-shot waiters.
+    framedetached: Arc<EventRegistry<crate::protocol::Frame>>,
+    /// `frameNavigated` event: handlers and one-shot waiters.
+    framenavigated: Arc<EventRegistry<crate::protocol::Frame>>,
     /// worker event handlers (fires when a web worker is created in the page)
     worker_handlers: Arc<Mutex<Vec<WorkerHandler>>>,
-    /// One-shot senders waiting for the next "close" event (expect_event("close"))
-    close_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<()>>>>,
-    /// One-shot senders waiting for the next "load" event (expect_event("load"))
-    load_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<()>>>>,
-    /// One-shot senders waiting for the next "crash" event (expect_event("crash"))
-    crash_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<()>>>>,
-    /// One-shot senders waiting for the next "pageerror" event (expect_event("pageerror"))
-    pageerror_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<String>>>>,
-    /// One-shot senders waiting for the next frame event (frameattached/detached/navigated)
-    frameattached_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
-    framedetached_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
-    framenavigated_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Frame>>>>,
     /// One-shot senders waiting for the next "worker" event (expect_event("worker"))
     worker_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<crate::protocol::Worker>>>>,
     /// Accumulated console messages received so far (appended by trigger_console_event)
@@ -304,45 +292,6 @@ type ScreencastFrameHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Se
 /// Screencast frame handler
 type ScreencastFrameHandler =
     Arc<dyn Fn(crate::protocol::ScreencastFrame) -> ScreencastFrameHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed close handler future
-type CloseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// close event handler (no arguments)
-type CloseHandler = Arc<dyn Fn() -> CloseHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed load handler future
-type LoadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// load event handler (no arguments)
-type LoadHandler = Arc<dyn Fn() -> LoadHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed crash handler future
-type CrashHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// crash event handler (no arguments)
-type CrashHandler = Arc<dyn Fn() -> CrashHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed pageError handler future
-type PageErrorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// pageError event handler — receives the error message as a String
-type PageErrorHandler = Arc<dyn Fn(String) -> PageErrorHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed frameAttached/Detached/Navigated handler future
-type FrameEventHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// frameAttached event handler
-type FrameAttachedHandler =
-    Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
-
-/// frameDetached event handler
-type FrameDetachedHandler =
-    Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
-
-/// frameNavigated event handler
-type FrameNavigatedHandler =
-    Arc<dyn Fn(crate::protocol::Frame) -> FrameEventHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed worker handler future
 type WorkerHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -488,22 +437,15 @@ impl Page {
             screencast_save_path: Arc::new(Mutex::new(None)),
             filechooser: EventRegistry::new("fileChooser"),
             console: EventRegistry::new("console"),
-            close_handlers: Arc::new(Mutex::new(Vec::new())),
-            load_handlers: Arc::new(Mutex::new(Vec::new())),
-            crash_handlers: Arc::new(Mutex::new(Vec::new())),
-            pageerror_handlers: Arc::new(Mutex::new(Vec::new())),
+            close: EventRegistry::new("close"),
+            load: EventRegistry::new("load"),
+            crash: EventRegistry::new("crash"),
+            pageerror: EventRegistry::new("pageError"),
             popup: EventRegistry::new("popup"),
-            frameattached_handlers: Arc::new(Mutex::new(Vec::new())),
-            framedetached_handlers: Arc::new(Mutex::new(Vec::new())),
-            framenavigated_handlers: Arc::new(Mutex::new(Vec::new())),
+            frameattached: EventRegistry::new("frameAttached"),
+            framedetached: EventRegistry::new("frameDetached"),
+            framenavigated: EventRegistry::new("frameNavigated"),
             worker_handlers: Arc::new(Mutex::new(Vec::new())),
-            close_waiters: Arc::new(Mutex::new(Vec::new())),
-            load_waiters: Arc::new(Mutex::new(Vec::new())),
-            crash_waiters: Arc::new(Mutex::new(Vec::new())),
-            pageerror_waiters: Arc::new(Mutex::new(Vec::new())),
-            frameattached_waiters: Arc::new(Mutex::new(Vec::new())),
-            framedetached_waiters: Arc::new(Mutex::new(Vec::new())),
-            framenavigated_waiters: Arc::new(Mutex::new(Vec::new())),
             worker_waiters: Arc::new(Mutex::new(Vec::new())),
             console_messages_log: Arc::new(Mutex::new(Vec::new())),
             page_errors_log: Arc::new(Mutex::new(Vec::new())),
@@ -2604,14 +2546,17 @@ impl Page {
             }
 
             "close" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<()>();
-                self.close_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.close.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if inner_rx.await.is_ok() {
-                            let _ = tx.send(EventValue::Close);
+                        tokio::select! {
+                            v = inner_rx => {
+                                if v.is_ok() { let _ = tx.send(EventValue::Close); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2621,14 +2566,17 @@ impl Page {
             }
 
             "load" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<()>();
-                self.load_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.load.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if inner_rx.await.is_ok() {
-                            let _ = tx.send(EventValue::Load);
+                        tokio::select! {
+                            v = inner_rx => {
+                                if v.is_ok() { let _ = tx.send(EventValue::Load); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2638,14 +2586,17 @@ impl Page {
             }
 
             "crash" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<()>();
-                self.crash_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.crash.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if inner_rx.await.is_ok() {
-                            let _ = tx.send(EventValue::Crash);
+                        tokio::select! {
+                            v = inner_rx => {
+                                if v.is_ok() { let _ = tx.send(EventValue::Crash); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2655,14 +2606,17 @@ impl Page {
             }
 
             "pageerror" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<String>();
-                self.pageerror_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.pageerror.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(msg) = inner_rx.await {
-                            let _ = tx.send(EventValue::PageError(msg));
+                        tokio::select! {
+                            msg = inner_rx => {
+                                if let Ok(msg) = msg { let _ = tx.send(EventValue::PageError(msg)); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2672,14 +2626,17 @@ impl Page {
             }
 
             "frameattached" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
-                self.frameattached_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.frameattached.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Frame(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v { let _ = tx.send(EventValue::Frame(v)); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2689,14 +2646,17 @@ impl Page {
             }
 
             "framedetached" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
-                self.framedetached_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.framedetached.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Frame(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v { let _ = tx.send(EventValue::Frame(v)); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2706,14 +2666,17 @@ impl Page {
             }
 
             "framenavigated" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::Frame>();
-                self.framenavigated_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.framenavigated.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Frame(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v { let _ = tx.send(EventValue::Frame(v)); }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2866,8 +2829,8 @@ impl Page {
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move || -> CloseHandlerFuture { Box::pin(handler()) });
-        self.close_handlers.lock().unwrap().push(handler);
+        let handler: Handler<()> = Arc::new(move |()| Box::pin(handler()));
+        self.close.add_handler(handler);
         Ok(())
     }
 
@@ -2890,9 +2853,9 @@ impl Page {
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move || -> LoadHandlerFuture { Box::pin(handler()) });
+        let handler: Handler<()> = Arc::new(move |()| Box::pin(handler()));
         // "load" events come via Frame's "loadstate" event, no subscription needed.
-        self.load_handlers.lock().unwrap().push(handler);
+        self.load.add_handler(handler);
         Ok(())
     }
 
@@ -2911,8 +2874,8 @@ impl Page {
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move || -> CrashHandlerFuture { Box::pin(handler()) });
-        self.crash_handlers.lock().unwrap().push(handler);
+        let handler: Handler<()> = Arc::new(move |()| Box::pin(handler()));
+        self.crash.add_handler(handler);
         Ok(())
     }
 
@@ -2935,10 +2898,9 @@ impl Page {
         F: Fn(String) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler =
-            Arc::new(move |msg: String| -> PageErrorHandlerFuture { Box::pin(handler(msg)) });
+        let handler: Handler<String> = Arc::new(move |msg| Box::pin(handler(msg)));
         // "pageError" events come via BrowserContext, no subscription needed.
-        self.pageerror_handlers.lock().unwrap().push(handler);
+        self.pageerror.add_handler(handler);
         Ok(())
     }
 
@@ -2983,12 +2945,9 @@ impl Page {
         F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |frame: crate::protocol::Frame| -> FrameEventHandlerFuture {
-                Box::pin(handler(frame))
-            },
-        );
-        self.frameattached_handlers.lock().unwrap().push(handler);
+        let handler: Handler<crate::protocol::Frame> =
+            Arc::new(move |frame| Box::pin(handler(frame)));
+        self.frameattached.add_handler(handler);
         Ok(())
     }
 
@@ -3008,12 +2967,9 @@ impl Page {
         F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |frame: crate::protocol::Frame| -> FrameEventHandlerFuture {
-                Box::pin(handler(frame))
-            },
-        );
-        self.framedetached_handlers.lock().unwrap().push(handler);
+        let handler: Handler<crate::protocol::Frame> =
+            Arc::new(move |frame| Box::pin(handler(frame)));
+        self.framedetached.add_handler(handler);
         Ok(())
     }
 
@@ -3033,12 +2989,9 @@ impl Page {
         F: Fn(crate::protocol::Frame) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |frame: crate::protocol::Frame| -> FrameEventHandlerFuture {
-                Box::pin(handler(frame))
-            },
-        );
-        self.framenavigated_handlers.lock().unwrap().push(handler);
+        let handler: Handler<crate::protocol::Frame> =
+            Arc::new(move |frame| Box::pin(handler(frame)));
+        self.framenavigated.add_handler(handler);
         Ok(())
     }
 
@@ -3365,60 +3318,21 @@ impl Page {
     }
 
     async fn on_close_event(&self) {
-        let handlers = self.close_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler().await {
-                tracing::warn!("Close handler error: {}", e);
-            }
-        }
-        // Notify expect_event("close") waiters
-        let waiters: Vec<_> = self.close_waiters.lock().unwrap().drain(..).collect();
-        for tx in waiters {
-            let _ = tx.send(());
-        }
+        self.close.dispatch_all(()).await;
     }
 
     async fn on_load_event(&self) {
-        let handlers = self.load_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler().await {
-                tracing::warn!("Load handler error: {}", e);
-            }
-        }
-        // Notify expect_event("load") waiters
-        let waiters: Vec<_> = self.load_waiters.lock().unwrap().drain(..).collect();
-        for tx in waiters {
-            let _ = tx.send(());
-        }
+        self.load.dispatch_all(()).await;
     }
 
     async fn on_crash_event(&self) {
-        let handlers = self.crash_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler().await {
-                tracing::warn!("Crash handler error: {}", e);
-            }
-        }
-        // Notify expect_event("crash") waiters
-        let waiters: Vec<_> = self.crash_waiters.lock().unwrap().drain(..).collect();
-        for tx in waiters {
-            let _ = tx.send(());
-        }
+        self.crash.dispatch_all(()).await;
     }
 
     async fn on_pageerror_event(&self, message: String) {
         // Accumulate error for page_errors() accessor
         self.page_errors_log.lock().unwrap().push(message.clone());
-        let handlers = self.pageerror_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(message.clone()).await {
-                tracing::warn!("PageError handler error: {}", e);
-            }
-        }
-        // Notify expect_event("pageerror") waiters
-        if let Some(tx) = self.pageerror_waiters.lock().unwrap().pop() {
-            let _ = tx.send(message);
-        }
+        self.pageerror.dispatch(message).await;
     }
 
     async fn on_popup_event(&self, popup: Page) {
@@ -3426,39 +3340,15 @@ impl Page {
     }
 
     async fn on_frameattached_event(&self, frame: crate::protocol::Frame) {
-        let handlers = self.frameattached_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(frame.clone()).await {
-                tracing::warn!("FrameAttached handler error: {}", e);
-            }
-        }
-        if let Some(tx) = self.frameattached_waiters.lock().unwrap().pop() {
-            let _ = tx.send(frame);
-        }
+        self.frameattached.dispatch(frame).await;
     }
 
     async fn on_framedetached_event(&self, frame: crate::protocol::Frame) {
-        let handlers = self.framedetached_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(frame.clone()).await {
-                tracing::warn!("FrameDetached handler error: {}", e);
-            }
-        }
-        if let Some(tx) = self.framedetached_waiters.lock().unwrap().pop() {
-            let _ = tx.send(frame);
-        }
+        self.framedetached.dispatch(frame).await;
     }
 
     async fn on_framenavigated_event(&self, frame: crate::protocol::Frame) {
-        let handlers = self.framenavigated_handlers.lock().unwrap().clone();
-        for handler in handlers {
-            if let Err(e) = handler(frame.clone()).await {
-                tracing::warn!("FrameNavigated handler error: {}", e);
-            }
-        }
-        if let Some(tx) = self.framenavigated_waiters.lock().unwrap().pop() {
-            let _ = tx.send(frame);
-        }
+        self.framenavigated.dispatch(frame).await;
     }
 
     /// Adds a `<style>` tag into the page with the desired content.

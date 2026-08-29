@@ -106,6 +106,26 @@ impl<T: Clone> EventRegistry<T> {
         self.notify_one_waiter(value);
     }
 
+    /// Deliver one event to every handler and *every* queued waiter.
+    ///
+    /// For one-time state transitions — close, load, crash — the event will
+    /// not recur, so every queued `expect_*` must resolve on it; serving only
+    /// the oldest (as [`dispatch`](Self::dispatch) does) would leave the rest
+    /// hanging until their timeouts. The hand-written dispatchers for those
+    /// three events always drained the whole queue.
+    pub(crate) async fn dispatch_all(&self, value: T) {
+        let handlers = self.handlers.lock().unwrap().clone();
+        for handler in handlers {
+            if let Err(e) = handler(value.clone()).await {
+                tracing::warn!("{} handler error: {}", self.name, e);
+            }
+        }
+        let drained: Vec<_> = self.waiters.lock().unwrap().drain(..).collect();
+        for tx in drained {
+            let _ = tx.send(value.clone());
+        }
+    }
+
     /// Hand the value to the oldest waiter whose receiver is still alive.
     ///
     /// Skipping dead receivers matters: an `expect_*` that timed out or was
@@ -261,6 +281,23 @@ mod tests {
         let _ = rx.await;
 
         assert_eq!(*order.lock().unwrap(), vec!["handler", "dispatch returned"]);
+    }
+
+    #[tokio::test]
+    async fn dispatch_all_resolves_every_waiter() {
+        let reg = EventRegistry::<u32>::new("test");
+        let first = reg.wait();
+        let second = reg.wait();
+
+        reg.dispatch_all(9).await;
+
+        assert_eq!(first.await.unwrap(), 9);
+        assert_eq!(
+            second.await.unwrap(),
+            9,
+            "a one-time transition must wake every queued expect, not just the oldest"
+        );
+        assert_eq!(reg.waiter_count(), 0);
     }
 
     #[tokio::test]
