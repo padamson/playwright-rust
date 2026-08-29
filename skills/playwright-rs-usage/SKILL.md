@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.3.1"
+  version: "0.4.0"
 ---
 
 # Using playwright-rs
@@ -152,6 +152,43 @@ async fn login_flow() -> Result<()> {
     Ok(())
 }
 ```
+
+## Configuring the test runner
+
+Under `cargo nextest`, browser tests fail out of the box for reasons that
+have nothing to do with the test. Add `.config/nextest.toml` to the
+consuming project before writing many of them:
+
+```toml
+[profile.default]
+# A browser and its driver take longer than nextest's 100ms default to be
+# reaped after a test ends. Without this, passing tests are intermittently
+# flagged "leaky" and fail the run.
+leak-timeout = "1s"
+# Launching a browser is slow, and Firefox and WebKit are slower than
+# Chromium. Worst on Windows.
+slow-timeout = { period = "30s", terminate-after = 2 }
+
+[profile.ci]
+leak-timeout = "1s"
+slow-timeout = { period = "60s", terminate-after = 2 }
+retries = 1
+```
+
+`leak-timeout` is the one that will otherwise cost an afternoon: the
+symptom is an intermittent "leaky" failure on a test whose assertions all
+passed, which reads like a bug in the test.
+
+Raise `slow-timeout` further for tests that drive Firefox or WebKit
+specifically, using a `[[profile.default.overrides]]` block with a `filter`.
+Reach for `retries` only in CI, where a retried browser launch is cheaper
+than a re-run; locally it hides flakes you want to see.
+
+Teardown itself is already synchronous: dropping `Playwright` blocks until
+the driver exits, closing every browser cleanly rather than signalling them
+(which would truncate in-flight traces, videos and HARs). In async code
+prefer `playwright.shutdown().await`, which does the same work without
+blocking a runtime thread.
 
 ## Capabilities worth reaching for
 
