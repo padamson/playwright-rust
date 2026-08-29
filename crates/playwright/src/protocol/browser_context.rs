@@ -25,6 +25,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+
+use crate::protocol::event_registry::{EventRegistry, Handler};
 use tokio::sync::oneshot;
 
 /// BrowserContext represents an isolated browser session.
@@ -91,52 +93,8 @@ use tokio::sync::oneshot;
 /// Type alias for boxed route handler future
 type RouteHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
-/// Type alias for boxed page handler future
-type PageHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Type alias for boxed close handler future
-type CloseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Type alias for boxed request handler future
-type RequestHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Type alias for boxed response handler future
-type ResponseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Type alias for boxed dialog handler future
-type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
 /// Type alias for boxed binding callback future
 type BindingCallbackFuture = Pin<Box<dyn Future<Output = serde_json::Value> + Send>>;
-
-/// Context-level page event handler
-type PageHandler = Arc<dyn Fn(Page) -> PageHandlerFuture + Send + Sync>;
-
-/// Context-level close event handler
-type CloseHandler = Arc<dyn Fn() -> CloseHandlerFuture + Send + Sync>;
-
-/// Context-level request event handler
-type RequestHandler = Arc<dyn Fn(Request) -> RequestHandlerFuture + Send + Sync>;
-
-/// Context-level response event handler
-type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Send + Sync>;
-
-/// Context-level dialog event handler
-type DialogHandler = Arc<dyn Fn(crate::protocol::Dialog) -> DialogHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed console handler future
-type ConsoleHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Context-level console event handler
-type ConsoleHandler =
-    Arc<dyn Fn(crate::protocol::ConsoleMessage) -> ConsoleHandlerFuture + Send + Sync>;
-
-/// Type alias for boxed weberror handler future
-type WebErrorHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Context-level weberror event handler
-type WebErrorHandler =
-    Arc<dyn Fn(crate::protocol::WebError) -> WebErrorHandlerFuture + Send + Sync>;
 
 /// Type alias for boxed service worker handler future
 type ServiceWorkerHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
@@ -196,32 +154,26 @@ pub struct BrowserContext {
     default_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
     /// Default navigation timeout for all pages in this context (milliseconds), stored as f64 bits.
     default_navigation_timeout_ms: Arc<std::sync::atomic::AtomicU64>,
-    /// Context-level page event handlers (fired when a new page is created)
-    page_handlers: Arc<Mutex<Vec<PageHandler>>>,
-    /// Context-level close event handlers (fired when the context is closed)
-    close_handlers: Arc<Mutex<Vec<CloseHandler>>>,
-    /// Context-level request event handlers
-    request_handlers: Arc<Mutex<Vec<RequestHandler>>>,
-    /// Context-level request finished event handlers
-    request_finished_handlers: Arc<Mutex<Vec<RequestHandler>>>,
-    /// Context-level request failed event handlers
-    request_failed_handlers: Arc<Mutex<Vec<RequestHandler>>>,
-    /// Context-level response event handlers
-    response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
-    /// One-shot senders waiting for the next "page" event (expect_page)
-    page_waiters: Arc<Mutex<Vec<oneshot::Sender<Page>>>>,
-    /// One-shot senders waiting for the next "close" event (expect_close)
-    close_waiters: Arc<Mutex<Vec<oneshot::Sender<()>>>>,
-    /// Context-level dialog event handlers (fired for dialogs on any page in the context)
-    dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
+    /// `page` event: handlers and one-shot `expect_page` waiters.
+    page_events: Arc<EventRegistry<Page>>,
+    /// `close` event: one-time transition; `dispatch_all` wakes every waiter.
+    close_events: Arc<EventRegistry<()>>,
+    /// `request` event: handlers and one-shot waiters.
+    request: Arc<EventRegistry<Request>>,
+    /// `requestFinished` event handlers (no `expect_*`; waiter queue stays empty).
+    request_finished: Arc<EventRegistry<Request>>,
+    /// `requestFailed` event handlers (no `expect_*`; waiter queue stays empty).
+    request_failed: Arc<EventRegistry<Request>>,
+    /// `response` event: handlers and one-shot waiters.
+    response: Arc<EventRegistry<ResponseObject>>,
+    /// `dialog` event handlers (no `expect_*`; waiter queue stays empty).
+    dialog: Arc<EventRegistry<crate::protocol::Dialog>>,
     /// Registered binding callbacks keyed by name (for expose_function / expose_binding)
     binding_callbacks: Arc<Mutex<HashMap<String, BindingCallback>>>,
-    /// Context-level console event handlers
-    console_handlers: Arc<Mutex<Vec<ConsoleHandler>>>,
-    /// One-shot senders waiting for the next "console" event (expect_console_message)
-    console_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::ConsoleMessage>>>>,
-    /// Context-level weberror event handlers (fired for uncaught JS exceptions from any page)
-    weberror_handlers: Arc<Mutex<Vec<WebErrorHandler>>>,
+    /// `console` event: handlers and one-shot `expect_console_message` waiters.
+    console: Arc<EventRegistry<crate::protocol::ConsoleMessage>>,
+    /// `pageError`-derived weberror event: handlers and one-shot waiters.
+    weberror: Arc<EventRegistry<crate::protocol::WebError>>,
     /// Context-level service worker event handlers (fired when a service worker is registered)
     serviceworker_handlers: Arc<Mutex<Vec<ServiceWorkerHandler>>>,
     /// Context-level lifecycle handlers, forwarded from each page's events.
@@ -231,12 +183,6 @@ pub struct BrowserContext {
     frame_navigated_handlers: Arc<Mutex<Vec<CtxFrameHandler>>>,
     page_load_handlers: Arc<Mutex<Vec<PageEventHandler>>>,
     page_close_handlers: Arc<Mutex<Vec<PageEventHandler>>>,
-    /// One-shot senders waiting for the next "request" event (expect_event("request"))
-    request_waiters: Arc<Mutex<Vec<oneshot::Sender<Request>>>>,
-    /// One-shot senders waiting for the next "response" event (expect_event("response"))
-    response_waiters: Arc<Mutex<Vec<oneshot::Sender<ResponseObject>>>>,
-    /// One-shot senders waiting for the next "weberror" event (expect_event("weberror"))
-    weberror_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::WebError>>>>,
     /// One-shot senders waiting for the next "serviceworker" event (expect_event("serviceworker"))
     serviceworker_waiters: Arc<Mutex<Vec<oneshot::Sender<crate::protocol::Worker>>>>,
     /// Active service workers tracked via "serviceWorker" events
@@ -317,19 +263,16 @@ impl BrowserContext {
             default_navigation_timeout_ms: Arc::new(std::sync::atomic::AtomicU64::new(
                 crate::DEFAULT_TIMEOUT_MS.to_bits(),
             )),
-            page_handlers: Arc::new(Mutex::new(Vec::new())),
-            close_handlers: Arc::new(Mutex::new(Vec::new())),
-            request_handlers: Arc::new(Mutex::new(Vec::new())),
-            request_finished_handlers: Arc::new(Mutex::new(Vec::new())),
-            request_failed_handlers: Arc::new(Mutex::new(Vec::new())),
-            response_handlers: Arc::new(Mutex::new(Vec::new())),
-            page_waiters: Arc::new(Mutex::new(Vec::new())),
-            close_waiters: Arc::new(Mutex::new(Vec::new())),
-            dialog_handlers: Arc::new(Mutex::new(Vec::new())),
+            page_events: EventRegistry::new("page"),
+            close_events: EventRegistry::new("close"),
+            request: EventRegistry::new("request"),
+            request_finished: EventRegistry::new("requestFinished"),
+            request_failed: EventRegistry::new("requestFailed"),
+            response: EventRegistry::new("response"),
+            dialog: EventRegistry::new("dialog"),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
-            console_handlers: Arc::new(Mutex::new(Vec::new())),
-            console_waiters: Arc::new(Mutex::new(Vec::new())),
-            weberror_handlers: Arc::new(Mutex::new(Vec::new())),
+            console: EventRegistry::new("console"),
+            weberror: EventRegistry::new("weberror"),
             serviceworker_handlers: Arc::new(Mutex::new(Vec::new())),
             download_handlers: Arc::new(Mutex::new(Vec::new())),
             frame_attached_handlers: Arc::new(Mutex::new(Vec::new())),
@@ -337,9 +280,6 @@ impl BrowserContext {
             frame_navigated_handlers: Arc::new(Mutex::new(Vec::new())),
             page_load_handlers: Arc::new(Mutex::new(Vec::new())),
             page_close_handlers: Arc::new(Mutex::new(Vec::new())),
-            request_waiters: Arc::new(Mutex::new(Vec::new())),
-            response_waiters: Arc::new(Mutex::new(Vec::new())),
-            weberror_waiters: Arc::new(Mutex::new(Vec::new())),
             serviceworker_waiters: Arc::new(Mutex::new(Vec::new())),
             service_workers_list: Arc::new(Mutex::new(Vec::new())),
             ws_route_handlers: Arc::new(Mutex::new(Vec::new())),
@@ -1267,13 +1207,24 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-page>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
+    /// Subscribe to `reg`'s event if nothing is listening yet.
+    ///
+    /// Same contract as `Page::subscribe_if_idle`: the server only pushes an
+    /// event once asked, so the first handler or `expect_*` turns it on, and
+    /// the name comes from the registry rather than being restated per site.
+    async fn subscribe_if_idle<T>(&self, reg: &EventRegistry<T>) {
+        if reg.is_idle() {
+            _ = self.channel().update_subscription(reg.name(), true).await;
+        }
+    }
+
     pub async fn on_page<F, Fut>(&self, handler: F) -> Result<()>
     where
         F: Fn(Page) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |page: Page| -> PageHandlerFuture { Box::pin(handler(page)) });
-        self.page_handlers.lock().unwrap().push(handler);
+        let handler: Handler<Page> = Arc::new(move |page| Box::pin(handler(page)));
+        self.page_events.add_handler(handler);
         Ok(())
     }
 
@@ -1518,8 +1469,8 @@ impl BrowserContext {
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move || -> CloseHandlerFuture { Box::pin(handler()) });
-        self.close_handlers.lock().unwrap().push(handler);
+        let handler: Handler<()> = Arc::new(move |()| Box::pin(handler()));
+        self.close_events.add_handler(handler);
         Ok(())
     }
 
@@ -1542,14 +1493,9 @@ impl BrowserContext {
         F: Fn(Request) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
-            Box::pin(handler(request))
-        });
-        let needs_subscription = self.request_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self.channel().update_subscription("request", true).await;
-        }
-        self.request_handlers.lock().unwrap().push(handler);
+        let handler: Handler<Request> = Arc::new(move |request| Box::pin(handler(request)));
+        self.subscribe_if_idle(&self.request).await;
+        self.request.add_handler(handler);
         Ok(())
     }
 
@@ -1571,17 +1517,9 @@ impl BrowserContext {
         F: Fn(Request) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
-            Box::pin(handler(request))
-        });
-        let needs_subscription = self.request_finished_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self
-                .channel()
-                .update_subscription("requestFinished", true)
-                .await;
-        }
-        self.request_finished_handlers.lock().unwrap().push(handler);
+        let handler: Handler<Request> = Arc::new(move |request| Box::pin(handler(request)));
+        self.subscribe_if_idle(&self.request_finished).await;
+        self.request_finished.add_handler(handler);
         Ok(())
     }
 
@@ -1603,17 +1541,9 @@ impl BrowserContext {
         F: Fn(Request) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
-            Box::pin(handler(request))
-        });
-        let needs_subscription = self.request_failed_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self
-                .channel()
-                .update_subscription("requestFailed", true)
-                .await;
-        }
-        self.request_failed_handlers.lock().unwrap().push(handler);
+        let handler: Handler<Request> = Arc::new(move |request| Box::pin(handler(request)));
+        self.subscribe_if_idle(&self.request_failed).await;
+        self.request_failed.add_handler(handler);
         Ok(())
     }
 
@@ -1634,14 +1564,10 @@ impl BrowserContext {
         F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture {
-            Box::pin(handler(response))
-        });
-        let needs_subscription = self.response_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self.channel().update_subscription("response", true).await;
-        }
-        self.response_handlers.lock().unwrap().push(handler);
+        let handler: Handler<ResponseObject> =
+            Arc::new(move |response| Box::pin(handler(response)));
+        self.subscribe_if_idle(&self.response).await;
+        self.response.add_handler(handler);
         Ok(())
     }
 
@@ -1670,12 +1596,9 @@ impl BrowserContext {
         F: Fn(crate::protocol::Dialog) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |dialog: crate::protocol::Dialog| -> DialogHandlerFuture {
-                Box::pin(handler(dialog))
-            },
-        );
-        self.dialog_handlers.lock().unwrap().push(handler);
+        let handler: Handler<crate::protocol::Dialog> =
+            Arc::new(move |dialog| Box::pin(handler(dialog)));
+        self.dialog.add_handler(handler);
         Ok(())
     }
 
@@ -1698,17 +1621,11 @@ impl BrowserContext {
         F: Fn(crate::protocol::ConsoleMessage) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |msg: crate::protocol::ConsoleMessage| -> ConsoleHandlerFuture {
-                Box::pin(handler(msg))
-            },
-        );
+        let handler: Handler<crate::protocol::ConsoleMessage> =
+            Arc::new(move |msg| Box::pin(handler(msg)));
 
-        let needs_subscription = self.console_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self.channel().update_subscription("console", true).await;
-        }
-        self.console_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.console).await;
+        self.console.add_handler(handler);
 
         Ok(())
     }
@@ -1736,12 +1653,9 @@ impl BrowserContext {
         F: Fn(crate::protocol::WebError) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(
-            move |web_error: crate::protocol::WebError| -> WebErrorHandlerFuture {
-                Box::pin(handler(web_error))
-            },
-        );
-        self.weberror_handlers.lock().unwrap().push(handler);
+        let handler: Handler<crate::protocol::WebError> =
+            Arc::new(move |web_error| Box::pin(handler(web_error)));
+        self.weberror.add_handler(handler);
         Ok(())
     }
 
@@ -1896,8 +1810,7 @@ impl BrowserContext {
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_page(&self, timeout: Option<f64>) -> Result<EventWaiter<Page>> {
-        let (tx, rx) = oneshot::channel();
-        self.page_waiters.lock().unwrap().push(tx);
+        let rx = self.page_events.wait();
         Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
     }
 
@@ -1934,8 +1847,7 @@ impl BrowserContext {
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-wait-for-event>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn expect_close(&self, timeout: Option<f64>) -> Result<EventWaiter<()>> {
-        let (tx, rx) = oneshot::channel();
-        self.close_waiters.lock().unwrap().push(tx);
+        let rx = self.close_events.wait();
         Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
     }
 
@@ -1947,13 +1859,8 @@ impl BrowserContext {
         &self,
         timeout: Option<f64>,
     ) -> Result<EventWaiter<crate::protocol::ConsoleMessage>> {
-        let needs_subscription = self.console_handlers.lock().unwrap().is_empty()
-            && self.console_waiters.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self.channel().update_subscription("console", true).await;
-        }
-        let (tx, rx) = oneshot::channel();
-        self.console_waiters.lock().unwrap().push(tx);
+        self.subscribe_if_idle(&self.console).await;
+        let rx = self.console.wait();
         Ok(EventWaiter::new(rx, timeout.or(Some(30_000.0))))
     }
 
@@ -1993,13 +1900,17 @@ impl BrowserContext {
 
         match event {
             "page" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<Page>();
-                self.page_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.page_events.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Page(v));
+                    tokio::select! {
+                        v = inner_rx => {
+                            if let Ok(v) = v { let _ = tx.send(EventValue::Page(v)); }
+                        }
+                        () = tx.closed() => {}
                     }
                 });
 
@@ -2007,13 +1918,17 @@ impl BrowserContext {
             }
 
             "close" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<()>();
-                self.close_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.close_events.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(async move {
-                    if inner_rx.await.is_ok() {
-                        let _ = tx.send(EventValue::Close);
+                    tokio::select! {
+                        v = inner_rx => {
+                            if v.is_ok() { let _ = tx.send(EventValue::Close); }
+                        }
+                        () = tx.closed() => {}
                     }
                 });
 
@@ -2021,19 +1936,19 @@ impl BrowserContext {
             }
 
             "console" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::ConsoleMessage>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = self.console_handlers.lock().unwrap().is_empty()
-                    && self.console_waiters.lock().unwrap().is_empty();
-                if needs_subscription {
-                    _ = self.channel().update_subscription("console", true).await;
-                }
-                self.console_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.console).await;
+                let inner_rx = self.console.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::ConsoleMessage(v));
+                    tokio::select! {
+                        v = inner_rx => {
+                            if let Ok(v) = v { let _ = tx.send(EventValue::ConsoleMessage(v)); }
+                        }
+                        () = tx.closed() => {}
                     }
                 });
 
@@ -2041,22 +1956,19 @@ impl BrowserContext {
             }
 
             "request" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<Request>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = {
-                    let handlers = self.request_handlers.lock().unwrap();
-                    let waiters = self.request_waiters.lock().unwrap();
-                    handlers.is_empty() && waiters.is_empty()
-                };
-                if needs_subscription {
-                    _ = self.channel().update_subscription("request", true).await;
-                }
-                self.request_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.request).await;
+                let inner_rx = self.request.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Request(v));
+                    tokio::select! {
+                        v = inner_rx => {
+                            if let Ok(v) = v { let _ = tx.send(EventValue::Request(v)); }
+                        }
+                        () = tx.closed() => {}
                     }
                 });
 
@@ -2064,22 +1976,19 @@ impl BrowserContext {
             }
 
             "response" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<ResponseObject>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = {
-                    let handlers = self.response_handlers.lock().unwrap();
-                    let waiters = self.response_waiters.lock().unwrap();
-                    handlers.is_empty() && waiters.is_empty()
-                };
-                if needs_subscription {
-                    _ = self.channel().update_subscription("response", true).await;
-                }
-                self.response_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.response).await;
+                let inner_rx = self.response.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::Response(v));
+                    tokio::select! {
+                        v = inner_rx => {
+                            if let Ok(v) = v { let _ = tx.send(EventValue::Response(v)); }
+                        }
+                        () = tx.closed() => {}
                     }
                 });
 
@@ -2087,13 +1996,17 @@ impl BrowserContext {
             }
 
             "weberror" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<crate::protocol::WebError>();
-                self.weberror_waiters.lock().unwrap().push(inner_tx);
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
+                let inner_rx = self.weberror.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(async move {
-                    if let Ok(v) = inner_rx.await {
-                        let _ = tx.send(EventValue::WebError(v));
+                    tokio::select! {
+                        v = inner_rx => {
+                            if let Ok(v) = v { let _ = tx.send(EventValue::WebError(v)); }
+                        }
+                        () = tx.closed() => {}
                     }
                 });
 
@@ -2273,10 +2186,9 @@ impl BrowserContext {
             let response_end_timing = params.get("responseEndTiming").and_then(|v| v.as_f64());
             let method = method.to_owned();
             // Clone context-level handler vecs for use in spawn
-            let ctx_request_handlers = self.request_handlers.clone();
-            let ctx_request_finished_handlers = self.request_finished_handlers.clone();
-            let ctx_request_failed_handlers = self.request_failed_handlers.clone();
-            let ctx_request_waiters = self.request_waiters.clone();
+            let ctx_request = self.request.clone();
+            let ctx_request_finished = self.request_finished.clone();
+            let ctx_request_failed = self.request_failed.clone();
             tokio::spawn(async move {
                 let request: Request =
                     match connection.get_typed::<Request>(&request_guid_owned).await {
@@ -2298,23 +2210,11 @@ impl BrowserContext {
                 }
 
                 // Dispatch to context-level handlers first (matching playwright-python behavior)
-                let ctx_handlers = match method.as_str() {
-                    "request" => ctx_request_handlers.lock().unwrap().clone(),
-                    "requestFinished" => ctx_request_finished_handlers.lock().unwrap().clone(),
-                    "requestFailed" => ctx_request_failed_handlers.lock().unwrap().clone(),
-                    _ => vec![],
-                };
-                for handler in ctx_handlers {
-                    if let Err(e) = handler(request.clone()).await {
-                        tracing::warn!("Context {} handler error: {}", method, e);
-                    }
-                }
-
-                // Notify expect_event("request") waiters (only for "request" events)
-                if method == "request"
-                    && let Some(tx) = ctx_request_waiters.lock().unwrap().pop()
-                {
-                    let _ = tx.send(request.clone());
+                match method.as_str() {
+                    "request" => ctx_request.dispatch(request.clone()).await,
+                    "requestFinished" => ctx_request_finished.dispatch(request.clone()).await,
+                    "requestFailed" => ctx_request_failed.dispatch(request.clone()).await,
+                    _ => {}
                 }
 
                 // Then dispatch to page-level handlers
@@ -2347,8 +2247,7 @@ impl BrowserContext {
                 .and_then(|v| v.get("guid"))
                 .and_then(|v| v.as_str())
                 .map(|v| v.to_owned());
-            let ctx_response_handlers = self.response_handlers.clone();
-            let ctx_response_waiters = self.response_waiters.clone();
+            let ctx_response = self.response.clone();
             tokio::spawn(async move {
                 let response: ResponseObject = match connection
                     .get_typed::<ResponseObject>(&response_guid_owned)
@@ -2359,17 +2258,7 @@ impl BrowserContext {
                 };
 
                 // Dispatch to context-level handlers first (matching playwright-python behavior)
-                let ctx_handlers = ctx_response_handlers.lock().unwrap().clone();
-                for handler in ctx_handlers {
-                    if let Err(e) = handler(response.clone()).await {
-                        tracing::warn!("Context response handler error: {}", e);
-                    }
-                }
-
-                // Notify expect_event("response") waiters
-                if let Some(tx) = ctx_response_waiters.lock().unwrap().pop() {
-                    let _ = tx.send(response.clone());
-                }
+                ctx_response.dispatch(response.clone()).await;
 
                 // Then dispatch to page-level handlers
                 if let Some(page_guid) = page_guid_owned {
@@ -2434,21 +2323,9 @@ impl ChannelOwner for BrowserContext {
             "close" => {
                 // BrowserContext close event — mark as closed and fire registered close handlers
                 self.is_closed.store(true, Ordering::Relaxed);
-                let close_handlers = self.close_handlers.clone();
-                let close_waiters = self.close_waiters.clone();
+                let close_events = self.close_events.clone();
                 tokio::spawn(async move {
-                    let handlers = close_handlers.lock().unwrap().clone();
-                    for handler in handlers {
-                        if let Err(e) = handler().await {
-                            tracing::warn!("Context close handler error: {}", e);
-                        }
-                    }
-
-                    // Notify all expect_close() waiters
-                    let waiters: Vec<_> = close_waiters.lock().unwrap().drain(..).collect();
-                    for tx in waiters {
-                        let _ = tx.send(());
-                    }
+                    close_events.dispatch_all(()).await;
                 });
             }
             "page" => {
@@ -2464,8 +2341,7 @@ impl ChannelOwner for BrowserContext {
                     let connection = self.connection();
                     let page_guid_owned = page_guid.to_string();
                     let pages = self.pages.clone();
-                    let page_handlers = self.page_handlers.clone();
-                    let page_waiters = self.page_waiters.clone();
+                    let page_events = self.page_events.clone();
                     let download_handlers = self.download_handlers.clone();
                     let frame_attached_handlers = self.frame_attached_handlers.clone();
                     let frame_detached_handlers = self.frame_detached_handlers.clone();
@@ -2518,18 +2394,9 @@ impl ChannelOwner for BrowserContext {
                             opener.trigger_popup_event(page.clone()).await;
                         }
 
-                        // Dispatch to context-level page handlers
-                        let handlers = page_handlers.lock().unwrap().clone();
-                        for handler in handlers {
-                            if let Err(e) = handler(page.clone()).await {
-                                tracing::warn!("Context page handler error: {}", e);
-                            }
-                        }
-
-                        // Notify the first expect_page() waiter (FIFO order)
-                        if let Some(tx) = page_waiters.lock().unwrap().pop() {
-                            let _ = tx.send(page);
-                        }
+                        // Dispatch to context-level page handlers, then the
+                        // longest-waiting expect_page() caller.
+                        page_events.dispatch(page).await;
                     });
                 }
             }
@@ -2570,8 +2437,7 @@ impl ChannelOwner for BrowserContext {
                         });
 
                 let connection = self.connection();
-                let weberror_handlers = self.weberror_handlers.clone();
-                let weberror_waiters = self.weberror_waiters.clone();
+                let weberror = self.weberror.clone();
 
                 tokio::spawn(async move {
                     // Resolve page (optional — may be None if page already closed)
@@ -2587,17 +2453,7 @@ impl ChannelOwner for BrowserContext {
                         page.clone(),
                         location.clone(),
                     );
-                    let handlers = weberror_handlers.lock().unwrap().clone();
-                    for handler in handlers {
-                        if let Err(e) = handler(web_error.clone()).await {
-                            tracing::warn!("Context weberror handler error: {}", e);
-                        }
-                    }
-
-                    // Notify expect_event("weberror") waiters
-                    if let Some(tx) = weberror_waiters.lock().unwrap().pop() {
-                        let _ = tx.send(web_error);
-                    }
+                    weberror.dispatch(web_error).await;
 
                     // 2. Forward to page-level pageerror handlers
                     if let Some(p) = page {
@@ -2617,7 +2473,7 @@ impl ChannelOwner for BrowserContext {
                 {
                     let connection = self.connection();
                     let dialog_guid_owned = dialog_guid.to_string();
-                    let dialog_handlers = self.dialog_handlers.clone();
+                    let ctx_dialog = self.dialog.clone();
 
                     tokio::spawn(async move {
                         // Get and downcast the Dialog object
@@ -2630,12 +2486,7 @@ impl ChannelOwner for BrowserContext {
                         };
 
                         // Dispatch to context-level dialog handlers first
-                        let ctx_handlers = dialog_handlers.lock().unwrap().clone();
-                        for handler in ctx_handlers {
-                            if let Err(e) = handler(dialog.clone()).await {
-                                tracing::warn!("Context dialog handler error: {}", e);
-                            }
-                        }
+                        ctx_dialog.dispatch(dialog.clone()).await;
 
                         // Then forward to the Page's dialog handlers
                         let page: Page =
@@ -2806,8 +2657,7 @@ impl ChannelOwner for BrowserContext {
                     .unwrap_or(0.0);
 
                 let connection = self.connection();
-                let ctx_console_handlers = self.console_handlers.clone();
-                let ctx_console_waiters = self.console_waiters.clone();
+                let ctx_console = self.console.clone();
 
                 tokio::spawn(async move {
                     use crate::protocol::JSHandle;
@@ -2842,18 +2692,10 @@ impl ChannelOwner for BrowserContext {
                     let msg =
                         ConsoleMessage::new(type_, text, location, page.clone(), args, timestamp);
 
-                    // Satisfy the first pending waiter (expect_console_message)
-                    if let Some(tx) = ctx_console_waiters.lock().unwrap().pop() {
-                        let _ = tx.send(msg.clone());
-                    }
-
-                    // Dispatch to context-level handlers
-                    let ctx_handlers = ctx_console_handlers.lock().unwrap().clone();
-                    for handler in ctx_handlers {
-                        if let Err(e) = handler(msg.clone()).await {
-                            tracing::warn!("Context console handler error: {}", e);
-                        }
-                    }
+                    // Handlers first, then the longest-waiting
+                    // expect_console_message() caller — the same order as
+                    // every other event since the registry migration.
+                    ctx_console.dispatch(msg.clone()).await;
 
                     // Forward to page-level handlers
                     if let Some(p) = page {
