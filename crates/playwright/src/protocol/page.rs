@@ -188,14 +188,15 @@ pub struct Page {
     download_handlers: Arc<Mutex<Vec<DownloadHandler>>>,
     /// Dialog event handlers
     dialog_handlers: Arc<Mutex<Vec<DialogHandler>>>,
-    /// Request event handlers
-    request_handlers: Arc<Mutex<Vec<RequestHandler>>>,
-    /// Request finished event handlers
-    request_finished_handlers: Arc<Mutex<Vec<RequestHandler>>>,
-    /// Request failed event handlers
-    request_failed_handlers: Arc<Mutex<Vec<RequestHandler>>>,
-    /// Response event handlers
-    response_handlers: Arc<Mutex<Vec<ResponseHandler>>>,
+    /// Request event handlers and one-shot `expect_request` waiters.
+    request: Arc<EventRegistry<Request>>,
+    /// RequestFinished event handlers (the event has no `expect_*`, so its
+    /// registry's waiter queue simply stays empty).
+    request_finished: Arc<EventRegistry<Request>>,
+    /// RequestFailed event handlers (no `expect_*`; waiter queue stays empty).
+    request_failed: Arc<EventRegistry<Request>>,
+    /// Response event handlers and one-shot `expect_response` waiters.
+    response: Arc<EventRegistry<ResponseObject>>,
     /// WebSocket event handlers
     websocket_handlers: Arc<Mutex<Vec<WebSocketHandler>>>,
     /// WebSocketRoute handlers for route_web_socket()
@@ -228,10 +229,6 @@ pub struct Page {
     popup_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Page>>>>,
     /// One-shot senders waiting for the next "download" event (expect_download)
     download_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Download>>>>,
-    /// One-shot senders waiting for the next "response" event (expect_response)
-    response_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<ResponseObject>>>>,
-    /// One-shot senders waiting for the next "request" event (expect_request)
-    request_waiters: Arc<Mutex<Vec<tokio::sync::oneshot::Sender<Request>>>>,
     /// Console event handlers and one-shot `expect_console_message` waiters.
     console: Arc<EventRegistry<crate::protocol::ConsoleMessage>>,
     /// close event handlers (fires when page is closed)
@@ -290,12 +287,6 @@ type DownloadHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 /// Type alias for boxed dialog handler future
 type DialogHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
-/// Type alias for boxed request handler future
-type RequestHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
-/// Type alias for boxed response handler future
-type ResponseHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
-
 /// Type alias for boxed websocket handler future
 type WebSocketHandlerFuture = Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
@@ -322,12 +313,6 @@ type DownloadHandler = Arc<dyn Fn(Download) -> DownloadHandlerFuture + Send + Sy
 
 /// Dialog event handler
 type DialogHandler = Arc<dyn Fn(Dialog) -> DialogHandlerFuture + Send + Sync>;
-
-/// Request event handler
-type RequestHandler = Arc<dyn Fn(Request) -> RequestHandlerFuture + Send + Sync>;
-
-/// Response event handler
-type ResponseHandler = Arc<dyn Fn(ResponseObject) -> ResponseHandlerFuture + Send + Sync>;
 
 /// WebSocket event handler
 type WebSocketHandler = Arc<dyn Fn(WebSocket) -> WebSocketHandlerFuture + Send + Sync>;
@@ -519,10 +504,10 @@ impl Page {
             route_handlers,
             download_handlers,
             dialog_handlers,
-            request_handlers: Default::default(),
-            request_finished_handlers: Default::default(),
-            request_failed_handlers: Default::default(),
-            response_handlers: Default::default(),
+            request: EventRegistry::new("request"),
+            request_finished: EventRegistry::new("requestFinished"),
+            request_failed: EventRegistry::new("requestFailed"),
+            response: EventRegistry::new("response"),
             websocket_handlers,
             ws_route_handlers,
             viewport,
@@ -539,8 +524,6 @@ impl Page {
             filechooser_waiters: Arc::new(Mutex::new(Vec::new())),
             popup_waiters: Arc::new(Mutex::new(Vec::new())),
             download_waiters: Arc::new(Mutex::new(Vec::new())),
-            response_waiters: Arc::new(Mutex::new(Vec::new())),
-            request_waiters: Arc::new(Mutex::new(Vec::new())),
             console: EventRegistry::new("console"),
             close_handlers: Arc::new(Mutex::new(Vec::new())),
             load_handlers: Arc::new(Mutex::new(Vec::new())),
@@ -2443,17 +2426,8 @@ impl Page {
         &self,
         timeout: Option<f64>,
     ) -> Result<crate::protocol::EventWaiter<ResponseObject>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-
-        let needs_subscription = {
-            let handlers = self.response_handlers.lock().unwrap();
-            let waiters = self.response_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self.channel().update_subscription("response", true).await;
-        }
-        self.response_waiters.lock().unwrap().push(tx);
+        self.subscribe_if_idle(&self.response).await;
+        let rx = self.response.wait();
 
         Ok(crate::protocol::EventWaiter::new(
             rx,
@@ -2481,17 +2455,8 @@ impl Page {
         &self,
         timeout: Option<f64>,
     ) -> Result<crate::protocol::EventWaiter<Request>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-
-        let needs_subscription = {
-            let handlers = self.request_handlers.lock().unwrap();
-            let waiters = self.request_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self.channel().update_subscription("request", true).await;
-        }
-        self.request_waiters.lock().unwrap().push(tx);
+        self.subscribe_if_idle(&self.request).await;
+        let rx = self.request.wait();
 
         Ok(crate::protocol::EventWaiter::new(
             rx,
@@ -2565,23 +2530,22 @@ impl Page {
 
         match event {
             "request" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<Request>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = {
-                    let handlers = self.request_handlers.lock().unwrap();
-                    let waiters = self.request_waiters.lock().unwrap();
-                    handlers.is_empty() && waiters.is_empty()
-                };
-                if needs_subscription {
-                    _ = self.channel().update_subscription("request", true).await;
-                }
-                self.request_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.request).await;
+                let inner_rx = self.request.wait();
 
+                // select: drop the registry receiver when the caller times
+                // out, or a stale FIFO waiter swallows the next event.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Request(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v {
+                                    let _ = tx.send(EventValue::Request(v));
+                                }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2591,23 +2555,21 @@ impl Page {
             }
 
             "response" => {
-                let (tx, rx) = oneshot::channel::<EventValue>();
-                let (inner_tx, inner_rx) = oneshot::channel::<ResponseObject>();
+                let (mut tx, rx) = oneshot::channel::<EventValue>();
 
-                let needs_subscription = {
-                    let handlers = self.response_handlers.lock().unwrap();
-                    let waiters = self.response_waiters.lock().unwrap();
-                    handlers.is_empty() && waiters.is_empty()
-                };
-                if needs_subscription {
-                    _ = self.channel().update_subscription("response", true).await;
-                }
-                self.response_waiters.lock().unwrap().push(inner_tx);
+                self.subscribe_if_idle(&self.response).await;
+                let inner_rx = self.response.wait();
 
+                // select: see the "request" arm.
                 tokio::spawn(
                     async move {
-                        if let Ok(v) = inner_rx.await {
-                            let _ = tx.send(EventValue::Response(v));
+                        tokio::select! {
+                            v = inner_rx => {
+                                if let Ok(v) = v {
+                                    let _ = tx.send(EventValue::Response(v));
+                                }
+                            }
+                            () = tx.closed() => {}
                         }
                     }
                     .in_current_span(),
@@ -2861,19 +2823,10 @@ impl Page {
         F: Fn(Request) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
-            Box::pin(handler(request))
-        });
+        let handler: Handler<Request> = Arc::new(move |request| Box::pin(handler(request)));
 
-        let needs_subscription = {
-            let handlers = self.request_handlers.lock().unwrap();
-            let waiters = self.request_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self.channel().update_subscription("request", true).await;
-        }
-        self.request_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.request).await;
+        self.request.add_handler(handler);
 
         Ok(())
     }
@@ -2885,18 +2838,10 @@ impl Page {
         F: Fn(Request) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
-            Box::pin(handler(request))
-        });
+        let handler: Handler<Request> = Arc::new(move |request| Box::pin(handler(request)));
 
-        let needs_subscription = self.request_finished_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self
-                .channel()
-                .update_subscription("requestFinished", true)
-                .await;
-        }
-        self.request_finished_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.request_finished).await;
+        self.request_finished.add_handler(handler);
 
         Ok(())
     }
@@ -2908,18 +2853,10 @@ impl Page {
         F: Fn(Request) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |request: Request| -> RequestHandlerFuture {
-            Box::pin(handler(request))
-        });
+        let handler: Handler<Request> = Arc::new(move |request| Box::pin(handler(request)));
 
-        let needs_subscription = self.request_failed_handlers.lock().unwrap().is_empty();
-        if needs_subscription {
-            _ = self
-                .channel()
-                .update_subscription("requestFailed", true)
-                .await;
-        }
-        self.request_failed_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.request_failed).await;
+        self.request_failed.add_handler(handler);
 
         Ok(())
     }
@@ -2931,19 +2868,11 @@ impl Page {
         F: Fn(ResponseObject) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let handler = Arc::new(move |response: ResponseObject| -> ResponseHandlerFuture {
-            Box::pin(handler(response))
-        });
+        let handler: Handler<ResponseObject> =
+            Arc::new(move |response| Box::pin(handler(response)));
 
-        let needs_subscription = {
-            let handlers = self.response_handlers.lock().unwrap();
-            let waiters = self.response_waiters.lock().unwrap();
-            handlers.is_empty() && waiters.is_empty()
-        };
-        if needs_subscription {
-            _ = self.channel().update_subscription("response", true).await;
-        }
-        self.response_handlers.lock().unwrap().push(handler);
+        self.subscribe_if_idle(&self.response).await;
+        self.response.add_handler(handler);
 
         Ok(())
     }
@@ -3299,51 +3228,19 @@ impl Page {
     }
 
     async fn on_request_event(&self, request: Request) {
-        let handlers = self.request_handlers.lock().unwrap().clone();
-
-        for handler in handlers {
-            if let Err(e) = handler(request.clone()).await {
-                tracing::warn!("Request handler error: {}", e);
-            }
-        }
-        // Notify the first expect_request() waiter (FIFO order)
-        if let Some(tx) = self.request_waiters.lock().unwrap().pop() {
-            let _ = tx.send(request);
-        }
+        self.request.dispatch(request).await;
     }
 
     async fn on_request_failed_event(&self, request: Request) {
-        let handlers = self.request_failed_handlers.lock().unwrap().clone();
-
-        for handler in handlers {
-            if let Err(e) = handler(request.clone()).await {
-                tracing::warn!("RequestFailed handler error: {}", e);
-            }
-        }
+        self.request_failed.dispatch(request).await;
     }
 
     async fn on_request_finished_event(&self, request: Request) {
-        let handlers = self.request_finished_handlers.lock().unwrap().clone();
-
-        for handler in handlers {
-            if let Err(e) = handler(request.clone()).await {
-                tracing::warn!("RequestFinished handler error: {}", e);
-            }
-        }
+        self.request_finished.dispatch(request).await;
     }
 
     async fn on_response_event(&self, response: ResponseObject) {
-        let handlers = self.response_handlers.lock().unwrap().clone();
-
-        for handler in handlers {
-            if let Err(e) = handler(response.clone()).await {
-                tracing::warn!("Response handler error: {}", e);
-            }
-        }
-        // Notify the first expect_response() waiter (FIFO order)
-        if let Some(tx) = self.response_waiters.lock().unwrap().pop() {
-            let _ = tx.send(response);
-        }
+        self.response.dispatch(response).await;
     }
 
     /// Registers a handler function that runs whenever a locator matches an element on the page.
