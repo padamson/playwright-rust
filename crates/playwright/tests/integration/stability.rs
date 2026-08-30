@@ -1317,7 +1317,6 @@ async fn test_error_recovery_network_timeout() {
     let result = page.goto("http://192.0.2.1:9999/", Some(options)).await;
 
     assert!(result.is_err(), "Expected timeout error");
-    assert!(result.is_err(), "Expected timeout error");
     tracing::info!("Timeout error occurred (expected)");
 
     // Recovery: Page should still work for valid navigation
@@ -1360,7 +1359,6 @@ async fn test_error_recovery_invalid_url() {
     // Test: After invalid URL error, page should still be usable
     let result = page.goto("not-a-valid-url", None).await;
 
-    assert!(result.is_err(), "Expected invalid URL error");
     assert!(result.is_err(), "Expected invalid URL error");
     tracing::info!("Invalid URL error occurred (expected)");
 
@@ -1412,7 +1410,6 @@ async fn test_error_recovery_multiple_errors() {
         let options = GotoOptions::new().timeout(Duration::from_millis(100));
         let result = page.goto(url, Some(options)).await;
 
-        assert!(result.is_err(), "Error {} should fail", i + 1);
         assert!(result.is_err(), "Error {} should fail", i + 1);
         tracing::info!("Error {} handled (expected)", i + 1);
     }
@@ -1583,19 +1580,10 @@ async fn test_error_recovery_stress() {
     let page = browser.new_page().await.expect("Failed to create page");
 
     // Each pair forces a navigation error and then requires the page to
-    // recover. A failed navigation leaves Chromium committing a
-    // `chrome-error://chromewebdata/` page *after* goto has already returned
-    // Err, and that commit legitimately interrupts an immediately-following
-    // goto (upstream behavior, not a bug) — so recovery is asserted as "a
-    // valid navigation succeeds within a bounded window, retried past
-    // interrupts". Only the interrupt is retryable; any other error fails the
-    // test at once, so a real goto regression cannot hide inside the window.
+    // recover via `common::goto_recovering`, which retries only the
+    // error-page-commit interrupt (see its rustdoc for the mechanism) and
+    // fails fast on anything else.
     const PAIRS: usize = 5;
-    const RECOVERY_WINDOW: Duration = Duration::from_secs(10);
-    // Per-attempt cap. Without it each attempt inherits the 30s default
-    // navigation timeout, one slow attempt eats the whole window with zero
-    // retries, and a fully wedged page outlives nextest's terminate-after.
-    const ATTEMPT_TIMEOUT: Duration = Duration::from_secs(2);
 
     let url = format!("{}/locators.html", server.url());
     for pair in 0..PAIRS {
@@ -1610,39 +1598,7 @@ async fn test_error_recovery_stress() {
         .await
         .expect_err("navigation to port 1 must fail; recovery is untested otherwise");
 
-        // Recover, retrying only past the error-page-commit interrupt.
-        let start = tokio::time::Instant::now();
-        let mut attempts = 0u32;
-        loop {
-            attempts += 1;
-            match page
-                .goto(&url, Some(GotoOptions::new().timeout(ATTEMPT_TIMEOUT)))
-                .await
-            {
-                Ok(_) => break,
-                Err(e) => {
-                    let msg = format!("{e:?}");
-                    assert!(
-                        msg.contains("interrupted by another navigation"),
-                        "Pair {pair}: navigation failed for a non-interrupt reason \
-                         after {attempts} attempt(s) in {:?}: {e:?}",
-                        start.elapsed()
-                    );
-                    assert!(
-                        start.elapsed() < RECOVERY_WINDOW,
-                        "Pair {pair}: page did not recover from the error-page \
-                         interrupt after {attempts} attempt(s) in {:?}: {e:?}",
-                        start.elapsed()
-                    );
-                    tracing::warn!("Pair {pair} attempt {attempts} interrupted; retrying: {e:?}");
-                    tokio::time::sleep(Duration::from_millis(25)).await;
-                }
-            }
-        }
-        tracing::info!(
-            "Pair {pair}: recovered in {attempts} attempt(s), {:?}",
-            start.elapsed()
-        );
+        crate::common::goto_recovering(&page, &url, &format!("pair {pair}")).await;
     }
 
     tracing::info!("✓ Error recovery stress test passed");

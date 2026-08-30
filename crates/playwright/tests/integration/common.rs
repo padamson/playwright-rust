@@ -1,4 +1,4 @@
-use playwright_rs::protocol::{Browser, BrowserContext, Page, Playwright};
+use playwright_rs::protocol::{Browser, BrowserContext, GotoOptions, Page, Playwright};
 use std::path::PathBuf;
 use std::sync::Once;
 
@@ -15,6 +15,69 @@ pub fn init_tracing() {
             .with_test_writer()
             .try_init();
     });
+}
+
+/// First navigation after a deliberately failed one, retried past the
+/// error-page-commit interrupt.
+///
+/// A failed navigation can leave Chromium committing a
+/// `chrome-error://chromewebdata/` page *after* `goto` has already returned
+/// `Err`, and that commit legitimately interrupts an immediately-following
+/// `goto` (upstream behavior, not a crate bug). Two error shapes are
+/// retryable within the window: that interrupt, and a per-attempt timeout —
+/// the attempt cap exists so one slow attempt cannot eat the whole window,
+/// so hitting it must buy another attempt, not a panic. (Both arrive as
+/// `Error::ProtocolError`; the crate never constructs `NavigationTimeout`.)
+/// Anything else panics immediately with the context, attempt count, and
+/// elapsed time, so a real goto regression cannot hide inside the window.
+/// Every retry is logged at warn, with a capped exponential backoff so a
+/// wedged page produces dozens of attempts in the log, not hundreds.
+pub async fn goto_recovering(page: &Page, url: &str, context: &str) {
+    const RECOVERY_WINDOW: std::time::Duration = std::time::Duration::from_secs(10);
+    const ATTEMPT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+    const BACKOFF_CAP: std::time::Duration = std::time::Duration::from_millis(250);
+
+    let start = tokio::time::Instant::now();
+    let mut attempts = 0u32;
+    let mut backoff = std::time::Duration::from_millis(25);
+    loop {
+        attempts += 1;
+        match page
+            .goto(url, Some(GotoOptions::new().timeout(ATTEMPT_TIMEOUT)))
+            .await
+        {
+            Ok(_) => {
+                tracing::info!(
+                    "{context}: recovered in {attempts} attempt(s), {:?}",
+                    start.elapsed()
+                );
+                return;
+            }
+            Err(e) => {
+                let retryable = matches!(
+                    &e,
+                    playwright_rs::Error::ProtocolError(m)
+                        if m.contains("interrupted by another navigation")
+                            || (m.contains("Timeout") && m.contains("exceeded"))
+                );
+                assert!(
+                    retryable,
+                    "{context}: navigation failed for a non-retryable reason after \
+                     {attempts} attempt(s) in {:?}: {e:?}",
+                    start.elapsed()
+                );
+                assert!(
+                    start.elapsed() < RECOVERY_WINDOW,
+                    "{context}: page did not recover after {attempts} attempt(s) \
+                     in {:?}; last error: {e:?}",
+                    start.elapsed()
+                );
+                tracing::warn!("{context} attempt {attempts} failed; retrying: {e:?}");
+                tokio::time::sleep(backoff).await;
+                backoff = (backoff * 2).min(BACKOFF_CAP);
+            }
+        }
+    }
 }
 
 /// Launch Playwright + Chromium browser + new page.
