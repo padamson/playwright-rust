@@ -1,10 +1,6 @@
 
 # cargo-vet imports lock
 
-[[unpublished.playwright-rs]]
-version = "0.17.0"
-audited_as = "0.16.0"
-
 [[publisher.aho-corasick]]
 version = "1.1.4"
 when = "2025-10-28"
@@ -166,8 +162,8 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.flate2]]
-version = "1.1.9"
-when = "2026-02-03"
+version = "1.1.10"
+when = "2026-08-28"
 user-id = 980
 user-login = "Byron"
 user-name = "Sebastian Thiel"
@@ -483,8 +479,8 @@ user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.tower-http]]
-version = "0.7.0"
-when = "2026-06-15"
+version = "0.7.1"
+when = "2026-08-31"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
