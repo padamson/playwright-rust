@@ -133,21 +133,9 @@ fn set_output_env_vars(driver_dir: &std::path::Path, platform: &str) {
         PLAYWRIGHT_VERSION
     );
     println!("cargo:rustc-env=PLAYWRIGHT_DRIVER_PLATFORM={}", platform);
-
-    // Node executable path
-    let node_exe = if cfg!(windows) {
-        driver_dir.join("node.exe")
-    } else {
-        driver_dir.join("node")
-    };
-
-    if node_exe.exists() {
-        println!("cargo:rustc-env=PLAYWRIGHT_NODE_EXE={}", node_exe.display());
-    }
-
-    // CLI.js path
-    let cli_js = driver_dir.join("package").join("cli.js");
-    if cli_js.exists() {
-        println!("cargo:rustc-env=PLAYWRIGHT_CLI_JS={}", cli_js.display());
-    }
+    // Deliberately not PLAYWRIGHT_NODE_EXE / PLAYWRIGHT_CLI_JS: those names are
+    // the user's runtime overrides, and cargo injects every rustc-env value
+    // into the environment of this crate's own test and bin processes, so
+    // emitting them here would make the bundled paths look like overrides.
+    // The runtime derives both files from PLAYWRIGHT_DRIVER_DIR instead.
 }

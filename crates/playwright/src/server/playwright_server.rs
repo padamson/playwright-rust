@@ -45,8 +45,10 @@ impl PlaywrightServer {
     ///
     /// # Errors
     ///
-    /// Returns `Error::ServerNotFound` if the driver cannot be located.
-    /// Returns `Error::LaunchFailed` if the process fails to start.
+    /// Returns `Error::ServerNotFound` if the driver cannot be located,
+    /// `Error::DriverMisconfigured` if a driver override environment variable
+    /// is set but does not point at an existing file, and
+    /// `Error::LaunchFailed` if the process fails to start.
     ///
     /// See: <https://playwright.dev/docs/api>
     pub async fn launch() -> Result<Self> {

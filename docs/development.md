@@ -10,8 +10,12 @@ start at the [README](../README.md) and [docs.rs](https://docs.rs/playwright-rs)
 
 No system Node.js is needed for the normal build: the build script downloads
 the pinned Playwright driver together with its own Node runtime. (With
-`PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD` set, driver resolution falls back to
-`PLAYWRIGHT_DRIVER_PATH` or an npm-installed playwright, which do need one.)
+`PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD` set, driver resolution falls through to an
+npm-installed playwright, which does need one.) At runtime,
+`PLAYWRIGHT_DRIVER_PATH` points at a different driver directory,
+`PLAYWRIGHT_NODE_EXE` swaps the runtime that runs the driver's `cli.js`, and
+`PLAYWRIGHT_CLI_JS` swaps the script; the rustdoc on
+`server::driver::get_driver_executable` has the full order.
 
 ## Building from source
 

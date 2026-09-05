@@ -25,6 +25,16 @@ pub enum Error {
     #[error("Failed to launch Playwright server: {0}. Check that Node.js is installed.")]
     LaunchFailed(String),
 
+    /// A driver override environment variable is set but does not point at
+    /// a usable driver
+    ///
+    /// `PLAYWRIGHT_DRIVER_PATH`, `PLAYWRIGHT_NODE_EXE`, or `PLAYWRIGHT_CLI_JS`
+    /// named a path that does not exist. The message names the variable.
+    /// Unset the variable to use the bundled driver, or point it at the right
+    /// path.
+    #[error("Playwright driver override is misconfigured: {0}")]
+    DriverMisconfigured(String),
+
     /// Server error (runtime issue with Playwright server)
     #[error("Server error: {0}")]
     ServerError(String),

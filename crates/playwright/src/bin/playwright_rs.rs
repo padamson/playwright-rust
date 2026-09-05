@@ -72,14 +72,18 @@ async fn run_install(
         return Ok(());
     }
 
-    // The library's `install_browsers_with_deps` calls `get_driver_executable()`,
-    // which probes the bundled path first. Override via `PLAYWRIGHT_DRIVER_PATH`
-    // so the user-cache driver is used instead of whatever the compile-time
-    // bundled path happens to be (which may not exist post-`cargo install`).
+    // The library's `install_browsers_with_deps` calls `get_driver_executable()`.
+    // `PLAYWRIGHT_DRIVER_PATH` is the highest-precedence source in its chain, so
+    // setting it pins the user-cache driver we just ensured, rather than the
+    // compile-time bundled path (which may not exist post-`cargo install`).
+    // A user who already exported it has pinned their own driver; browsers
+    // must be installed for that one, so leave it alone.
     // SAFETY: set_var is unsafe in Rust 2024 because env mutation isn't
     // thread-safe; we run before spawning any worker threads.
-    unsafe {
-        std::env::set_var("PLAYWRIGHT_DRIVER_PATH", &driver_dir);
+    if std::env::var_os("PLAYWRIGHT_DRIVER_PATH").is_none_or(|value| value.is_empty()) {
+        unsafe {
+            std::env::set_var("PLAYWRIGHT_DRIVER_PATH", &driver_dir);
+        }
     }
 
     let browser_refs: Vec<&str> = browsers.iter().map(String::as_str).collect();

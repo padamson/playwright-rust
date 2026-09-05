@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The driver runtime overrides now take effect.** `PLAYWRIGHT_DRIVER_PATH`, `PLAYWRIGHT_NODE_EXE`, and `PLAYWRIGHT_CLI_JS` were documented as user overrides but were consulted only after the bundled driver, which every normal build has, so setting them changed nothing: the bundled Node was spawned regardless (this is the override recommended on issue [#93](https://github.com/padamson/playwright-rust/issues/93) for running the driver under Bun, and it did not work). `PLAYWRIGHT_DRIVER_PATH` is now the first place the driver directory is looked for, and `PLAYWRIGHT_NODE_EXE` and `PLAYWRIGHT_CLI_JS` each replace one half of whatever driver was found, independently: setting only `PLAYWRIGHT_NODE_EXE=bun` runs the bundled `cli.js` under Bun, a bare command name is left to `PATH` lookup, and the two together need no driver directory at all. An override that is set but points at a missing file is a new `Error::DriverMisconfigured` naming the variable, instead of a silent fall-through to the bundled driver; an exported-but-empty variable counts as unset. Alongside, the build script no longer emits the override names for the bundled driver's paths (Cargo injects build-script variables into the crate's own test and binary processes, which made the bundled driver look like an override), and `playwright-rs install` no longer overwrites a `PLAYWRIGHT_DRIVER_PATH` you already exported, so browsers are installed for the driver you pinned. Resolution without any override is unchanged.
+
 ## [0.17.0] - 2026-08-23
 
 ### Changed

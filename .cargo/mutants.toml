@@ -35,16 +35,18 @@ additional_cargo_test_args = [
 # Exclude mutations that are only testable via integration tests (require Playwright server)
 # or represent serde_json limitations (cannot distinguish special float behavior).
 exclude_re = [
-    # driver.rs: only the pure helpers (install_args, tee) are unit-testable;
-    # everything that probes the filesystem or spawns the driver needs
-    # integration tests. Mutant names are "<path>:<line>:<col>: replace <fn>
-    # -> ..." with no `fn ` keyword and no module path, so these match the
-    # bare function name — verify edits with
+    # driver.rs: the pure helpers (install_args, tee) and the env-override
+    # resolution (resolve_driver, try_driver_path_env, try_node_cli_env, which
+    # take an environment lookup and are tested against a tempdir) are
+    # unit-testable; everything that reads compile-time paths, the user cache,
+    # npm, or spawns the driver needs integration tests. Mutant names are
+    # "<path>:<line>:<col>: replace <fn> -> ..." with no `fn ` keyword and no
+    # module path, so these match the bare function name — verify edits with
     # `cargo mutants --list -f crates/playwright/src/server/driver.rs`.
     "install_browsers",
     "get_driver_executable",
-    "try_bundled_driver|try_user_cache_driver|try_driver_path_env",
-    "try_node_cli_env|try_npm_global|try_npm_local",
+    "try_bundled_driver|try_user_cache_driver",
+    "try_npm_global|try_npm_local",
     "find_playwright_in_node_modules|find_node_executable",
 
     # Builder constructors — trivially correct, integration-test-only

@@ -10,19 +10,34 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 /// Get the path to the Playwright driver executable
 ///
-/// This function attempts to locate the Playwright driver in the following order:
-/// 1. Bundled driver downloaded by build.rs (PRIMARY - matches official bindings)
-/// 2. User cache populated by `playwright-rs install` (stable across cargo install)
-/// 3. PLAYWRIGHT_DRIVER_PATH environment variable (user override)
-/// 4. PLAYWRIGHT_NODE_EXE and PLAYWRIGHT_CLI_JS environment variables (user override)
-/// 5. Global npm installation (`npm root -g`) (development fallback)
-/// 6. Local npm installation (`npm root`) (development fallback)
+/// The driver directory is located in this order:
+/// 1. `PLAYWRIGHT_DRIVER_PATH` (user override: a directory holding `node`, or
+///    `node.exe` on Windows, and `package/cli.js`)
+/// 2. Bundled driver assembled by build.rs (the default; matches official bindings)
+/// 3. User cache populated by `playwright-rs install` (stable across cargo install)
+/// 4. Global npm installation (`npm root -g`) (development fallback)
+/// 5. Local npm installation (`npm root`) (development fallback)
+///
+/// On top of that, `PLAYWRIGHT_NODE_EXE` replaces the runtime and
+/// `PLAYWRIGHT_CLI_JS` replaces the CLI script, each independently. Setting
+/// only `PLAYWRIGHT_NODE_EXE` runs the resolved driver's `cli.js` under a
+/// different runtime, which is how to try the driver under Bun. A bare
+/// command name such as `bun` is left for `PATH` lookup at spawn; anything
+/// with a directory component must exist. When both are set no driver
+/// directory is needed at all.
+///
+/// An override that is set but does not point at an existing file is an
+/// error rather than a fall-through: silently spawning the bundled driver
+/// would hide the misconfiguration. An exported-but-empty variable counts as
+/// unset.
 ///
 /// Returns a tuple of (node_executable_path, cli_js_path).
 ///
 /// # Errors
 ///
-/// Returns `Error::ServerNotFound` if the driver cannot be located in any of the search paths.
+/// Returns `Error::DriverMisconfigured` if an override environment variable
+/// is set but does not point at an existing file, and `Error::ServerNotFound`
+/// if no driver can be located in any of the search paths.
 ///
 /// # Example
 ///
@@ -35,67 +50,103 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 /// # Ok::<(), playwright_rs::Error>(())
 /// ```
 pub fn get_driver_executable() -> Result<(PathBuf, PathBuf)> {
-    if let Some(result) = try_bundled_driver()? {
-        return Ok(result);
-    }
-
-    if let Some(result) = try_user_cache_driver()? {
-        return Ok(result);
-    }
-
-    if let Some(result) = try_driver_path_env()? {
-        return Ok(result);
-    }
-
-    if let Some(result) = try_node_cli_env()? {
-        return Ok(result);
-    }
-
-    if let Some(result) = try_npm_global()? {
-        return Ok(result);
-    }
-
-    if let Some(result) = try_npm_local()? {
-        return Ok(result);
-    }
-
-    Err(Error::ServerNotFound)
+    resolve_driver(|name| std::env::var(name).ok())
 }
 
-/// Try to find bundled driver from build.rs
-///
-/// This is the PRIMARY path and matches how playwright-python, playwright-java,
-/// and playwright-dotnet distribute their drivers.
-fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
-    // Check if build.rs set the environment variables (compile-time)
-    if let (Some(node_exe), Some(cli_js)) = (
-        option_env!("PLAYWRIGHT_NODE_EXE"),
-        option_env!("PLAYWRIGHT_CLI_JS"),
-    ) {
-        let node_path = PathBuf::from(node_exe);
-        let cli_path = PathBuf::from(cli_js);
+/// Resolution behind `get_driver_executable`, parameterized by the
+/// process-environment lookup so it can be tested with a fake environment
+/// instead of mutating the real one.
+fn resolve_driver(env: impl Fn(&str) -> Option<String>) -> Result<(PathBuf, PathBuf)> {
+    // Exported-but-empty counts as unset, the convention build.rs already
+    // uses for PLAYWRIGHT_DRIVER_DIR.
+    let env = |name: &str| env(name).filter(|value| !value.is_empty());
 
-        if node_path.exists() && cli_path.exists() {
-            return Ok(Some((node_path, cli_path)));
+    let driver = resolve_driver_dir(&env)?;
+    let runtime = env("PLAYWRIGHT_NODE_EXE")
+        .map(runtime_override)
+        .transpose()?;
+    let cli = env("PLAYWRIGHT_CLI_JS")
+        .map(|value| existing_file("PLAYWRIGHT_CLI_JS", value))
+        .transpose()?;
+
+    match (runtime, cli, driver) {
+        (Some(runtime), Some(cli), _) => Ok((runtime, cli)),
+        (runtime, cli, Some((driver_node, driver_cli))) => {
+            Ok((runtime.unwrap_or(driver_node), cli.unwrap_or(driver_cli)))
         }
+        (_, _, None) => Err(Error::ServerNotFound),
     }
+}
 
-    // Fallback: Check PLAYWRIGHT_DRIVER_DIR and construct paths (compile-time)
-    if let Some(driver_dir) = option_env!("PLAYWRIGHT_DRIVER_DIR") {
-        let driver_path = PathBuf::from(driver_dir);
-        let node_exe = if cfg!(windows) {
-            driver_path.join("node.exe")
-        } else {
-            driver_path.join("node")
-        };
-        let cli_js = driver_path.join("package").join("cli.js");
-
-        if node_exe.exists() && cli_js.exists() {
-            return Ok(Some((node_exe, cli_js)));
-        }
+/// The driver directory's `(node, cli.js)` pair: the `PLAYWRIGHT_DRIVER_PATH`
+/// override first, then the bundled, user-cache, and npm locations. `None`
+/// when nothing is found; an error only when the override is set but wrong.
+fn resolve_driver_dir(env: &impl Fn(&str) -> Option<String>) -> Result<Option<(PathBuf, PathBuf)>> {
+    if let Some(found) = try_driver_path_env(env)? {
+        return Ok(Some(found));
     }
-
+    if let Some(found) = try_bundled_driver()? {
+        return Ok(Some(found));
+    }
+    if let Some(found) = try_user_cache_driver()? {
+        return Ok(Some(found));
+    }
+    if let Some(found) = try_npm_global()? {
+        return Ok(Some(found));
+    }
+    if let Some(found) = try_npm_local()? {
+        return Ok(Some(found));
+    }
     Ok(None)
+}
+
+/// The two files every driver directory holds: the runtime binary (`node`,
+/// or `node.exe` for Windows) and the CLI script at `package/cli.js`.
+fn driver_layout(driver_dir: &Path, windows: bool) -> (PathBuf, PathBuf) {
+    let node_exe = driver_dir.join(if windows { "node.exe" } else { "node" });
+    let cli_js = driver_dir.join("package").join("cli.js");
+    (node_exe, cli_js)
+}
+
+/// `PLAYWRIGHT_NODE_EXE`: a bare command name (no directory component) is
+/// left for `PATH` lookup at spawn; anything else must exist.
+fn runtime_override(value: String) -> Result<PathBuf> {
+    let is_bare_name = Path::new(&value).components().count() == 1;
+    if is_bare_name {
+        Ok(PathBuf::from(value))
+    } else {
+        existing_file("PLAYWRIGHT_NODE_EXE", value)
+    }
+}
+
+fn existing_file(variable: &str, value: String) -> Result<PathBuf> {
+    let path = PathBuf::from(value);
+    if path.exists() {
+        Ok(path)
+    } else {
+        Err(Error::DriverMisconfigured(format!(
+            "{variable} is set to {} but that file does not exist",
+            path.display()
+        )))
+    }
+}
+
+/// Try to find the bundled driver assembled by build.rs
+///
+/// This is the default path and matches how playwright-python, playwright-java,
+/// and playwright-dotnet distribute their drivers. build.rs emits an empty
+/// `PLAYWRIGHT_DRIVER_DIR` when the download was skipped or failed.
+fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
+    let Some(driver_dir) = option_env!("PLAYWRIGHT_DRIVER_DIR").filter(|dir| !dir.is_empty())
+    else {
+        return Ok(None);
+    };
+    let (node_exe, cli_js) = driver_layout(Path::new(driver_dir), cfg!(windows));
+    if node_exe.exists() && cli_js.exists() {
+        Ok(Some((node_exe, cli_js)))
+    } else {
+        Ok(None)
+    }
 }
 
 /// Try to find driver in the user cache populated by `playwright-rs install`.
@@ -117,8 +168,8 @@ fn try_user_cache_driver() -> Result<Option<(PathBuf, PathBuf)>> {
     try_user_cache_driver_in(&cache_dir, version, platform)
 }
 
-/// Resolution helper for `try_user_cache_driver` parameterised by cache root,
-/// version, and platform — exposed at module scope so tests can drive it
+/// Resolution helper for `try_user_cache_driver` parameterized by cache root,
+/// version, and platform, exposed at module scope so tests can drive it
 /// with a `tempfile::tempdir()`.
 fn try_user_cache_driver_in(
     cache_root: &Path,
@@ -129,13 +180,7 @@ fn try_user_cache_driver_in(
         .join("playwright-rust")
         .join(version)
         .join(format!("playwright-{}-{}", version, platform));
-
-    let node_exe = if platform.starts_with("win32") {
-        driver_dir.join("node.exe")
-    } else {
-        driver_dir.join("node")
-    };
-    let cli_js = driver_dir.join("package").join("cli.js");
+    let (node_exe, cli_js) = driver_layout(&driver_dir, platform.starts_with("win32"));
 
     if node_exe.exists() && cli_js.exists() {
         Ok(Some((node_exe, cli_js)))
@@ -144,46 +189,29 @@ fn try_user_cache_driver_in(
     }
 }
 
-/// Try to find driver from PLAYWRIGHT_DRIVER_PATH environment variable
+/// Try to find driver from the `PLAYWRIGHT_DRIVER_PATH` override: a directory
+/// holding `node` (or `node.exe` on Windows) and `package/cli.js`.
 ///
-/// User can set PLAYWRIGHT_DRIVER_PATH to a directory containing:
-/// - node (or node.exe on Windows)
-/// - package/cli.js
-fn try_driver_path_env() -> Result<Option<(PathBuf, PathBuf)>> {
-    if let Ok(driver_path) = std::env::var("PLAYWRIGHT_DRIVER_PATH") {
-        let driver_dir = PathBuf::from(driver_path);
-        let node_exe = if cfg!(windows) {
-            driver_dir.join("node.exe")
-        } else {
-            driver_dir.join("node")
-        };
-        let cli_js = driver_dir.join("package").join("cli.js");
+/// Returns `None` when the variable is unset and an error when it is set but
+/// the directory does not hold both files.
+fn try_driver_path_env(
+    env: &impl Fn(&str) -> Option<String>,
+) -> Result<Option<(PathBuf, PathBuf)>> {
+    let Some(driver_path) = env("PLAYWRIGHT_DRIVER_PATH") else {
+        return Ok(None);
+    };
+    let driver_dir = PathBuf::from(driver_path);
+    let (node_exe, cli_js) = driver_layout(&driver_dir, cfg!(windows));
 
-        if node_exe.exists() && cli_js.exists() {
-            return Ok(Some((node_exe, cli_js)));
-        }
+    if node_exe.exists() && cli_js.exists() {
+        Ok(Some((node_exe, cli_js)))
+    } else {
+        Err(Error::DriverMisconfigured(format!(
+            "PLAYWRIGHT_DRIVER_PATH is set to {} but it does not contain both {} and package/cli.js",
+            driver_dir.display(),
+            if cfg!(windows) { "node.exe" } else { "node" }
+        )))
     }
-
-    Ok(None)
-}
-
-/// Try to find driver from PLAYWRIGHT_NODE_EXE and PLAYWRIGHT_CLI_JS environment variables
-///
-/// User can set both variables to explicitly specify paths.
-fn try_node_cli_env() -> Result<Option<(PathBuf, PathBuf)>> {
-    if let (Ok(node_exe), Ok(cli_js)) = (
-        std::env::var("PLAYWRIGHT_NODE_EXE"),
-        std::env::var("PLAYWRIGHT_CLI_JS"),
-    ) {
-        let node_path = PathBuf::from(node_exe);
-        let cli_path = PathBuf::from(cli_js);
-
-        if node_path.exists() && cli_path.exists() {
-            return Ok(Some((node_path, cli_path)));
-        }
-    }
-
-    Ok(None)
 }
 
 /// Try to find driver in npm global installation (development fallback)
@@ -330,6 +358,8 @@ fn find_node_executable() -> Result<PathBuf> {
 /// # Errors
 ///
 /// - [`Error::ServerNotFound`] if the Playwright driver cannot be located.
+/// - [`Error::DriverMisconfigured`] if a driver override environment variable
+///   is set but does not point at an existing file.
 /// - [`Error::LaunchFailed`] if the installation process exits with a non-zero
 ///   status or fails to spawn.
 ///
@@ -372,6 +402,8 @@ pub async fn install_browsers(browsers: Option<&[&str]>) -> Result<()> {
 /// # Errors
 ///
 /// - [`Error::ServerNotFound`] if the Playwright driver cannot be located.
+/// - [`Error::DriverMisconfigured`] if a driver override environment variable
+///   is set but does not point at an existing file.
 /// - [`Error::LaunchFailed`] if the installation process exits with a non-zero
 ///   status or fails to spawn.
 ///
@@ -585,8 +617,9 @@ mod tests {
 
     #[test]
     fn test_get_driver_executable() {
-        // This test will pass if any driver source is available
-        let result = get_driver_executable();
+        // Passes if any driver source is available; ignores the real process
+        // environment so a stale override in a developer's shell cannot fail it
+        let result = resolve_driver(|_| None);
         match result {
             Ok((node, cli)) => {
                 tracing::info!("Found Playwright driver:");
@@ -691,5 +724,172 @@ mod tests {
                 .unwrap()
                 .ends_with(".exe")
         );
+    }
+
+    fn fake_driver_dir(temp: &Path) -> (PathBuf, PathBuf) {
+        let (node, cli) = driver_layout(temp, cfg!(windows));
+        std::fs::create_dir_all(cli.parent().unwrap()).unwrap();
+        std::fs::write(&node, b"").unwrap();
+        std::fs::write(&cli, b"").unwrap();
+        (node, cli)
+    }
+
+    fn env_of(vars: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> + use<> {
+        let vars: Vec<(String, String)> = vars
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+        move |name| vars.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone())
+    }
+
+    fn s(path: &Path) -> String {
+        path.to_string_lossy().into_owned()
+    }
+
+    #[test]
+    fn driver_path_override_wins_over_the_bundled_driver() {
+        let temp = tempfile::tempdir().unwrap();
+        let (node, cli) = fake_driver_dir(temp.path());
+        let env = env_of(&[("PLAYWRIGHT_DRIVER_PATH", &s(temp.path()))]);
+
+        assert_eq!(resolve_driver(env).unwrap(), (node, cli));
+    }
+
+    #[test]
+    fn node_exe_override_swaps_the_runtime_and_keeps_the_resolved_cli() {
+        let temp = tempfile::tempdir().unwrap();
+        let (_node, cli) = fake_driver_dir(temp.path());
+        let other_runtime = temp.path().join("other-runtime");
+        std::fs::write(&other_runtime, b"").unwrap();
+        let env = env_of(&[
+            ("PLAYWRIGHT_DRIVER_PATH", &s(temp.path())),
+            ("PLAYWRIGHT_NODE_EXE", &s(&other_runtime)),
+        ]);
+
+        assert_eq!(resolve_driver(env).unwrap(), (other_runtime, cli));
+    }
+
+    #[test]
+    fn cli_js_override_swaps_the_cli_and_keeps_the_resolved_runtime() {
+        let temp = tempfile::tempdir().unwrap();
+        let (node, _cli) = fake_driver_dir(temp.path());
+        let other_cli = temp.path().join("other-cli.js");
+        std::fs::write(&other_cli, b"").unwrap();
+        let env = env_of(&[
+            ("PLAYWRIGHT_DRIVER_PATH", &s(temp.path())),
+            ("PLAYWRIGHT_CLI_JS", &s(&other_cli)),
+        ]);
+
+        assert_eq!(resolve_driver(env).unwrap(), (node, other_cli));
+    }
+
+    #[test]
+    fn node_exe_and_cli_js_together_win_over_the_bundled_driver() {
+        let temp = tempfile::tempdir().unwrap();
+        let (node, cli) = fake_driver_dir(temp.path());
+        let env = env_of(&[
+            ("PLAYWRIGHT_NODE_EXE", &s(&node)),
+            ("PLAYWRIGHT_CLI_JS", &s(&cli)),
+        ]);
+
+        assert_eq!(resolve_driver(env).unwrap(), (node, cli));
+    }
+
+    #[test]
+    fn a_bare_command_name_runtime_is_left_to_path_lookup() {
+        let temp = tempfile::tempdir().unwrap();
+        let (_node, cli) = fake_driver_dir(temp.path());
+        let env = env_of(&[
+            ("PLAYWRIGHT_DRIVER_PATH", &s(temp.path())),
+            ("PLAYWRIGHT_NODE_EXE", "bun"),
+        ]);
+
+        assert_eq!(resolve_driver(env).unwrap(), (PathBuf::from("bun"), cli));
+    }
+
+    #[test]
+    fn an_empty_override_counts_as_unset() {
+        let temp = tempfile::tempdir().unwrap();
+        let (node, cli) = fake_driver_dir(temp.path());
+        let env = env_of(&[
+            ("PLAYWRIGHT_DRIVER_PATH", ""),
+            ("PLAYWRIGHT_NODE_EXE", &s(&node)),
+            ("PLAYWRIGHT_CLI_JS", &s(&cli)),
+        ]);
+
+        assert_eq!(resolve_driver(env).unwrap(), (node, cli));
+    }
+
+    #[test]
+    fn a_runtime_override_pointing_at_a_missing_file_is_an_error() {
+        let temp = tempfile::tempdir().unwrap();
+        fake_driver_dir(temp.path());
+        let missing = temp.path().join("no-such-runtime");
+        let env = env_of(&[
+            ("PLAYWRIGHT_DRIVER_PATH", &s(temp.path())),
+            ("PLAYWRIGHT_NODE_EXE", &s(&missing)),
+        ]);
+
+        let err = resolve_driver(env).unwrap_err();
+
+        assert!(
+            matches!(&err, Error::DriverMisconfigured(msg) if msg.contains("PLAYWRIGHT_NODE_EXE")),
+            "expected DriverMisconfigured naming the variable, got {err:?}"
+        );
+    }
+
+    #[test]
+    fn a_cli_override_pointing_at_a_missing_file_is_an_error() {
+        let temp = tempfile::tempdir().unwrap();
+        fake_driver_dir(temp.path());
+        let missing = temp.path().join("no-such-cli.js");
+        let env = env_of(&[
+            ("PLAYWRIGHT_DRIVER_PATH", &s(temp.path())),
+            ("PLAYWRIGHT_CLI_JS", &s(&missing)),
+        ]);
+
+        let err = resolve_driver(env).unwrap_err();
+
+        assert!(
+            matches!(&err, Error::DriverMisconfigured(msg) if msg.contains("PLAYWRIGHT_CLI_JS")),
+            "expected DriverMisconfigured naming the variable, got {err:?}"
+        );
+    }
+
+    #[test]
+    fn a_driver_path_override_with_only_the_runtime_in_it_is_an_error() {
+        let temp = tempfile::tempdir().unwrap();
+        let (_node, cli) = fake_driver_dir(temp.path());
+        std::fs::remove_file(&cli).unwrap();
+        let env = env_of(&[("PLAYWRIGHT_DRIVER_PATH", &s(temp.path()))]);
+
+        let err = resolve_driver(env).unwrap_err();
+
+        assert!(
+            matches!(&err, Error::DriverMisconfigured(msg) if msg.contains("package/cli.js")),
+            "expected DriverMisconfigured naming the missing file, got {err:?}"
+        );
+    }
+
+    #[test]
+    fn a_driver_path_override_without_a_driver_in_it_is_an_error() {
+        let temp = tempfile::tempdir().unwrap();
+        let env = env_of(&[("PLAYWRIGHT_DRIVER_PATH", &s(temp.path()))]);
+
+        let err = resolve_driver(env).unwrap_err();
+
+        assert!(
+            matches!(&err, Error::DriverMisconfigured(msg) if msg.contains("PLAYWRIGHT_DRIVER_PATH")),
+            "expected DriverMisconfigured naming the variable, got {err:?}"
+        );
+    }
+
+    #[test]
+    fn without_overrides_resolution_still_reaches_the_bundled_driver() {
+        let Some(bundled) = try_bundled_driver().unwrap() else {
+            return; // compile-only builds skip the driver download
+        };
+
+        assert_eq!(resolve_driver(|_| None).unwrap(), bundled);
     }
 }
