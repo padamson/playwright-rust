@@ -12,7 +12,7 @@ use axum::{
     body::Body,
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     http::{HeaderMap, Response, StatusCode},
-    routing::{get, post},
+    routing::{any, get, post},
 };
 use std::net::SocketAddr;
 use tokio::task::JoinHandle;
@@ -56,6 +56,7 @@ impl TestServer {
             .route("/api/data.json", get(json_data_endpoint))
             .route("/slow.html", get(slow_page))
             .route("/api/echo", post(echo_post_endpoint))
+            .route("/api/echo-request", any(echo_request_endpoint))
             .route("/redirect", get(redirect_handler))
             .route("/iframe-test.html", get(iframe_test_page))
             .route("/iframe-content.html", get(iframe_content_page))
@@ -994,6 +995,39 @@ async fn echo_post_endpoint(body: axum::body::Bytes) -> Response<Body> {
         .status(StatusCode::OK)
         .header("Content-Type", "text/plain")
         .body(Body::from(body.to_vec()))
+        .unwrap()
+}
+
+/// Echoes the request as JSON: method, path, lowercased headers, and the body
+/// both as lossy text and base64, so a route override can be verified from the
+/// server's side rather than assumed.
+async fn echo_request_endpoint(
+    method: axum::http::Method,
+    uri: axum::http::Uri,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> Response<Body> {
+    use base64::Engine;
+    let mut header_map = serde_json::Map::new();
+    for (name, value) in &headers {
+        if let Ok(v) = value.to_str() {
+            header_map.insert(
+                name.as_str().to_lowercase(),
+                serde_json::Value::String(v.to_string()),
+            );
+        }
+    }
+    let json = serde_json::json!({
+        "method": method.as_str(),
+        "path": uri.path(),
+        "headers": header_map,
+        "body": String::from_utf8_lossy(&body),
+        "body_base64": base64::engine::general_purpose::STANDARD.encode(&body),
+    });
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Body::from(json.to_string()))
         .unwrap()
 }
 

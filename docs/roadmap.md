@@ -124,7 +124,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - Custom timeouts: `.with_timeout()` configuration
 - Network interception: `page.route()` with async closure handlers
 - Route handling: `route.abort()`, `route.continue()`, `route.fulfill()`
-- Response mocking: Custom status, headers, body (works for API/fetch, main document needs investigation)
+- Response mocking: Custom status, headers, body (delivered to the browser only from the post-0.17.0 fulfill wire-format fix; earlier releases sent parameters the driver ignored)
 - JSON helpers: `.json()` for automatic serialization
 - Glob pattern matching: `**/*.png`, `**/*`, etc.
 - Request data access: `route.request().url()`, `method()`
@@ -144,7 +144,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 **Delivered:**
 - Windows support (stdio cleanup fix, CI stability flags)
 - Complete assertion API (to_be_focused)
-- Main document fulfillment investigation (Playwright server limitation documented)
+- Main document fulfillment investigation (recorded then as a Playwright server limitation; it was this crate's wire format, fixed after 0.17.0)
 - Documentation completeness (rustdoc 100% coverage for all public APIs)
 - Performance optimization (benchmark suite, GUID Arc<str> optimization, chunked reading)
 - Test suite optimization (cargo-nextest integration, test combining)

@@ -1926,18 +1926,9 @@ impl Page {
                                     .unwrap_or_default()
                             });
 
-                            // Build headers map
-                            let mut headers_map = std::collections::HashMap::new();
-                            if let Some(raw_headers) = result.headers {
-                                for h in raw_headers {
-                                    if let (Some(name), Some(value)) = (
-                                        h.get("name").and_then(|v| v.as_str()),
-                                        h.get("value").and_then(|v| v.as_str()),
-                                    ) {
-                                        headers_map.insert(name.to_string(), value.to_string());
-                                    }
-                                }
-                            }
+                            let headers_map = crate::protocol::route_params::har_response_headers(
+                                result.headers.as_deref().unwrap_or_default(),
+                            );
 
                             let mut builder =
                                 crate::protocol::FulfillOptions::builder().status(status);

@@ -73,6 +73,7 @@ pub mod resource_timing;
 pub mod response;
 pub mod root;
 pub mod route;
+pub(crate) mod route_params;
 pub mod screencast;
 pub mod screenshot;
 pub mod select_option;

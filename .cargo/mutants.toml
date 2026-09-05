@@ -21,6 +21,7 @@ examine_globs = [
     "crates/playwright/src/protocol/wait_for.rs",
     "crates/playwright/src/server/error_parsing.rs",
     "crates/playwright/src/server/driver.rs",
+    "crates/playwright/src/protocol/route_params.rs",
     "crates/playwright/src/protocol/resource_timing.rs",
 ]
 

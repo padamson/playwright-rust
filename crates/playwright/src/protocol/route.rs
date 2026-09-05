@@ -179,40 +179,7 @@ impl Route {
         overrides: Option<ContinueOptions>,
         is_fallback: bool,
     ) -> Result<()> {
-        let mut params = json!({
-            "isFallback": is_fallback
-        });
-
-        // Add overrides if provided
-        if let Some(opts) = overrides {
-            // Add headers
-            if let Some(headers) = opts.headers {
-                let headers_array: Vec<serde_json::Value> = headers
-                    .into_iter()
-                    .map(|(name, value)| json!({"name": name, "value": value}))
-                    .collect();
-                params["headers"] = json!(headers_array);
-            }
-
-            // Add method
-            if let Some(method) = opts.method {
-                params["method"] = json!(method);
-            }
-
-            // Add postData (string or binary)
-            if let Some(post_data) = opts.post_data {
-                params["postData"] = json!(post_data);
-            } else if let Some(post_data_bytes) = opts.post_data_bytes {
-                use base64::Engine;
-                let encoded = base64::engine::general_purpose::STANDARD.encode(&post_data_bytes);
-                params["postData"] = json!(encoded);
-            }
-
-            // Add URL
-            if let Some(url) = opts.url {
-                params["url"] = json!(url);
-            }
-        }
+        let params = super::route_params::continue_params(overrides, is_fallback);
 
         self.channel()
             .send::<_, serde_json::Value>("continue", params)
@@ -226,28 +193,10 @@ impl Route {
     ///
     /// * `options` - Response configuration (status, headers, body, etc.)
     ///
-    /// # Known Limitations
+    /// # Errors
     ///
-    /// **Response body fulfillment is not supported in Playwright 1.49.0 - 1.62.1.**
-    ///
-    /// The route.fulfill() method can successfully send requests for status codes and headers,
-    /// but the response body is not transmitted to the browser JavaScript layer. This applies
-    /// to ALL request types (main document, fetch, XHR, etc.), not just document navigation.
-    ///
-    /// **Investigation Findings:**
-    /// - The protocol message is correctly formatted and accepted by the Playwright server
-    /// - The body bytes are present in the fulfill() call
-    /// - The Playwright server creates a Response object
-    /// - But the body content does not reach the browser's fetch/network API
-    ///
-    /// This appears to be a limitation or bug in the Playwright server implementation.
-    /// Tested with versions 1.49.0, 1.56.1, 1.58.2, 1.59.1, 1.60.0, 1.61.1, and
-    /// 1.62.1 (the currently bundled driver). Re-verified against 1.62.1 by the
-    /// reverse-canary integration tests, which still pass — i.e. the limitation
-    /// is unchanged. Those tests assert the broken behavior, so they fail the
-    /// moment upstream fixes it; no manual re-check is needed.
-    /// Workaround: Mock responses at the HTTP server level rather than using network interception,
-    /// or wait for a newer Playwright version that supports response body fulfillment.
+    /// Returns an error if the driver rejects the command, for example when
+    /// the route has already been handled or the page has closed.
     ///
     /// See: <https://playwright.dev/docs/api/class-route#route-fulfill>
     pub async fn fulfill(&self, options: impl Into<Option<FulfillOptions>>) -> Result<()> {
@@ -255,50 +204,7 @@ impl Route {
         self.handled.store(true, Ordering::SeqCst);
         let opts = options.unwrap_or_default();
 
-        // Build the response object for the protocol
-        let mut response = json!({
-            "status": opts.status.unwrap_or(200),
-            "headers": []
-        });
-
-        // Set headers - prepare them BEFORE adding body
-        let mut headers_map = opts.headers.unwrap_or_default();
-
-        // Set body if provided, and prepare headers
-        let body_bytes = opts.body.as_ref();
-        if let Some(body) = body_bytes {
-            let content_length = body.len().to_string();
-            headers_map.insert("content-length".to_string(), content_length);
-        }
-
-        // Add Content-Type if specified
-        if let Some(ref ct) = opts.content_type {
-            headers_map.insert("content-type".to_string(), ct.clone());
-        }
-
-        // Convert headers to protocol format
-        let headers_array: Vec<Value> = headers_map
-            .into_iter()
-            .map(|(name, value)| json!({"name": name, "value": value}))
-            .collect();
-        response["headers"] = json!(headers_array);
-
-        // Set body LAST, after all other fields
-        if let Some(body) = body_bytes {
-            // Send as plain string for text (UTF-8), base64 for binary
-            if let Ok(body_str) = std::str::from_utf8(body) {
-                response["body"] = json!(body_str);
-            } else {
-                use base64::Engine;
-                let encoded = base64::engine::general_purpose::STANDARD.encode(body);
-                response["body"] = json!(encoded);
-                response["isBase64"] = json!(true);
-            }
-        }
-
-        let params = json!({
-            "response": response
-        });
+        let params = super::route_params::fulfill_params(opts);
 
         self.channel()
             .send::<_, serde_json::Value>("fulfill", params)
