@@ -1,7 +1,8 @@
 use leptos::prelude::*;
 
 use crate::components::{
-    Comparison, DogfoodBanner, Features, Footer, Hero, Install, VersionSwitcher, Walkthrough,
+    Comparison, DogfoodBanner, Features, Footer, Hero, Install, ServeWalkthrough, VersionSwitcher,
+    Walkthrough,
 };
 
 /// Root of the landing page. Each section is a reusable component so the view
@@ -18,6 +19,7 @@ pub fn App() -> impl IntoView {
             <Features/>
             <DogfoodBanner/>
             <Walkthrough/>
+            <ServeWalkthrough/>
             <Footer/>
         </div>
     }

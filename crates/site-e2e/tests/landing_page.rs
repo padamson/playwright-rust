@@ -21,10 +21,12 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use axum::Router;
+use axum::http::{StatusCode, header::CONTENT_TYPE};
+use axum::response::IntoResponse;
 use playwright_rs::protocol::{
     ActionCursor, Animations, AriaSnapshotOptions, Page, Playwright, ScreencastStartOptions,
     ScreenshotOptions, ShowActionsOptions, StartHarOptions, TracingStartOptions,
-    TracingStopOptions,
+    TracingStopOptions, Viewport,
 };
 use playwright_rs::{expect, expect_page};
 use tower_http::services::ServeDir;
@@ -57,6 +59,41 @@ async fn serve(dist: &PathBuf) -> (SocketAddr, tokio::task::JoinHandle<()>) {
     serve_with(dist, None).await
 }
 
+/// What the in-process backend answers for `/versions.json`: the JSON, or
+/// `None` for an outage. Shared with the test, which rewrites it mid-run.
+type Backend = Arc<Mutex<Option<String>>>;
+
+fn backend_answering(manifest: &str) -> Backend {
+    Arc::new(Mutex::new(Some(manifest.to_string())))
+}
+
+/// A router answering `/versions.json` from `backend`, for stubbing what the
+/// version switcher fetches.
+fn versions_manifest(backend: &Backend) -> Router {
+    let answers = backend.clone();
+    Router::new().route(
+        "/versions.json",
+        axum::routing::get(move || {
+            let answer = answers.lock().expect("backend lock").clone();
+            async move {
+                match answer {
+                    Some(json) => ([(CONTENT_TYPE, "application/json")], json).into_response(),
+                    None => StatusCode::SERVICE_UNAVAILABLE.into_response(),
+                }
+            }
+        }),
+    )
+}
+
+/// A fresh Chromium page. The `Playwright` and `Browser` handles come back
+/// too: dropping either tears down the browser.
+async fn launch_page() -> (Playwright, playwright_rs::protocol::Browser, Page) {
+    let pw = Playwright::launch().await.expect("launch playwright");
+    let browser = pw.chromium().launch().await.expect("launch chromium");
+    let page = browser.new_page().await.expect("new page");
+    (pw, browser, page)
+}
+
 /// The built site, or `None` when it is absent — these tests skip rather than
 /// fail so `cargo test` is useful without a prior `trunk build`.
 fn dist_or_skip(what: &str) -> Option<PathBuf> {
@@ -87,9 +124,7 @@ async fn open_site(
     tokio::task::JoinHandle<()>,
 ) {
     let (addr, server) = serve_with(dist, overlay).await;
-    let pw = Playwright::launch().await.expect("launch playwright");
-    let browser = pw.chromium().launch().await.expect("launch chromium");
-    let page = browser.new_page().await.expect("new page");
+    let (pw, browser, page) = launch_page().await;
     page.goto(&format!("http://{addr}"), None)
         .await
         .expect("navigate to site");
@@ -265,22 +300,38 @@ async fn landing_page_works_as_advertised() {
     // below enforces. Twice now a release has added cards here with no
     // coverage at all (webstorage/webauthn/fake-fs in 0.15.0, then
     // wait-for-function/evaluate-callback/session-state in 0.16.0), each time
-    // by adding to the page and not to this hand-maintained list. A card that
-    // renders only on some builds would need this reworked, not just extended.
+    // by adding to the page and not to this hand-maintained list. An
+    // unreleased card renders only on the dev build, which the hero's
+    // crates.io badge identifies.
+    let is_dev = page
+        .locator("#hero-badges img[alt='crates.io: unreleased']")
+        .count()
+        .await
+        .expect("count the unreleased badge")
+        == 1;
     let cards = [
-        ("#feature-locators", "page.locator"),
-        ("#feature-assertions", "to_have_text"),
-        ("#feature-cross-browser", "launch"),
-        ("#feature-routing", "route"),
-        ("#feature-tracing", "tracing_subscriber"),
-        ("#feature-responsive", "set_viewport_size"),
-        ("#feature-webstorage", "local_storage"),
-        ("#feature-webauthn", "credentials"),
-        ("#feature-wait-for-function", "wait_for_function"),
-        ("#feature-evaluate-callback", "evaluate_with_callback"),
-        ("#feature-session-state", "storage_state"),
-        ("#feature-fake-fs", "fake_file_system"),
+        ("#feature-locators", "page.locator", false),
+        ("#feature-assertions", "to_have_text", false),
+        ("#feature-cross-browser", "launch", false),
+        ("#feature-routing", "route", false),
+        ("#feature-tracing", "tracing_subscriber", false),
+        ("#feature-responsive", "set_viewport_size", false),
+        ("#feature-webstorage", "local_storage", false),
+        ("#feature-webauthn", "credentials", false),
+        ("#feature-wait-for-function", "wait_for_function", false),
+        (
+            "#feature-evaluate-callback",
+            "evaluate_with_callback",
+            false,
+        ),
+        ("#feature-session-state", "storage_state", false),
+        ("#feature-fake-fs", "fake_file_system", false),
+        ("#feature-route-service", "route_service", true),
     ];
+    let cards: Vec<(&str, &str)> = cards
+        .into_iter()
+        .filter_map(|(id, token, unreleased)| (is_dev || !unreleased).then_some((id, token)))
+        .collect();
     let rendered = page
         .locator("[id^='feature-']")
         .count()
@@ -377,15 +428,9 @@ async fn version_switcher_lists_versions_and_warns_on_dev() {
     };
 
     // Overlay a fixture manifest the dev build can fetch.
-    let manifest = Router::new().route(
-        "/versions.json",
-        axum::routing::get(|| async {
-            (
-                [(axum::http::header::CONTENT_TYPE, "application/json")],
-                r#"{"latest":"9.9.9","versions":["9.9.9","0.14.0"]}"#,
-            )
-        }),
-    );
+    let manifest = versions_manifest(&backend_answering(
+        r#"{"latest":"9.9.9","versions":["9.9.9","0.14.0"]}"#,
+    ));
     let (_pw, browser, page, server) = open_site(&dist, Some(manifest)).await;
 
     // The dropdown is always present; once the manifest loads it carries the
@@ -444,13 +489,17 @@ async fn dev_build_reflects_unreleased_state() {
         .expect("count Playwright badge");
     assert_eq!(pw_badge, 1, "dev build shows the 1.62.1 Playwright badge");
 
-    // No cards carry `unreleased=true` right now: wait-for-function,
-    // evaluate-callback and session-state all shipped in 0.16.0, so their
-    // dev-only assertions retired with the flag. With no flagged card left,
-    // the dev-only branch in FeatureCard is unexercised in both directions
-    // (the snapshot's zero-badge assertion passes vacuously too), and stays
-    // that way until someone adds the next unreleased card. That gap is the
-    // reason to replace the boolean with a per-card `since` version.
+    // The in-process serving card and its walkthrough are `unreleased` until
+    // the release that carries `route_service` ships: both render here, badged,
+    // and the release-snapshot gate asserts neither does there.
+    expect(page.locator("#feature-route-service [data-unreleased-badge]"))
+        .to_be_visible()
+        .await
+        .expect("the unreleased card is badged on the dev build");
+    expect(page.locator("#serve-walkthrough [data-unreleased-badge]"))
+        .to_be_visible()
+        .await
+        .expect("the unreleased walkthrough is badged on the dev build");
 
     // Dogfood the screencast API (shipped in 0.15.0): record the page with
     // cursor decoration and save a frame as the DogfoodBanner's receipt (the
@@ -544,22 +593,11 @@ async fn deployed_snapshot_is_sound() {
     // and misreport it as broken — the first run of this test did exactly that.
     let mount = base.trim_end_matches('/').to_string();
     let manifest = format!(r#"{{"latest":"{version}","versions":["{version}"]}}"#);
-    let overlay = Router::new()
-        .route(
-            "/versions.json",
-            axum::routing::get(|| async move {
-                (
-                    [(axum::http::header::CONTENT_TYPE, "application/json")],
-                    manifest,
-                )
-            }),
-        )
-        .nest_service(&mount, ServeDir::new(&dist));
+    let overlay =
+        versions_manifest(&backend_answering(&manifest)).nest_service(&mount, ServeDir::new(&dist));
     let (addr, server) = serve_with(&dist, Some(overlay)).await;
 
-    let pw = Playwright::launch().await.expect("launch playwright");
-    let browser = pw.chromium().launch().await.expect("launch chromium");
-    let page = browser.new_page().await.expect("new page");
+    let (_pw, browser, page) = launch_page().await;
 
     // Registered before navigating: any 4xx/5xx here is an asset the snapshot
     // build pointed at the wrong place. This is the sub-path guard.
@@ -637,4 +675,108 @@ async fn deployed_snapshot_is_sound() {
 
     browser.close().await.ok();
     server.abort();
+}
+
+/// Serve this site in-process through `route_service` and rewrite its backend
+/// under the running app; each step writes the receipt the second walkthrough
+/// shows.
+#[tokio::test]
+async fn site_served_in_process_boots_and_reacts() {
+    let Some(dist) = dist_or_skip("in-process serving test") else {
+        return;
+    };
+    let receipts = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../site/public/receipts");
+    let steps = receipts.join("serve");
+    std::fs::create_dir_all(&steps).expect("create receipts/serve dir");
+
+    // Step 1: the app under test, its backend owned by the test. Nothing is
+    // listening, and the origin is made up.
+    let backend = backend_answering(r#"{"latest":"9.9.9","versions":["9.9.9","0.17.0"]}"#);
+    let app = versions_manifest(&backend).fallback_service(ServeDir::new(&dist));
+
+    let (_pw, browser, page) = launch_page().await;
+    page.route_service("https://playwright-rust.test/**", app)
+        .await
+        .expect("register the in-process app");
+    page.goto("https://playwright-rust.test/", None)
+        .await
+        .expect("navigate to the in-process site");
+    expect(page.locator("#hero-title"))
+        .to_have_text("Playwright for Rust")
+        .await
+        .expect("the wasm app boots when served in-process");
+    let secure = page
+        .evaluate_value("String(window.isSecureContext) + ':' + location.origin")
+        .await
+        .expect("probe the security context");
+    assert_eq!(secure, "true:https://playwright-rust.test");
+    shot(&page, &steps, "01.png", "#hero").await;
+
+    // The switcher bar is one wide row; a phone-width viewport keeps its
+    // receipts legible in the walkthrough's frame.
+    page.set_viewport_size(Viewport {
+        width: 480,
+        height: 640,
+    })
+    .await
+    .expect("narrow the viewport");
+
+    // Step 2: the router answered the app's own fetch with the test's JSON.
+    expect(page.locator("#version-select"))
+        .to_contain_text("v9.9.9")
+        .await
+        .expect("the switcher lists the made-up release the in-process endpoint returned");
+    expect(page.locator("#version-switcher a"))
+        .to_contain_text("v9.9.9")
+        .await
+        .expect("the banner nudges toward the made-up release");
+    shot(&page, &steps, "02.png", "#version-switcher").await;
+
+    // Step 3: rewrite the backend's answer; the app follows on reload.
+    *backend.lock().expect("backend lock") =
+        Some(r#"{"latest":"0.17.0","versions":["0.17.0"]}"#.to_string());
+    page.reload(None)
+        .await
+        .expect("reload against the new answer");
+    expect(page.locator("#version-switcher a"))
+        .to_contain_text("v0.17.0")
+        .await
+        .expect("the banner follows the backend's new latest");
+    shot(&page, &steps, "03.png", "#version-switcher").await;
+
+    // Step 4: take the backend down; the app degrades to the current build.
+    *backend.lock().expect("backend lock") = None;
+    page.reload(None).await.expect("reload against the outage");
+    expect(page.locator("#version-select option"))
+        .to_have_count(1)
+        .await
+        .expect("only the current build is offered during the outage");
+    expect(page.locator("#version-switcher a"))
+        .to_have_count(0)
+        .await
+        .expect("no nudge without a manifest");
+    shot(&page, &steps, "04.png", "#version-switcher").await;
+
+    // The walkthrough that shows these receipts renders on the dev build and
+    // steps through them.
+    page.set_viewport_size(Viewport {
+        width: 1280,
+        height: 720,
+    })
+    .await
+    .expect("restore the viewport");
+    expect(page.locator("#serve-walkthrough"))
+        .to_be_visible()
+        .await
+        .expect("the in-process walkthrough renders");
+    page.locator("#serve-next")
+        .click(None)
+        .await
+        .expect("advance the in-process walkthrough");
+    expect(page.locator("#serve-walkthrough img"))
+        .to_have_attribute("src", "receipts/serve/02.png")
+        .await
+        .expect("the second step shows its receipt");
+
+    browser.close().await.expect("close browser");
 }

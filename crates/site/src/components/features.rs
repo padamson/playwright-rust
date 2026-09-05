@@ -2,6 +2,25 @@ use leptos::prelude::*;
 
 use super::{CodeBlock, CodeTabs, FeatureCard};
 use crate::snippets;
+use crate::version::{SITE_VERSION, is_dev};
+
+/// Where the in-process serving card sends the reader: the walkthrough on
+/// this page, and the module reference. docs.rs only has the module once the
+/// release that carries it ships, so the dev build links to the source.
+fn route_service_links() -> Vec<(&'static str, String)> {
+    let reference = if is_dev() {
+        "https://github.com/padamson/playwright-rust/blob/main/crates/playwright/src/protocol/route_service.rs"
+            .to_string()
+    } else {
+        format!(
+            "https://docs.rs/playwright-rs/{SITE_VERSION}/playwright_rs/protocol/route_service/index.html"
+        )
+    };
+    vec![
+        ("Walkthrough", "#serve-walkthrough".to_string()),
+        ("Reference", reference),
+    ]
+}
 
 #[component]
 pub fn Features() -> impl IntoView {
@@ -40,6 +59,15 @@ pub fn Features() -> impl IntoView {
                     blurb="Mock, block, or inspect any request from Rust."
                 >
                     <CodeBlock html=snippets::CARD_ROUTING_RS/>
+                </FeatureCard>
+                <FeatureCard
+                    id="feature-route-service"
+                    title="Serve your app from the test"
+                    blurb="Hand an axum router or a wasm bundle to route_service. No port, no server, any origin."
+                    unreleased=true
+                    links=route_service_links()
+                >
+                    <CodeBlock html=snippets::CARD_ROUTE_SERVICE_RS/>
                 </FeatureCard>
                 <FeatureCard
                     id="feature-tracing"

@@ -23,4 +23,4 @@ pub use hero::Hero;
 pub use install::Install;
 pub use unreleased_badge::UnreleasedBadge;
 pub use version_switcher::VersionSwitcher;
-pub use walkthrough::Walkthrough;
+pub use walkthrough::{ServeWalkthrough, Walkthrough};

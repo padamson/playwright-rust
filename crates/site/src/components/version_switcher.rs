@@ -127,7 +127,7 @@ pub fn VersionSwitcher() -> impl IntoView {
     };
 
     view! {
-        <div class="w-full border-b border-rust-700/30 bg-ink-800/80 text-sm">
+        <div id="version-switcher" class="w-full border-b border-rust-700/30 bg-ink-800/80 text-sm">
             <div class="mx-auto flex max-w-5xl items-center gap-3 px-6 py-2">
                 <label for="version-select" class="text-rust-50/60">"Version"</label>
                 <select
