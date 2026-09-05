@@ -158,7 +158,7 @@ repos:
         language: system
         pass_filenames: false
         # Only run when dependency or supply-chain config files change
-        files: (Cargo\.toml|Cargo\.lock|supply-chain/)$
+        files: (Cargo\.toml|Cargo\.lock|^supply-chain/)
 
       - id: external-lockfiles-current
         name: out-of-workspace lockfiles current
