@@ -155,17 +155,12 @@ impl APIRequestContext {
             params["method"] = json!(method);
         }
         if let Some(headers) = opts.headers {
-            let headers_array = crate::protocol::route_params::header_array(headers);
-            params["headers"] = json!(headers_array);
+            params["headers"] = Value::Array(crate::protocol::route_params::header_array(headers));
         }
-        if let Some(post_data) = opts.post_data {
-            use base64::Engine;
-            let encoded = base64::engine::general_purpose::STANDARD.encode(post_data.as_bytes());
-            params["postData"] = json!(encoded);
-        } else if let Some(post_data_bytes) = opts.post_data_bytes {
-            use base64::Engine;
-            let encoded = base64::engine::general_purpose::STANDARD.encode(&post_data_bytes);
-            params["postData"] = json!(encoded);
+        if let Some(encoded) =
+            crate::protocol::route_params::post_data_param(opts.post_data, opts.post_data_bytes)
+        {
+            params["postData"] = Value::String(encoded);
         }
         if let Some(max_redirects) = opts.max_redirects {
             params["maxRedirects"] = json!(max_redirects);
@@ -271,18 +266,12 @@ impl APIRequestContext {
             params["method"] = json!(method);
         }
         if let Some(headers) = opts.headers {
-            let headers_array = crate::protocol::route_params::header_array(headers);
-            params["headers"] = json!(headers_array);
+            params["headers"] = Value::Array(crate::protocol::route_params::header_array(headers));
         }
-        if let Some(post_data) = opts.post_data {
-            use base64::Engine;
-            let encoded = base64::engine::general_purpose::STANDARD.encode(post_data.as_bytes());
-            params["postData"] = json!(encoded);
-        }
-        if let Some(post_data_bytes) = opts.post_data_bytes {
-            use base64::Engine;
-            let encoded = base64::engine::general_purpose::STANDARD.encode(&post_data_bytes);
-            params["postData"] = json!(encoded);
+        if let Some(encoded) =
+            crate::protocol::route_params::post_data_param(opts.post_data, opts.post_data_bytes)
+        {
+            params["postData"] = Value::String(encoded);
         }
         if let Some(max_redirects) = opts.max_redirects {
             params["maxRedirects"] = json!(max_redirects);
@@ -617,8 +606,8 @@ impl APIRequest {
                 params["baseURL"] = json!(base_url);
             }
             if let Some(headers) = opts.extra_http_headers {
-                let arr = crate::protocol::route_params::header_array(headers);
-                params["extraHTTPHeaders"] = json!(arr);
+                params["extraHTTPHeaders"] =
+                    Value::Array(crate::protocol::route_params::header_array(headers));
             }
             if let Some(ignore) = opts.ignore_https_errors {
                 params["ignoreHTTPSErrors"] = json!(ignore);

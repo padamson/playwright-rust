@@ -22,6 +22,7 @@ examine_globs = [
     "crates/playwright/src/server/error_parsing.rs",
     "crates/playwright/src/server/driver.rs",
     "crates/playwright/src/protocol/route_params.rs",
+    "crates/playwright/src/protocol/route_service.rs",
     "crates/playwright/src/protocol/resource_timing.rs",
 ]
 
@@ -49,6 +50,11 @@ exclude_re = [
     "try_bundled_driver|try_user_cache_driver",
     "try_npm_global|try_npm_local",
     "find_playwright_in_node_modules|find_node_executable",
+
+    # route_service.rs: the request/response conversions are pure and unit
+    # tested; the fulfiller, its inner step, and the engine lookup drive a
+    # live Route and need the integration suite.
+    "fulfill_from_service|service_response|request_context",
 
     # Builder constructors — trivially correct, integration-test-only
     "Options::builder",

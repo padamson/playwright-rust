@@ -61,6 +61,8 @@ mod response;
 mod route_advanced;
 mod route_fallback_unroute;
 mod route_fetch;
+#[cfg(feature = "route-service")]
+mod route_service;
 mod screencast;
 mod screenshot;
 mod scripts_styles;

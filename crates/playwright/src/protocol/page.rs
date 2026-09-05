@@ -1749,6 +1749,49 @@ impl Page {
         Ok(())
     }
 
+    /// Fulfills matching requests from an in-process tower `Service`, such as
+    /// an axum `Router` or a tower-http `ServeDir`, with no socket.
+    ///
+    /// Each request whose URL matches `pattern` is rebuilt as an
+    /// `http::Request`, handed to a clone of `service`, and fulfilled with the
+    /// response. The [`route_service`](crate::protocol::route_service) module
+    /// documents what the service sees, the limits of route interception
+    /// compared with a real listener, and how to wait on a wasm frontend.
+    ///
+    /// # Arguments
+    ///
+    /// * `pattern` - URL pattern to match (supports glob patterns like `"https://app.example/**"`)
+    /// * `service` - Any [`RouteService`](crate::protocol::route_service::RouteService):
+    ///   an axum `Router`, a tower-http `ServeDir`, a `tower::service_fn`; cloned per request
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if network interception cannot be enabled. A service
+    /// that fails at request time aborts that request and logs the error; it
+    /// does not surface here.
+    ///
+    /// See: <https://playwright.dev/docs/mock>
+    #[cfg(feature = "route-service")]
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %pattern))]
+    pub async fn route_service<S: crate::protocol::route_service::RouteService>(
+        &self,
+        pattern: &str,
+        service: S,
+    ) -> Result<()> {
+        // Captured here, a hop away, so the service's view of the browser
+        // (its engine, its cookie jar) does not depend on walking each
+        // request's object chain.
+        let context = self.context().ok();
+        self.route(pattern, move |route| {
+            crate::protocol::route_service::fulfill_from_service(
+                route,
+                service.clone(),
+                context.clone(),
+            )
+        })
+        .await
+    }
+
     /// Updates network interception patterns for this page
     async fn enable_network_interception(&self) -> Result<()> {
         // Collect all patterns from registered handlers
@@ -1886,7 +1929,7 @@ impl Page {
                 let req_method = request.method().to_string();
 
                 // Build headers array as [{name, value}]
-                let headers = crate::protocol::route_params::header_array(request.headers());
+                let headers = crate::protocol::route_params::header_array(request.header_pairs());
 
                 let lookup = local_utils
                     .har_lookup(
@@ -1913,31 +1956,13 @@ impl Page {
                             route.continue_(Some(opts)).await
                         }
                         "fulfill" => {
-                            let status = result.status.unwrap_or(200);
-
-                            // Decode base64 body if present
-                            let body_bytes = result.body.as_deref().map(|b64| {
-                                base64::engine::general_purpose::STANDARD
-                                    .decode(b64)
-                                    .unwrap_or_default()
-                            });
-
-                            let headers_map = crate::protocol::route_params::har_response_headers(
-                                result.headers.as_deref().unwrap_or_default(),
-                            );
-
-                            let mut builder =
-                                crate::protocol::FulfillOptions::builder().status(status);
-
-                            if !headers_map.is_empty() {
-                                builder = builder.headers(headers_map);
-                            }
-
-                            if let Some(body) = body_bytes {
-                                builder = builder.body(body);
-                            }
-
-                            route.fulfill(Some(builder.build())).await
+                            route
+                                .fulfill(Some(crate::protocol::route_params::har_fulfill_options(
+                                    result.status,
+                                    result.body.as_deref(),
+                                    result.headers.as_deref(),
+                                )))
+                                .await
                         }
                         _ => {
                             // "fallback" or "error" or unknown
@@ -2029,6 +2054,14 @@ impl Page {
                 let handler = entry.handler.clone();
                 if let Err(e) = handler(route.clone()).await {
                     tracing::warn!("Route handler error: {}", e);
+                    // A handler that failed before reaching a route command
+                    // leaves the request pending; abort it so the browser
+                    // sees a failed request instead of waiting out its timeout.
+                    if !route.was_handled()
+                        && let Err(abort_error) = route.abort(Some("failed")).await
+                    {
+                        tracing::warn!("aborting the unhandled route failed too: {}", abort_error);
+                    }
                     break;
                 }
                 // If handler called fallback(), try the next matching handler
@@ -5681,18 +5714,13 @@ impl Response {
     pub async fn all_headers(
         &self,
     ) -> crate::error::Result<std::collections::HashMap<String, String>> {
-        let entries = self.headers_array().await?;
-        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-        for entry in entries {
-            let key = entry.name.to_lowercase();
-            map.entry(key)
-                .and_modify(|v| {
-                    v.push_str(", ");
-                    v.push_str(&entry.value);
-                })
-                .or_insert(entry.value);
-        }
-        Ok(map)
+        Ok(crate::protocol::route_params::merge_headers(
+            self.headers_array()
+                .await?
+                .into_iter()
+                .map(|entry| (entry.name, entry.value)),
+            Some(", "),
+        ))
     }
 
     /// Returns the value for a single response header, or `None` if not present.
@@ -5720,21 +5748,7 @@ impl Response {
     /// See: <https://playwright.dev/docs/api/class-response#response-header-value>
     #[tracing::instrument(level = "debug", skip_all, fields(url = %self.url(), name = %name))]
     pub async fn header_value(&self, name: &str) -> crate::error::Result<Option<String>> {
-        let entries = self.headers_array().await?;
-        let name_lower = name.to_lowercase();
-        let mut values: Vec<String> = entries
-            .into_iter()
-            .filter(|h| h.name.to_lowercase() == name_lower)
-            .map(|h| h.value)
-            .collect();
-
-        if values.is_empty() {
-            Ok(None)
-        } else if values.len() == 1 {
-            Ok(Some(values.remove(0)))
-        } else {
-            Ok(Some(values.join(", ")))
-        }
+        Ok(self.all_headers().await?.get(&name.to_lowercase()).cloned())
     }
 }
 

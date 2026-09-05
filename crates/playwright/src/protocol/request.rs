@@ -296,18 +296,16 @@ impl Request {
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-headers>
     pub fn headers(&self) -> HashMap<String, String> {
-        let mut map = HashMap::new();
-        if let Some(headers) = self.initializer().get("headers").and_then(|v| v.as_array()) {
-            for entry in headers {
-                if let (Some(name), Some(value)) = (
-                    entry.get("name").and_then(|v| v.as_str()),
-                    entry.get("value").and_then(|v| v.as_str()),
-                ) {
-                    map.insert(name.to_lowercase(), value.to_string());
-                }
-            }
-        }
-        map
+        self.header_pairs().into_iter().collect()
+    }
+
+    /// The request headers from the initializer in wire order, names
+    /// lowercased, repeats kept. A local read; no RPC.
+    pub(crate) fn header_pairs(&self) -> Vec<(String, String)> {
+        let raw = self.initializer().get("headers").and_then(|v| v.as_array());
+        crate::protocol::route_params::name_value_pairs(raw.map(Vec::as_slice))
+            .map(|(name, value)| (name.to_lowercase(), value.to_string()))
+            .collect()
     }
 
     /// Returns the raw base64-encoded post data from the initializer, or `None`.
@@ -324,9 +322,7 @@ impl Request {
     ///
     /// See: <https://playwright.dev/docs/api/class-request#request-post-data-buffer>
     pub fn post_data_buffer(&self) -> Option<Vec<u8>> {
-        let b64 = self.post_data_b64()?;
-        use base64::Engine;
-        base64::engine::general_purpose::STANDARD.decode(b64).ok()
+        crate::protocol::route_params::base64_decode(self.post_data_b64()?)
     }
 
     /// Returns the request body (POST data) as a UTF-8 string, or `None` if there is no body.
@@ -424,8 +420,9 @@ impl Request {
 
     /// Returns all request headers as a `HashMap<String, String>` with lowercased keys.
     ///
-    /// When multiple headers have the same name, their values are joined with `\n`
-    /// (matching Playwright's behavior).
+    /// When multiple headers have the same name, their values are joined with
+    /// `, `, except `set-cookie`, joined with a newline, matching Playwright's
+    /// other bindings.
     ///
     /// Sends a `"rawRequestHeaders"` RPC call to the Playwright server.
     ///
@@ -436,18 +433,13 @@ impl Request {
     /// See: <https://playwright.dev/docs/api/class-request#request-all-headers>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn all_headers(&self) -> Result<HashMap<String, String>> {
-        let entries = self.headers_array().await?;
-        let mut map: HashMap<String, String> = HashMap::new();
-        for entry in entries {
-            let key = entry.name.to_lowercase();
-            map.entry(key)
-                .and_modify(|existing| {
-                    existing.push('\n');
-                    existing.push_str(&entry.value);
-                })
-                .or_insert(entry.value);
-        }
-        Ok(map)
+        Ok(crate::protocol::route_params::merge_headers(
+            self.headers_array()
+                .await?
+                .into_iter()
+                .map(|entry| (entry.name, entry.value)),
+            Some(", "),
+        ))
     }
 
     /// Returns the value of the specified header (case-insensitive), or `None` if not found.

@@ -2,6 +2,47 @@ use crate::test_server::TestServer;
 use playwright_rs::protocol::{ContinueOptions, FulfillOptions, Playwright, RouteFromHarOptions};
 use std::collections::HashMap;
 
+/// Fulfill the main document and assert the browser rendered it, not the server's page.
+async fn assert_fulfilled_document(
+    page: &playwright_rs::protocol::Page,
+    server: &TestServer,
+    status: u16,
+    title: &str,
+) {
+    let html = format!(
+        "<!DOCTYPE html><html><head><title>{title}</title></head>\
+         <body><p id=\"content\">Fulfillment worked</p></body></html>"
+    );
+    page.route(&format!("{}/", server.url()), move |route| {
+        let html = html.clone();
+        async move {
+            let options = FulfillOptions::builder()
+                .status(status)
+                .body_string(html)
+                .content_type("text/html")
+                .build();
+            route.fulfill(Some(options)).await
+        }
+    })
+    .await
+    .expect("Failed to set up route");
+
+    let response = page
+        .goto(&format!("{}/", server.url()), None)
+        .await
+        .expect("Failed to navigate")
+        .expect("Expected a response");
+    assert_eq!(response.status(), status);
+
+    let delivered = page
+        .evaluate_value(
+            "document.title + '|' + (document.getElementById('content')?.textContent ?? 'missing')",
+        )
+        .await
+        .expect("Failed to read the document");
+    assert_eq!(delivered, format!("{title}|Fulfillment worked"));
+}
+
 #[tokio::test]
 async fn test_route_continue_with_headers() {
     let server = TestServer::start().await;
@@ -20,7 +61,7 @@ async fn test_route_continue_with_headers() {
         .await
         .expect("Failed to navigate");
 
-    let echoed = echoed_request(&page).await;
+    let echoed = crate::common::echoed_request(&page).await;
     assert_eq!(echoed["headers"]["x-custom-header"], "test-value");
 
     browser.close().await.expect("Failed to close browser");
@@ -45,20 +86,10 @@ async fn test_route_continue_with_method() {
         .await
         .expect("Failed to navigate");
 
-    assert_eq!(echoed_request(&page).await["method"], "POST");
+    assert_eq!(crate::common::echoed_request(&page).await["method"], "POST");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
-}
-
-/// What the test server saw for a navigation the route continued with
-/// overrides: the echo endpoint reports method, path, headers, and body.
-async fn echoed_request(page: &playwright_rs::protocol::Page) -> serde_json::Value {
-    let text = page
-        .evaluate_value("document.body.textContent")
-        .await
-        .expect("read echoed request");
-    serde_json::from_str(&text).unwrap_or_else(|e| panic!("echo endpoint returned {text:?}: {e}"))
 }
 
 #[tokio::test]
@@ -80,7 +111,7 @@ async fn test_route_continue_with_post_data() {
         .await
         .expect("Failed to navigate");
 
-    let echoed = echoed_request(&page).await;
+    let echoed = crate::common::echoed_request(&page).await;
     assert_eq!(echoed["method"], "POST");
     assert_eq!(echoed["body"], "key=value");
 
@@ -107,7 +138,7 @@ async fn test_route_continue_with_post_data_bytes() {
         .await
         .expect("Failed to navigate");
 
-    let echoed = echoed_request(&page).await;
+    let echoed = crate::common::echoed_request(&page).await;
     assert_eq!(echoed["method"], "POST");
     assert_eq!(echoed["body_base64"], "AQL/");
 
@@ -135,7 +166,7 @@ async fn test_route_continue_with_url() {
         .await
         .expect("Failed to navigate");
 
-    let echoed = echoed_request(&page).await;
+    let echoed = crate::common::echoed_request(&page).await;
     assert_eq!(echoed["path"], "/api/echo-request");
 
     browser.close().await.expect("Failed to close browser");
@@ -165,7 +196,7 @@ async fn test_route_continue_with_combined_overrides() {
         .await
         .expect("Failed to navigate");
 
-    let echoed = echoed_request(&page).await;
+    let echoed = crate::common::echoed_request(&page).await;
     assert_eq!(echoed["method"], "POST");
     assert_eq!(echoed["headers"]["x-custom"], "value");
     assert_eq!(echoed["headers"]["x-test"], "123");
@@ -190,7 +221,7 @@ async fn test_route_continue_no_overrides() {
         .expect("Failed to navigate")
         .expect("Expected a response");
     assert_eq!(response.status(), 200);
-    assert_eq!(echoed_request(&page).await["method"], "GET");
+    assert_eq!(crate::common::echoed_request(&page).await["method"], "GET");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -200,53 +231,12 @@ async fn test_route_continue_no_overrides() {
 // route.fulfill() with main document navigation
 // ============================================================================
 
-/// Fulfill the main document with a page titled `title` and assert the
-/// browser rendered that page, not the server's.
-async fn assert_fulfilled_document(
-    page: &playwright_rs::protocol::Page,
-    server: &TestServer,
-    title: &str,
-) {
-    let html = format!(
-        "<!DOCTYPE html><html><head><title>{title}</title></head>\
-         <body><p id=\"content\">Fulfillment worked</p></body></html>"
-    );
-    page.route(&format!("{}/", server.url()), move |route| {
-        let html = html.clone();
-        async move {
-            let options = FulfillOptions::builder()
-                .status(200)
-                .body_string(html)
-                .content_type("text/html")
-                .build();
-            route.fulfill(Some(options)).await
-        }
-    })
-    .await
-    .expect("Failed to set up route");
-
-    let response = page
-        .goto(&format!("{}/", server.url()), None)
-        .await
-        .expect("Failed to navigate")
-        .expect("Expected a response");
-    assert_eq!(response.status(), 200);
-
-    let delivered = page
-        .evaluate_value(
-            "document.title + '|' + (document.getElementById('content')?.textContent ?? 'missing')",
-        )
-        .await
-        .expect("Failed to read the document");
-    assert_eq!(delivered, format!("{title}|Fulfillment worked"));
-}
-
 #[tokio::test]
 async fn test_route_fulfill_main_document() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
-    assert_fulfilled_document(&page, &server, "Fulfilled Page").await;
+    assert_fulfilled_document(&page, &server, 200, "Fulfilled Page").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -267,7 +257,7 @@ async fn test_route_fulfill_main_document_firefox() {
         .expect("Failed to launch Firefox");
     let page = browser.new_page().await.expect("Failed to create page");
 
-    assert_fulfilled_document(&page, &server, "Firefox Fulfilled").await;
+    assert_fulfilled_document(&page, &server, 200, "Firefox Fulfilled").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -288,7 +278,7 @@ async fn test_route_fulfill_main_document_webkit() {
         .expect("Failed to launch WebKit");
     let page = browser.new_page().await.expect("Failed to create page");
 
-    assert_fulfilled_document(&page, &server, "WebKit Fulfilled").await;
+    assert_fulfilled_document(&page, &server, 200, "WebKit Fulfilled").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -299,29 +289,7 @@ async fn test_route_fulfill_main_document_with_status() {
     let server = TestServer::start().await;
     let (_pw, browser, page) = crate::common::setup().await;
 
-    page.route(&format!("{}/", server.url()), |route| async move {
-        let options = FulfillOptions::builder()
-            .status(404)
-            .body_string("<html><body><h1>Page Not Found</h1></body></html>")
-            .content_type("text/html")
-            .build();
-        route.fulfill(Some(options)).await
-    })
-    .await
-    .expect("Failed to set up route");
-
-    let response = page
-        .goto(&format!("{}/", server.url()), None)
-        .await
-        .expect("Failed to navigate")
-        .expect("Expected a response");
-    assert_eq!(response.status(), 404);
-
-    let heading = page
-        .evaluate_value("document.querySelector('h1')?.textContent ?? 'missing'")
-        .await
-        .expect("Failed to read h1");
-    assert_eq!(heading, "Page Not Found");
+    assert_fulfilled_document(&page, &server, 404, "Page Not Found").await;
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -351,12 +319,12 @@ async fn test_route_fulfill_fetch_json() {
         .evaluate_value(
             r#"
         fetch('/api/test')
-            .then(r => r.json().then(j => `${r.status}:${j.status}:${j.mocked}`))
+            .then(r => r.json().then(j => `${r.status}:${r.headers.get('content-type')}:${j.status}:${j.mocked}`))
         "#,
         )
         .await
         .expect("Failed to fetch");
-    assert_eq!(fetched, "200:ok:true");
+    assert_eq!(fetched, "200:application/json:ok:true");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();

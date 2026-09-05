@@ -831,17 +831,22 @@ async fn handle_socket(mut socket: WebSocket) {
     }
 }
 
-/// Returns all request headers as a JSON object so tests can inspect them.
+/// Request headers as a JSON object; `HeaderName` already normalizes names
+/// to lowercase, and non-UTF-8 values are skipped.
+fn headers_json(headers: &HeaderMap) -> serde_json::Map<String, serde_json::Value> {
+    headers
+        .iter()
+        .filter_map(|(name, value)| {
+            Some((
+                name.to_string(),
+                serde_json::Value::String(value.to_str().ok()?.to_string()),
+            ))
+        })
+        .collect()
+}
+
 async fn echo_headers_page(headers: HeaderMap) -> Response<Body> {
-    let mut map = serde_json::Map::new();
-    for (name, value) in &headers {
-        if let Ok(v) = value.to_str() {
-            map.insert(
-                name.as_str().to_lowercase(),
-                serde_json::Value::String(v.to_string()),
-            );
-        }
-    }
+    let map = headers_json(&headers);
     let json = serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
     let html = format!(
         r#"<!DOCTYPE html>
@@ -998,9 +1003,7 @@ async fn echo_post_endpoint(body: axum::body::Bytes) -> Response<Body> {
         .unwrap()
 }
 
-/// Echoes the request as JSON: method, path, lowercased headers, and the body
-/// both as lossy text and base64, so a route override can be verified from the
-/// server's side rather than assumed.
+/// Echoes the request as JSON (method, path, headers, body as text and base64).
 async fn echo_request_endpoint(
     method: axum::http::Method,
     uri: axum::http::Uri,
@@ -1008,19 +1011,10 @@ async fn echo_request_endpoint(
     body: axum::body::Bytes,
 ) -> Response<Body> {
     use base64::Engine;
-    let mut header_map = serde_json::Map::new();
-    for (name, value) in &headers {
-        if let Ok(v) = value.to_str() {
-            header_map.insert(
-                name.as_str().to_lowercase(),
-                serde_json::Value::String(v.to_string()),
-            );
-        }
-    }
     let json = serde_json::json!({
         "method": method.as_str(),
         "path": uri.path(),
-        "headers": header_map,
+        "headers": headers_json(&headers),
         "body": String::from_utf8_lossy(&body),
         "body_base64": base64::engine::general_purpose::STANDARD.encode(&body),
     });

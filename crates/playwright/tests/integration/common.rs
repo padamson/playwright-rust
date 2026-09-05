@@ -146,3 +146,13 @@ pub async fn poll_until<F: FnMut() -> bool>(timeout: std::time::Duration, mut co
         tokio::time::sleep(std::time::Duration::from_millis(25)).await;
     }
 }
+
+/// What the test server's `/api/echo-request` endpoint saw, read from the
+/// page that navigated to it: method, path, headers, and body.
+pub async fn echoed_request(page: &Page) -> serde_json::Value {
+    let text = page
+        .evaluate_value("document.body.textContent")
+        .await
+        .expect("read echoed request");
+    serde_json::from_str(&text).unwrap_or_else(|e| panic!("echo endpoint returned {text:?}: {e}"))
+}

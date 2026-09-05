@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.6.0"
+  version: "0.7.0"
 ---
 
 # Using playwright-rs
@@ -37,12 +37,13 @@ Two things, and the second one is the one that surprises people.
 **The crate.** `playwright-rs` in `[dependencies]`, or `[dev-dependencies]`
 if it is test-only, alongside `tokio` with the `full` feature. Defaults are
 `native-tls`, `macros` and `ring`: transport, the `locator!()` macro, and
-the crypto backend respectively.
+the crypto backend respectively. The release after 0.17.0 adds a fourth default,
+`route-service`, in-process serving through `route_service`.
 
 Prefer leaving them on. `default-features = false` is only needed to swap
-`ring` for `aws-lc`, and it drops all three, so the replacements have to be
-listed back explicitly or `locator!()` disappears and no TLS transport
-remains:
+`ring` for `aws-lc`, and it drops every default, so the replacements have to
+be listed back explicitly or `locator!()` disappears and no TLS transport
+remains (add `"route-service"` to the list on the release after 0.17.0):
 
 ```toml
 playwright-rs = { version = "0.17", default-features = false, features = [
@@ -270,6 +271,20 @@ Concept-level pointers; the exact options live on docs.rs.
   view before acting; `ClickOptions::builder().scroll(Scroll::None)`
   makes the action fail instead — the way to assert something is
   *already* visible, or to avoid scroll side effects.
+- **Serving the app from inside the test: `route_service` (the release
+  after 0.17.0).** When the frontend under test is served by Rust (an axum `Router`, or a built
+  wasm bundle in a directory via tower-http's `ServeDir`), hand the
+  service to `page.route_service("https://app.example/**", service)` or
+  the `BrowserContext` form and navigate to that origin. Every matching
+  request is answered by the service in-process: no listener, no port,
+  any origin including `https://`, works in sandboxes. Prefer it over
+  binding an ephemeral port and spawning `axum::serve` for a test. Reach
+  for a real listener instead when the app depends on streaming
+  responses, server-sent events, WebSockets (those go through
+  `route_web_socket`), or connection-level behavior, since route
+  interception delivers whole bodies and has no connection. The
+  `route_service` module rustdoc has the full contract and a wasm
+  testing section.
 
 ## Debugging failures with traces
 

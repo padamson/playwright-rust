@@ -74,6 +74,8 @@ pub mod response;
 pub mod root;
 pub mod route;
 pub(crate) mod route_params;
+#[cfg(feature = "route-service")]
+pub mod route_service;
 pub mod screencast;
 pub mod screenshot;
 pub mod select_option;

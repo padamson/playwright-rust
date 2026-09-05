@@ -443,6 +443,13 @@ user-id = 96974
 user-login = "daniel-abramov"
 user-name = "Daniel Abramov"
 
+[[publisher.tokio-util]]
+version = "0.7.19"
+when = "2026-07-21"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
+
 [[publisher.toml]]
 version = "1.1.2+spec-1.1.0"
 when = "2026-04-01"
@@ -505,6 +512,13 @@ when = "2026-07-11"
 user-id = 96974
 user-login = "daniel-abramov"
 user-name = "Daniel Abramov"
+
+[[publisher.unicase]]
+version = "2.9.0"
+when = "2026-01-06"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
 
 [[publisher.unicode-ident]]
 version = "1.0.24"
@@ -1398,6 +1412,12 @@ and there were no hits.
 https://source.chromium.org/chromium/chromium/src/+/28841c33c77833cc30b286f9ae24c97e7a8f4057
 """
 aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.http-range-header]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = "safe-to-deploy"
+version = "0.3.1"
+aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
 
 [[audits.google.audits.httpdate]]
 who = "George Burgess IV <gbiv@google.com>"

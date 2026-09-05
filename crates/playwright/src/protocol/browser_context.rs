@@ -1013,6 +1013,50 @@ impl BrowserContext {
         self.enable_network_interception().await
     }
 
+    /// Fulfills matching requests from every page in this context using an
+    /// in-process tower `Service`, such as an axum `Router` or a tower-http
+    /// `ServeDir`, with no socket.
+    ///
+    /// Each request whose URL matches `pattern` is rebuilt as an
+    /// `http::Request`, handed to a clone of `service`, and fulfilled with the
+    /// response. The [`route_service`](crate::protocol::route_service) module
+    /// documents what the service sees, the limits of route interception
+    /// compared with a real listener, and how to wait on a wasm frontend.
+    ///
+    /// # Arguments
+    ///
+    /// * `pattern` - URL pattern to match (supports glob patterns like `"https://app.example/**"`)
+    /// * `service` - Any [`RouteService`](crate::protocol::route_service::RouteService):
+    ///   an axum `Router`, a tower-http `ServeDir`, a `tower::service_fn`; cloned per request
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if network interception cannot be enabled. A service
+    /// that fails at request time aborts that request and logs the error; it
+    /// does not surface here.
+    ///
+    /// See: <https://playwright.dev/docs/mock>
+    #[cfg(feature = "route-service")]
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), url = %pattern))]
+    pub async fn route_service<S: crate::protocol::route_service::RouteService>(
+        &self,
+        pattern: &str,
+        service: S,
+    ) -> Result<()> {
+        // Captured here, a hop away, so the service's view of the browser
+        // (its engine, its cookie jar) does not depend on walking each
+        // request's object chain.
+        let context = Some(self.clone());
+        self.route(pattern, move |route| {
+            crate::protocol::route_service::fulfill_from_service(
+                route,
+                service.clone(),
+                context.clone(),
+            )
+        })
+        .await
+    }
+
     /// Removes route handler(s) matching the given URL pattern.
     ///
     /// # Arguments
@@ -1114,7 +1158,7 @@ impl BrowserContext {
                 let req_url = request.url().to_string();
                 let req_method = request.method().to_string();
 
-                let headers = crate::protocol::route_params::header_array(request.headers());
+                let headers = crate::protocol::route_params::header_array(request.header_pairs());
 
                 let lookup = local_utils
                     .har_lookup(
@@ -1141,31 +1185,13 @@ impl BrowserContext {
                             route.continue_(Some(opts)).await
                         }
                         "fulfill" => {
-                            let status = result.status.unwrap_or(200);
-
-                            let body_bytes = result.body.as_deref().map(|b64| {
-                                use base64::Engine;
-                                base64::engine::general_purpose::STANDARD
-                                    .decode(b64)
-                                    .unwrap_or_default()
-                            });
-
-                            let headers_map = crate::protocol::route_params::har_response_headers(
-                                result.headers.as_deref().unwrap_or_default(),
-                            );
-
-                            let mut builder =
-                                crate::protocol::FulfillOptions::builder().status(status);
-
-                            if !headers_map.is_empty() {
-                                builder = builder.headers(headers_map);
-                            }
-
-                            if let Some(body) = body_bytes {
-                                builder = builder.body(body);
-                            }
-
-                            route.fulfill(Some(builder.build())).await
+                            route
+                                .fulfill(Some(crate::protocol::route_params::har_fulfill_options(
+                                    result.status,
+                                    result.body.as_deref(),
+                                    result.headers.as_deref(),
+                                )))
+                                .await
                         }
                         _ => {
                             if not_found == "fallback" {
@@ -2133,6 +2159,14 @@ impl BrowserContext {
                 let handler = entry.handler.clone();
                 if let Err(e) = handler(route.clone()).await {
                     tracing::warn!("Context route handler error: {}", e);
+                    // A handler that failed before reaching a route command
+                    // leaves the request pending; abort it so the browser
+                    // sees a failed request instead of waiting out its timeout.
+                    if !route.was_handled()
+                        && let Err(abort_error) = route.abort(Some("failed")).await
+                    {
+                        tracing::warn!("aborting the unhandled route failed too: {}", abort_error);
+                    }
                     break;
                 }
                 if !route.was_handled() {
