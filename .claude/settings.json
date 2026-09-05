@@ -1,0 +1,17 @@
+{
+  "sandbox": {
+    "network": {
+      "allowLocalBinding": true,
+      "allowedDomains": ["localhost", "127.0.0.1", "[::1]"],
+      "allowMachLookup": ["com.apple.SystemConfiguration.configd"]
+    },
+    "excludedCommands": [
+      "git *",
+      "gh *",
+      "cargo nextest run *",
+      "cargo run *",
+      "./scripts/mutants.sh *",
+      "prek *"
+    ]
+  }
+}

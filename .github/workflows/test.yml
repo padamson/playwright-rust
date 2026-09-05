@@ -11,6 +11,9 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
 
+permissions:
+  contents: read
+
 jobs:
   msrv:
     name: MSRV Check
@@ -19,15 +22,15 @@ jobs:
     env:
       PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install MSRV toolchain
-      uses: dtolnay/rust-toolchain@master
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
       with:
         toolchain: "1.88"
 
     - name: Cache Cargo
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
 
     - name: Check compilation on MSRV
       run: cargo check --workspace
@@ -47,26 +50,26 @@ jobs:
       PLAYWRIGHT_DRIVER_CACHE_DIR: ${{ github.workspace }}/.playwright-driver
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@master
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
       with:
         toolchain: ${{ matrix.rust }}
         components: rustfmt, clippy
 
     - name: Cache Cargo
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
 
     - name: Cache Playwright driver
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ${{ github.workspace }}/.playwright-driver
         key: ${{ runner.os }}-pw-driver-1.62.1-assembled
 
     - name: Cache Playwright Browsers (Linux/macOS)
       if: runner.os != 'Windows'
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: |
           ~/.cache/ms-playwright
@@ -77,7 +80,7 @@ jobs:
 
     - name: Cache Playwright Browsers (Windows)
       if: runner.os == 'Windows'
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ~\AppData\Local\ms-playwright
         key: ${{ runner.os }}-playwright-browsers-1.62.1-v2
@@ -85,7 +88,7 @@ jobs:
           ${{ runner.os }}-playwright-browsers-1.62.1-
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@v2.87.1
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
       with:
         tool: cargo-nextest
 

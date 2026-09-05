@@ -211,7 +211,25 @@ cargo fmt -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 
 # Local CI rehearsal
-pre-commit run --all-files
+prek run --all-files
+```
+
+## Claude Code sandbox
+
+The sandbox is on (user settings) and `.claude/settings.json` (tracked)
+carries this repo's additions: `git`, `gh`, `cargo nextest run`,
+`cargo run`, `scripts/mutants.sh`, and `prek` run outside it because they
+need credentials or the browser's Mach ports the sandbox hides; loopback
+is allowed for the test servers; and the `configd` Mach lookup lets
+`cargo vet`/`audit`/`deny` run sandboxed. Keep that file to the sandbox
+block. Personal permission allowlists go in the untracked
+`.claude/settings.local.json`. A session here never writes into a sibling
+checkout. Hooks are installed once per clone by hand, since `.git/hooks`
+is outside the sandbox's write set:
+
+```bash
+cargo install prek
+prek install --overwrite   # replaces any legacy pre-commit hook
 ```
 
 ## Mutation testing

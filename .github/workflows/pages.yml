@@ -29,7 +29,7 @@ on:
         default: ""
 
 permissions:
-  contents: write # push to gh-pages
+  contents: read
 
 # One deploy at a time; don't cancel an in-progress deploy.
 concurrency:
@@ -40,10 +40,12 @@ jobs:
   deploy:
     name: Build, dogfood-gate, and deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to gh-pages
     env:
       PLAYWRIGHT_DRIVER_CACHE_DIR: ${{ github.workspace }}/.playwright-driver
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Determine target snapshot
         id: target
@@ -66,31 +68,32 @@ jobs:
           fi
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
         with:
+          toolchain: stable
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
         with:
           workspaces: |
             crates/site
             crates/site-e2e
 
       - name: Install Trunk
-        uses: taiki-e/install-action@v2.87.1
+        uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
         with:
           tool: trunk
 
       - name: Cache Playwright driver
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ${{ github.workspace }}/.playwright-driver
           key: ${{ runner.os }}-pw-driver-1.62.1-assembled
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-browsers-1.62.1-v2

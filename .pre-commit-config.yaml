@@ -1,6 +1,6 @@
-# Pre-commit hooks for playwright-rust
-# Install: pip install pre-commit && pre-commit install
-# Run manually: pre-commit run --all-files
+# Pre-commit hooks for playwright-rust, run by prek
+# Install: cargo install prek && prek install --overwrite
+# Run manually: prek run --all-files
 
 # Stop at first failure to save time (e.g., don't run tests if fmt fails)
 fail_fast: true

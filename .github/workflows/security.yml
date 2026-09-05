@@ -13,18 +13,25 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
   audit:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with:
+        toolchain: stable
 
     - name: Install cargo-audit
-      run: cargo install cargo-audit
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
+      with:
+        tool: cargo-audit
 
     - name: Run cargo audit
       run: cargo audit
@@ -33,13 +40,17 @@ jobs:
     name: License & Dependency Check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with:
+        toolchain: stable
 
     - name: Install cargo-deny
-      run: cargo install cargo-deny
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
+      with:
+        tool: cargo-deny
 
     - name: Run cargo deny
       run: cargo deny check
@@ -48,13 +59,17 @@ jobs:
     name: Supply Chain Review
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with:
+        toolchain: stable
 
     - name: Install cargo-vet
-      run: cargo install cargo-vet
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
+      with:
+        tool: cargo-vet
 
     - name: Run cargo vet
       run: cargo vet
@@ -82,23 +97,27 @@ jobs:
       CARGO_INCREMENTAL: "1"
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with:
+        toolchain: stable
 
     - name: Cache Cargo
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
       with:
         shared-key: mutants
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@nextest
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
+      with:
+        tool: cargo-nextest
 
     # Prebuilt binary — `cargo install` fails when a cache restore
     # leaves an existing binary in ~/.cargo/bin/.
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@v2.87.1
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
       with:
         tool: cargo-mutants
 
@@ -107,7 +126,7 @@ jobs:
 
     - name: Upload mutation report
       if: always()
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: mutation-report
         path: mutants.out/
@@ -125,17 +144,19 @@ jobs:
       PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Install Rust nightly
-      uses: dtolnay/rust-toolchain@nightly
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with:
+        toolchain: nightly
 
     - name: Install cargo-fuzz
-      uses: taiki-e/install-action@v2.87.1
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
       with:
         tool: cargo-fuzz
 
-    - uses: Swatinem/rust-cache@v2
+    - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
       with:
         workspaces: crates/playwright/fuzz
 
@@ -145,7 +166,7 @@ jobs:
     # coverage forever. The rolling key means each run restores the newest
     # prior corpus and saves the grown one under a fresh key.
     - name: Restore fuzz corpus
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: crates/playwright/fuzz/corpus
         key: fuzz-corpus-${{ github.run_id }}
@@ -187,7 +208,7 @@ jobs:
 
     - name: Upload crash artifacts
       if: failure()
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: fuzz-artifacts
         path: crates/playwright/fuzz/artifacts/
@@ -204,24 +225,28 @@ jobs:
       CARGO_INCREMENTAL: "1"
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         # Need history beyond HEAD so `git diff` can reach the diff base.
         fetch-depth: 0
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with:
+        toolchain: stable
 
     - name: Cache Cargo
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
       with:
         shared-key: mutants-diff
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@nextest
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
+      with:
+        tool: cargo-nextest
 
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@v2.87.1
+      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
       with:
         tool: cargo-mutants
 
@@ -250,7 +275,7 @@ jobs:
 
     - name: Upload mutation report
       if: always()
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: mutation-report-diff
         path: mutants.out/
