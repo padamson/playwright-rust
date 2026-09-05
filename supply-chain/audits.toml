@@ -7,6 +7,12 @@ criteria = "safe-to-deploy"
 delta = "0.22.1 -> 0.23.1"
 notes = "Delta is edition/MSRV housekeeping plus the new simd-unsafe feature (on by default): AVX2/NEON base64 kernels (Mula-Lemire algorithm) selected via runtime CPU feature detection. All unsafe is confined to src/engine/simd.rs intrinsics with loop-guard bounds checks before every load/store; invalid input falls back to the scalar decoder for exact error reporting. No new dependencies, no build script, no fs/net/process/env access. SIMD engines run the same property-test suite as the scalar engine."
 
+[[audits.miniz_oxide]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.9 -> 0.9.1"
+notes = "Pulled in by flate2 1.1.10. The crate keeps #![forbid(unsafe_code)] (the only 'unsafe' hits are comments), has no build script, and adds no dependencies: serde goes default-features = false with alloc, and the simd-adler32 floor moves 0.3.3 -> 0.3.8. No fs/net/process/env access in either version. Deflate side: new TDEFLFlush variants (Partial, PartialOpt, SyncOpt, NoSync) and #[non_exhaustive] on the public enums; CompressorOxide::with_params clamps window_bits to 15 and level to 10, and the zlib header now derives CINFO from window_bits with saturating_sub; flush_block skips emitting an empty block unless finishing; the stored-block path stops feeding the hash chain; SMALL_DIST_EXTRA shrinks to 128 entries indexed by match_dist >> 2, which stays in bounds because the branch is guarded by match_dist < 512. Two assert!(lookahead_size >= len_to_move) become debug_assert!; that is an internal invariant, and every downstream dict index is masked by LZ_DICT_SIZE_MASK, so a violation could corrupt output but not escape bounds. Inflate side: Huffman table validation is stricter (rejects over-subscribed tables step by step, matching zlib inftrees.c) and the incomplete-table rule is restated per RFC 1951; decompress_with_limit adds an out_max that OutputBuffer computes with saturating_add and clamps to the slice length, and the back-reference bounds check now uses that limit. wasm32 boxes the LZ code buffer. Remaining changes are docs, const fn, and Clone derives."
+
 [[audits.rustls]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
