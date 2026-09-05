@@ -1886,11 +1886,7 @@ impl Page {
                 let req_method = request.method().to_string();
 
                 // Build headers array as [{name, value}]
-                let headers: Vec<serde_json::Value> = request
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| serde_json::json!({"name": k, "value": v}))
-                    .collect();
+                let headers = crate::protocol::route_params::header_array(request.headers());
 
                 let lookup = local_utils
                     .har_lookup(
@@ -3609,10 +3605,7 @@ impl Page {
     ) -> Result<()> {
         // Playwright protocol expects an array of {name, value} objects
         // This RPC is sent on the Page channel (not the Frame channel)
-        let headers_array: Vec<serde_json::Value> = headers
-            .into_iter()
-            .map(|(name, value)| serde_json::json!({ "name": name, "value": value }))
-            .collect();
+        let headers_array = crate::protocol::route_params::header_array(headers);
         self.channel()
             .send_no_result(
                 "setExtraHTTPHeaders",

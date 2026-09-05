@@ -862,10 +862,7 @@ impl BrowserContext {
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), count = headers.len()))]
     pub async fn set_extra_http_headers(&self, headers: HashMap<String, String>) -> Result<()> {
         // Playwright protocol expects an array of {name, value} objects
-        let headers_array: Vec<serde_json::Value> = headers
-            .into_iter()
-            .map(|(name, value)| serde_json::json!({ "name": name, "value": value }))
-            .collect();
+        let headers_array = crate::protocol::route_params::header_array(headers);
         self.channel()
             .send_no_result(
                 "setExtraHTTPHeaders",
@@ -1117,11 +1114,7 @@ impl BrowserContext {
                 let req_url = request.url().to_string();
                 let req_method = request.method().to_string();
 
-                let headers: Vec<serde_json::Value> = request
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| serde_json::json!({"name": k, "value": v}))
-                    .collect();
+                let headers = crate::protocol::route_params::header_array(request.headers());
 
                 let lookup = local_utils
                     .har_lookup(

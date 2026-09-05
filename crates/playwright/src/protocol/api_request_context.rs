@@ -155,10 +155,7 @@ impl APIRequestContext {
             params["method"] = json!(method);
         }
         if let Some(headers) = opts.headers {
-            let headers_array: Vec<Value> = headers
-                .into_iter()
-                .map(|(name, value)| json!({"name": name, "value": value}))
-                .collect();
+            let headers_array = crate::protocol::route_params::header_array(headers);
             params["headers"] = json!(headers_array);
         }
         if let Some(post_data) = opts.post_data {
@@ -274,10 +271,7 @@ impl APIRequestContext {
             params["method"] = json!(method);
         }
         if let Some(headers) = opts.headers {
-            let headers_array: Vec<Value> = headers
-                .into_iter()
-                .map(|(name, value)| json!({"name": name, "value": value}))
-                .collect();
+            let headers_array = crate::protocol::route_params::header_array(headers);
             params["headers"] = json!(headers_array);
         }
         if let Some(post_data) = opts.post_data {
@@ -623,10 +617,7 @@ impl APIRequest {
                 params["baseURL"] = json!(base_url);
             }
             if let Some(headers) = opts.extra_http_headers {
-                let arr: Vec<Value> = headers
-                    .into_iter()
-                    .map(|(name, value)| json!({"name": name, "value": value}))
-                    .collect();
+                let arr = crate::protocol::route_params::header_array(headers);
                 params["extraHTTPHeaders"] = json!(arr);
             }
             if let Some(ignore) = opts.ignore_https_errors {
