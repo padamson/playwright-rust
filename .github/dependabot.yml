@@ -34,7 +34,10 @@ updates:
     ignore:
       - dependency-name: "serde"
         versions: ["1.0.229"]
-    # Group minor and patch updates to reduce noise
+    # Grouping keeps the weekly run to as few PRs as possible. Every cargo PR
+    # edits Cargo.lock, so two open cargo PRs conflict the moment one merges
+    # and the second must rebase and re-run CI; with N PRs the auto-merge
+    # cascade costs O(N^2) runs. Fewer PRs is the only fix.
     groups:
       start-dependencies:
         patterns:
@@ -42,6 +45,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      major-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # Maintain GitHub Actions
   - package-ecosystem: "github-actions"
@@ -59,3 +67,8 @@ updates:
     # cargo-vet lag argument does not apply to actions.
     cooldown:
       default-days: 7
+    # One PR for the week's action bumps, same cascade rationale as cargo.
+    groups:
+      actions:
+        patterns:
+          - "*"

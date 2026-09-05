@@ -13,7 +13,7 @@ env:
 
 jobs:
   msrv:
-    name: MSRV Check (Rust 1.88)
+    name: MSRV Check
     runs-on: ubuntu-latest
     # Compile-only — never launches a browser, so skip the driver download.
     env:
