@@ -66,10 +66,13 @@ jobs:
       with:
         toolchain: stable
 
+    # Built from crates.io on purpose: install-action serves GitHub release
+    # binaries, and cargo-vet's newest release with binaries is 0.10.0, which
+    # cannot parse the audits file that 0.10.2 (crates.io) writes. No cache
+    # step here, so the restored-binary failure `cargo install` has elsewhere
+    # does not apply.
     - name: Install cargo-vet
-      uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
-      with:
-        tool: cargo-vet
+      run: cargo install cargo-vet
 
     - name: Run cargo vet
       run: cargo vet
