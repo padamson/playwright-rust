@@ -467,6 +467,32 @@ impl Frame {
         crate::protocol::Locator::new(Arc::new(self.clone()), selector.into(), page)
     }
 
+    /// Creates a [`FrameLocator`](crate::protocol::FrameLocator) for an
+    /// iframe inside this frame.
+    ///
+    /// Pass `None` to search every frame in this frame's subtree instead of
+    /// naming the iframe.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the frame has no page yet, like
+    /// [`locator`](Self::locator).
+    ///
+    /// See: <https://playwright.dev/docs/api/class-frame#frame-frame-locator>
+    pub fn frame_locator<'a>(
+        &self,
+        selector: impl Into<Option<&'a str>>,
+    ) -> crate::protocol::FrameLocator {
+        let page = self.page().expect(
+            "Frame::frame_locator() called before set_page(); call page.main_frame() first",
+        );
+        let frame = Arc::new(self.clone());
+        match selector.into() {
+            Some(selector) => crate::protocol::FrameLocator::new(frame, selector.to_string(), page),
+            None => crate::protocol::FrameLocator::any_frame(frame, page),
+        }
+    }
+
     /// Returns a locator that matches elements containing the given text.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-get-by-text>
@@ -2069,6 +2095,50 @@ impl Frame {
         }
 
         let response: AriaSnapshotResponse = self.channel().send("ariaSnapshot", params).await?;
+        Ok(response.snapshot)
+    }
+
+    pub(crate) async fn locator_aria_snapshot_json(
+        &self,
+        selector: &str,
+        options: Option<&crate::protocol::AriaSnapshotOptions>,
+    ) -> Result<serde_json::Value> {
+        let timeout = options
+            .and_then(|o| o.timeout)
+            .unwrap_or(crate::DEFAULT_TIMEOUT_MS);
+        self.aria_snapshot_json_raw(selector, timeout, options)
+            .await
+    }
+
+    pub(crate) async fn aria_snapshot_json_raw(
+        &self,
+        selector: &str,
+        timeout: f64,
+        options: Option<&crate::protocol::AriaSnapshotOptions>,
+    ) -> Result<serde_json::Value> {
+        #[derive(Deserialize)]
+        struct AriaSnapshotJsonResponse {
+            snapshot: serde_json::Value,
+        }
+
+        let mut params = serde_json::json!({
+            "selector": selector,
+            "timeout": timeout,
+        });
+        if let Some(opts) = options {
+            if let Some(mode) = opts.mode {
+                params["mode"] = serde_json::Value::String(mode.as_str().to_string());
+            }
+            if let Some(depth) = opts.depth {
+                params["depth"] = serde_json::Value::from(depth);
+            }
+            if let Some(boxes) = opts.boxes {
+                params["boxes"] = serde_json::Value::Bool(boxes);
+            }
+        }
+
+        let response: AriaSnapshotJsonResponse =
+            self.channel().send("ariaSnapshotJSON", params).await?;
         Ok(response.snapshot)
     }
 

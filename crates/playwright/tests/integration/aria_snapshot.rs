@@ -201,3 +201,68 @@ async fn test_aria_snapshot_boxes() {
     );
     browser.close().await.ok();
 }
+
+#[tokio::test]
+async fn aria_snapshot_json_returns_the_tree_as_json() {
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    page.set_content("<h1>Hello</h1><button>Click me</button>", None)
+        .await
+        .expect("set content");
+
+    let snapshot = page
+        .locator("body")
+        .aria_snapshot_json(None)
+        .await
+        .expect("aria snapshot as JSON");
+
+    // The YAML form of the same tree is what `aria_snapshot` returns; this
+    // one is structured, so a caller can walk it instead of parsing text.
+    assert!(
+        snapshot.is_object() || snapshot.is_array(),
+        "expected structured JSON, got {snapshot}"
+    );
+    let rendered = snapshot.to_string();
+    assert!(rendered.contains("heading"), "{rendered}");
+    assert!(rendered.contains("Click me"), "{rendered}");
+
+    browser.close().await.expect("close browser");
+}
+
+/// Each option has to reach the driver, which drops parameters it does not
+/// recognize rather than rejecting them, so assert on what each one changes.
+#[tokio::test]
+async fn aria_snapshot_json_options_reach_the_driver() {
+    let (_playwright, browser, page) = crate::common::setup().await;
+
+    page.set_content("<h1>Hello</h1><button>Click me</button>", None)
+        .await
+        .expect("set content");
+
+    let default = page
+        .aria_snapshot_json(None)
+        .await
+        .expect("default snapshot")
+        .to_string();
+    assert!(!default.contains("\"ref\""), "{default}");
+    assert!(!default.contains("\"box\""), "{default}");
+
+    // AI mode hands back element refs for a model to act on.
+    let ai = page
+        .aria_snapshot_json(AriaSnapshotOptions::default().mode(AriaSnapshotMode::Ai))
+        .await
+        .expect("ai snapshot")
+        .to_string();
+    assert!(ai.contains("\"ref\""), "{ai}");
+
+    // Boxes add each element's geometry.
+    let boxes = page
+        .aria_snapshot_json(AriaSnapshotOptions::default().boxes(true))
+        .await
+        .expect("boxes snapshot")
+        .to_string();
+    assert!(boxes.contains("\"box\""), "{boxes}");
+    assert!(boxes.contains("\"width\""), "{boxes}");
+
+    browser.close().await.expect("close browser");
+}

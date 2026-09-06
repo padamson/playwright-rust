@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.8.0"
+  version: "0.9.0"
 ---
 
 # Using playwright-rs
@@ -243,6 +243,18 @@ Concept-level pointers; the exact options live on docs.rs.
   .to_match_aria_snapshot(..)` (and the locator form) guard the page's
   ARIA structure as a regression check; `aria_snapshot` can emit
   `[box=..]` bounding boxes for visual/agent reasoning.
+  `aria_snapshot_json` returns the same tree as `serde_json::Value`
+  rather than YAML markup, which is what an agent walking the tree
+  wants; the YAML form is for a human reading a diff.
+- **Visibility is a locator, not a pseudo-class.** `locator.visible()`
+  narrows to the visible matches (Playwright's replacement for
+  `:visible`), and `filter(FilterOptions::default().visible(false))` is
+  the hidden half.
+- **Frames without naming the iframe.** `page.frame_locator(None)`
+  searches every frame in the subtree, so no iframe selector is needed;
+  `Frame::frame_locator` takes the same optional argument. The rest of
+  the locator resolves inside one frame, and matching several is an
+  error, so keep the inner selector unique.
 
 - **Waiting on arbitrary state: `wait_for_function`.** When there is no
   selector to wait on — a JS flag, a store, a counter —

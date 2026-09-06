@@ -993,13 +993,25 @@ impl Page {
 
     /// Creates a [`FrameLocator`](crate::protocol::FrameLocator) for an iframe on this page.
     ///
-    /// The `selector` identifies the iframe element (e.g., `"iframe[name='content']"`).
+    /// The `selector` identifies the iframe element (e.g.
+    /// `"iframe[name='content']"`). Pass `None` to search every frame in the
+    /// subtree instead, so the iframe does not have to be located first; the
+    /// rest of the locator still resolves inside a single frame, and matching
+    /// elements in several of them is an error.
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-frame-locator>
-    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), selector = %selector))]
-    pub fn frame_locator(&self, selector: &str) -> crate::protocol::FrameLocator {
-        let frame = self.main_frame_wired();
-        crate::protocol::FrameLocator::new(Arc::new(frame), selector.to_string(), self.clone())
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
+    pub fn frame_locator<'a>(
+        &self,
+        selector: impl Into<Option<&'a str>>,
+    ) -> crate::protocol::FrameLocator {
+        let frame = Arc::new(self.main_frame_wired());
+        match selector.into() {
+            Some(selector) => {
+                crate::protocol::FrameLocator::new(frame, selector.to_string(), self.clone())
+            }
+            None => crate::protocol::FrameLocator::any_frame(frame, self.clone()),
+        }
     }
 
     /// Returns a locator that matches elements containing the given text.
@@ -3970,6 +3982,31 @@ impl Page {
             .unwrap_or_else(|| self.default_timeout_ms());
         frame
             .aria_snapshot_raw("body", timeout, options.as_ref())
+            .await
+    }
+
+    /// The whole document's accessibility tree, as JSON rather than the YAML
+    /// markup [`aria_snapshot`](Self::aria_snapshot) returns, so a caller can
+    /// walk it instead of parsing text.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the driver rejects the request or the page closes
+    /// first.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-aria-snapshot-json>
+    pub async fn aria_snapshot_json(
+        &self,
+        options: impl Into<Option<crate::protocol::AriaSnapshotOptions>>,
+    ) -> Result<serde_json::Value> {
+        let options = options.into();
+        let frame = self.main_frame().await?;
+        let timeout = options
+            .as_ref()
+            .and_then(|o| o.timeout)
+            .unwrap_or_else(|| self.default_timeout_ms());
+        frame
+            .aria_snapshot_json_raw("body", timeout, options.as_ref())
             .await
     }
 

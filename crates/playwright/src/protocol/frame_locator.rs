@@ -42,6 +42,10 @@ use crate::protocol::locator::{
 use crate::protocol::{AriaRole, Frame, GetByRoleOptions, Locator, Page};
 use std::sync::Arc;
 
+/// The driver directive matching any frame in the subtree, which is what a
+/// `frame_locator` with no selector resolves to.
+const ANY_FRAME_SELECTOR: &str = "internal:control=any-frame";
+
 /// FrameLocator represents a view to an iframe on the page.
 ///
 /// It is used to locate elements inside iframes. FrameLocator is not a
@@ -68,6 +72,20 @@ impl FrameLocator {
         Self {
             frame,
             selector,
+            page,
+        }
+    }
+
+    /// Creates a FrameLocator over every frame in the subtree, for callers
+    /// that did not name an iframe.
+    ///
+    /// The selector is the driver's any-frame directive, which needs no
+    /// `enter-frame` of its own: the rest of the locator still resolves
+    /// inside a single frame, and matching in more than one is an error.
+    pub(crate) fn any_frame(frame: Arc<Frame>, page: Page) -> Self {
+        Self {
+            frame,
+            selector: ANY_FRAME_SELECTOR.to_string(),
             page,
         }
     }
@@ -131,8 +149,20 @@ impl FrameLocator {
 
     /// Returns a new FrameLocator matching the nth iframe (0-indexed).
     ///
+    /// # Panics
+    ///
+    /// Panics when this locator came from `frame_locator(None)`, which
+    /// names no iframe to index into. Upstream refuses the same
+    /// combination; the alternative here would be a selector the driver
+    /// rejects much later, after a full auto-wait.
+    ///
     /// See: <https://playwright.dev/docs/api/class-framelocator#frame-locator-nth>
     pub fn nth(&self, index: i32) -> FrameLocator {
+        assert!(
+            self.selector != ANY_FRAME_SELECTOR,
+            "Selecting the nth frame is not allowed on frame_locator(None), which matches \
+             every frame rather than a named iframe. Give frame_locator a selector."
+        );
         // Insert nth before the enter-frame control:
         // "iframe >> internal:control=enter-frame"
         // becomes "iframe >> nth=N >> internal:control=enter-frame"

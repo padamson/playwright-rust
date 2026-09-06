@@ -538,6 +538,10 @@ pub struct FilterOptions {
     pub has: Option<Locator>,
     /// Narrows to elements that do **not** contain a descendant matching this locator.
     pub has_not: Option<Locator>,
+    /// Narrows to elements that are visible (`true`) or hidden (`false`).
+    ///
+    /// [`Locator::visible`] is the shorthand for the `true` case.
+    pub visible: Option<bool>,
 }
 
 impl FilterOptions {
@@ -561,6 +565,52 @@ impl FilterOptions {
         self.has_not = Some(has_not);
         self
     }
+    /// Keep only visible (`true`) or only hidden (`false`) elements.
+    pub fn visible(mut self, visible: bool) -> Self {
+        self.visible = Some(visible);
+        self
+    }
+}
+
+/// The selector `filter` builds: each narrowing appended in the order
+/// upstream's client appends it, since the engine applies them in order.
+///
+/// The `has` / `has_not` selectors are passed separately because a
+/// [`FilterOptions`] holds whole locators, and only their selectors matter
+/// here.
+fn filter_selector(
+    base: &str,
+    options: &FilterOptions,
+    has: Option<&str>,
+    has_not: Option<&str>,
+) -> String {
+    let mut selector = base.to_string();
+
+    if let Some(text) = &options.has_text {
+        let escaped = escape_for_selector(text, false);
+        selector = format!("{selector} >> internal:has-text={escaped}");
+    }
+
+    if let Some(text) = &options.has_not_text {
+        let escaped = escape_for_selector(text, false);
+        selector = format!("{selector} >> internal:has-not-text={escaped}");
+    }
+
+    if let Some(inner) = has {
+        let quoted = serde_json::to_string(inner).unwrap_or_else(|_| format!("\"{inner}\""));
+        selector = format!("{selector} >> internal:has={quoted}");
+    }
+
+    if let Some(inner) = has_not {
+        let quoted = serde_json::to_string(inner).unwrap_or_else(|_| format!("\"{inner}\""));
+        selector = format!("{selector} >> internal:has-not={quoted}");
+    }
+
+    if let Some(visible) = options.visible {
+        selector = format!("{selector} >> visible={visible}");
+    }
+
+    selector
 }
 
 /// Locator represents a way to find element(s) on the page at any given moment.
@@ -930,31 +980,42 @@ impl Locator {
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-filter>
     pub fn filter(&self, options: FilterOptions) -> Locator {
-        let mut selector = self.selector.clone();
-
-        if let Some(text) = &options.has_text {
-            let escaped = escape_for_selector(text, false);
-            selector = format!("{} >> internal:has-text={}", selector, escaped);
-        }
-
-        if let Some(text) = &options.has_not_text {
-            let escaped = escape_for_selector(text, false);
-            selector = format!("{} >> internal:has-not-text={}", selector, escaped);
-        }
-
-        if let Some(locator) = &options.has {
-            let inner = serde_json::to_string(&locator.selector)
-                .unwrap_or_else(|_| format!("\"{}\"", locator.selector));
-            selector = format!("{} >> internal:has={}", selector, inner);
-        }
-
-        if let Some(locator) = &options.has_not {
-            let inner = serde_json::to_string(&locator.selector)
-                .unwrap_or_else(|_| format!("\"{}\"", locator.selector));
-            selector = format!("{} >> internal:has-not={}", selector, inner);
-        }
-
+        let selector = filter_selector(
+            &self.selector,
+            &options,
+            options.has.as_ref().map(|l| l.selector.as_str()),
+            options.has_not.as_ref().map(|l| l.selector.as_str()),
+        );
         Locator::new(Arc::clone(&self.frame), selector, self.page.clone())
+    }
+
+    /// Returns a locator that matches only the visible elements of this one.
+    ///
+    /// This is the replacement Playwright recommends for the `:visible` CSS
+    /// pseudo-class. `filter(FilterOptions::default().visible(false))` is the
+    /// other half, matching only hidden elements.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use playwright_rs::Playwright;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let playwright = Playwright::launch().await?;
+    /// # let browser = playwright.chromium().launch().await?;
+    /// # let page = browser.new_page().await?;
+    /// page.locator("button").visible().click(None).await?;
+    /// # browser.close().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-visible>
+    pub fn visible(&self) -> Locator {
+        Locator::new(
+            Arc::clone(&self.frame),
+            format!("{} >> visible=true", self.selector),
+            self.page.clone(),
+        )
     }
 
     /// Creates a locator matching elements that satisfy **both** this locator and `locator`.
@@ -1950,6 +2011,29 @@ impl Locator {
             .map_err(|e| self.wrap_error_with_selector(e))
     }
 
+    /// The accessibility tree of the matched element, as JSON rather than
+    /// the YAML markup [`aria_snapshot`](Self::aria_snapshot) returns, so a
+    /// caller can walk it instead of parsing text.
+    ///
+    /// Takes the same options; `mode`, `depth`, and `boxes` all apply.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the element is not found within the timeout, or
+    /// if the driver rejects the request.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot-json>
+    pub async fn aria_snapshot_json(
+        &self,
+        options: impl Into<Option<crate::protocol::AriaSnapshotOptions>>,
+    ) -> Result<serde_json::Value> {
+        let options = options.into();
+        self.frame
+            .locator_aria_snapshot_json(&self.selector, options.as_ref())
+            .await
+            .map_err(|e| self.wrap_error_with_selector(e))
+    }
+
     /// Returns a new locator whose selector has been resolved to a
     /// best-practices canonical form — preferring test-ids, then ARIA
     /// roles, then accessible text. The resolved locator points at the
@@ -2175,9 +2259,45 @@ mod tests {
 
     #[test]
     fn test_filter_options_setters() {
-        let opts = FilterOptions::default().has_text("a").has_not_text("b");
+        let opts = FilterOptions::default()
+            .has_text("a")
+            .has_not_text("b")
+            .visible(false);
         assert_eq!(opts.has_text.as_deref(), Some("a"));
         assert_eq!(opts.has_not_text.as_deref(), Some("b"));
+        assert_eq!(opts.visible, Some(false));
+        assert_eq!(FilterOptions::default().visible, None);
+    }
+
+    #[test]
+    fn filter_selector_appends_each_narrowing_in_order() {
+        let options = FilterOptions::default()
+            .has_text("Apple")
+            .has_not_text("Pear")
+            .visible(true);
+
+        assert_eq!(
+            filter_selector("tr", &options, Some("td.price"), Some("td.sold")),
+            "tr >> internal:has-text=\"Apple\"i >> internal:has-not-text=\"Pear\"i \
+             >> internal:has=\"td.price\" >> internal:has-not=\"td.sold\" >> visible=true"
+        );
+    }
+
+    #[test]
+    fn filter_selector_leaves_the_base_alone_when_nothing_is_set() {
+        assert_eq!(
+            filter_selector("tr", &FilterOptions::default(), None, None),
+            "tr"
+        );
+    }
+
+    #[test]
+    fn filter_selector_spells_the_hidden_half() {
+        let options = FilterOptions::default().visible(false);
+        assert_eq!(
+            filter_selector(".item", &options, None, None),
+            ".item >> visible=false"
+        );
     }
 
     #[test]

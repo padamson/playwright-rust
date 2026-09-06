@@ -178,3 +178,82 @@ async fn test_locator_frame_locator() -> Result<(), Box<dyn std::error::Error>> 
     server.shutdown();
     Ok(())
 }
+
+/// Without a selector, a frame locator searches every frame in the subtree,
+/// so the iframe does not have to be located first.
+#[tokio::test]
+async fn frame_locator_without_a_selector_searches_every_frame()
+-> Result<(), Box<dyn std::error::Error>> {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/iframe-test.html", server.url()), None)
+        .await?;
+
+    let button = page.frame_locator(None).locator("#frame-btn");
+    button.click(None).await?;
+    assert_eq!(button.text_content().await?, Some("clicked".to_string()));
+
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}
+
+/// The same, from a frame rather than the page.
+#[tokio::test]
+async fn frame_frame_locator_without_a_selector() -> Result<(), Box<dyn std::error::Error>> {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/iframe-test.html", server.url()), None)
+        .await?;
+
+    let main = page.main_frame().await?;
+    let button = main
+        .frame_locator(None)
+        .locator("#btn2")
+        .text_content()
+        .await?;
+    assert_eq!(button, Some("Other Button".to_string()));
+
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}
+
+/// The rest of the locator still resolves inside one frame, so a selector
+/// that matches in several is an error rather than an arbitrary pick.
+#[tokio::test]
+async fn frame_locator_without_a_selector_refuses_a_match_in_several_frames()
+-> Result<(), Box<dyn std::error::Error>> {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/iframe-test.html", server.url()), None)
+        .await?;
+
+    // Both iframes have an `h1`.
+    let error = page
+        .frame_locator(None)
+        .locator("h1")
+        .text_content()
+        .await
+        .expect_err("a match in several frames must be refused");
+    assert!(
+        error.to_string().contains("multiple frames"),
+        "unexpected error: {error}"
+    );
+
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}
+
+/// `frame_locator(None)` names no iframe, so there is no nth frame to pick.
+#[tokio::test]
+#[should_panic(expected = "Selecting the nth frame is not allowed")]
+async fn nth_on_an_any_frame_locator_is_refused() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let _ = page.frame_locator(None).first();
+    browser.close().await.expect("close browser");
+}

@@ -1958,3 +1958,52 @@ async fn test_locator_normalize_returns_robust_selector() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+#[tokio::test]
+async fn visible_matches_only_the_visible_elements() {
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content(
+        "<p class='item'>shown</p><p class='item' hidden>gone</p>\
+         <p class='item' style='display:none'>also gone</p>",
+        None,
+    )
+    .await
+    .expect("set content");
+
+    let items = page.locator(".item");
+    assert_eq!(items.count().await.expect("count all"), 3);
+
+    let shown = items.visible();
+    assert_eq!(shown.count().await.expect("count visible"), 1);
+    assert_eq!(
+        shown.text_content().await.expect("text"),
+        Some("shown".to_string())
+    );
+
+    browser.close().await.expect("close browser");
+}
+
+#[tokio::test]
+async fn filter_selects_hidden_elements_too() {
+    use playwright_rs::protocol::FilterOptions;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.set_content(
+        "<p class='item'>shown</p><p class='item' hidden>gone</p>",
+        None,
+    )
+    .await
+    .expect("set content");
+
+    let hidden = page
+        .locator(".item")
+        .filter(FilterOptions::default().visible(false));
+    assert_eq!(hidden.count().await.expect("count hidden"), 1);
+    assert_eq!(
+        hidden.text_content().await.expect("text"),
+        Some("gone".to_string())
+    );
+
+    browser.close().await.expect("close browser");
+}
