@@ -106,14 +106,48 @@ impl Frame {
         }
     }
 
-    /// Returns the owning Page for this frame, if it has been set.
+    /// Returns the owning Page for this frame.
     ///
-    /// Returns `None` if `set_page()` has not been called yet (i.e., before the frame
-    /// has been adopted by a Page). In normal usage the main frame always has a Page.
+    /// A frame reached through the frame tree (`child_frames`,
+    /// `parent_frame`) or delivered by an event resolves its page on first
+    /// use and caches it. `None` means the page is no longer in the object
+    /// registry, which is to say it was closed.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-page>
     pub fn page(&self) -> Option<crate::protocol::Page> {
-        self.page.lock().ok().and_then(|g| g.clone())
+        if let Some(page) = self.page.lock().ok().and_then(|guard| guard.clone()) {
+            return Some(page);
+        }
+        // Only the page wires its own main frame, so a frame reached through
+        // the frame tree (`child_frames`, `parent_frame`) or delivered by an
+        // event arrives without the back-reference. Find the owning page in
+        // the registry instead of making every such accessor remember, and
+        // cache it so the walk happens once per frame.
+        let page = self.resolve_page()?;
+        self.set_page(page.clone());
+        Some(page)
+    }
+
+    /// The page that owns this frame's tree: walk up to the root frame, then
+    /// find the page whose main frame it is.
+    fn resolve_page(&self) -> Option<crate::protocol::Page> {
+        let mut root = self.clone();
+        while let Some(parent) = root.parent_frame() {
+            root = parent;
+        }
+        let root_guid = root.guid().to_string();
+
+        self.base
+            .connection()
+            .all_objects_sync()
+            .into_iter()
+            .filter(|object| object.type_name() == "Page")
+            .find(|object| {
+                object.initializer()["mainFrame"]["guid"].as_str() == Some(root_guid.as_str())
+            })?
+            .as_any()
+            .downcast_ref::<crate::protocol::Page>()
+            .cloned()
     }
 
     /// Returns the `name` attribute value of the frame element used to create this frame.
@@ -129,17 +163,24 @@ impl Frame {
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-parent-frame>
     pub fn parent_frame(&self) -> Option<crate::protocol::Frame> {
-        let guid = self.parent_frame_guid.as_ref()?;
-        // Look up the parent frame in the connection registry (sync-compatible via block_on)
-        // We spawn a brief async lookup using the connection.
-        let conn = self.base.connection();
-        // Use tokio's block_in_place / futures executor to do a synchronous resolution.
-        // This mirrors how other Rust Playwright clients resolve parent references.
-        tokio::task::block_in_place(|| {
-            tokio::runtime::Handle::current()
-                .block_on(conn.get_typed::<crate::protocol::Frame>(guid))
-                .ok()
-        })
+        // Read straight from the registry snapshot, as `child_frames` does.
+        // The parent is already there: a frame's initializer names it, so it
+        // was created first. The previous `block_in_place` + `block_on`
+        // resolution panicked outright on a current-thread runtime, which is
+        // what `#[tokio::test]` gives you by default.
+        self.frame_by_guid(self.parent_frame_guid.as_deref()?)
+    }
+
+    /// The registered `Frame` with this guid, from the registry snapshot.
+    fn frame_by_guid(&self, guid: &str) -> Option<crate::protocol::Frame> {
+        self.base
+            .connection()
+            .all_objects_sync()
+            .into_iter()
+            .find(|object| object.type_name() == "Frame" && object.guid() == guid)?
+            .as_any()
+            .downcast_ref::<crate::protocol::Frame>()
+            .cloned()
     }
 
     /// Returns `true` if the frame has been detached from its page.
@@ -456,14 +497,14 @@ impl Frame {
     ///
     /// # Panics
     ///
-    /// Panics if the owning Page has not been set (i.e., `set_page()` was never called).
-    /// In normal usage the main frame always has its page wired up by `Page::main_frame()`.
+    /// Panics only if the frame's page cannot be resolved, which means the
+    /// page was closed and its objects disposed.
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-locator>
     pub fn locator(&self, selector: impl Into<String>) -> crate::protocol::Locator {
         let page = self
             .page()
-            .expect("Frame::locator() called before set_page(); call page.main_frame() first");
+            .expect("Frame::locator(): the frame's page is gone (was it closed?)");
         crate::protocol::Locator::new(Arc::new(self.clone()), selector.into(), page)
     }
 
@@ -475,7 +516,7 @@ impl Frame {
     ///
     /// # Panics
     ///
-    /// Panics if the frame has no page yet, like
+    /// Panics only if the frame's page is gone, like
     /// [`locator`](Self::locator).
     ///
     /// See: <https://playwright.dev/docs/api/class-frame#frame-frame-locator>
@@ -483,9 +524,9 @@ impl Frame {
         &self,
         selector: impl Into<Option<&'a str>>,
     ) -> crate::protocol::FrameLocator {
-        let page = self.page().expect(
-            "Frame::frame_locator() called before set_page(); call page.main_frame() first",
-        );
+        let page = self
+            .page()
+            .expect("Frame::frame_locator(): the frame's page is gone (was it closed?)");
         let frame = Arc::new(self.clone());
         match selector.into() {
             Some(selector) => crate::protocol::FrameLocator::new(frame, selector.to_string(), page),
@@ -2658,10 +2699,13 @@ impl ChannelOwner for Frame {
                 });
             }
             "loadstate" => {
-                // Track which load states are active.
-                // When "load" is added, fire page-level on_load handlers.
+                // `loadstate` is per frame, but `page.on_load` is the
+                // document's own load, so only the main frame may raise it.
+                // Every iframe would otherwise fire it too, and a waiter
+                // would resolve on whichever frame loaded first.
                 if let Some(add) = params.get("add").and_then(|v| v.as_str())
                     && add == "load"
+                    && self.parent_frame_guid.is_none()
                 {
                     let self_clone = self.clone();
                     tokio::spawn(async move {

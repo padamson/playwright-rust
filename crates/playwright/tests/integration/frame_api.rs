@@ -328,3 +328,85 @@ async fn test_frame_get_by_methods() -> Result<(), Box<dyn std::error::Error>> {
     server.shutdown();
     Ok(())
 }
+
+/// A frame reached through the frame tree, rather than from `page.main_frame()`,
+/// still knows its page, so locators built from it work.
+#[tokio::test]
+async fn a_child_frame_knows_its_page() {
+    let server = crate::test_server::TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+    page.goto(&format!("{}/iframe-test.html", server.url()), None)
+        .await
+        .expect("navigate");
+
+    let main = page.main_frame().await.expect("main frame");
+    let children = main.child_frames();
+    assert_eq!(children.len(), 2, "the fixture has two iframes");
+
+    for child in &children {
+        assert!(
+            child.page().is_some(),
+            "a child frame should carry its page back-reference"
+        );
+    }
+
+    // The whole point of the back-reference: locators built from the frame.
+    let heading = children
+        .iter()
+        .find(|frame| frame.url().ends_with("/iframe-content.html"))
+        .expect("the first iframe")
+        .locator("h1")
+        .text_content()
+        .await
+        .expect("read the heading through a child frame's locator");
+    assert_eq!(heading, Some("Inside Frame".to_string()));
+
+    // And back up: the parent of a child is the main frame, also wired.
+    let parent = children[0].parent_frame().expect("a parent frame");
+    assert!(parent.page().is_some(), "the parent should be wired too");
+
+    browser.close().await.expect("close browser");
+    server.shutdown();
+}
+
+/// `page.on_load` is the document's load, not each frame's, so a page full
+/// of iframes still raises it exactly once.
+#[tokio::test]
+async fn iframes_do_not_raise_the_page_load_event() {
+    use std::sync::{Arc, Mutex};
+
+    let server = crate::test_server::TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let loads = Arc::new(Mutex::new(0usize));
+    let sink = Arc::clone(&loads);
+    page.on_load(move || {
+        let sink = Arc::clone(&sink);
+        async move {
+            *sink.lock().expect("load counter") += 1;
+            Ok(())
+        }
+    })
+    .await
+    .expect("subscribe to load");
+
+    // The fixture has two iframes, each of which reports its own load state.
+    page.goto(&format!("{}/iframe-test.html", server.url()), None)
+        .await
+        .expect("navigate");
+    crate::common::poll_until(std::time::Duration::from_secs(5), || {
+        *loads.lock().expect("load counter") >= 1
+    })
+    .await;
+    // Give any stray frame loads a chance to be counted before asserting.
+    crate::common::poll_until(std::time::Duration::from_millis(500), || false).await;
+
+    assert_eq!(
+        *loads.lock().expect("load counter"),
+        1,
+        "only the main frame's load is the page's load"
+    );
+
+    browser.close().await.expect("close browser");
+    server.shutdown();
+}
