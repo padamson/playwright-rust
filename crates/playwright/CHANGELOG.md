@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`on_dialog_closed` on `Page` and `BrowserContext`.** Fires once a dialog has been accepted, dismissed, or closed by the user, which is how a test knows the page is interactive again rather than guessing. Context handlers run before page ones, as with `on_dialog`.
+- **`StorageStateOptions::opfs`: carry each origin's private file system.** Opt in when capturing and the files come back on restore, alongside the existing `indexed_db` and `credentials` opt-ins; `Origin::opfs` holds the driver's payload verbatim.
 - **`Locator::visible()`: match only the visible elements.** The replacement Playwright recommends for the `:visible` CSS pseudo-class; `filter(FilterOptions::default().visible(false))` is the other half, matching only hidden ones.
 - **BREAKING: `frame_locator(None)` searches every frame in the subtree**, on `Page` and now on `Frame` too, so an iframe no longer has to be located first. The rest of the locator still resolves inside a single frame, and a selector matching elements in several of them is an error rather than an arbitrary pick; `nth()`, `first()`, and `last()` panic on such a locator, since it names no iframe to index into, which is what upstream refuses too. Taking the selector by `impl Into<Option<&str>>` is what makes the argument optional: a `&String` argument no longer coerces, so `frame_locator(&name)` becomes `frame_locator(name.as_str())`.
 - **`aria_snapshot_json()` on `Locator` and `Page`:** the accessibility tree as JSON rather than YAML markup, so a caller can walk it instead of parsing text. Takes the same `mode`, `depth`, and `boxes` options as `aria_snapshot()`.

@@ -314,3 +314,54 @@ async fn test_storage_state_round_trips_indexed_db() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+/// The origin private file system round-trips through storage state, the same
+/// way IndexedDB does: opt in when capturing, and it is restored verbatim.
+#[tokio::test]
+async fn opfs_round_trips_through_storage_state() -> Result<(), Box<dyn std::error::Error>> {
+    let server = crate::test_server::TestServer::start().await;
+    let (_pw, browser, context) = crate::common::setup_context().await;
+    let page = context.new_page().await?;
+    page.goto(&format!("{}/", server.url()), None).await?;
+
+    // Write a file into the origin private file system.
+    page.evaluate_value(
+        r#"navigator.storage.getDirectory()
+             .then(root => root.getFileHandle('note.txt', { create: true }))
+             .then(handle => handle.createWritable())
+             .then(w => w.write('remembered').then(() => w.close()))
+             .then(() => 'written')"#,
+    )
+    .await?;
+
+    let state = context
+        .storage_state(playwright_rs::protocol::StorageStateOptions::default().opfs(true))
+        .await?;
+    assert!(
+        state.origins.iter().any(|o| o.opfs.is_some()),
+        "capturing with opfs(true) should carry the origin's files"
+    );
+
+    // Restore into a fresh context and read the file back.
+    let restored = browser.new_context().await?;
+    restored.set_storage_state(state).await?;
+    let restored_page = restored.new_page().await?;
+    restored_page
+        .goto(&format!("{}/", server.url()), None)
+        .await?;
+    let text = restored_page
+        .evaluate_value(
+            r#"navigator.storage.getDirectory()
+                 .then(root => root.getFileHandle('note.txt'))
+                 .then(handle => handle.getFile())
+                 .then(file => file.text())"#,
+        )
+        .await?;
+    assert_eq!(text, "remembered");
+
+    restored.close().await?;
+    context.close().await?;
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}

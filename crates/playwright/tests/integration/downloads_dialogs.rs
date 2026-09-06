@@ -527,3 +527,72 @@ async fn test_cross_browser_smoke() -> Result<(), Box<dyn std::error::Error>> {
     webkit.close().await?;
     Ok(())
 }
+
+/// `dialogclosed` fires after a dialog is accepted or dismissed, so a test can
+/// wait for the page to be interactive again instead of guessing.
+#[tokio::test]
+async fn dialog_closed_fires_after_the_dialog_is_accepted() -> Result<(), Box<dyn std::error::Error>>
+{
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    let closed = Arc::new(Mutex::new(Vec::<String>::new()));
+    let sink = closed.clone();
+    page.on_dialog_closed(move |dialog| {
+        let sink = sink.clone();
+        async move {
+            sink.lock().unwrap().push(dialog.message().to_string());
+            Ok(())
+        }
+    })
+    .await?;
+
+    page.on_dialog(move |dialog| async move { dialog.accept(None).await })
+        .await?;
+
+    page.goto("about:blank", None).await?;
+    page.evaluate_expression("alert('all done')").await?;
+
+    crate::common::poll_until(std::time::Duration::from_secs(5), || {
+        !closed.lock().unwrap().is_empty()
+    })
+    .await;
+    assert_eq!(closed.lock().unwrap().as_slice(), ["all done".to_string()]);
+
+    browser.close().await?;
+    Ok(())
+}
+
+/// The same event on the context, which sees every page's dialogs.
+#[tokio::test]
+async fn context_dialog_closed_fires() -> Result<(), Box<dyn std::error::Error>> {
+    let (_pw, browser, context) = crate::common::setup_context().await;
+
+    let closed = Arc::new(Mutex::new(0usize));
+    let sink = closed.clone();
+    context
+        .on_dialog_closed(move |_| {
+            let sink = sink.clone();
+            async move {
+                *sink.lock().unwrap() += 1;
+                Ok(())
+            }
+        })
+        .await?;
+    context
+        .on_dialog(move |dialog| async move { dialog.dismiss().await })
+        .await?;
+
+    let page = context.new_page().await?;
+    page.goto("about:blank", None).await?;
+    page.evaluate_expression("confirm('sure?')").await?;
+
+    crate::common::poll_until(std::time::Duration::from_secs(5), || {
+        *closed.lock().unwrap() > 0
+    })
+    .await;
+    assert_eq!(*closed.lock().unwrap(), 1);
+
+    context.close().await?;
+    browser.close().await?;
+    Ok(())
+}

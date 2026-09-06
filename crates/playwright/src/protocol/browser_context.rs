@@ -168,6 +168,9 @@ pub struct BrowserContext {
     response: Arc<EventRegistry<ResponseObject>>,
     /// `dialog` event handlers (no `expect_*`; waiter queue stays empty).
     dialog: Arc<EventRegistry<crate::protocol::Dialog>>,
+    /// `dialogClosed` handlers, subscribed on the first one rather than
+    /// eagerly like `dialog`: nothing accumulates these passively.
+    dialog_closed: Arc<EventRegistry<crate::protocol::Dialog>>,
     /// Registered binding callbacks keyed by name (for expose_function / expose_binding)
     binding_callbacks: Arc<Mutex<HashMap<String, BindingCallback>>>,
     /// `console` event: handlers and one-shot `expect_console_message` waiters.
@@ -270,6 +273,7 @@ impl BrowserContext {
             request_failed: EventRegistry::new("requestFailed"),
             response: EventRegistry::new("response"),
             dialog: EventRegistry::new("dialog"),
+            dialog_closed: EventRegistry::new("dialogClosed"),
             binding_callbacks: Arc::new(Mutex::new(HashMap::new())),
             console: EventRegistry::new("console"),
             weberror: EventRegistry::new("weberror"),
@@ -1218,6 +1222,16 @@ impl BrowserContext {
     ///
     /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-page>
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
+    pub async fn on_page<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Page) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler: Handler<Page> = Arc::new(move |page| Box::pin(handler(page)));
+        self.page_events.add_handler(handler);
+        Ok(())
+    }
+
     /// Subscribe to `reg`'s event if nothing is listening yet.
     ///
     /// Same contract as `Page::subscribe_if_idle`: the server only pushes an
@@ -1227,16 +1241,6 @@ impl BrowserContext {
         if reg.is_idle() {
             _ = self.channel().update_subscription(reg.name(), true).await;
         }
-    }
-
-    pub async fn on_page<F, Fut>(&self, handler: F) -> Result<()>
-    where
-        F: Fn(Page) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<()>> + Send + 'static,
-    {
-        let handler: Handler<Page> = Arc::new(move |page| Box::pin(handler(page)));
-        self.page_events.add_handler(handler);
-        Ok(())
     }
 
     /// Adds a listener for the `download` event: fired when any page in the
@@ -1611,6 +1615,35 @@ impl BrowserContext {
             Arc::new(move |dialog| Box::pin(handler(dialog)));
         self.dialog.add_handler(handler);
         Ok(())
+    }
+
+    /// Adds a listener for the `dialogclosed` event, which fires once a
+    /// dialog has been accepted, dismissed, or closed by the user, on any
+    /// page in the context.
+    ///
+    /// Context-level handlers fire before page-level ones.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the handler cannot be registered.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-event-dialog-closed>
+    pub async fn on_dialog_closed<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(crate::protocol::Dialog) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler: Handler<crate::protocol::Dialog> =
+            Arc::new(move |dialog| Box::pin(handler(dialog)));
+        self.subscribe_if_idle(&self.dialog_closed).await;
+        self.dialog_closed.add_handler(handler);
+        Ok(())
+    }
+
+    /// Subscribe to `dialogClosed` if nothing has yet, so a page-level
+    /// handler receives the event even when the context has none of its own.
+    pub(crate) async fn ensure_dialog_closed_subscription(&self) {
+        self.subscribe_if_idle(&self.dialog_closed).await;
     }
 
     /// Registers a context-level console event handler.
@@ -2518,6 +2551,36 @@ impl ChannelOwner for BrowserContext {
                     });
                 }
             }
+            "dialogClosed" => {
+                // Same delivery as `dialog`: the context sees it, then the
+                // page whose dialog it was.
+                if let Some(dialog_guid) = params
+                    .get("dialog")
+                    .and_then(|v| v.get("guid"))
+                    .and_then(|v| v.as_str())
+                {
+                    let connection = self.connection();
+                    let dialog_guid_owned = dialog_guid.to_string();
+                    let ctx_dialog_closed = self.dialog_closed.clone();
+
+                    tokio::spawn(async move {
+                        let Ok(dialog) = connection
+                            .get_typed::<crate::protocol::Dialog>(&dialog_guid_owned)
+                            .await
+                        else {
+                            return;
+                        };
+
+                        ctx_dialog_closed.dispatch(dialog.clone()).await;
+
+                        if let Some(page) =
+                            crate::server::connection::downcast_parent::<Page>(&dialog)
+                        {
+                            page.trigger_dialog_closed_event(dialog).await;
+                        }
+                    });
+                }
+            }
             "bindingCall" => {
                 // A JS caller invoked an exposed function. Dispatch to the registered
                 // callback and send the result back via BindingCall::fulfill.
@@ -2977,6 +3040,15 @@ pub struct Origin {
     /// supported operation is carrying it back unchanged.
     #[serde(rename = "indexedDB", default, skip_serializing_if = "Option::is_none")]
     pub indexed_db: Option<serde_json::Value>,
+    /// This origin's private file system, as the driver's opaque payload.
+    ///
+    /// Populated when the state was captured with
+    /// [`StorageStateOptions::opfs`], and passed back verbatim on restore.
+    /// Kept as raw JSON for the same reason as `indexed_db`: the shape is
+    /// the driver's snapshot format, and the only supported operation is
+    /// carrying it back unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opfs: Option<serde_json::Value>,
 }
 
 impl Origin {
@@ -2986,6 +3058,7 @@ impl Origin {
             origin: origin.into(),
             local_storage,
             indexed_db: None,
+            opfs: None,
         }
     }
 }
@@ -3045,6 +3118,9 @@ pub struct StorageStateOptions {
     /// Include the virtual authenticator's WebAuthn passkeys.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub credentials: Option<bool>,
+    /// Include each origin's private file system in the captured state.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub opfs: Option<bool>,
 }
 
 impl StorageStateOptions {
@@ -3056,6 +3132,11 @@ impl StorageStateOptions {
     /// Include the virtual authenticator's WebAuthn passkeys.
     pub fn credentials(mut self, include: bool) -> Self {
         self.credentials = Some(include);
+        self
+    }
+    /// Include each origin's private file system in the captured state.
+    pub fn opfs(mut self, include: bool) -> Self {
+        self.opfs = Some(include);
         self
     }
 }

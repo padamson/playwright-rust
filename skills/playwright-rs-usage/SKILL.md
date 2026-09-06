@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.9.0"
+  version: "0.10.0"
 ---
 
 # Using playwright-rs
@@ -246,6 +246,11 @@ Concept-level pointers; the exact options live on docs.rs.
   `aria_snapshot_json` returns the same tree as `serde_json::Value`
   rather than YAML markup, which is what an agent walking the tree
   wants; the YAML form is for a human reading a diff.
+- **Dialogs: wait for the close, not the open.** `on_dialog` hands you
+  the dialog to accept or dismiss; `on_dialog_closed` fires once it has
+  been answered, which is the point at which the page is interactive
+  again. Both exist on `Page` and `BrowserContext`, and context handlers
+  run first.
 - **Visibility is a locator, not a pseudo-class.** `locator.visible()`
   narrows to the visible matches (Playwright's replacement for
   `:visible`), and `filter(FilterOptions::default().visible(false))` is
@@ -275,8 +280,9 @@ Concept-level pointers; the exact options live on docs.rs.
   `expose_function`/`expose_binding` instead.
 - **Session save & replay.** `context.storage_state(None)` captures
   cookies and per-origin storage;
-  `StorageStateOptions::default().credentials(true).indexed_db(true)`
-  additionally captures WebAuthn passkeys and IndexedDB.
+  `StorageStateOptions::default().credentials(true).indexed_db(true).opfs(true)`
+  additionally captures WebAuthn passkeys, IndexedDB, and each origin's
+  private file system.
   `set_storage_state(state)` restores into any context — a **replace**,
   not a merge: the driver clears storage for every visited origin, and
   restoring a state without `credentials` disposes an installed virtual

@@ -188,6 +188,7 @@ pub struct Page {
     download: Arc<EventRegistry<Download>>,
     /// Dialog event handlers (no `expect_*`; waiter queue stays empty).
     dialog: Arc<EventRegistry<Dialog>>,
+    dialog_closed: Arc<EventRegistry<Dialog>>,
     /// Request event handlers and one-shot `expect_request` waiters.
     request: Arc<EventRegistry<Request>>,
     /// RequestFinished event handlers (the event has no `expect_*`, so its
@@ -419,6 +420,7 @@ impl Page {
             route_handlers,
             download: EventRegistry::new("download"),
             dialog: EventRegistry::new("dialog"),
+            dialog_closed: EventRegistry::new("dialogClosed"),
             request: EventRegistry::new("request"),
             request_finished: EventRegistry::new("requestFinished"),
             request_failed: EventRegistry::new("requestFailed"),
@@ -2132,6 +2134,31 @@ impl Page {
         Ok(())
     }
 
+    /// Registers a handler for the `dialogclosed` event, which fires once a
+    /// dialog has been accepted, dismissed, or closed by the user.
+    ///
+    /// Waiting for this rather than for `dialog` is how a test knows the page
+    /// is interactive again.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the handler cannot be registered.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-page#page-event-dialog-closed>
+    pub async fn on_dialog_closed<F, Fut>(&self, handler: F) -> Result<()>
+    where
+        F: Fn(Dialog) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let handler: Handler<Dialog> = Arc::new(move |dialog| Box::pin(handler(dialog)));
+        // The event is delivered to the owning context, which subscribes on
+        // its own first handler. A page-only listener has to ask for the
+        // subscription itself, or nothing arrives.
+        self.context()?.ensure_dialog_closed_subscription().await;
+        self.dialog_closed.add_handler(handler);
+        Ok(())
+    }
+
     /// Registers a console event handler.
     ///
     /// The handler is called whenever the page emits a JavaScript console message
@@ -3277,6 +3304,12 @@ impl Page {
     #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn trigger_dialog_event(&self, dialog: Dialog) {
         self.on_dialog_event(dialog).await;
+    }
+
+    /// Triggers the `dialogclosed` event (called by BrowserContext when the
+    /// dialog it forwarded has been answered).
+    pub(crate) async fn trigger_dialog_closed_event(&self, dialog: Dialog) {
+        self.dialog_closed.dispatch(dialog).await;
     }
 
     /// Triggers request event (called by BrowserContext when request events arrive)
