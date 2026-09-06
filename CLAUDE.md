@@ -274,12 +274,13 @@ proven through dogfooding (see roadmap). For release mechanics see the
 - Playwright server source: <https://github.com/microsoft/playwright/tree/main/packages/playwright-core/src/server>
 - Driver protocol schema — the wire contract this crate implements, and
   the authoritative thing to diff when bumping the driver. It is **not
-  in the driver we assemble**: the `playwright-core` npm package ships
-  no schema (only the retired CDN zips did), so fetch it from the source
-  repo at the tag you care about:
-  `https://raw.githubusercontent.com/microsoft/playwright/v<VERSION>/packages/protocol/spec/<file>.yml`
-  Upstream split the former single `protocol.yml` into a
-  [`packages/protocol/spec/`](https://github.com/microsoft/playwright/tree/main/packages/protocol/spec)
-  directory (~19 files: `frame.yml`, `page.yml`, `browserContext.yml`,
-  `core.yml`, ...), so a driver-bump review means diffing the directory
-  across both tags, not one file.
+  in the driver we assemble** (the `playwright-core` npm package ships no
+  schema), so it is vendored in [`protocol-spec/`](protocol-spec/) at the
+  pinned tag, ~19 files (`frame.yml`, `page.yml`, `browserContext.yml`,
+  ...). A bump refreshes it with `cargo xtask sync-protocol-spec` and
+  **the resulting `git diff protocol-spec` is the review**; `--check`
+  runs offline in CI and pre-commit so the vendored copy cannot lag the
+  pinned driver. This matters because the driver's validator drops
+  parameters it does not recognize instead of rejecting them: 1.63
+  renamed every `tracingStart` capture parameter and the traces came out
+  empty, silently, with the whole suite still green.

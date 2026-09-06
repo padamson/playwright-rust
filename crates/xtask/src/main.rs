@@ -24,6 +24,10 @@
 //! - `verify-changelog-links` — checks that each per-crate CHANGELOG's
 //!   reference-link footer matches its version headings, so a release
 //!   can't leave `[X.Y.Z]` rendering as literal text.
+//! - `sync-protocol-spec` — vendors the pinned driver's protocol spec
+//!   into `protocol-spec/` so a driver bump shows its wire-contract
+//!   delta as a diff; `--check` verifies that copy offline and is what
+//!   CI and pre-commit run.
 
 use anyhow::{Context as _, Result, bail};
 use axum::Router;
@@ -69,6 +73,19 @@ enum Cmd {
     /// one. These footers are maintained by hand at release time and
     /// had drifted silently across three releases.
     VerifyChangelogLinks,
+    /// Vendor the protocol spec of the pinned driver into `protocol-spec/`,
+    /// so a driver bump shows its wire-contract delta as a reviewable diff
+    /// rather than as behavior nobody notices. The driver's validator drops
+    /// parameters it does not recognize instead of rejecting them, so a
+    /// renamed key is silent: Playwright 1.63 renamed every `tracingStart`
+    /// capture parameter, and traces recorded with the old spellings
+    /// contained no snapshots and no timeline, with no error anywhere.
+    SyncProtocolSpec {
+        /// Verify the vendored copy is the pinned driver's, without
+        /// fetching. This is the CI/pre-commit form.
+        #[arg(long)]
+        check: bool,
+    },
 }
 
 #[tokio::main]
@@ -79,6 +96,7 @@ async fn main() -> Result<()> {
         Cmd::VerifySiteSnippets => verify_site_snippets(),
         Cmd::VerifyDriverVersion => verify_driver_version(),
         Cmd::VerifyChangelogLinks => verify_changelog_links(),
+        Cmd::SyncProtocolSpec { check } => sync_protocol_spec(check),
     }
 }
 
@@ -829,6 +847,213 @@ fn verify_changelog_links() -> Result<()> {
     Ok(())
 }
 
+/// Where the pinned driver's protocol spec is vendored.
+const SPEC_DIR: &str = "protocol-spec";
+/// Records which driver the vendored spec was taken from.
+const SPEC_STAMP: &str = "protocol-spec/DRIVER_VERSION";
+/// Digest of every vendored file, so the offline check sees an edited or
+/// half-written tree rather than a plausible-looking one.
+const SPEC_MANIFEST: &str = "protocol-spec/MANIFEST";
+
+/// Vendor (or verify) the protocol spec of the pinned driver.
+fn sync_protocol_spec(check: bool) -> Result<()> {
+    let root = workspace_root();
+    let expected = read_driver_version(&root)?;
+    let dir = root.join(SPEC_DIR);
+
+    if check {
+        return check_protocol_spec(&root, &dir, &expected);
+    }
+
+    // Fetch everything before touching the tree: a mid-flight failure then
+    // leaves the vendored copy as it was, rather than a truncated spec the
+    // stamp still vouches for.
+    let files = fetch_spec_files(&expected)?;
+
+    std::fs::create_dir_all(&dir).with_context(|| format!("create {}", dir.display()))?;
+    for stale in spec_files(&dir)? {
+        std::fs::remove_file(&stale).with_context(|| format!("remove {}", stale.display()))?;
+    }
+    let mut manifest = String::new();
+    for (name, content) in &files {
+        std::fs::write(dir.join(name), content)
+            .with_context(|| format!("write {}", dir.join(name).display()))?;
+        manifest.push_str(&format!("{}  {name}\n", digest(content)));
+    }
+    std::fs::write(root.join(SPEC_MANIFEST), manifest)
+        .with_context(|| format!("write {SPEC_MANIFEST}"))?;
+    std::fs::write(root.join(SPEC_STAMP), format!("{expected}\n"))
+        .with_context(|| format!("write {SPEC_STAMP}"))?;
+
+    println!(
+        "sync-protocol-spec: vendored {} spec file(s) from driver {expected}. \
+         Review `git diff {SPEC_DIR}` before committing: a removed or renamed parameter \
+         is dropped silently by the driver.",
+        files.len()
+    );
+    Ok(())
+}
+
+/// Verify the vendored spec offline: the right driver, every file the
+/// manifest lists, unmodified, and nothing extra.
+fn check_protocol_spec(root: &Path, dir: &Path, expected: &str) -> Result<()> {
+    let stamp = root.join(SPEC_STAMP);
+    let found = std::fs::read_to_string(&stamp)
+        .with_context(|| {
+            format!(
+                "read {}; run `cargo xtask sync-protocol-spec` to vendor the spec",
+                stamp.display()
+            )
+        })?
+        .trim()
+        .to_string();
+    if found != expected {
+        bail!(
+            "verify-protocol-spec: the vendored protocol spec is from driver {found}, but \
+             build.rs pins {expected}. Run `cargo xtask sync-protocol-spec` and review the \
+             diff: a renamed parameter is dropped by the driver, not rejected."
+        );
+    }
+
+    let manifest = std::fs::read_to_string(root.join(SPEC_MANIFEST))
+        .with_context(|| format!("read {SPEC_MANIFEST}"))?;
+    let vendored: Vec<(String, Option<Vec<u8>>)> = spec_files(dir)?
+        .into_iter()
+        .map(|path| {
+            let name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or_default()
+                .to_string();
+            (name, std::fs::read(&path).ok())
+        })
+        .collect();
+    let (listed, problems) = spec_problems(&manifest, &vendored)?;
+
+    if !problems.is_empty() {
+        bail!(
+            "verify-protocol-spec: the vendored spec does not match {SPEC_MANIFEST}:\n  {}\n\n\
+             It is vendored verbatim from upstream; re-run `cargo xtask sync-protocol-spec`.",
+            problems.join("\n  ")
+        );
+    }
+
+    println!(
+        "verify-protocol-spec: {listed} spec file(s) vendored from driver {expected}, digests match"
+    );
+    Ok(())
+}
+
+/// Compare a `MANIFEST` against the vendored files, returning how many the
+/// manifest lists and every mismatch found. Pure, so the comparison is
+/// unit-testable without a checkout to mangle.
+fn spec_problems(
+    manifest: &str,
+    vendored: &[(String, Option<Vec<u8>>)],
+) -> Result<(usize, Vec<String>)> {
+    let mut listed: Vec<&str> = Vec::new();
+    let mut problems: Vec<String> = Vec::new();
+    for line in manifest.lines().filter(|line| !line.trim().is_empty()) {
+        let (want, name) = line
+            .split_once("  ")
+            .with_context(|| format!("malformed {SPEC_MANIFEST} line: {line}"))?;
+        listed.push(name);
+        match vendored.iter().find(|(have, _)| have == name) {
+            None => problems.push(format!("{name}: missing")),
+            Some((_, None)) => problems.push(format!("{name}: unreadable")),
+            Some((_, Some(content))) if digest(content) != want => {
+                problems.push(format!("{name}: contents differ from the vendored copy"));
+            }
+            Some(_) => {}
+        }
+    }
+    if listed.is_empty() {
+        bail!("verify-protocol-spec: {SPEC_MANIFEST} lists no files");
+    }
+    for (name, _) in vendored {
+        if !listed.contains(&name.as_str()) {
+            problems.push(format!("{name}: present but not in {SPEC_MANIFEST}"));
+        }
+    }
+    Ok((listed.len(), problems))
+}
+
+/// Fetch every spec file upstream publishes at this driver's tag.
+fn fetch_spec_files(version: &str) -> Result<Vec<(String, Vec<u8>)>> {
+    let listing = format!(
+        "https://api.github.com/repos/microsoft/playwright/contents/packages/protocol/spec?ref=v{version}"
+    );
+    let entries: serde_json::Value =
+        serde_json::from_str(&fetch(&listing)?).context("parse the spec directory listing")?;
+    let entries = entries
+        .as_array()
+        .context("the spec directory listing is not a JSON array")?;
+
+    let mut files = Vec::new();
+    let mut skipped = Vec::new();
+    for entry in entries {
+        let name = entry["name"].as_str().unwrap_or_default().to_string();
+        let kind = entry["type"].as_str().unwrap_or_default();
+        if kind != "file" || !name.ends_with(".yml") {
+            skipped.push(format!("{name} ({kind})"));
+            continue;
+        }
+        let url = entry["download_url"]
+            .as_str()
+            .with_context(|| format!("no download_url for {name}"))?;
+        files.push((name, fetch(url)?.into_bytes()));
+    }
+    if !skipped.is_empty() {
+        // Upstream restructured this directory once already; vendoring part
+        // of it quietly is how a wire contract goes half-reviewed.
+        bail!(
+            "sync-protocol-spec: the spec directory holds entries this command does not \
+             vendor, so the layout changed upstream and this command needs updating:\n  {}",
+            skipped.join("\n  ")
+        );
+    }
+    if files.is_empty() {
+        bail!("sync-protocol-spec: the listing held no .yml files");
+    }
+    files.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(files)
+}
+
+/// Hex digest of a vendored file. SHA-1 is enough to catch an edited or
+/// truncated copy, which is all this guards.
+fn digest(content: &[u8]) -> String {
+    use sha1::Digest as _;
+    sha1::Sha1::digest(content)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+/// The vendored `.yml` files, sorted, or an empty vector when none exist.
+fn spec_files(dir: &Path) -> Result<Vec<PathBuf>> {
+    if !dir.is_dir() {
+        return Ok(Vec::new());
+    }
+    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
+        .with_context(|| format!("read {}", dir.display()))?
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .filter(|path| path.extension().is_some_and(|ext| ext == "yml"))
+        .collect();
+    files.sort();
+    Ok(files)
+}
+
+fn fetch(url: &str) -> Result<String> {
+    ureq::get(url)
+        // GitHub rejects requests without one.
+        .header("User-Agent", "playwright-rust-xtask")
+        .call()
+        .with_context(|| format!("GET {url}"))?
+        .body_mut()
+        .read_to_string()
+        .with_context(|| format!("read the body of {url}"))
+}
+
 /// Resolve the workspace root by walking up from the xtask binary's
 /// `CARGO_MANIFEST_DIR` (which Cargo sets at compile time for the
 /// xtask crate to `crates/xtask`).
@@ -838,6 +1063,85 @@ fn workspace_root() -> PathBuf {
         .and_then(|p| p.parent())
         .expect("xtask manifest dir has two parents")
         .to_path_buf()
+}
+
+#[cfg(test)]
+mod spec_manifest_tests {
+    use super::*;
+
+    fn vendored(files: &[(&str, &str)]) -> Vec<(String, Option<Vec<u8>>)> {
+        files
+            .iter()
+            .map(|(name, body)| (name.to_string(), Some(body.as_bytes().to_vec())))
+            .collect()
+    }
+
+    fn manifest_for(files: &[(&str, &str)]) -> String {
+        files
+            .iter()
+            .map(|(name, body)| format!("{}  {name}\n", digest(body.as_bytes())))
+            .collect()
+    }
+
+    #[test]
+    fn a_matching_tree_has_no_problems() {
+        let files = [
+            ("page.yml", "commands:\n"),
+            ("frame.yml", "commands:\n  goto:\n"),
+        ];
+        let (listed, problems) = spec_problems(&manifest_for(&files), &vendored(&files)).unwrap();
+
+        assert_eq!(listed, 2);
+        assert!(problems.is_empty(), "{problems:?}");
+    }
+
+    #[test]
+    fn an_edited_file_is_reported() {
+        let files = [("page.yml", "commands:\n")];
+        let manifest = manifest_for(&files);
+        // What a CRLF checkout does to a byte-exact tree.
+        let (_, problems) =
+            spec_problems(&manifest, &vendored(&[("page.yml", "commands:\r\n")])).unwrap();
+
+        assert_eq!(
+            problems,
+            ["page.yml: contents differ from the vendored copy"]
+        );
+    }
+
+    #[test]
+    fn a_missing_file_is_reported() {
+        let manifest = manifest_for(&[("page.yml", "a"), ("frame.yml", "b")]);
+        let (listed, problems) = spec_problems(&manifest, &vendored(&[("page.yml", "a")])).unwrap();
+
+        assert_eq!(listed, 2);
+        assert_eq!(problems, ["frame.yml: missing"]);
+    }
+
+    #[test]
+    fn a_file_the_manifest_does_not_list_is_reported() {
+        let manifest = manifest_for(&[("page.yml", "a")]);
+        let (_, problems) = spec_problems(
+            &manifest,
+            &vendored(&[("page.yml", "a"), ("rogue.yml", "x")]),
+        )
+        .unwrap();
+
+        assert_eq!(
+            problems,
+            ["rogue.yml: present but not in protocol-spec/MANIFEST"]
+        );
+    }
+
+    #[test]
+    fn an_empty_manifest_is_an_error() {
+        assert!(spec_problems("\n", &vendored(&[("page.yml", "a")])).is_err());
+    }
+
+    #[test]
+    fn a_malformed_manifest_line_is_an_error() {
+        assert!(spec_problems("no-two-space-separator\n", &[]).is_err());
+    }
 }
 
 #[cfg(test)]

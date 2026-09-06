@@ -2951,7 +2951,10 @@ dependencies = [
  "axum",
  "clap",
  "playwright-rs",
+ "serde_json",
+ "sha1 0.10.6",
  "tokio",
+ "ureq",
 ]
 
 [[package]]

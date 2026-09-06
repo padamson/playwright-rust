@@ -101,13 +101,15 @@ jobs:
           - \`.github/workflows/test.yml\` and \`.github/workflows/release.yml\` — browser cache keys and install paths (search for the old version string)
           - \`crates/playwright/tests/playwright_version_test.rs\` — \`PLAYWRIGHT_VERSION\` assertion
           - \`crates/playwright/examples/*\` — example comments referencing the version
+          - \`protocol-spec/\` — run \`cargo xtask sync-protocol-spec\` after moving \`PLAYWRIGHT_VERSION\`; \`cargo xtask verify-driver-version\` and \`cargo xtask sync-protocol-spec --check\` then name anything still stale
 
           See \`.claude/skills/release-process/SKILL.md\` and the **release** sub-agent for the full release flow.
 
           ## Things to validate
 
           - Browser binaries: \`cargo run --bin playwright-rs --features cli -- install\` succeeds on Linux/macOS/Windows
-          - Protocol changes: review the [v${UPSTREAM} release notes](https://github.com/microsoft/playwright/releases/tag/v${UPSTREAM}) for breaking RPC or initializer-shape changes
+          - Protocol changes: **read \`git diff protocol-spec\` after the sync**, which is the authoritative delta; the release notes do not list renamed wire parameters, and the driver drops parameters it does not recognize rather than rejecting them, so a rename is silent (1.63 renamed every \`tracingStart\` capture parameter and traces came out empty with the suite green)
+          - Trace format: if \`protocol-spec/tracing.yml\` or the recorded fixture moves, \`playwright-rs-trace\` needs the new format and a \`cargo xtask regenerate-trace-fixture\`
           - Platform support: minor releases sometimes drop OS support (e.g. macOS 14 WebKit was removed in 1.59) — document under \`### Breaking Changes\` if present
           - Test suite: full run on all three platforms before tagging
 

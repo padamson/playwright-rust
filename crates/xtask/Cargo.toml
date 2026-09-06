@@ -19,3 +19,15 @@ tokio = { workspace = true }
 anyhow = { workspace = true }
 clap = { version = "4", features = ["derive"] }
 axum = "0.8"
+serde_json = { workspace = true }
+# Fetches the pinned driver's protocol spec. Already in the graph through
+# playwright-rs's `cli` feature, so no new audit surface.
+ureq = { version = "3", default-features = false, features = [
+    "rustls",
+    "gzip",
+    "rustls-webpki-roots",
+] }
+# Digests the vendored spec files so the offline check can see an edited or
+# truncated tree. Already in the graph through axum, so no new audit surface.
+# Drift detection, not a security boundary.
+sha1 = "0.10"

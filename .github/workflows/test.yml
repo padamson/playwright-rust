@@ -183,3 +183,6 @@ jobs:
 
     - name: Verify bundled driver version references
       run: cargo xtask verify-driver-version
+
+    - name: Verify the vendored protocol spec matches the pinned driver
+      run: cargo xtask sync-protocol-spec --check

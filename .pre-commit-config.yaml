@@ -20,18 +20,19 @@ repos:
         name: Check for case conflicts
       - id: detect-private-key
         name: Detect private keys
-      # Fuzz seeds are byte sequences fed to a parser, not source text.
-      # Appending a newline or trimming whitespace edits the input under test,
-      # and would silently corrupt any seed that is not newline-tolerant.
+      # Two byte-exact trees. Fuzz seeds are byte sequences fed to a parser,
+      # not source text: appending a newline or trimming whitespace edits the
+      # input under test. `protocol-spec/` is vendored verbatim from upstream,
+      # so any local edit would resurface as a false delta on the next sync.
       - id: trailing-whitespace
         name: Trim trailing whitespace
-        exclude: ^crates/playwright/fuzz/seeds/
+        exclude: ^(crates/playwright/fuzz/seeds/|protocol-spec/)
       - id: end-of-file-fixer
         name: Fix end of files
-        exclude: ^crates/playwright/fuzz/seeds/
+        exclude: ^(crates/playwright/fuzz/seeds/|protocol-spec/)
       - id: mixed-line-ending
         name: Fix mixed line endings
-        exclude: ^crates/playwright/fuzz/seeds/
+        exclude: ^(crates/playwright/fuzz/seeds/|protocol-spec/)
 
   # Rust-specific checks (matches CI exactly)
   - repo: local
@@ -105,6 +106,17 @@ repos:
         language: system
         pass_filenames: false
         files: (crates/playwright/build\.rs|crates/playwright/src/lib\.rs|crates/playwright/examples/connect_over_cdp\.rs|\.github/workflows/(test|release|pages)\.yml|crates/xtask/src/)
+
+      # 5b-bis. The vendored protocol spec must be the pinned driver's, so a
+      # bump cannot land without the wire-contract diff being seen. Offline:
+      # the fetch is `cargo xtask sync-protocol-spec`, run at bump time.
+      - id: verify-protocol-spec
+        name: cargo xtask sync-protocol-spec --check
+        description: Check the vendored protocol spec against build.rs PLAYWRIGHT_VERSION
+        entry: cargo xtask sync-protocol-spec --check
+        language: system
+        pass_filenames: false
+        files: (crates/playwright/build\.rs|protocol-spec/|crates/xtask/src/)
 
       # 5c. Verify each per-crate CHANGELOG's reference-link footer still
       # agrees with its version headings. Hand-maintained at release time,

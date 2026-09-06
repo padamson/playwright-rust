@@ -1,0 +1,8 @@
+# Two trees must reach every checkout byte-for-byte, so line-ending
+# conversion is off for them. Without this, Git for Windows' default
+# `core.autocrlf=true` rewrites them at checkout: the fuzz seeds stop
+# being the bytes that were fed to the parser, and every vendored spec
+# digest mismatches, failing `cargo xtask sync-protocol-spec --check` on
+# Windows with nothing a contributor can do about it locally.
+protocol-spec/** -text
+crates/playwright/fuzz/seeds/** -text
