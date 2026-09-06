@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Parser for Playwright trace zip files (format v8)"
+description = "Parser for Playwright trace zip files (formats v8 and v9)"
 keywords = ["playwright", "trace", "parser", "viewer"]
 categories = ["development-tools::testing", "parser-implementations"]
 readme = "README.md"
@@ -19,4 +19,8 @@ thiserror = { workspace = true }
 # compression backends to keep the dep tree small (and to avoid
 # pulling in C-FFI compressors that complicate the eventual WASM
 # build planned in slice 6).
-zip = { version = "8", default-features = false, features = ["deflate"] }
+# The flate2 backend alone decodes deflate; zip's `deflate` feature would
+# also pull zopfli, an encoder a read-only parser never calls.
+zip = { version = "8", default-features = false, features = [
+    "deflate-flate2-zlib-rs",
+] }

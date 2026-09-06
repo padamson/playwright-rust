@@ -12,7 +12,10 @@ use zip::ZipArchive;
 
 const TRACE_ENTRY: &str = "trace.trace";
 const NETWORK_ENTRY: &str = "trace.network";
-const SUPPORTED_VERSION: u32 = 8;
+/// Trace formats this parser reads. v9 gave frame snapshots a `phase`
+/// and wrote blob references as whole archive paths; both formats parse,
+/// and a reference from either opens through [`TraceReader::blob`].
+const SUPPORTED_VERSIONS: std::ops::RangeInclusive<u32> = 8..=9;
 const RESOURCE_SNAPSHOT_KIND: &str = "resource-snapshot";
 
 /// Streaming reader over a Playwright trace zip.
@@ -35,10 +38,10 @@ impl<R: Read + Seek> TraceReader<R> {
     pub fn open(reader: R) -> Result<Self> {
         let mut zip = ZipArchive::new(reader)?;
         let context = parse_context(&mut zip)?;
-        if context.version != SUPPORTED_VERSION {
+        if !SUPPORTED_VERSIONS.contains(&context.version) {
             return Err(TraceError::UnsupportedVersion {
                 found: context.version,
-                expected: SUPPORTED_VERSION,
+                supported: SUPPORTED_VERSIONS,
             });
         }
         Ok(Self { zip, context })
@@ -87,6 +90,20 @@ impl<R: Read + Seek> TraceReader<R> {
     /// `end_time = None` rather than discarded.
     pub fn actions(&mut self) -> Result<impl Iterator<Item = Result<Action>>> {
         Ok(ActionStream::new(self.events()?))
+    }
+
+    /// The bytes of a blob the trace refers to: a screencast frame, a
+    /// response body, a snapshot resource. `path` is the archive path an
+    /// event carries in its `file` field.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TraceError::Zip`] when the archive holds no such entry.
+    pub fn blob(&mut self, path: &str) -> Result<Vec<u8>> {
+        let mut entry = self.zip.by_name(path)?;
+        let mut bytes = Vec::new();
+        entry.read_to_end(&mut bytes)?;
+        Ok(bytes)
     }
 
     /// Streaming iterator over [`NetworkEntry`] records from

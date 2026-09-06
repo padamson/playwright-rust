@@ -6,6 +6,12 @@
 **Targets:** independent of `playwright-rs` versions; first publish ships alongside v0.13.0 (see [#86](https://github.com/padamson/playwright-rust/issues/86))
 **Downstream:** [#82](https://github.com/padamson/playwright-rust/issues/82) — WASM trace viewer
 
+> **Historical (2026-09-06).** Field names below predate trace v9: blob
+> references are now `file` / `_file` carrying the whole archive path
+> (`resources/…`, `screencast/…`) rather than `sha1` / `_sha1`, and the
+> deferred resource accessor shipped as `TraceReader::blob(path)`. See the
+> crate's CHANGELOG for the current shape.
+
 ## Goal
 
 A pure-Rust programmatic parser for Playwright trace zip files (format

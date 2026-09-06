@@ -9,7 +9,7 @@ browser.
 ## Regenerate
 
 When the trace format changes (Playwright minor version bump that
-shifts the format from v8) or when fixture content needs updating,
+moves the format past v9) or when fixture content needs updating,
 regenerate via:
 
 ```bash

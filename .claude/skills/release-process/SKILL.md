@@ -57,6 +57,7 @@ table above; the workflow is otherwise identical.
 4. **If a sibling crate's version changed too**, update the dep line in
    `crates/playwright/Cargo.toml`:
    - `playwright-rs-macros = { version = "...", path = "..." }` for the macros bump
+   - `playwright-rs-trace = { version = "...", path = "..." }` for the trace bump — **two lines carry it**, the optional dependency behind the `trace` feature and the dev-dependency the tracing integration test uses, and both need the new version. Cargo does not fall back to crates.io for a path dependency whose version requirement fails, so a stale line breaks every workspace command until it is updated
    - `xtask`'s `playwright-rs = { path = "...", version = "..." }` if the main crate version changes (cargo-deny's no-wildcard rule)
 5. **Refresh `cargo vet`** — see the **supply-chain** skill for the
    `cargo vet regenerate unpublished` / `cargo vet regenerate exemptions`

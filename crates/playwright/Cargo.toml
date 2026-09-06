@@ -28,6 +28,10 @@ screenshot-diff = ["dep:image"]
 # pure-Rust crates, all already in the dependency graph's audit set.
 route-service = ["dep:http", "dep:http-body", "dep:http-body-util", "dep:tower"]
 macros = ["dep:playwright-rs-macros"]
+# Re-exports the trace-zip parser as `playwright_rs::trace`, so a project
+# that reads its own traces never picks a second version. Off by default:
+# writing traces needs none of it, and it pulls the zip and deflate stack.
+trace = ["dep:playwright-rs-trace"]
 cli = [
     "dep:clap",
     "dep:ureq",
@@ -58,6 +62,7 @@ http-body = { version = "1", optional = true }
 http-body-util = { version = "0.1", optional = true }
 tower = { version = "0.5", default-features = false, features = ["util"], optional = true }
 playwright-rs-macros = { version = "0.1.1", path = "../playwright-rs-macros", optional = true }
+playwright-rs-trace = { version = "0.1", path = "../playwright-rs-trace", optional = true }
 clap = { version = "4", features = ["derive"], optional = true }
 ureq = { version = "3.3.0", optional = true, default-features = false, features = [
     "gzip",
@@ -88,6 +93,9 @@ tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 urlencoding = "2"
 tempfile = "3"
+# Also a dev-dependency, so the tracing test reads its trace back whether
+# or not the `trace` feature is on.
+playwright-rs-trace = { version = "0.1", path = "../playwright-rs-trace" }
 
 [target.'cfg(windows)'.dev-dependencies]
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef"] }

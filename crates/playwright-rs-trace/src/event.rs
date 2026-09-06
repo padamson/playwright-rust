@@ -49,9 +49,15 @@ impl RawEvent {
         // Try to deserialize as the tagged enum. If it fails (unknown
         // tag, or a known tag with unexpected payload shape), preserve
         // the raw payload as `Unknown` rather than discarding it.
-        match serde_json::from_value::<TypedEnum>(Value::Object(self.raw.clone())) {
+        // Borrowing deserialization: only the strings a variant keeps are
+        // copied, and the map is handed back intact on a miss.
+        let value = Value::Object(self.raw);
+        match TypedEnum::deserialize(&value) {
             Ok(t) => t.into(),
-            Err(_) => TraceEvent::Unknown(self),
+            Err(_) => match value {
+                Value::Object(raw) => TraceEvent::Unknown(RawEvent { raw }),
+                _ => unreachable!("the value was built from an object above"),
+            },
         }
     }
 }
@@ -87,7 +93,10 @@ enum TypedEnum {
     After(AfterEvent),
     Console(ConsoleEvent),
     Event(SystemEvent),
-    FrameSnapshot(FrameSnapshotEvent),
+    /// The payload sits under a `snapshot` key.
+    FrameSnapshot {
+        snapshot: FrameSnapshotWire,
+    },
     ScreencastFrame(ScreencastFrameEvent),
 }
 
@@ -101,7 +110,7 @@ impl From<TypedEnum> for TraceEvent {
             TypedEnum::After(a) => TraceEvent::After(a),
             TypedEnum::Console(c) => TraceEvent::Console(c),
             TypedEnum::Event(e) => TraceEvent::Event(e),
-            TypedEnum::FrameSnapshot(f) => TraceEvent::FrameSnapshot(f),
+            TypedEnum::FrameSnapshot { snapshot } => TraceEvent::FrameSnapshot(snapshot.into()),
             TypedEnum::ScreencastFrame(s) => TraceEvent::ScreencastFrame(s),
         }
     }
@@ -196,7 +205,10 @@ pub struct ConsoleEvent {
     /// `"log"`, `"warn"`, `"error"`, `"info"`, `"debug"`, etc. Kept as
     /// a string because Playwright extends this set; matching at the
     /// call site keeps us forward-compatible.
-    #[serde(rename = "type", default)]
+    ///
+    /// The driver writes this under `messageType`: `type` is the event's
+    /// own discriminator, so reading it here left the level always empty.
+    #[serde(rename = "messageType", default)]
     pub level: String,
     #[serde(default)]
     pub text: String,
@@ -233,33 +245,116 @@ pub struct SystemEvent {
     pub page_id: Option<String>,
 }
 
-/// Per-frame DOM snapshot. Includes the full HTML payload — these can
-/// be sizeable; callers iterating on snapshots for many frames should
-/// expect the per-event size to dominate the overall trace memory
-/// budget.
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// Per-frame DOM snapshot. Includes the full DOM payload, which can be
+/// sizeable; callers iterating on snapshots for many frames should expect
+/// the per-event size to dominate the overall trace memory budget.
+///
+/// A snapshot belongs to the action whose `call_id` it names, at the
+/// moment its `phase` says. Trace v9 writes the phase; v8 named each
+/// snapshot (`before@<call>`) and the phase is read back from that name,
+/// so the link is the same on both formats.
+#[derive(Debug, Clone)]
 pub struct FrameSnapshotEvent {
     pub call_id: String,
-    pub snapshot_name: String,
+    /// The moment of the action this snapshot captured.
+    pub phase: ActionPhase,
+    /// The v8 snapshot name that the action's own events refer to. `None`
+    /// on v9, which stopped naming snapshots.
+    pub snapshot_name: Option<String>,
     pub page_id: String,
     pub frame_id: String,
-    #[serde(default)]
     pub frame_url: String,
-    #[serde(default)]
     pub doctype: String,
-    #[serde(default)]
-    pub html: String,
+    /// The serialized DOM, in the trace viewer's nested-array encoding.
+    pub html: Value,
     pub viewport: Option<Viewport>,
     pub timestamp: f64,
-    #[serde(default)]
     pub wall_time: f64,
-    #[serde(default)]
     pub collection_time: f64,
-    #[serde(default)]
     pub is_main_frame: bool,
-    #[serde(default)]
     pub resource_overrides: Vec<ResourceOverride>,
+}
+
+/// The `snapshot` payload as written, before the phase is settled.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrameSnapshotWire {
+    call_id: String,
+    #[serde(default)]
+    phase: Option<ActionPhase>,
+    #[serde(default)]
+    snapshot_name: Option<String>,
+    page_id: String,
+    frame_id: String,
+    #[serde(default)]
+    frame_url: String,
+    #[serde(default)]
+    doctype: String,
+    #[serde(default)]
+    html: Value,
+    viewport: Option<Viewport>,
+    timestamp: f64,
+    #[serde(default)]
+    wall_time: f64,
+    #[serde(default)]
+    collection_time: f64,
+    #[serde(default)]
+    is_main_frame: bool,
+    #[serde(default)]
+    resource_overrides: Vec<ResourceOverride>,
+}
+
+impl From<FrameSnapshotWire> for FrameSnapshotEvent {
+    fn from(wire: FrameSnapshotWire) -> Self {
+        let phase = wire
+            .phase
+            .or_else(|| wire.snapshot_name.as_deref().map(ActionPhase::from_v8_name))
+            .unwrap_or(ActionPhase::Other);
+        Self {
+            call_id: wire.call_id,
+            phase,
+            snapshot_name: wire.snapshot_name,
+            page_id: wire.page_id,
+            frame_id: wire.frame_id,
+            frame_url: wire.frame_url,
+            doctype: wire.doctype,
+            html: wire.html,
+            viewport: wire.viewport,
+            timestamp: wire.timestamp,
+            wall_time: wire.wall_time,
+            collection_time: wire.collection_time,
+            is_main_frame: wire.is_main_frame,
+            resource_overrides: wire.resource_overrides,
+        }
+    }
+}
+
+/// The moment of an action a snapshot captured.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ActionPhase {
+    /// Just before the action ran.
+    Before,
+    /// At the input, e.g. the click point.
+    Action,
+    /// After the action completed.
+    After,
+    /// A phase this parser does not know.
+    #[serde(other)]
+    Other,
+}
+
+impl ActionPhase {
+    /// The phase a v8 snapshot name encodes: `before@<call>`,
+    /// `input@<call>`, or `after@<call>`.
+    fn from_v8_name(name: &str) -> Self {
+        match name.split('@').next() {
+            Some("before") => Self::Before,
+            Some("input") => Self::Action,
+            Some("after") => Self::After,
+            _ => Self::Other,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]
@@ -268,28 +363,70 @@ pub struct Viewport {
     pub height: u32,
 }
 
-/// External resource reference used by a snapshot. Either a SHA-1 hash
-/// (resolved through the zip's `resources/` directory) or an internal
-/// reference identifier the trace viewer reassembles.
+/// External resource reference used by a snapshot. Either a blob in the
+/// archive or an internal reference identifier the trace viewer reassembles.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResourceOverride {
     pub url: String,
-    #[serde(default)]
-    pub sha1: Option<String>,
+    /// Path of the blob inside the archive, ready to open there. Trace v8
+    /// wrote the entry name relative to `resources/`; v9 writes the whole
+    /// path. Both are normalized to the path.
+    #[serde(default, alias = "sha1", deserialize_with = "resource_path")]
+    pub file: Option<String>,
+    /// Ordinal of the earlier snapshot whose copy of this resource still
+    /// applies, for a stylesheet the page mutated and then left alone.
     #[serde(rename = "ref", default)]
-    pub reference: Option<String>,
+    pub reference: Option<u64>,
 }
 
-/// Single screencast frame stored as a JPEG in `resources/<sha1>`.
+/// Single screencast frame stored as a JPEG in the archive.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScreencastFrameEvent {
     pub page_id: String,
-    pub sha1: String,
+    /// Path of the JPEG inside the archive, ready to open there. Trace v9
+    /// keeps frames under `screencast/`; v8 kept them under `resources/`
+    /// and wrote only the entry name, which is normalized to the path.
+    #[serde(alias = "sha1", deserialize_with = "required_resource_path")]
+    pub file: String,
     pub width: u32,
     pub height: u32,
     pub timestamp: f64,
+}
+
+/// The archive directory every trace v8 blob reference was relative to.
+/// Trace v9 writes whole paths, under this directory or others such as
+/// `screencast/`.
+const RESOURCES_PREFIX: &str = "resources/";
+
+/// Normalize a blob reference to its path inside the archive: a v9 path
+/// passes through, a v8 entry name gets its directory back.
+fn to_resource_path(mut raw: String) -> String {
+    if !raw.contains('/') {
+        raw.insert_str(0, RESOURCES_PREFIX);
+    }
+    raw
+}
+
+/// `deserialize_with` for an optional blob reference; see [`to_resource_path`].
+pub(crate) fn resource_path<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(Option::<String>::deserialize(deserializer)?.map(to_resource_path))
+}
+
+/// `deserialize_with` for a required blob reference; see [`to_resource_path`].
+pub(crate) fn required_resource_path<'de, D>(
+    deserializer: D,
+) -> std::result::Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(to_resource_path(String::deserialize(deserializer)?))
 }
 
 /// Failure payload attached to an [`AfterEvent`].

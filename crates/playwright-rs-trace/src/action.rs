@@ -29,7 +29,12 @@ pub struct Action {
     pub error: Option<ActionError>,
     pub logs: Vec<LogLine>,
     pub input: Option<InputEvent>,
+    /// Name of the DOM snapshot taken before the action, on trace v8 only.
+    /// On both formats the snapshot itself carries `call_id` and `phase`,
+    /// which is the link that always works.
     pub before_snapshot: Option<String>,
+    /// Name of the DOM snapshot taken after the action, on trace v8 only;
+    /// see `before_snapshot`.
     pub after_snapshot: Option<String>,
     pub point: Option<Point>,
 }

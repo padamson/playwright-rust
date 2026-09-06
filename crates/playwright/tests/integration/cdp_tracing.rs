@@ -302,20 +302,50 @@ async fn test_tracing_start_with_options() {
         .await
         .expect("Failed to start tracing with options");
 
-    // Do some activity
+    // A page that keeps repainting: screencast frames follow paints, and a
+    // static page paints once, which under load can land after the stop.
     let page = context.new_page().await.expect("Failed to create page");
     page.goto(
-        "data:text/html,<html><body>Tracing with options test</body></html>",
+        "data:text/html,<html><body><script>window.ticks = 0; setInterval(() => { window.ticks += 1; document.body.textContent = 'tick ' + window.ticks; }, 50);</script></body></html>",
         None,
     )
     .await
     .expect("Failed to navigate");
+    page.wait_for_function("() => window.ticks > 5", None)
+        .await
+        .expect("the page keeps painting");
 
-    // Stop tracing
+    // Read the trace back: the driver ignores capture keys it does not
+    // know, so only the recorded content proves the options took effect.
+    use playwright_rs::protocol::TracingStopOptions;
+    use playwright_rs_trace::TraceEvent;
+    let dir = tempfile::tempdir().expect("tempdir");
+    let path = dir.path().join("trace.zip");
     tracing
-        .stop(None)
+        .stop(Some(
+            TracingStopOptions::default().path(path.to_str().expect("utf-8 path")),
+        ))
         .await
         .expect("Failed to stop tracing with options");
+
+    let mut reader = playwright_rs_trace::open(&path).expect("open the recorded trace");
+    let events: Vec<_> = reader
+        .events()
+        .expect("events")
+        .collect::<Result<_, _>>()
+        .expect("typed events");
+    assert!(
+        events
+            .iter()
+            .any(|e| matches!(e, TraceEvent::FrameSnapshot(_))),
+        "snapshots(true) must record DOM snapshots"
+    );
+    assert!(
+        events
+            .iter()
+            .any(|e| matches!(e, TraceEvent::ScreencastFrame(_))),
+        "screenshots(true) must record screencast frames"
+    );
 
     context.close().await.expect("Failed to close context");
     browser.close().await.expect("Failed to close browser");

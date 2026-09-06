@@ -129,7 +129,7 @@ impl Root {
                 "initialize",
                 serde_json::json!({
                     // See this method's rustdoc for why this is not "rust".
-                    // Validator enum last confirmed against playwright@1.62.1.
+                    // Validator enum last confirmed against playwright@1.63.0.
                     "sdkLanguage": "python"
                 }),
             )

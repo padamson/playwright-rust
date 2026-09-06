@@ -6,16 +6,20 @@
 //!
 //! See `tests/fixtures/README.md` for details.
 
-use playwright_rs_trace::{NetworkEntry, TraceEvent, TraceReader};
+use playwright_rs_trace::{ActionPhase, NetworkEntry, TraceError, TraceEvent, TraceReader};
 use std::io::Cursor;
 
 const BASIC_FIXTURE: &[u8] = include_bytes!("fixtures/basic.trace.zip");
+
+/// A trace from the last driver that wrote v8. Kept so the v8 paths stay
+/// covered by a real recording once the bundled driver moved past them.
+const BASIC_V8_FIXTURE: &[u8] = include_bytes!("fixtures/basic-v8.trace.zip");
 
 /// Driver the fixture was recorded with. `cargo xtask verify-driver-version`
 /// anchors this to `build.rs`'s `PLAYWRIGHT_VERSION`, so bumping the driver
 /// without regenerating the fixture fails a gate instead of quietly leaving
 /// the parser untested against the format it will actually meet.
-const FIXTURE_DRIVER: &str = "playwright@1.62.1";
+const FIXTURE_DRIVER: &str = "playwright@1.63.0";
 
 fn open_basic() -> TraceReader<Cursor<&'static [u8]>> {
     TraceReader::open(Cursor::new(BASIC_FIXTURE)).expect("open basic fixture")
@@ -25,7 +29,7 @@ fn open_basic() -> TraceReader<Cursor<&'static [u8]>> {
 fn opens_basic_fixture_and_reads_context() {
     let reader = open_basic();
     let ctx = reader.context();
-    assert_eq!(ctx.version, 8, "trace v8 expected");
+    assert_eq!(ctx.version, 9, "playwright@1.63.0 writes trace v9");
     assert_eq!(ctx.browser_name, "chromium");
     let expected_driver = FIXTURE_DRIVER
         .strip_prefix("playwright@")
@@ -73,13 +77,24 @@ fn typed_events_includes_known_kinds() {
     let mut saw_before = false;
     let mut saw_after = false;
     let mut saw_console_hi = false;
+    let mut phases = Vec::new();
+    let mut blobs = Vec::new();
 
     for ev in &events {
         match ev {
             TraceEvent::ContextOptions(_) => saw_context = true,
             TraceEvent::Before(_) => saw_before = true,
             TraceEvent::After(_) => saw_after = true,
-            TraceEvent::Console(c) if c.text == "hi" => saw_console_hi = true,
+            TraceEvent::Console(c) if c.text == "hi" => {
+                assert_eq!(c.level, "log", "the console level is read from the trace");
+                saw_console_hi = true;
+            }
+            TraceEvent::FrameSnapshot(f) => {
+                assert!(f.snapshot_name.is_none(), "v9 names no snapshots");
+                assert!(f.html.is_array(), "the DOM is the viewer's array encoding");
+                phases.push(f.phase);
+            }
+            TraceEvent::ScreencastFrame(f) => blobs.push(f.file.clone()),
             _ => {}
         }
     }
@@ -91,6 +106,27 @@ fn typed_events_includes_known_kinds() {
         saw_console_hi,
         "expected a Console event with text \"hi\" from the recorded onclick handler",
     );
+    assert!(
+        phases.contains(&ActionPhase::Before) && phases.contains(&ActionPhase::After),
+        "the goto and click each snapshot before and after: {phases:?}"
+    );
+    assert!(
+        !blobs.is_empty(),
+        "screenshots(true) recorded screencast frames"
+    );
+
+    // A blob reference is a path that opens in the archive, which is the
+    // whole point of normalizing it.
+    for file in &blobs {
+        assert!(
+            file.starts_with("screencast/"),
+            "v9 keeps frames under screencast/: {file}"
+        );
+        let bytes = reader
+            .blob(file)
+            .unwrap_or_else(|e| panic!("blob {file} should open: {e}"));
+        assert!(!bytes.is_empty(), "screencast frame {file} is empty");
+    }
 }
 
 #[test]
@@ -124,6 +160,124 @@ fn actions_reassemble_a_click() {
     );
 }
 
+/// The v8 paths, against a real recording rather than synthetic lines: the
+/// driver stopped writing this format, so nothing else would exercise them.
+#[test]
+fn the_v8_fixture_parses_with_names_and_derived_phases() {
+    let mut reader = TraceReader::open(Cursor::new(BASIC_V8_FIXTURE)).expect("open the v8 fixture");
+    assert_eq!(reader.context().version, 8);
+
+    let events: Vec<_> = reader
+        .events()
+        .expect("events")
+        .collect::<Result<_, _>>()
+        .expect("typed events");
+
+    let mut snapshots = Vec::new();
+    let mut blobs = Vec::new();
+    for ev in &events {
+        match ev {
+            TraceEvent::FrameSnapshot(f) => snapshots.push((
+                f.snapshot_name.clone().expect("v8 names every snapshot"),
+                f.phase,
+            )),
+            TraceEvent::ScreencastFrame(f) => blobs.push(f.file.clone()),
+            _ => {}
+        }
+    }
+
+    assert!(
+        snapshots
+            .iter()
+            .any(|(name, phase)| name.starts_with("before@") && *phase == ActionPhase::Before),
+        "the phase is read back from the v8 name: {snapshots:?}"
+    );
+    assert!(
+        snapshots
+            .iter()
+            .any(|(name, phase)| name.starts_with("input@") && *phase == ActionPhase::Action),
+        "an input snapshot is the action phase: {snapshots:?}"
+    );
+
+    // v8 wrote the entry name; normalized, it opens like any other blob.
+    for file in &blobs {
+        assert!(
+            file.starts_with("resources/"),
+            "v8 kept frames under resources/: {file}"
+        );
+        assert!(!reader.blob(file).expect("blob opens").is_empty());
+    }
+
+    // The v8-only action linkage still resolves.
+    let mut reader = TraceReader::open(Cursor::new(BASIC_V8_FIXTURE)).expect("reopen");
+    let actions: Vec<_> = reader
+        .actions()
+        .expect("actions")
+        .collect::<Result<_, _>>()
+        .expect("action stream");
+    assert!(
+        actions.iter().any(|a| a
+            .before_snapshot
+            .as_deref()
+            .is_some_and(|n| n.starts_with("before@"))),
+        "v8 actions name their snapshots"
+    );
+}
+
+/// A `context-options` line declaring `version`, as the driver writes it.
+fn context_line(version: u32) -> String {
+    format!(
+        r#"{{"type":"context-options","version":{version},"browserName":"chromium","playwrightVersion":"1.63.0"}}"#
+    )
+}
+
+/// v8 wrote a blob's entry name, v9 writes its archive path; both resolve to the path.
+#[test]
+fn screencast_blob_resolves_to_its_archive_path_on_v8_and_v9() {
+    let cases = [
+        (
+            8,
+            r#"{"type":"screencast-frame","pageId":"p","sha1":"page@1-2.jpeg","width":2,"height":2,"timestamp":1.0}"#,
+            "resources/page@1-2.jpeg",
+        ),
+        (
+            9,
+            r#"{"type":"screencast-frame","pageId":"p","file":"screencast/page@1-2.jpeg","width":2,"height":2,"timestamp":1.0}"#,
+            "screencast/page@1-2.jpeg",
+        ),
+    ];
+
+    for (version, frame, expected) in cases {
+        let zip_bytes = build_synthetic_trace(&[&context_line(version), frame]);
+        let mut reader =
+            TraceReader::open(Cursor::new(zip_bytes)).expect("a supported version opens");
+        assert_eq!(reader.context().version, version);
+
+        let events: Vec<_> = reader
+            .events()
+            .expect("events")
+            .collect::<Result<_, _>>()
+            .expect("typed events");
+        match &events[1] {
+            TraceEvent::ScreencastFrame(f) => assert_eq!(f.file, expected, "trace v{version}"),
+            other => panic!("expected a screencast frame, got {other:?}"),
+        }
+    }
+}
+
+#[test]
+fn a_future_trace_version_is_refused() {
+    let zip_bytes = build_synthetic_trace(&[&context_line(10)]);
+
+    let Err(error) = TraceReader::open(Cursor::new(zip_bytes)) else {
+        panic!("v10 is newer than this parser and must be refused");
+    };
+    assert!(
+        matches!(&error, TraceError::UnsupportedVersion { found: 10, supported } if *supported == (8..=9)),
+        "got {error:?}"
+    );
+}
+
 #[test]
 fn unknown_event_via_synthetic_zip() {
     // Forward-compat contract: events with a `type` we don't model
@@ -131,7 +285,7 @@ fn unknown_event_via_synthetic_zip() {
     // never silently dropped. Build a minimal trace zip exercising
     // this without depending on the fixture content.
     let zip_bytes = build_synthetic_trace(&[
-        r#"{"type":"context-options","version":8,"browserName":"chromium","playwrightVersion":"1.60.0"}"#,
+        &context_line(8),
         r#"{"type":"future-thing-not-modelled","customField":42,"text":"hello"}"#,
     ]);
 
@@ -231,8 +385,8 @@ fn network_parses_synthetic_resource_snapshot() {
     assert_eq!(e.request.headers_size, Some(64));
     assert_eq!(e.request.body_size, Some(11));
     assert_eq!(
-        e.request.post_data.as_ref().map(|p| p.sha1.as_str()),
-        Some("req-body-hash"),
+        e.request.post_data.as_ref().map(|p| p.file.as_str()),
+        Some("resources/req-body-hash"),
     );
 
     assert_eq!(e.response.status, Some(200));
@@ -243,7 +397,10 @@ fn network_parses_synthetic_resource_snapshot() {
     assert_eq!(e.response.redirect_url, None, "empty redirectURL → None");
     assert_eq!(e.response.content.size, Some(5));
     assert_eq!(e.response.content.mime_type, "text/plain");
-    assert_eq!(e.response.content.sha1.as_deref(), Some("resp-body-hash"));
+    assert_eq!(
+        e.response.content.file.as_deref(),
+        Some("resources/resp-body-hash")
+    );
 
     // raw_snapshot preserves fields we don't model.
     assert!(
@@ -424,7 +581,7 @@ fn network_absent_optional_fields_become_none() {
     assert!(entry.request.post_data.is_none());
 
     // content._sha1: absent (response with no body, e.g. 204).
-    assert_eq!(entry.response.content.sha1, None);
+    assert_eq!(entry.response.content.file, None);
 
     // status_text is not Optional — 204 still has "No Content".
     assert_eq!(entry.response.status, Some(204));
@@ -472,11 +629,8 @@ fn build_synthetic_network_zip(network_lines: &[&str]) -> Vec<u8> {
         let opts = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
         zip.start_file("trace.trace", opts).expect("start trace");
-        zip.write_all(
-            br#"{"type":"context-options","version":8,"browserName":"chromium","playwrightVersion":"1.60.0"}
-"#,
-        )
-        .expect("write trace");
+        zip.write_all(format!("{}\n", context_line(8)).as_bytes())
+            .expect("write trace");
 
         zip.start_file("trace.network", opts)
             .expect("start network");

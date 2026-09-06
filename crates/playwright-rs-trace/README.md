@@ -1,6 +1,6 @@
 # playwright-rs-trace
 
-Programmatic parser for [Playwright][pw] trace zip files (trace format v8).
+Programmatic parser for [Playwright][pw] trace zip files (trace formats v8 and v9, v9 from 0.2.0).
 
 The Playwright JS ecosystem ships a trace-viewer UI but no documented
 parsing API. This crate fills that gap for Rust:

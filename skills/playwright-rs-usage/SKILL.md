@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.7.0"
+  version: "0.8.0"
 ---
 
 # Using playwright-rs
@@ -53,10 +53,12 @@ playwright-rs = { version = "0.17", default-features = false, features = [
 ] }
 ```
 
-Two capabilities are opt-in and off unless asked for. `screenshot-diff`
+Three capabilities are opt-in and off unless asked for. `screenshot-diff`
 turns on pixel-diff screenshot assertions, so reach for it when the task
 calls for comparing a rendering against a baseline rather than asserting on
-the DOM. `cli` builds an installer binary for use outside a Cargo project;
+the DOM. `trace` re-exports the trace-zip parser as `playwright_rs::trace`,
+for code that reads back the traces it recorded. `cli` builds an installer
+binary for use outside a Cargo project;
 inside one, prefer the example below, because `cargo install` compiles a
 second copy of the crate that then has to be kept in sync with the
 project's lockfile.
@@ -303,13 +305,22 @@ hosted version is at <https://trace.playwright.dev>.
 ## Programmatic trace inspection
 
 For CI bots, agent feedback loops, or any code that wants to read what
-happened in a trace without re-running the test, add the companion
-crate as a `[dev-dependencies]` entry: `playwright-rs-trace = "0.1"`.
+happened in a trace without re-running the test, turn on the `trace`
+feature and the parser is `playwright_rs::trace`, at a version this crate
+already pins:
 
-Use `TraceReader::actions()` to walk the reassembled action stream,
-`TraceReader::network()` for HTTP traffic. The crate's `//!`
-rustdoc on <https://docs.rs/playwright-rs-trace> has a runnable
-example.
+```toml
+playwright-rs = { version = "0.17", features = ["trace"] }
+```
+
+Use `trace::open(path)` then `TraceReader::actions()` to walk the
+reassembled action stream, `TraceReader::network()` for HTTP traffic, and
+`TraceReader::blob(path)` to pull a screencast frame or response body out
+of the archive. Code that reads traces without driving a browser can
+depend on `playwright-rs-trace` alone instead; it needs `0.2` or later to
+read traces from the current driver, since `0.1` reads only the older
+trace format and refuses them. The crate's `//!` rustdoc on
+<https://docs.rs/playwright-rs-trace> has a runnable example.
 
 ## Things that look like playwright-python but aren't quite
 

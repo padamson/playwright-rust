@@ -62,17 +62,19 @@ pub struct HeaderEntry {
 
 #[derive(Debug, Clone)]
 pub struct RequestPostData {
-    /// Points to `resources/<sha1>` in the zip.
-    pub sha1: String,
+    /// Path of the request body inside the archive, ready to open there.
+    /// Normalized across trace v8 (entry name) and v9 (path).
+    pub file: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct ResponseContent {
     pub size: Option<u64>,
     pub mime_type: String,
-    /// Points to `resources/<sha1>`. `None` when the response has no
-    /// body (`204`, `304`, …).
-    pub sha1: Option<String>,
+    /// Path of the response body inside the archive, ready to open there,
+    /// normalized across trace v8 (entry name) and v9 (path). `None` when
+    /// the response has no body (`204`, `304`, …).
+    pub file: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -145,8 +147,13 @@ struct HeaderEntryWire {
 
 #[derive(Deserialize)]
 struct PostDataWire {
-    #[serde(rename = "_sha1")]
-    sha1: String,
+    // Trace v8 wrote `_sha1` (an entry name), v9 writes `_file` (a path).
+    #[serde(
+        rename = "_file",
+        alias = "_sha1",
+        deserialize_with = "crate::event::required_resource_path"
+    )]
+    file: String,
 }
 
 #[derive(Deserialize)]
@@ -156,8 +163,13 @@ struct ContentWire {
     size: i64,
     #[serde(default)]
     mime_type: String,
-    #[serde(default, rename = "_sha1")]
-    sha1: Option<String>,
+    #[serde(
+        default,
+        rename = "_file",
+        alias = "_sha1",
+        deserialize_with = "crate::event::resource_path"
+    )]
+    file: Option<String>,
 }
 
 fn default_neg_one() -> i64 {
@@ -183,7 +195,9 @@ fn empty_string_to_none(s: String) -> Option<String> {
 
 impl NetworkEntry {
     pub(crate) fn from_snapshot(snapshot: Value) -> Result<Self, serde_json::Error> {
-        let wire: SnapshotWire = serde_json::from_value(snapshot.clone())?;
+        // Borrowing deserialization: the wire struct copies only the strings
+        // it keeps, and the tree moves into `raw_snapshot` unchanged.
+        let wire = SnapshotWire::deserialize(&snapshot)?;
         Ok(NetworkEntry {
             frame_ref: wire.frame_ref,
             page_ref: wire.pageref,
@@ -208,7 +222,7 @@ impl NetworkEntry {
                 post_data: wire
                     .request
                     .post_data
-                    .map(|p| RequestPostData { sha1: p.sha1 }),
+                    .map(|p| RequestPostData { file: p.file }),
             },
             response: ResponseSnapshot {
                 status: if wire.response.status == -1 {
@@ -233,7 +247,7 @@ impl NetworkEntry {
                 content: ResponseContent {
                     size: unknown_neg_one_u64(wire.response.content.size),
                     mime_type: wire.response.content.mime_type,
-                    sha1: wire.response.content.sha1,
+                    file: wire.response.content.file,
                 },
             },
             raw_snapshot: snapshot,

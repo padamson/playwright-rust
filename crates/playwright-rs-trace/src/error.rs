@@ -20,8 +20,11 @@ pub enum TraceError {
     #[error("missing entry: {0}")]
     MissingEntry(&'static str),
 
-    #[error("unsupported trace version {found}, expected {expected}")]
-    UnsupportedVersion { found: u32, expected: u32 },
+    #[error("unsupported trace version {found}, supported {supported:?}")]
+    UnsupportedVersion {
+        found: u32,
+        supported: std::ops::RangeInclusive<u32>,
+    },
 
     #[error("malformed action {call_id}: {reason}")]
     MalformedAction { call_id: String, reason: String },

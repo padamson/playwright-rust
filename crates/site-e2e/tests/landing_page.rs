@@ -483,11 +483,11 @@ async fn dev_build_reflects_unreleased_state() {
         "dev build shows the unreleased crates.io badge"
     );
     let pw_badge = page
-        .locator("#hero-badges img[alt='Playwright 1.62.1']")
+        .locator("#hero-badges img[alt='Playwright 1.63.0']")
         .count()
         .await
         .expect("count Playwright badge");
-    assert_eq!(pw_badge, 1, "dev build shows the 1.62.1 Playwright badge");
+    assert_eq!(pw_badge, 1, "dev build shows the 1.63.0 Playwright badge");
 
     // The in-process serving card and its walkthrough are `unreleased` until
     // the release that carries `route_service` ships: both render here, badged,

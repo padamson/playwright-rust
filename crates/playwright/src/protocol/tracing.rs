@@ -55,29 +55,42 @@ use crate::server::channel_owner::{
     ChannelOwner, ChannelOwnerImpl, DisposeReason, ParentOrConnection,
 };
 use crate::server::connection::ConnectionLike;
+use serde::Serialize;
 use serde_json::Value;
 use std::any::Any;
 use std::sync::Arc;
 
 /// Options for starting a trace recording.
 ///
+/// Serializes straight to the driver's `tracingStart` parameters. The
+/// driver ignores keys it does not know rather than rejecting them, so a
+/// stale spelling costs every trace its snapshots and its timeline with no
+/// error anywhere; the unit tests below pin the current spellings.
+///
 /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start>
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct TracingStartOptions {
     /// Custom name for the trace. Shown in trace viewer as the trace title.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    /// Whether to capture screenshots during tracing. Screenshots are used as
-    /// a timeline preview in the trace viewer.
+    /// Whether to record a screencast during tracing. Its frames are the
+    /// timeline preview in the trace viewer.
+    #[serde(rename = "screencast", skip_serializing_if = "Option::is_none")]
     pub screenshots: Option<bool>,
-    /// Whether to capture DOM snapshots on each action.
-    pub snapshots: Option<bool>,
+    /// Which snapshots to capture on each action. `snapshots(true)` is the
+    /// DOM snapshot alone; a [`TraceSnapshots`] value selects DOM,
+    /// accessibility, and screen captures individually.
+    #[serde(flatten)]
+    pub snapshots: Option<TraceSnapshots>,
     /// Whether to enable live trace updates while recording. When `true`,
     /// the trace viewer can attach and observe the trace as it is being
     /// captured, rather than waiting for the recording to finish. Useful
     /// for debugging long-running flows.
     ///
     /// See: <https://playwright.dev/docs/api/class-tracing#tracing-start-option-live>
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub live: Option<bool>,
 }
 
@@ -92,15 +105,111 @@ impl TracingStartOptions {
         self.screenshots = Some(screenshots);
         self
     }
-    /// Capture DOM snapshots during tracing.
-    pub fn snapshots(mut self, snapshots: bool) -> Self {
-        self.snapshots = Some(snapshots);
+    /// Capture snapshots on each action: `true` for the DOM snapshot, or a
+    /// [`TraceSnapshots`] selecting DOM, accessibility, and screen captures.
+    pub fn snapshots(mut self, snapshots: impl Into<TraceSnapshots>) -> Self {
+        self.snapshots = Some(snapshots.into());
         self
     }
     /// Enable live tracing (view in the trace viewer while running).
     pub fn live(mut self, live: bool) -> Self {
         self.live = Some(live);
         self
+    }
+}
+
+impl TracingStartOptions {
+    /// Convert options to JSON value for protocol
+    pub(crate) fn to_json(&self) -> Value {
+        serde_json::to_value(self).expect("TracingStartOptions serialization cannot fail")
+    }
+}
+
+/// Which snapshots a trace captures on each action.
+///
+/// `true` converts to the DOM snapshot alone, which is what
+/// `snapshots(true)` has always meant; the accessibility and screen
+/// captures are what the trace viewer's Display Aria mode shows side by
+/// side.
+///
+/// See: <https://playwright.dev/docs/api/class-tracing#tracing-start-option-snapshots>
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[non_exhaustive]
+pub struct TraceSnapshots {
+    /// Capture the DOM on each action, replayed as the trace viewer's DOM view.
+    #[serde(rename = "snapshotDom", skip_serializing_if = "Option::is_none")]
+    pub dom: Option<bool>,
+    /// Capture an accessibility snapshot on each action.
+    #[serde(rename = "snapshotAria", skip_serializing_if = "Option::is_none")]
+    pub aria: Option<bool>,
+    /// Capture a screen snapshot on each action.
+    #[serde(rename = "snapshotScreen", skip_serializing_if = "Option::is_none")]
+    pub screen: Option<bool>,
+}
+
+impl TraceSnapshots {
+    /// Capture the DOM on each action.
+    pub fn dom(mut self, dom: bool) -> Self {
+        self.dom = Some(dom);
+        self
+    }
+    /// Capture an accessibility snapshot on each action.
+    pub fn aria(mut self, aria: bool) -> Self {
+        self.aria = Some(aria);
+        self
+    }
+    /// Capture a screen snapshot on each action.
+    pub fn screen(mut self, screen: bool) -> Self {
+        self.screen = Some(screen);
+        self
+    }
+}
+
+impl From<bool> for TraceSnapshots {
+    fn from(dom: bool) -> Self {
+        Self::default().dom(dom)
+    }
+}
+
+#[cfg(test)]
+mod to_json_tests {
+    use super::*;
+
+    #[test]
+    fn keys_are_the_driver_spellings() {
+        let params = TracingStartOptions::default()
+            .name("t")
+            .screenshots(true)
+            .snapshots(TraceSnapshots::default().dom(true).aria(false).screen(true))
+            .live(false)
+            .to_json();
+
+        assert_eq!(
+            params,
+            serde_json::json!({
+                "name": "t",
+                "screencast": true,
+                "snapshotDom": true,
+                "snapshotAria": false,
+                "snapshotScreen": true,
+                "live": false,
+            })
+        );
+    }
+
+    #[test]
+    fn a_bool_selects_the_dom_snapshot_alone() {
+        let params = TracingStartOptions::default().snapshots(true).to_json();
+
+        assert_eq!(params, serde_json::json!({ "snapshotDom": true }));
+    }
+
+    #[test]
+    fn unset_options_send_no_keys() {
+        assert_eq!(
+            TracingStartOptions::default().to_json(),
+            serde_json::json!({})
+        );
     }
 }
 
@@ -169,7 +278,7 @@ impl Tracing {
     ///
     /// # Arguments
     ///
-    /// * `options` - Optional trace configuration (name, screenshots, snapshots)
+    /// * `options` - Optional trace configuration (name, screenshots, snapshots, live)
     ///
     /// # Errors
     ///
@@ -184,22 +293,8 @@ impl Tracing {
         let opts = options.unwrap_or_default();
 
         // Step 1: tracingStart — configure the trace
-        let mut start_params = serde_json::json!({});
-        if let Some(ref name) = opts.name {
-            start_params["name"] = serde_json::Value::String(name.clone());
-        }
-        if let Some(screenshots) = opts.screenshots {
-            start_params["screenshots"] = serde_json::Value::Bool(screenshots);
-        }
-        if let Some(snapshots) = opts.snapshots {
-            start_params["snapshots"] = serde_json::Value::Bool(snapshots);
-        }
-        if let Some(live) = opts.live {
-            start_params["live"] = serde_json::Value::Bool(live);
-        }
-
         self.channel()
-            .send_no_result("tracingStart", start_params)
+            .send_no_result("tracingStart", opts.to_json())
             .await?;
 
         // Step 2: tracingStartChunk — begin the chunk/recording

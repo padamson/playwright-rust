@@ -9,7 +9,7 @@ const GITHUB: &str = "https://github.com/padamson/playwright-rust";
 // Playwright driver bundled by the latest crates.io release vs. by main HEAD.
 // Bump these at release time, alongside the install version (snippets/install.toml).
 const PLAYWRIGHT_RELEASED: &str = "1.62.1";
-const PLAYWRIGHT_DEV: &str = "1.62.1";
+const PLAYWRIGHT_DEV: &str = "1.63.0";
 
 #[component]
 pub fn Hero() -> impl IntoView {

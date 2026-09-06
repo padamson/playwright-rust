@@ -356,7 +356,8 @@ pub use protocol::{
 // them to the crate root matches every other type a consumer constructs
 // (the `protocol::` paths still work).
 pub use protocol::{
-    HarContent, HarMode, StartHarOptions, Tracing, TracingStartOptions, TracingStopOptions,
+    HarContent, HarMode, StartHarOptions, TraceSnapshots, Tracing, TracingStartOptions,
+    TracingStopOptions,
 };
 
 // Re-export EventWaiter for use with expect_page() / expect_close()
@@ -411,6 +412,28 @@ pub use server::driver::{install_browsers, install_browsers_with_deps};
 // available can opt out.
 #[cfg(feature = "macros")]
 pub use playwright_rs_macros::locator;
+
+/// Parser for the trace zips [`Tracing`](crate::protocol::Tracing) writes.
+///
+/// Re-exported from the companion `playwright-rs-trace` crate, so a
+/// project that records and reads its own traces pins one version rather
+/// than two. Gated on the `trace` feature (off by default, since writing
+/// traces needs none of it); depend on the parser crate directly to read
+/// traces without this one.
+///
+/// ```no_run
+/// # #[cfg(feature = "trace")]
+/// # fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let mut reader = playwright_rs::trace::open("trace.zip")?;
+/// for action in reader.actions()? {
+///     let action = action?;
+///     println!("{}.{}", action.class, action.method);
+/// }
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "trace")]
+pub use playwright_rs_trace as trace;
 
 // The pure driver-acquisition mapping (platform → Node triple, download URLs)
 // that build.rs and the cli binary `include!`. std-only, so compiling it into

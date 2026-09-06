@@ -1400,6 +1400,7 @@ dependencies = [
  "libc",
  "parking_lot",
  "playwright-rs-macros",
+ "playwright-rs-trace",
  "proptest",
  "regex",
  "rustls",

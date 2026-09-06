@@ -168,7 +168,7 @@ pub use select_option::SelectOption;
 pub use selectors::Selectors;
 pub use tap::{TapOptions, TapOptionsBuilder};
 pub use touchscreen::Touchscreen;
-pub use tracing::{Tracing, TracingStartOptions, TracingStopOptions};
+pub use tracing::{TraceSnapshots, Tracing, TracingStartOptions, TracingStopOptions};
 pub use video::Video;
 pub use wait_for::{WaitForFunctionOptions, WaitForOptions, WaitForOptionsBuilder, WaitForState};
 pub use web_error::{WebError, WebErrorLocation};

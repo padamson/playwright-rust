@@ -1,6 +1,6 @@
 //! Programmatic parser for [Playwright][pw] trace zip files
-//! (trace format v8, verified against traces recorded by the bundled
-//! driver, playwright@1.62.1).
+//! (trace formats v8 and v9, v9 from 0.2.0; verified against traces
+//! recorded by the bundled driver, playwright@1.63.0).
 //!
 //! # When to reach for this crate
 //!
@@ -88,9 +88,9 @@ mod trace;
 pub use action::{Action, ActionStream, LogLine};
 pub use error::{Result, TraceError};
 pub use event::{
-    ActionError, AfterEvent, BeforeEvent, ConsoleEvent, ConsoleLocation, ContextOptions,
-    FrameSnapshotEvent, InputEvent, LogEvent, Point, RawEvent, ResourceOverride,
-    ScreencastFrameEvent, SystemEvent, TraceEvent, Viewport,
+    ActionError, ActionPhase, AfterEvent, BeforeEvent, ConsoleEvent, ConsoleLocation,
+    ContextOptions, FrameSnapshotEvent, FrameSnapshotWire, InputEvent, LogEvent, Point, RawEvent,
+    ResourceOverride, ScreencastFrameEvent, SystemEvent, TraceEvent, Viewport,
 };
 pub use network::{
     HeaderEntry, NetworkEntry, RequestPostData, RequestSnapshot, ResponseContent, ResponseSnapshot,
