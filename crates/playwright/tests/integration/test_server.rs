@@ -62,7 +62,9 @@ impl TestServer {
             .route("/iframe-content.html", get(iframe_content_page))
             .route("/iframe-content2.html", get(iframe_content2_page))
             .route("/nested-iframe.html", get(nested_iframe_page))
-            .route("/inner-iframe.html", get(inner_iframe_page));
+            .route("/inner-iframe.html", get(inner_iframe_page))
+            .route("/protected", get(basic_auth_endpoint))
+            .route("/protected-403", get(no_challenge_auth_endpoint));
 
         // Bind to port 0 to get any available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -1039,4 +1041,58 @@ fn html_escape(s: &str) -> String {
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
+}
+
+/// Requires HTTP basic auth as `user:secret`, so a test can prove credentials
+/// reached the request. Answers 401 with a challenge when they did not.
+async fn basic_auth_endpoint(headers: HeaderMap) -> Response<Body> {
+    use base64::Engine;
+    let expected = format!(
+        "Basic {}",
+        base64::engine::general_purpose::STANDARD.encode("user:secret")
+    );
+    let offered = headers
+        .get("authorization")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+
+    if offered == expected {
+        Response::builder()
+            .status(200)
+            .header("content-type", "text/html")
+            .body(Body::from("<html><body><h1>secret area</h1></body></html>"))
+            .unwrap()
+    } else {
+        Response::builder()
+            .status(401)
+            .header("www-authenticate", "Basic realm=\"test\"")
+            .header("content-type", "text/html")
+            .body(Body::from("<html><body><h1>denied</h1></body></html>"))
+            .unwrap()
+    }
+}
+
+/// Requires the same credentials but answers `403` with no challenge, so a
+/// client that waits to be challenged never authenticates. Only credentials
+/// sent up front get through.
+async fn no_challenge_auth_endpoint(headers: HeaderMap) -> Response<Body> {
+    use base64::Engine;
+    let expected = format!(
+        "Basic {}",
+        base64::engine::general_purpose::STANDARD.encode("user:secret")
+    );
+    let authorized = headers
+        .get("authorization")
+        .and_then(|value| value.to_str().ok())
+        .is_some_and(|offered| offered == expected);
+
+    Response::builder()
+        .status(if authorized { 200 } else { 403 })
+        .header("content-type", "text/html")
+        .body(Body::from(if authorized {
+            "<html><body><h1>secret area</h1></body></html>"
+        } else {
+            "<html><body><h1>forbidden</h1></body></html>"
+        }))
+        .unwrap()
 }

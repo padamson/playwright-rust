@@ -509,6 +509,11 @@ pub struct APIRequestContextOptions {
     pub user_agent: Option<String>,
     /// Default timeout for fetch operations in milliseconds.
     pub timeout: Option<f64>,
+    /// Credentials for HTTP authentication, matched per request origin.
+    ///
+    /// This is the one context that honors
+    /// [`HttpCredentialsSend::Always`](crate::protocol::HttpCredentialsSend).
+    pub http_credentials: Option<Vec<crate::protocol::HttpCredentials>>,
 }
 
 impl APIRequestContextOptions {
@@ -525,6 +530,11 @@ impl APIRequestContextOptions {
     /// Ignore HTTPS certificate errors.
     pub fn ignore_https_errors(mut self, ignore: bool) -> Self {
         self.ignore_https_errors = Some(ignore);
+        self
+    }
+    /// Credentials for HTTP authentication, matched per request origin.
+    pub fn http_credentials(mut self, credentials: Vec<crate::protocol::HttpCredentials>) -> Self {
+        self.http_credentials = Some(credentials);
         self
     }
     /// User-Agent header value.
@@ -614,6 +624,9 @@ impl APIRequest {
             }
             if let Some(ua) = opts.user_agent {
                 params["userAgent"] = json!(ua);
+            }
+            if let Some(credentials) = opts.http_credentials {
+                params["httpCredentials"] = json!(credentials);
             }
             if let Some(timeout) = opts.timeout {
                 params["timeout"] = json!(timeout);

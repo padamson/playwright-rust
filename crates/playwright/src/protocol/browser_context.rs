@@ -966,6 +966,26 @@ impl BrowserContext {
             .await
     }
 
+    /// Replaces the credentials used for HTTP authentication.
+    ///
+    /// Each request uses the first entry whose `origin` matches it; an entry
+    /// without an origin matches anything. Pass an empty vector to clear.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the context is closed or the driver rejects the
+    /// credentials.
+    ///
+    /// See: <https://playwright.dev/docs/api/class-browsercontext#browser-context-set-http-credentials>
+    pub async fn set_http_credentials(&self, credentials: Vec<HttpCredentials>) -> Result<()> {
+        self.channel()
+            .send_no_result(
+                "setHTTPCredentials",
+                serde_json::json!({ "httpCredentials": credentials }),
+            )
+            .await
+    }
+
     /// Toggles the offline mode for this browser context.
     ///
     /// When `true`, all network requests from pages in this context will fail with
@@ -2925,6 +2945,74 @@ pub struct Geolocation {
     pub accuracy: Option<f64>,
 }
 
+/// When to send HTTP credentials.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-http-credentials>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[non_exhaustive]
+pub enum HttpCredentialsSend {
+    /// Send the `Authorization` header up front rather than waiting to be
+    /// challenged.
+    ///
+    /// **Only honored by [`APIRequestContext`](crate::protocol::APIRequestContext)
+    /// fetches**, matching upstream: browser navigation stays reactive on
+    /// every engine, so this is a no-op for page loads. Reach for it when a
+    /// server answers `403` instead of `401`, which leaves nothing to react
+    /// to.
+    Always,
+    /// Send it only after the server answers `401`. The default.
+    Unauthorized,
+}
+
+/// Credentials for HTTP authentication.
+///
+/// A context can hold several: the first whose `origin` matches the request
+/// is used, and an entry without an origin matches any request.
+///
+/// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-http-credentials>
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
+pub struct HttpCredentials {
+    /// Username to authenticate with.
+    pub username: String,
+    /// Password to authenticate with.
+    pub password: String,
+    /// Restrict these credentials to one origin (scheme, host, and port,
+    /// e.g. `https://example.com`). Without it they match any request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub origin: Option<String>,
+    /// When to send the header. Defaults to after a `401`, and only an
+    /// [`APIRequestContext`](crate::protocol::APIRequestContext) honors
+    /// anything else; see [`HttpCredentialsSend`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub send: Option<HttpCredentialsSend>,
+}
+
+impl HttpCredentials {
+    /// Credentials matching any origin.
+    pub fn new(username: impl Into<String>, password: impl Into<String>) -> Self {
+        Self {
+            username: username.into(),
+            password: password.into(),
+            origin: None,
+            send: None,
+        }
+    }
+
+    /// Restrict these credentials to one origin.
+    pub fn origin(mut self, origin: impl Into<String>) -> Self {
+        self.origin = Some(origin.into());
+        self
+    }
+
+    /// Choose when the `Authorization` header is sent.
+    pub fn send(mut self, send: HttpCredentialsSend) -> Self {
+        self.send = Some(send);
+        self
+    }
+}
+
 /// Cookie information for storage state.
 ///
 /// See: <https://playwright.dev/docs/api/class-browser#browser-new-context-option-storage-state>
@@ -3346,6 +3434,10 @@ pub struct BrowserContextOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geolocation: Option<Geolocation>,
 
+    /// Credentials for HTTP authentication, matched per request origin.
+    #[serde(rename = "httpCredentials", skip_serializing_if = "Option::is_none")]
+    pub http_credentials: Option<Vec<HttpCredentials>>,
+
     /// List of permissions to grant (e.g., "geolocation", "notifications")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<Vec<String>>,
@@ -3503,6 +3595,7 @@ pub struct BrowserContextOptionsBuilder {
     locale: Option<String>,
     timezone_id: Option<String>,
     geolocation: Option<Geolocation>,
+    http_credentials: Option<Vec<HttpCredentials>>,
     permissions: Option<Vec<String>>,
     proxy: Option<ProxySettings>,
     color_scheme: Option<String>,
@@ -3577,6 +3670,15 @@ impl BrowserContextOptionsBuilder {
     /// Sets the geolocation
     pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
         self.geolocation = Some(geolocation);
+        self
+    }
+
+    /// Sets credentials for HTTP authentication.
+    ///
+    /// Each request uses the first entry whose `origin` matches it; an entry
+    /// without an origin matches anything.
+    pub fn http_credentials(mut self, credentials: Vec<HttpCredentials>) -> Self {
+        self.http_credentials = Some(credentials);
         self
     }
 
@@ -3888,6 +3990,7 @@ impl BrowserContextOptionsBuilder {
             locale: self.locale,
             timezone_id: self.timezone_id,
             geolocation: self.geolocation,
+            http_credentials: self.http_credentials,
             permissions: self.permissions,
             proxy: self.proxy,
             color_scheme: self.color_scheme,
@@ -3960,6 +4063,36 @@ mod tests {
         assert_eq!(
             value,
             serde_json::json!({ "indexedDB": true, "credentials": true })
+        );
+    }
+
+    #[test]
+    fn http_credentials_serialize_with_protocol_casing() {
+        // The driver validates `send` against an enum, so a wrong spelling is
+        // a hard error rather than a silent drop; and an unset field must not
+        // serialize as null.
+        let bare = HttpCredentials::new("user", "secret");
+        assert_eq!(
+            serde_json::to_value(&bare).unwrap(),
+            serde_json::json!({ "username": "user", "password": "secret" })
+        );
+
+        let full = HttpCredentials::new("user", "secret")
+            .origin("https://example.test")
+            .send(HttpCredentialsSend::Always);
+        assert_eq!(
+            serde_json::to_value(&full).unwrap(),
+            serde_json::json!({
+                "username": "user",
+                "password": "secret",
+                "origin": "https://example.test",
+                "send": "always",
+            })
+        );
+
+        assert_eq!(
+            serde_json::to_value(HttpCredentialsSend::Unauthorized).unwrap(),
+            serde_json::json!("unauthorized")
         );
     }
 

@@ -227,3 +227,42 @@ async fn test_api_response_server_addr_and_security_details() {
         .expect("shutdown should succeed");
     server.shutdown();
 }
+
+/// An API request context authenticates too, and it is the one place
+/// `send(Always)` is honored: the header goes out without a challenge.
+#[tokio::test]
+async fn api_request_context_sends_credentials_up_front() -> Result<(), Box<dyn std::error::Error>>
+{
+    use playwright_rs::protocol::{APIRequestContextOptions, HttpCredentials, HttpCredentialsSend};
+
+    let server = crate::test_server::TestServer::start().await;
+    let (playwright, browser, _) = crate::common::setup().await;
+
+    // This endpoint answers 403 with no challenge, so waiting to be
+    // challenged never authenticates: only `Always` gets through.
+    let url = format!("{}/protected-403", server.url());
+
+    let reactive = playwright
+        .request()
+        .new_context(Some(
+            APIRequestContextOptions::default()
+                .http_credentials(vec![HttpCredentials::new("user", "secret")]),
+        ))
+        .await?;
+    assert_eq!(reactive.get(&url, None).await?.status(), 403);
+    reactive.dispose().await?;
+
+    let up_front = playwright
+        .request()
+        .new_context(Some(APIRequestContextOptions::default().http_credentials(
+            vec![HttpCredentials::new("user", "secret").send(HttpCredentialsSend::Always)],
+        )))
+        .await?;
+    let response = up_front.get(&url, None).await?;
+    assert_eq!(response.status(), 200);
+    assert!(response.text().await?.contains("secret area"));
+    up_front.dispose().await?;
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}

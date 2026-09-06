@@ -347,8 +347,8 @@ pub use protocol::{
 
 // Re-export browser context options and storage state types
 pub use protocol::{
-    BrowserContextOptions, Cookie, Geolocation, LocalStorageItem, Origin, RecordHar, RecordVideo,
-    StorageState, StorageStateOptions, Viewport,
+    BrowserContextOptions, Cookie, Geolocation, HttpCredentials, HttpCredentialsSend,
+    LocalStorageItem, Origin, RecordHar, RecordVideo, StorageState, StorageStateOptions, Viewport,
 };
 
 // Re-export the tracing + HAR API. These were the last consumer-facing

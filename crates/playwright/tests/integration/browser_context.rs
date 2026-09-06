@@ -932,3 +932,79 @@ async fn test_context_browser_webkit() {
     let pw = Playwright::launch().await.unwrap();
     assert_context_browser(pw.webkit(), "webkit").await;
 }
+
+/// HTTP credentials are matched per request origin, so a context can hold
+/// several and each request gets the one for its own host.
+#[tokio::test]
+async fn http_credentials_authenticate_by_origin() -> Result<(), Box<dyn std::error::Error>> {
+    use playwright_rs::protocol::{BrowserContextOptions, HttpCredentials};
+
+    let server = crate::test_server::TestServer::start().await;
+    let (_pw, browser, _) = crate::common::setup().await;
+
+    // Without credentials the server challenges.
+    let bare = browser.new_context().await?;
+    let page = bare.new_page().await?;
+    let denied = page
+        .goto(&format!("{}/protected", server.url()), None)
+        .await?
+        .expect("a response");
+    assert_eq!(denied.status(), 401);
+    bare.close().await?;
+
+    // With credentials for this origin, the same request succeeds.
+    let options = BrowserContextOptions::builder()
+        .http_credentials(vec![
+            // Wrong credentials first, for an origin this test never visits:
+            // picking by list order rather than by origin fails the request.
+            HttpCredentials::new("wrong", "wrong").origin("https://elsewhere.test"),
+            HttpCredentials::new("user", "secret").origin(server.url()),
+        ])
+        .build();
+    let context = browser.new_context_with_options(options).await?;
+    let page = context.new_page().await?;
+    let allowed = page
+        .goto(&format!("{}/protected", server.url()), None)
+        .await?
+        .expect("a response");
+    assert_eq!(allowed.status(), 200);
+    playwright_rs::expect(page.locator("h1"))
+        .to_have_text("secret area")
+        .await?;
+
+    context.close().await?;
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}
+
+/// `set_http_credentials` swaps them on a live context.
+#[tokio::test]
+async fn set_http_credentials_applies_to_later_requests() -> Result<(), Box<dyn std::error::Error>>
+{
+    use playwright_rs::protocol::HttpCredentials;
+
+    let server = crate::test_server::TestServer::start().await;
+    let (_pw, browser, context) = crate::common::setup_context().await;
+    let page = context.new_page().await?;
+
+    let denied = page
+        .goto(&format!("{}/protected", server.url()), None)
+        .await?
+        .expect("a response");
+    assert_eq!(denied.status(), 401);
+
+    context
+        .set_http_credentials(vec![HttpCredentials::new("user", "secret")])
+        .await?;
+    let allowed = page
+        .goto(&format!("{}/protected", server.url()), None)
+        .await?
+        .expect("a response");
+    assert_eq!(allowed.status(), 200);
+
+    context.close().await?;
+    browser.close().await?;
+    server.shutdown();
+    Ok(())
+}

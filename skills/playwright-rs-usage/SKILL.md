@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.10.0"
+  version: "0.12.0"
 ---
 
 # Using playwright-rs
@@ -246,6 +246,13 @@ Concept-level pointers; the exact options live on docs.rs.
   `aria_snapshot_json` returns the same tree as `serde_json::Value`
   rather than YAML markup, which is what an agent walking the tree
   wants; the YAML form is for a human reading a diff.
+- **Pages behind HTTP auth.** `BrowserContextOptions::builder()
+  .http_credentials(vec![HttpCredentials::new("user", "pass")])` — do not
+  hand-set an `Authorization` header. Give an entry an `origin` when the
+  test talks to more than one host; the first matching entry wins.
+  `APIRequestContextOptions` takes the same list, and is the only one that
+  honors `send(HttpCredentialsSend::Always)` — which you need when the
+  server answers `403` rather than `401`, leaving nothing to react to.
 - **Dialogs: wait for the close, not the open.** `on_dialog` hands you
   the dialog to accept or dismiss; `on_dialog_closed` fires once it has
   been answered, which is the point at which the page is interactive
