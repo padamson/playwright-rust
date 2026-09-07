@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.12.0"
+  version: "0.13.0"
 ---
 
 # Using playwright-rs
@@ -89,7 +89,12 @@ directly instead.
 On Linux the browsers also need system libraries: pass `--with-deps` to
 the example (CI usually wants this; it runs the package manager under
 sudo), or call `install_browsers_with_deps` instead. Without it only
-browsers install, on every platform.
+browsers install, on every platform — the driver prints a missing-library
+box and still exits 0, as `npx playwright install` does, so the failure
+surfaces later as a browser that will not launch. Two traps worth naming:
+`cargo run --example` only resolves examples in the current package, so a
+consumer copies the file into their own `examples/` first; and Linux is not
+special-cased, so a call that omits the flag there installs no libraries.
 
 ## Object model
 

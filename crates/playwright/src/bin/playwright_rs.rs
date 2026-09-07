@@ -28,7 +28,9 @@ enum Cmd {
     Install {
         /// Browser names to install (e.g. `chromium firefox webkit`). Omit to install all.
         browsers: Vec<String>,
-        /// Pass `--with-deps` to the Playwright CLI (forced on Linux regardless).
+        /// Also install the system libraries the browsers need, which runs
+        /// the package manager under sudo. Opt-in on every platform,
+        /// including Linux, matching `npx playwright install`.
         #[arg(long)]
         with_deps: bool,
         /// Populate the user-cache driver but skip the browser-install step.

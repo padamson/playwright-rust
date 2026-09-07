@@ -105,7 +105,9 @@ jobs:
         run: cargo run --release --bin playwright-rs --features cli -- install chromium firefox webkit${{ runner.os == 'Linux' && ' --with-deps' || '' }}
 
       - name: Run tests
-        run: cargo nextest run --workspace --profile ci --target ${{ matrix.target }}
+        # Same feature set as the push gate, so the run that precedes a
+        # publish is not narrower than the one that guards main.
+        run: cargo nextest run --workspace --all-features --profile ci --target ${{ matrix.target }}
 
   create-release:
     name: Create GitHub Release

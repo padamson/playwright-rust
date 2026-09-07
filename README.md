@@ -160,29 +160,29 @@ as a `[dev-dependencies]` entry.
 ### Browser installation (required)
 
 Browsers install once; the library bundles a specific Playwright driver,
-and each driver release expects matching browser builds. Install through
-the crate itself so the match is guaranteed and the browser version rides
-`Cargo.lock`: copy
-[`examples/install-browsers.rs`](crates/playwright/examples/install-browsers.rs)
-into your project's `examples/` directory (it needs `tokio` with the
-`macros` and `rt-multi-thread` features), then:
+and each release expects matching browser builds. Install through the crate
+so the match is guaranteed and the browser version rides `Cargo.lock`.
+`cargo run --example` only finds examples in *your* package, so add one:
 
-```bash
-cargo run --example install-browsers                          # all browsers
-cargo run --example install-browsers -- chromium firefox      # or a subset
+```rust
+// examples/install-browsers.rs — needs tokio's `macros` + `rt-multi-thread`
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // ...with_deps also installs the system libraries the browsers need
+    // (sudo package manager). Linux wants it: without it they install and
+    // then fail to launch. `Some(&["chromium"])` narrows the set.
+    playwright_rs::install_browsers_with_deps(None).await?;
+    Ok(())
+}
 ```
-
-Pass `--with-deps` to also install the system libraries the browsers need
-(Linux CI typically wants this; it runs the package manager under sudo).
-Without the flag only browsers install, on every platform, matching
-`npx playwright install`.
-
-**In CI**, the same command runs before the test step:
 
 ```yaml
-- name: Install Playwright browsers
-  run: cargo run --example install-browsers -- chromium firefox webkit
+- name: Install Playwright browsers      # in CI, before the test step
+  run: cargo run --example install-browsers
 ```
+
+[This repo's copy](crates/playwright/examples/install-browsers.rs) takes
+browser names and `--with-deps` as arguments if you want that.
 
 When dependabot bumps `playwright-rs`, the crate, driver, and browsers move
 together with no workflow edit. Never hardcode a Playwright version in a
