@@ -108,27 +108,35 @@ fn dist_or_skip(what: &str) -> Option<PathBuf> {
     None
 }
 
-/// Serve the site and open its landing page in a fresh browser.
+/// The origin every in-process test serves the site on. Nothing listens here,
+/// and the driver never resolves it.
+const IN_PROCESS_ORIGIN: &str = "https://playwright-rust.test";
+
+/// Open the landing page without a socket, serving `dist` straight from the
+/// test process through `route_service`.
 ///
-/// Returns the `Playwright` and `Browser` handles alongside the page: dropping
-/// either tears down the browser, so the caller must hold them for the life of
-/// the test. Tests that need a `BrowserContext` (tracing, HAR, video) build
-/// their own rather than using this.
-async fn open_site(
+/// Two tests deliberately keep the socket instead, and should not be migrated:
+/// `landing_page_works_as_advertised` is the walkthrough the landing page
+/// narrates as running "against the page", and the second walkthrough's whole
+/// point is the contrast with it; and `deployed_snapshot_is_sound` checks that
+/// assets resolve under the deployed path layout, which is worth asserting
+/// against a real server. Keeping one socket path also means an ordinary
+/// network regression still shows up in this suite.
+async fn open_site_in_process(
     dist: &PathBuf,
     overlay: Option<Router>,
-) -> (
-    Playwright,
-    playwright_rs::protocol::Browser,
-    Page,
-    tokio::task::JoinHandle<()>,
-) {
-    let (addr, server) = serve_with(dist, overlay).await;
+) -> (Playwright, playwright_rs::protocol::Browser, Page) {
+    let app = overlay
+        .unwrap_or_else(Router::new)
+        .fallback_service(ServeDir::new(dist));
     let (pw, browser, page) = launch_page().await;
-    page.goto(&format!("http://{addr}"), None)
+    page.route_service(&format!("{IN_PROCESS_ORIGIN}/**"), app)
         .await
-        .expect("navigate to site");
-    (pw, browser, page, server)
+        .expect("serve the site in-process");
+    page.goto(IN_PROCESS_ORIGIN, None)
+        .await
+        .expect("navigate to the in-process site");
+    (pw, browser, page)
 }
 
 /// Write an element screenshot of `selector` to the step file. An element
@@ -431,7 +439,7 @@ async fn version_switcher_lists_versions_and_warns_on_dev() {
     let manifest = versions_manifest(&backend_answering(
         r#"{"latest":"9.9.9","versions":["9.9.9","0.14.0"]}"#,
     ));
-    let (_pw, browser, page, server) = open_site(&dist, Some(manifest)).await;
+    let (_pw, browser, page) = open_site_in_process(&dist, Some(manifest)).await;
 
     // The dropdown is always present; once the manifest loads it carries the
     // published versions, and the dev build shows the unreleased banner.
@@ -449,7 +457,6 @@ async fn version_switcher_lists_versions_and_warns_on_dev() {
         .expect("dev build shows the unreleased banner");
 
     browser.close().await.ok();
-    server.abort();
 }
 
 /// The dev (main HEAD) build reflects its ahead-of-crates.io state: it installs
@@ -461,7 +468,7 @@ async fn dev_build_reflects_unreleased_state() {
     let Some(dist) = dist_or_skip("dev-features test") else {
         return;
     };
-    let (_pw, browser, page, server) = open_site(&dist, None).await;
+    let (_pw, browser, page) = open_site_in_process(&dist, None).await;
 
     // The dev build installs from git (main HEAD), not the crates.io version.
     expect(page.locator("#install"))
@@ -547,7 +554,6 @@ async fn dev_build_reflects_unreleased_state() {
     std::fs::write(receipts.join("screencast.jpeg"), frame).expect("write screencast receipt");
 
     browser.close().await.ok();
-    server.abort();
 }
 
 /// The artifact that actually deploys — not the build the gate above drives.
@@ -695,10 +701,10 @@ async fn site_served_in_process_boots_and_reacts() {
     let app = versions_manifest(&backend).fallback_service(ServeDir::new(&dist));
 
     let (_pw, browser, page) = launch_page().await;
-    page.route_service("https://playwright-rust.test/**", app)
+    page.route_service(&format!("{IN_PROCESS_ORIGIN}/**"), app)
         .await
         .expect("register the in-process app");
-    page.goto("https://playwright-rust.test/", None)
+    page.goto(IN_PROCESS_ORIGIN, None)
         .await
         .expect("navigate to the in-process site");
     expect(page.locator("#hero-title"))
@@ -709,7 +715,7 @@ async fn site_served_in_process_boots_and_reacts() {
         .evaluate_value("String(window.isSecureContext) + ':' + location.origin")
         .await
         .expect("probe the security context");
-    assert_eq!(secure, "true:https://playwright-rust.test");
+    assert_eq!(secure, format!("true:{IN_PROCESS_ORIGIN}"));
     shot(&page, &steps, "01.png", "#hero").await;
 
     // The switcher bar is one wide row; a phone-width viewport keeps its
