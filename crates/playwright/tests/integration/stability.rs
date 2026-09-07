@@ -1414,16 +1414,18 @@ async fn test_error_recovery_multiple_errors() {
         tracing::info!("Error {} handled (expected)", i + 1);
     }
 
-    // Recovery: Page should still work after multiple errors
-    let recovery_result = page
-        .goto(&format!("{}/locators.html", server.url()), None)
-        .await;
-
-    assert!(
-        recovery_result.is_ok(),
-        "Page should recover after multiple errors: {:?}",
-        recovery_result
-    );
+    // Recovery: the page still works after those errors. The failed gotos
+    // above commit an error page, and a navigation that interrupts that
+    // commit is reported as a failure of its own, which is what made a bare
+    // goto here flake under load. `goto_recovering` retries only that
+    // interrupt and panics on anything else, so a real regression still
+    // fails the test.
+    crate::common::goto_recovering(
+        &page,
+        &format!("{}/locators.html", server.url()),
+        "recovery after multiple errors",
+    )
+    .await;
 
     tracing::info!("✓ Page recovered after multiple consecutive errors");
 

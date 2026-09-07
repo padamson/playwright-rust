@@ -137,26 +137,29 @@ jobs:
       timeout-minutes: 15
       run: cargo run --release -p playwright-rs --example install-browsers -- chromium firefox webkit${{ runner.os == 'Linux' && ' --with-deps' || '' }}
 
+    # `--all-features` because the opt-in ones carry their own tests, and on
+    # default features those never run: `screenshot-diff` and `trace` were a
+    # dozen tests CI had never executed.
     - name: Run tests (Linux/macOS)
       if: runner.os != 'Windows'
-      run: cargo nextest run --workspace --profile ci
+      run: cargo nextest run --workspace --all-features --profile ci
 
     - name: Run stress tests (Linux/macOS)
       if: runner.os != 'Windows'
-      run: cargo nextest run --workspace --profile ci --run-ignored ignored-only
+      run: cargo nextest run --workspace --all-features --profile ci --run-ignored ignored-only
 
     - name: Run tests (Windows)
       if: runner.os == 'Windows'
       timeout-minutes: 30
-      run: cargo nextest run --workspace --profile ci --test-threads=1
+      run: cargo nextest run --workspace --all-features --profile ci --test-threads=1
 
     - name: Run stress tests (Windows)
       if: runner.os == 'Windows'
       timeout-minutes: 30
-      run: cargo nextest run --workspace --profile ci --run-ignored ignored-only --test-threads=1
+      run: cargo nextest run --workspace --all-features --profile ci --run-ignored ignored-only --test-threads=1
 
     - name: Compile doc-tests (no_run; browser doctests are compile-only)
-      run: cargo test --doc --workspace
+      run: cargo test --doc --workspace --all-features
 
     - name: Build all examples
       run: cargo build --package playwright-rs --examples
