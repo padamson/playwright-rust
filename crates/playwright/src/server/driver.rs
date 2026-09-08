@@ -347,6 +347,12 @@ fn find_node_executable() -> Result<PathBuf> {
 /// libnss, etc.); use [`install_browsers_with_deps`] to install those
 /// alongside, which runs the system package manager under `sudo`.
 ///
+/// When those libraries are absent the driver says so and still exits 0, as
+/// `npx playwright install` does, so this call succeeds and the browsers
+/// fail to launch later. That case is logged at `warn` naming
+/// [`install_browsers_with_deps`]; it is not an error, because installing
+/// the libraries separately (a Docker layer, a base image) is legitimate.
+///
 /// # Output
 ///
 /// The installer's stdout and stderr are streamed to this process's stdout and
@@ -522,7 +528,33 @@ async fn install_browsers_impl(browsers: Option<&[&str]>, with_deps_forced: bool
         )));
     }
 
+    // The driver reports missing system libraries and still exits 0 (it only
+    // throws on Windows), so an install that leaves the browsers unable to
+    // launch looks like a success. Upstream's own box says to run
+    // `install-deps`; name the call that does it from here, since that is the
+    // step a caller of this function is missing.
+    if !with_deps_forced && missing_system_libraries(&out_bytes, &err_bytes) {
+        tracing::warn!(
+            "the driver reported missing system libraries and still exited 0, so the browsers \
+             will not launch until they are installed: call install_browsers_with_deps (or pass \
+             --with-deps) instead of install_browsers. Installing them separately, as a Docker \
+             layer does, is also fine."
+        );
+    }
+
     Ok(())
+}
+
+/// Whether the installer's output carries the driver's missing-libraries
+/// report.
+///
+/// Matched on the driver's own headline rather than the library list, which
+/// is per-distribution. If upstream rewords it the check goes quiet, which is
+/// the safe direction: the warning disappears, nothing starts failing.
+fn missing_system_libraries(stdout: &[u8], stderr: &[u8]) -> bool {
+    const MARKER: &str = "Host system is missing dependencies";
+    String::from_utf8_lossy(stdout).contains(MARKER)
+        || String::from_utf8_lossy(stderr).contains(MARKER)
 }
 
 #[cfg(test)]
@@ -594,6 +626,20 @@ mod tests {
         assert_eq!(install_args(None, false), vec!["install"]);
         assert_eq!(install_args(Some(&[]), false), vec!["install"]);
         assert_eq!(install_args(None, true), vec!["install", "--with-deps"]);
+    }
+
+    #[test]
+    fn missing_libraries_is_detected_on_either_stream() {
+        // The driver's headline, as it writes it; the library list below it
+        // is per-distribution and deliberately not matched.
+        let report = b"Host system is missing dependencies!\n\nInstall them with...";
+        assert!(missing_system_libraries(report, b""));
+        assert!(missing_system_libraries(b"", report));
+        assert!(!missing_system_libraries(
+            b"Downloading Chromium 153...",
+            b""
+        ));
+        assert!(!missing_system_libraries(b"", b""));
     }
 
     #[test]

@@ -136,14 +136,30 @@
 //!   rather than followed. Chromium and Firefox follow it into a new
 //!   routed request.
 //! - **Cost per request.** Each request crosses the driver's JSON-RPC
-//!   channel with its body, so very large assets are slower than a local
-//!   listener would serve them. Fine for an app bundle; not a load test.
+//!   channel with its body rather than a socket. Measured on a consumer's
+//!   suite at a 3.2 MB wasm bundle, that is not slower: 10.7s over a
+//!   listener against 9.9-10.8s in-process, run to run, a spread nine times
+//!   the difference between the two modes. It is still a per-request cost
+//!   rather than a free one, so treat it as fine for an app bundle and
+//!   wrong for a load test.
+//!
+//!   What does change is *when* bytes arrive, which breaks a test that
+//!   waits by sleeping: a fixed delay tuned against loopback can be too
+//!   short once the bundle moves onto the channel. Wait on something the
+//!   app renders instead, as below. This is the one behavior change a real
+//!   consumer hit converting a suite.
 //!
 //! For an app that depends on any of those, bind a listener on port `0` and
 //! serve it with `axum::serve`; the browser and the service then talk over
 //! real sockets.
 //!
 //! # Testing a wasm frontend
+//!
+//! Register on whichever page you already have: `route_service` is a method
+//! on `Page` and `BrowserContext`, so a page built through a context with a
+//! viewport and an init script takes it just as well as a freshly opened
+//! one. Where every test opens its own browser, one helper that opens a
+//! page and registers the service is what makes converting a suite cheap.
 //!
 //! The bundle boots asynchronously, so wait on something it renders rather
 //! than on `goto` returning: a locator for the first element the app mounts

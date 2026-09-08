@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.13.0"
+  version: "0.14.0"
 ---
 
 # Using playwright-rs
@@ -315,6 +315,10 @@ Concept-level pointers; the exact options live on docs.rs.
   responses, server-sent events, WebSockets (those go through
   `route_web_socket`), or connection-level behavior, since route
   interception delivers whole bodies and has no connection. The
+  Sleeping to wait for a page is wrong anyway, and wronger here: a delay
+  tuned against a real listener can be too short once the bundle crosses
+  the driver channel, which is the one behavior change a consumer hit
+  converting a suite. Wait on what the app renders. The
   `route_service` module rustdoc has the full contract and a wasm
   testing section.
 
