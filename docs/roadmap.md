@@ -4,7 +4,7 @@
 
 **Architecture:** JSON-RPC communication with Playwright Node.js server (same as all official bindings)
 
-**Status:** Version 0.17.0 shipped 2026-08-23, still bundling the Playwright 1.62.1 driver. Event delivery is unified through one registry (handlers before waiters, oldest-first `expect_*` service), `install_browsers` no longer implies `--with-deps` on Linux, and the installer streams its output. See [`crates/playwright/CHANGELOG.md`](../crates/playwright/CHANGELOG.md) `[Unreleased]` for anything landed on `main` since.
+**Status:** Version 0.18.0 shipped 2026-09-08, bundling the Playwright 1.63.0 driver. Routes can be fulfilled in-process by a tower `Service` (`route_service`, on by default), the 1.63 surface is complete (`locator.visible()`, any-frame `frame_locator(None)`, `aria_snapshot_json`, `dialogclosed`, OPFS storage state, HTTP credentials), the driver's protocol spec is vendored and gated, and `playwright-rs-trace` 0.2.0 reads trace format v9 through the new `trace` feature. See [`crates/playwright/CHANGELOG.md`](../crates/playwright/CHANGELOG.md) `[Unreleased]` for anything landed on `main` since.
 
 ---
 
@@ -30,6 +30,7 @@ This roadmap outlines the path to a production-ready `playwright-rust` library. 
 - ✅ **v0.15.x** - File System Access test fakes + Playwright 1.61 surface on the 1.61.1 driver - 2026-08-02
 - ✅ **v0.16.0** - Playwright 1.62.1 driver; storage-state overhaul (WebAuthn passkeys + IndexedDB), `wait_for_function`, Rust closures in `evaluate` - 2026-08-17
 - ✅ **v0.17.0** - unified event delivery (EventRegistry), opt-in `--with-deps` on Linux, streaming installer output - 2026-08-23
+- ✅ **v0.18.0** - Playwright 1.63.0 driver + full 1.63 surface, in-process `route_service`, vendored protocol spec, trace format v9 via the `trace` feature - 2026-09-08
 - 🚧 **v1.0.0** - Real-World Validation & Final Polish
 - 🔮 **v1.1.0** - Future enhancements
 
