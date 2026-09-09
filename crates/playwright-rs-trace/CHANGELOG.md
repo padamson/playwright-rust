@@ -9,9 +9,11 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-08
+
 ### Changed
 
-- **BREAKING: trace format v9 (Playwright 1.63) parses, and blob references are archive paths named `file`.** The next release is 0.2.0. v9 writes every blob reference as a whole path inside the archive (`resources/…`, `screencast/…`) where v8 wrote an entry name under `resources/`; the parser reads both formats and normalizes both spellings, so the `file` field on `ScreencastFrameEvent`, `ResourceOverride`, `RequestPostData`, and `ResponseContent` (formerly `sha1`) opens directly in the archive. Callers that prefixed `resources/` themselves should drop that step. `TraceError::UnsupportedVersion` now carries the `supported` range instead of a single `expected` version.
+- **BREAKING: trace format v9 (Playwright 1.63) parses, and blob references are archive paths named `file`.** v9 writes every blob reference as a whole path inside the archive (`resources/…`, `screencast/…`) where v8 wrote an entry name under `resources/`; the parser reads both formats and normalizes both spellings, so the `file` field on `ScreencastFrameEvent`, `ResourceOverride`, `RequestPostData`, and `ResponseContent` (formerly `sha1`) opens directly in the archive. Callers that prefixed `resources/` themselves should drop that step. `TraceError::UnsupportedVersion` now carries the `supported` range instead of a single `expected` version.
 - **`TraceReader::blob()` opens a blob the trace refers to**, by the archive path an event carries in its `file` field, so reading a screencast frame or a response body no longer means opening the archive a second time.
 - **`ConsoleEvent::level` now carries the console level.** It was read from the event's own `type` discriminator, so it was always empty; the driver writes it as `messageType`.
 - **`ResourceOverride::reference` is a number**, as the trace writes it. A snapshot carrying one, which happens when a page mutates a linked stylesheet, previously failed to parse and surfaced as `Unknown`.
@@ -88,7 +90,8 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   the deterministic test fixture under `tests/fixtures/`. New
   `.cargo/config.toml` aliases `cargo xtask`.
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/trace-v0.1.3...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/trace-v0.2.0...HEAD
+[0.2.0]: https://github.com/padamson/playwright-rust/compare/trace-v0.1.3...trace-v0.2.0
 [0.1.3]: https://github.com/padamson/playwright-rust/compare/trace-v0.1.2...trace-v0.1.3
 [0.1.2]: https://github.com/padamson/playwright-rust/compare/trace-v0.1.1...trace-v0.1.2
 [0.1.1]: https://github.com/padamson/playwright-rust/compare/trace-v0.1.0...trace-v0.1.1

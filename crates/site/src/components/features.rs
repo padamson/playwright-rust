@@ -64,7 +64,6 @@ pub fn Features() -> impl IntoView {
                     id="feature-route-service"
                     title="Serve your app from the test"
                     blurb="Hand an axum router or a wasm bundle to route_service. No port, no server, any origin."
-                    unreleased=true
                     links=route_service_links()
                 >
                     <CodeBlock html=snippets::CARD_ROUTE_SERVICE_RS/>
@@ -86,7 +85,8 @@ pub fn Features() -> impl IntoView {
 
                 // Web storage / WebAuthn / File System Access shipped in 0.15.0
                 // (Playwright 1.61 parity); wait-for-function, Rust closures in
-                // the page, and session save & replay shipped in 0.16.0 (1.62.1).
+                // the page, and session save & replay shipped in 0.16.0 (1.62.1);
+                // in-process serving through route_service in 0.18.0 (1.63.0).
                 // To preview a not-yet-released feature, add a card with
                 // `unreleased=true` — it renders only on the dev build with an
                 // "Unreleased" badge, and the flag is dropped once it ships.

@@ -334,7 +334,7 @@ async fn landing_page_works_as_advertised() {
         ),
         ("#feature-session-state", "storage_state", false),
         ("#feature-fake-fs", "fake_file_system", false),
-        ("#feature-route-service", "route_service", true),
+        ("#feature-route-service", "route_service", false),
     ];
     let cards: Vec<(&str, &str)> = cards
         .into_iter()
@@ -495,18 +495,6 @@ async fn dev_build_reflects_unreleased_state() {
         .await
         .expect("count Playwright badge");
     assert_eq!(pw_badge, 1, "dev build shows the 1.63.0 Playwright badge");
-
-    // The in-process serving card and its walkthrough are `unreleased` until
-    // the release that carries `route_service` ships: both render here, badged,
-    // and the release-snapshot gate asserts neither does there.
-    expect(page.locator("#feature-route-service [data-unreleased-badge]"))
-        .to_be_visible()
-        .await
-        .expect("the unreleased card is badged on the dev build");
-    expect(page.locator("#serve-walkthrough [data-unreleased-badge]"))
-        .to_be_visible()
-        .await
-        .expect("the unreleased walkthrough is badged on the dev build");
 
     // Dogfood the screencast API (shipped in 0.15.0): record the page with
     // cursor decoration and save a frame as the DogfoodBanner's receipt (the

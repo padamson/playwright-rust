@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-09-08
+
 ### Added
 
 - **HTTP authentication: `http_credentials` on a context, and `set_http_credentials` to change them later.** A long-standing gap rather than new upstream surface: the crate had no way to authenticate at all, so a page behind basic auth could only be reached by hand-setting an `Authorization` header. A context takes several credentials and each request uses the first whose `origin` matches it, with an origin-less entry matching anything. `APIRequestContextOptions` takes them too, and is the one place `HttpCredentialsSend::Always` is honored: it sends the header without waiting to be challenged, which is what reaches a server that answers `403` rather than `401`. Browser navigation stays reactive on every engine, as upstream documents.
@@ -871,7 +873,8 @@ Public-API type-consistency sweep — within the crate, the same conceptual quan
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/padamson/playwright-rust/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/padamson/playwright-rust/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/padamson/playwright-rust/compare/v0.15.1...v0.16.0
 [0.15.1]: https://github.com/padamson/playwright-rust/compare/v0.15.0...v0.15.1

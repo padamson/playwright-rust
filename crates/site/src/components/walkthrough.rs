@@ -84,8 +84,7 @@ pub fn Walkthrough() -> impl IntoView {
     }
 }
 
-/// The walkthrough of the test that serves this page in-process; unreleased
-/// until the release that carries `route_service` ships.
+/// The walkthrough of the test that serves this page in-process.
 #[component]
 pub fn ServeWalkthrough() -> impl IntoView {
     view! {
@@ -95,7 +94,6 @@ pub fn ServeWalkthrough() -> impl IntoView {
             title="Serve the app from inside the test"
             intro="This page is a wasm app. The same deploy also serves its bundle to the browser from inside the test process: an axum router, no socket, and a backend the test rewrites while the app is running. Step through the code and what the browser saw."
             steps=serve_steps()
-            unreleased=true
         />
     }
 }

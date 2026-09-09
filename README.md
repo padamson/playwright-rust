@@ -4,7 +4,7 @@
 [![docs.rs](https://docs.rs/playwright-rs/badge.svg)](https://docs.rs/playwright-rs)
 [![CI](https://github.com/padamson/playwright-rust/actions/workflows/test.yml/badge.svg)](https://github.com/padamson/playwright-rust/actions/workflows/test.yml)
 [![License](https://img.shields.io/crates/l/playwright-rs)](LICENSE)
-[![Playwright](https://img.shields.io/badge/Playwright-1.62.1-45ba4b)](https://playwright.dev)
+[![Playwright](https://img.shields.io/badge/Playwright-1.63.0-45ba4b)](https://playwright.dev)
 [![skills.sh](https://skills.sh/b/padamson/playwright-rust)](https://skills.sh/padamson/playwright-rust)
 
 > Rust language bindings for [Microsoft Playwright](https://playwright.dev) — the industry standard for cross-browser end-to-end testing.
@@ -133,29 +133,31 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-playwright-rs = "0.17"  # Auto-updates to latest 0.17.x
+playwright-rs = "0.18"  # Auto-updates to latest 0.18.x
 tokio = { version = "1", features = ["full"] }
 ```
 
-The default-on `macros` feature re-exports the
+Four features are on by default: `macros` re-exports the
 [`locator!()`](https://docs.rs/playwright-rs-macros) compile-time selector
-macro. The default-on `ring` feature selects the crypto backend for driver
-downloads (and for rustls WebSocket connections); use `aws-lc` instead when
-AWS-LC is required:
+macro, `route-service` serves the app under test from inside the test
+process, `native-tls` is the transport, and `ring` selects the crypto
+backend for driver downloads (and rustls WebSocket connections). Use
+`aws-lc` instead when AWS-LC is required; disabling defaults drops all
+four, so list the others back:
 
 ```toml
-playwright-rs = { version = "0.17", default-features = false, features = [
+playwright-rs = { version = "0.18", default-features = false, features = [
     "aws-lc",
     "native-tls",
     "macros",
+    "route-service",
 ] }
 ```
 
-Disabling default features requires selecting either `ring` or `aws-lc`.
-Other opt-in features are `cli` (installer binary, see below) and
-`screenshot-diff` (pixel-diff assertions). For programmatic trace-zip
-inspection, add [`playwright-rs-trace`](https://docs.rs/playwright-rs-trace)
-as a `[dev-dependencies]` entry.
+Opt-in features are `trace` (re-exports the trace-zip parser as
+`playwright_rs::trace`, so reading your own traces needs no second
+version), `screenshot-diff` (pixel-diff assertions), and `cli` (installer
+binary, see below).
 
 ### Browser installation (required)
 
