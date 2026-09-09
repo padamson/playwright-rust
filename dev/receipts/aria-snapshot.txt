@@ -56,7 +56,6 @@
 - paragraph [box=671,1774,436,20]: Mock, block, or inspect any request from Rust.
 - text: "page.route(\"**/*.png\", |route| async move { route.abort(None).await }).await?;"
 - heading "Serve your app from the test" [level=3] [box=173,2024,295,28]
-- text: Unreleased
 - paragraph [box=173,2056,436,40]: Hand an axum router or a wasm bundle to route_service. No port, no server, any origin.
 - paragraph [box=173,2112,436,16]:
   - link "Walkthrough" [box=173,2112,87,16]:
@@ -128,7 +127,6 @@
 - text: Step 1 of 6
 - button "Next" [box=1067,4984,61,32]
 - heading "Serve the app from inside the test" [level=2] [box=152,5316,466,32]
-- text: Unreleased
 - paragraph [box=152,5356,672,60]: "This page is a wasm app. The same deploy also serves its bundle to the browser from inside the test process: an axum router, no socket, and a backend the test rewrites while the app is running. Step through the code and what the browser saw."
 - tablist [box=152,5440,476,156]:
   - button "1. Serve it from the test. Nothing listens" [box=152,5440,476,36]
