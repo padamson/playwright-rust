@@ -8,10 +8,36 @@ metadata:
 # Release Process
 
 This skill captures the procedural steps for shipping a playwright-rust
-release. For deeper automation (full pre-flight checks, mutation testing,
-CHANGELOG validation), use the **release-preparation** sub-agent. This
-skill exists for in-context reference when you're walking through a
-release manually or guiding the user.
+release, for in-context reference when walking through one manually or
+guiding the user.
+
+## Pre-flight, before touching any version string
+
+The checklist below assumes these already pass; run them first so a
+failure lands here rather than halfway through a bump. All are read-only
+against the tree as it stands.
+
+```bash
+cargo nextest run --workspace --all-features               # what release.yml runs
+cargo nextest run --workspace --run-ignored ignored-only   # engine-specific stress set
+cargo test --doc --workspace --all-features
+cargo xtask verify-changelog-links      # [Unreleased] and the link footer agree
+cargo xtask verify-driver-version       # every pinned reference matches build.rs
+cargo xtask verify-agent-docs           # skill compiles and names every feature
+cargo xtask verify-site-snippets
+cargo xtask sync-protocol-spec --check  # vendored spec is the pinned driver's
+cargo vet && cargo deny check && cargo audit
+```
+
+`cargo audit` fetches the RustSec database over git, which the Claude Code
+sandbox blocks; a "couldn't fetch advisory database" there is the sandbox,
+not an advisory. CI's Security & Quality job on the same commit is the
+authoritative run in that case.
+
+Then check the cross-crate couplings that a bump makes bite. Step 4 below
+lists the dependency lines that move together; confirm each is at the
+version about to be superseded before editing any of them, so a line that
+was already stale does not get mistaken for one this bump changed.
 
 ## Workspace layout — three independently-versioned crates
 
