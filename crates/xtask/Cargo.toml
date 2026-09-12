@@ -30,4 +30,4 @@ ureq = { version = "3", default-features = false, features = [
 # Digests the vendored spec files so the offline check can see an edited or
 # truncated tree. Already in the graph through axum, so no new audit surface.
 # Drift detection, not a security boundary.
-sha1 = "0.10"
+sha1 = "0.11"
