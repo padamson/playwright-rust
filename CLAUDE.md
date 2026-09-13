@@ -150,7 +150,9 @@ Just-in-time philosophy — write the right thing in the right file:
    [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)** — that
    version is the update gate, and until it moves `/plugin update`
    tells installed consumers they are already current. A pre-commit
-   hook (`scripts/check-plugin-version-bumped.sh`) enforces it.
+   hook (`scripts/check-plugin-version-bumped.sh`) enforces it, and the
+   `Plugin version guard` job in `test.yml` runs the same script against
+   the PR base or pre-push tip, so a hookless clone cannot slip past.
    Validate manifest changes with `claude plugin validate .`.
 
 ## Working on Features

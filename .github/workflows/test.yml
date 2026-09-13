@@ -15,6 +15,28 @@ permissions:
   contents: read
 
 jobs:
+  plugin-version:
+    name: Plugin version guard
+    runs-on: ubuntu-latest
+    # The pre-commit hook of the same name is per-clone and opt-in, so a
+    # hookless clone or a --no-verify commit would ship a skill edit without
+    # the version bump that installed consumers key their updates on. Same
+    # script, run against the PR base or the tip before the push.
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        fetch-depth: 0
+
+    - name: Check plugin version against the base ref
+      env:
+        BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+      run: |
+        if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+          echo "No reachable base ref (new branch, force push, or manual run); nothing to compare."
+          exit 0
+        fi
+        scripts/check-plugin-version-bumped.sh --base "$BASE"
+
   msrv:
     name: MSRV Check
     runs-on: ubuntu-latest

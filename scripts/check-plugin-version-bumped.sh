@@ -9,21 +9,57 @@
 # consumer. The bump is pure bookkeeping, which makes it easy to forget --
 # this hook is what makes forgetting impossible.
 #
-# Compares the staged manifest against HEAD's, so it checks what is actually
-# being committed.
+# Two modes, one rule:
+#   (no args)      pre-commit: the staged tree against HEAD, so it checks
+#                  what is actually being committed.
+#   --base <ref>   CI: HEAD against <ref>, the base of a PR or the tip
+#                  before a push, so a hookless clone or --no-verify commit
+#                  is still caught.
 set -euo pipefail
 
 manifest=.claude-plugin/plugin.json
+guarded=(skills/ .claude-plugin/)
 
-# Initial commit: nothing to compare against.
-git rev-parse -q --verify HEAD >/dev/null 2>&1 || exit 0
+base=""
+if [ "${1:-}" = "--base" ]; then
+  base="${2:?--base needs a ref}"
+  shift 2
+fi
 
+if [ -n "$base" ]; then
+  old_spec="$base:$manifest"
+  new_spec="HEAD:$manifest"
+  skill_spec_prefix="HEAD:"
+  content_unchanged() { git diff --quiet "$base" HEAD -- "${guarded[@]}"; }
+else
+  # Initial commit: nothing to compare against.
+  git rev-parse -q --verify HEAD >/dev/null 2>&1 || exit 0
+  old_spec="HEAD:$manifest"
+  new_spec=":$manifest"
+  skill_spec_prefix=":"
+  content_unchanged() { git diff --cached --quiet -- "${guarded[@]}"; }
+fi
+
+# Nothing changed under the guarded paths: nothing to guard. The hook's
+# `files:` filter already implies this on a real commit, but `run
+# --all-files` runs every hook regardless of what changed, and without this
+# the guard would fail any full-tree run that is not itself a version bump.
+if content_unchanged 2>/dev/null; then
+  exit 0
+fi
+
+# Empty input (the commit that first adds the manifest) is "no version",
+# not a JSON parse error.
 read_version() {
-  python3 -c 'import json,sys; print(json.load(sys.stdin).get("version",""))'
+  python3 -c '
+import json, sys
+text = sys.stdin.read()
+print(json.loads(text).get("version", "") if text.strip() else "")
+'
 }
 
-old=$(git show "HEAD:$manifest" 2>/dev/null | read_version || echo "")
-new=$(git show ":$manifest" 2>/dev/null | read_version || echo "")
+old=$(git show "$old_spec" 2>/dev/null | read_version || echo "")
+new=$(git show "$new_spec" 2>/dev/null | read_version || echo "")
 
 if [ -z "$new" ]; then
   echo "plugin version guard: $manifest has no version field." >&2
@@ -43,7 +79,7 @@ fi
 # disagree about what is installed.
 skill=skills/playwright-rs-usage/SKILL.md
 
-skill_version=$(git show ":$skill" 2>/dev/null | python3 -c '
+skill_version=$(git show "$skill_spec_prefix$skill" 2>/dev/null | python3 -c '
 import re, sys
 text = sys.stdin.read()
 m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
