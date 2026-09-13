@@ -66,15 +66,15 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.aws-lc-rs]]
-version = "1.17.3"
-when = "2026-07-17"
+version = "1.18.1"
+when = "2026-09-01"
 user-id = 156764
 user-login = "justsmth"
 user-name = "Justin W Smith"
 
 [[publisher.aws-lc-sys]]
-version = "0.43.0"
-when = "2026-07-17"
+version = "0.45.0"
+when = "2026-09-01"
 user-id = 156764
 user-login = "justsmth"
 user-name = "Justin W Smith"
@@ -218,15 +218,22 @@ user-id = 55123
 user-login = "rust-lang-owner"
 
 [[publisher.http]]
-version = "1.4.0"
-when = "2025-11-24"
+version = "1.5.0"
+when = "2026-07-29"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
+
+[[publisher.http-body]]
+version = "1.1.0"
+when = "2026-07-13"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.http-body-util]]
-version = "0.1.3"
-when = "2025-03-11"
+version = "0.1.5"
+when = "2026-08-12"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
@@ -384,6 +391,11 @@ user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.sha1]]
+version = "0.10.7"
+when = "2026-07-10"
+trusted-publisher = "github:RustCrypto/hashes"
+
+[[publisher.sha1]]
 version = "0.11.0"
 when = "2026-03-27"
 trusted-publisher = "github:RustCrypto/hashes"
@@ -396,8 +408,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.syn]]
-version = "3.0.4"
-when = "2026-08-24"
+version = "3.0.5"
+when = "2026-09-04"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -409,9 +421,9 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
-[[publisher.target-triple]]
-version = "1.0.0"
-when = "2025-10-27"
+[[publisher.target-tuple]]
+version = "1.0.2"
+when = "2026-09-08"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -501,8 +513,8 @@ user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.trybuild]]
-version = "1.0.120"
-when = "2026-08-03"
+version = "1.0.121"
+when = "2026-09-08"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -902,17 +914,6 @@ criteria = "safe-to-deploy"
 delta = "0.4.1 -> 0.5.0"
 notes = "Minor changes for a `no_std` upgrade but otherwise everything looks as expected."
 
-[[audits.bytecode-alliance.audits.http-body]]
-who = "Pat Hickey <phickey@fastly.com>"
-criteria = "safe-to-deploy"
-version = "1.0.0-rc.2"
-
-[[audits.bytecode-alliance.audits.http-body]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-delta = "1.0.0-rc.2 -> 1.0.0"
-notes = "Only minor changes made for a stable release."
-
 [[audits.bytecode-alliance.audits.idna]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
@@ -1071,12 +1072,6 @@ who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"
 version = "1.0.17"
 notes = "plenty of unsafe pointer and vec tricks, but in well-structured and commented code that appears to be correct"
-
-[[audits.bytecode-alliance.audits.sha1]]
-who = "Andrew Brown <andrew.brown@intel.com>"
-criteria = "safe-to-deploy"
-delta = "0.10.5 -> 0.10.6"
-notes = "Only new code is some loongarch64 additions which include assembly code for that platform."
 
 [[audits.bytecode-alliance.audits.sharded-slab]]
 who = "Pat Hickey <phickey@fastly.com>"
@@ -1842,13 +1837,6 @@ delta = "1.0.218 -> 1.0.219"
 notes = "Minor changes (clippy tweaks, using `mem::take` instead of `mem::replace`)."
 aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
 
-[[audits.google.audits.sha1]]
-who = "David Koloski <dkoloski@google.com>"
-criteria = "safe-to-deploy"
-version = "0.10.5"
-notes = "Reviewed on https://fxrev.dev/712371."
-aggregated-from = "https://fuchsia.googlesource.com/fuchsia/+/refs/heads/main/third_party/rust_crates/supply-chain/audits.toml?format=TEXT"
-
 [[audits.google.audits.smallvec]]
 who = "Manish Goregaokar <manishearth@google.com>"
 criteria = "safe-to-deploy"
@@ -2539,12 +2527,6 @@ aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/suppl
 who = "Jack Grigg <jack@electriccoin.co>"
 criteria = "safe-to-deploy"
 delta = "0.3.13 -> 0.3.14"
-aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
-
-[[audits.zcash.audits.http-body]]
-who = "Jack Grigg <jack@electriccoin.co>"
-criteria = "safe-to-deploy"
-delta = "1.0.0 -> 1.0.1"
 aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
 
 [[audits.zcash.audits.rand_xorshift]]
