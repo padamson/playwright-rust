@@ -25,17 +25,41 @@ criteria = "safe-to-deploy"
 delta = "0.23.42 -> 0.23.43"
 notes = "Defensive hardening release. Threads Protocol (Tcp/Quic) through supports_version and find_cipher_suite so a QUIC connection cannot negotiate a TLS1.2-only suite. Replaces two attacker-reachable subtractions on handshake input with saturating_sub (encoding_for_binder_signing, and the server TLS1.3 binder plaintext slice), removing a panic path on a malformed ClientHello. Replaces an as-cast multiply on session ticket age with checked conversion. No new unsafe, no new ambient capabilities, no I/O changes."
 
+[[audits.rustls]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.23.43 -> 0.23.44"
+notes = "SignatureScheme::algorithm() now returns Option so schemes with no TLS1.2 SignatureAlgorithm (ML-DSA) are filtered out of the TLS1.2 ClientHello signature_schemes, CertificateRequest handling and server-side client-auth verify schemes; a ServerKeyExchange signed with such a scheme is rejected with an IllegalParameter alert, and verify_tls12_signature rejects it up front, where 0.23.43 fell through as Unknown(0). Adds ML-DSA signing keys under aws-lc-rs (PqdsaSigningKey, signature length checked against the algorithm). On ECH rejection the client now authenticates the outer public_name per RFC 9849 instead of the inner name. PayloadU24 gains a cardinality marker so a zero-length OCSP response is rejected at decode. SSLKEYLOGFILE is now created with mode 0o600 on Unix, the only ambient-capability change and a tightening. No new unsafe."
+
+[[audits.rustls-webpki]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.103.13 -> 0.103.15"
+notes = "Promotes ML-DSA-44/65/87 verification from the aws-lc-rs-unstable feature to plain aws-lc-rs (aws-lc-rs 1.14 -> 1.18 now ships them as stable) and drops the per-algorithm in_fips_submission flag, so fips() reports aws-lc-rs's own FIPS mode; base64 0.22 -> 0.23. The one logic edit is find_serial in crl/types.rs rewritten with ? for the same control flow. No unsafe, no build script, no new ambient capabilities."
+
 [[audits.ureq]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "3.3.0 -> 3.4.0"
 notes = "No new unsafe (the crate has none in either version), no build script, no new ambient capabilities. The TLS delta is two lines: rustls.rs and native_tls.rs switch .host() to .host_bare() so RFC 3986 bracketed IPv6 literals are stripped before use as SNI/ServerName, which rustls rejects in bracketed form; host_bare strips only a leading [ and trailing ], leaving DNS and IPv4 authorities untouched, and is covered by new unit tests. Remaining changes match the changelog: HTTPS CONNECT proxy support and canonical Basic auth scheme for CONNECT (connect.rs), a max_idle_age pooling fix, sealing RequestExt, and rustls-platform-verifier 0.6 -> 0.7. One disable_verification(true) is added but sits inside #[cfg(test)] behind the private _test/_ring features, exercising the new proxy path against a self-signed fixture; it is not reachable from shipped code."
 
+[[audits.ureq]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "3.4.0 -> 3.4.1"
+notes = 'No unsafe, no build script, no new deps beyond ureq-proto 0.6.2. The TLS handshake now completes inside connect() (rustls complete_io; native-tls drops its LazyStream deferral) so timeout_connect covers it. Timeout budgets: each phase starts from the latest completed predecessor instead of chaining every earlier phase, and an already-expired budget fails in Connection::transmit_output/maybe_await_input instead of getting a per-call socket grace period. The pool refuses to reuse a connection with unconsumed buffered input (server sent more than Content-Length), which closes a response-desync path. read_json buffers bodies whose Content-Length is under a third of the read limit and parses from the slice, still bounded by that limit. The std::net::TcpListener use is a cfg(not(feature = "_test")) unit test on 127.0.0.1; disable_verification(true) appears only under cfg(test).'
+
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.6.1"
 notes = "No source changes whatsoever. The delta is a newly added LICENSE-APACHE.txt (which accounts for nearly all of the reported line count), packaging metadata, and a base64 0.22.1 -> 0.23.1 dependency bump that is already audited in this file."
+
+[[audits.ureq-proto]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.6.1 -> 0.6.2"
+notes = "Hardening of received-header parsing; no unsafe, no new deps. Content-Length is read from every header line as a comma list: each element must be plain digits (a sign, inner whitespace, an empty element or u64 overflow is BadContentLengthHeader) and repeated values must agree, differing values are TooManyContentLengthHeaders, with no first- or last-wins. Outgoing requests and responses reject a signed or list-valued Content-Length before it reaches the wire. A status code below 100 from httparse is now HttpParseFail instead of an unwrap panic, or unwrap_or_default's bogus 200 on the partial-response path. The partial-response header scan stops on an empty name rather than an empty value, so a Location after an empty header is no longer dropped. Connection and Expect token matching is comma-list and ASCII case-insensitive per RFC 9110."
 
 [[trusted.aho-corasick]]
 criteria = "safe-to-deploy"
@@ -229,6 +253,12 @@ user-id = 359 # Sean McArthur (seanmonstar)
 start = "2019-04-05"
 end = "2027-05-16"
 
+[[trusted.http-body]]
+criteria = "safe-to-deploy"
+user-id = 359 # Sean McArthur (seanmonstar)
+start = "2019-10-01"
+end = "2027-09-13"
+
 [[trusted.http-body-util]]
 criteria = "safe-to-deploy"
 user-id = 359 # Sean McArthur (seanmonstar)
@@ -390,6 +420,12 @@ criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2023-12-21"
 end = "2027-05-23"
+
+[[trusted.target-tuple]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2026-09-08"
+end = "2027-09-13"
 
 [[trusted.thiserror]]
 criteria = "safe-to-deploy"
