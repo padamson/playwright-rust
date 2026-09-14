@@ -113,8 +113,9 @@ Just-in-time philosophy — write the right thing in the right file:
 1. **README.md** — landing page; vision, working example (current code
    only), what works now, installation. Keep < 250 lines. No future
    API previews.
-2. **docs/roadmap.md** — strategic direction, milestone planning,
-   high-level version overview. No slice details.
+2. **docs/roadmap.md** — what 1.0 means, what gates it, and what is
+   deliberately out of scope. No per-release status and no slice
+   details; it is not edited when a version ships.
 3. **docs/implementation-plans/vX.Y-*.md** — detailed work tracking
    for the version *currently in progress*; created just-in-time.
    Becomes a historical reference once the version ships.
@@ -265,8 +266,8 @@ Install once: `cargo install cargo-mutants`.
 
 ## Versioning
 
-`0.x.y` while pre-1.0; API may evolve. `1.0.0` after stable parity is
-proven through dogfooding (see roadmap). For release mechanics see the
+`0.x.y` while pre-1.0; API may evolve. `1.0.0` when the gates in
+[docs/roadmap.md](docs/roadmap.md) all hold. For release mechanics see the
 **release-process** skill.
 
 ## Useful References

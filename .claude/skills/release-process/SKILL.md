@@ -266,15 +266,17 @@ pipeline rather than bolting onto this workflow.
    `supply-chain/config.toml` in a follow-up commit. Cannot be done
    pre-release because `cargo vet` rejects the policy until the crate
    exists on crates.io.
-5. **Flip the release-state docs** — one follow-up commit, `[skip ci]`:
-   - `docs/roadmap.md` — the **Status:** line and the milestone list
-   - `docs/implementation-plans/v1.0-gap-analysis.md` — the version's
-     section heading and the Coverage Summary paragraph
-   These claim a release exists, so they must **not** ride the version-bump
-   commit: that lands on `main` before CI and before the tag, and a failed
-   publish would leave `main` advertising a release nobody can install.
-   Keep them in the "cut, awaiting tag" phrasing until the publish is
-   verified in steps 1-2, then flip both to shipped in one commit.
+5. **Flip the release-state doc** — one follow-up commit, `[skip ci]`,
+   for a minor release that closed driver surface:
+   `docs/implementation-plans/v1.0-gap-analysis.md`, the version's section
+   heading and the Coverage Summary paragraph. A patch release that changes
+   no coverage needs nothing here. `docs/roadmap.md` carries no per-release
+   status by design and is never touched at release time.
+   The gap analysis claims a release exists, so it must **not** ride the
+   version-bump commit: that lands on `main` before CI and before the tag,
+   and a failed publish would leave `main` advertising a release nobody
+   can install. Keep it in the "cut, awaiting tag" phrasing until the
+   publish is verified in steps 1-2, then flip it in one commit.
 6. **Update tracking issues** if this release closes any
 7. **Announce** if applicable (depends on release significance)
 

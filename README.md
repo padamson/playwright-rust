@@ -25,7 +25,7 @@ fuller case). The goal is official-quality Rust bindings following the same
 architecture as
 [playwright-python](https://github.com/microsoft/playwright-python),
 playwright-java, and playwright-dotnet; see the
-[development roadmap](docs/roadmap.md) for plans and status.
+[roadmap](docs/roadmap.md) for what 1.0 means and what gates it.
 
 ## Quick comparison: Python vs Rust
 
