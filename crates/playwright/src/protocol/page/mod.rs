@@ -24,147 +24,25 @@ use crate::protocol::event_registry::EventRegistry;
 ///
 /// # Example
 ///
+/// The lifecycle every test follows: open a page, navigate, read through a
+/// locator, close. Each method group below (navigation, evaluation, input,
+/// events, network, bindings, capture, emulation) carries its own example.
+///
 /// ```no_run
-/// use playwright_rs::protocol::{
-///     Playwright, ScreenshotOptions, ScreenshotType, AddStyleTagOptions, AddScriptTagOptions,
-///     EmulateMediaOptions, Media, ColorScheme, Viewport,
-/// };
-/// use std::path::PathBuf;
+/// # use playwright_rs::Playwright;
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let playwright = Playwright::launch().await?;
+/// let browser = playwright.chromium().launch().await?;
+/// let page = browser.new_page().await?;
 ///
-/// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let playwright = Playwright::launch().await?;
-///     let browser = playwright.chromium().launch().await?;
-///     let page = browser.new_page().await?;
+/// page.goto("https://example.com", None).await?;
+/// let heading = page.locator("h1").text_content().await?;
+/// println!("{}: {:?}", page.title().await?, heading);
 ///
-///     // Demonstrate url() - initially at about:blank
-///     assert_eq!(page.url(), "about:blank");
-///
-///     // Demonstrate goto() - navigate to a page
-///     let html = r#"<!DOCTYPE html>
-///         <html>
-///             <head><title>Test Page</title></head>
-///             <body>
-///                 <h1 id="heading">Hello World</h1>
-///                 <p>First paragraph</p>
-///                 <p>Second paragraph</p>
-///                 <button onclick="alert('Alert!')">Alert</button>
-///                 <a href="data:text/plain,file" download="test.txt">Download</a>
-///             </body>
-///         </html>
-///     "#;
-///     // Data URLs may not return a response (this is normal)
-///     let _response = page.goto(&format!("data:text/html,{}", html), None).await?;
-///
-///     // Demonstrate title()
-///     let title = page.title().await?;
-///     assert_eq!(title, "Test Page");
-///
-///     // Demonstrate content() - returns full HTML including DOCTYPE
-///     let content = page.content().await?;
-///     assert!(content.contains("<!DOCTYPE html>") || content.to_lowercase().contains("<!doctype html>"));
-///     assert!(content.contains("<title>Test Page</title>"));
-///     assert!(content.contains("Hello World"));
-///
-///     // Demonstrate locator()
-///     let heading = page.locator("#heading");
-///     let text = heading.text_content().await?;
-///     assert_eq!(text, Some("Hello World".to_string()));
-///
-///     // Demonstrate query_selector()
-///     let element = page.query_selector("h1").await?;
-///     assert!(element.is_some(), "Should find the h1 element");
-///
-///     // Demonstrate query_selector_all()
-///     let paragraphs = page.query_selector_all("p").await?;
-///     assert_eq!(paragraphs.len(), 2);
-///
-///     // Demonstrate evaluate()
-///     page.evaluate::<(), ()>("console.log('Hello from Playwright!')", None).await?;
-///
-///     // Demonstrate evaluate_value()
-///     let result = page.evaluate_value("1 + 1").await?;
-///     assert_eq!(result, "2");
-///
-///     // Demonstrate screenshot()
-///     let bytes = page.screenshot(None).await?;
-///     assert!(!bytes.is_empty());
-///
-///     // Demonstrate screenshot_to_file()
-///     let temp_dir = std::env::temp_dir();
-///     let path = temp_dir.join("playwright_doctest_screenshot.png");
-///     let bytes = page.screenshot_to_file(&path, Some(
-///         ScreenshotOptions::builder()
-///             .screenshot_type(ScreenshotType::Png)
-///             .build()
-///     )).await?;
-///     assert!(!bytes.is_empty());
-///
-///     // Demonstrate reload()
-///     // Data URLs may not return a response on reload (this is normal)
-///     let _response = page.reload(None).await?;
-///
-///     // Demonstrate route() - network interception
-///     page.route("**/*.png", |route| async move {
-///         route.abort(None).await
-///     }).await?;
-///
-///     // Demonstrate on_download() - download handler
-///     page.on_download(|download| async move {
-///         println!("Download started: {}", download.url());
-///         Ok(())
-///     }).await?;
-///
-///     // Demonstrate on_dialog() - dialog handler
-///     page.on_dialog(|dialog| async move {
-///         println!("Dialog: {} - {}", dialog.type_(), dialog.message());
-///         dialog.accept(None).await
-///     }).await?;
-///
-///     // Demonstrate add_style_tag() - inject CSS
-///     page.add_style_tag(
-///         AddStyleTagOptions::builder()
-///             .content("body { background-color: blue; }")
-///             .build()
-///     ).await?;
-///
-///     // Demonstrate set_extra_http_headers() - set page-level headers
-///     let mut headers = std::collections::HashMap::new();
-///     headers.insert("x-custom-header".to_string(), "value".to_string());
-///     page.set_extra_http_headers(headers).await?;
-///
-///     // Demonstrate emulate_media() - emulate print media type
-///     page.emulate_media(Some(
-///         EmulateMediaOptions::builder()
-///             .media(Media::Print)
-///             .color_scheme(ColorScheme::Dark)
-///             .build()
-///     )).await?;
-///
-///     // Demonstrate add_script_tag() - inject a script
-///     page.add_script_tag(Some(
-///         AddScriptTagOptions::builder()
-///             .content("window.injectedByScriptTag = true;")
-///             .build()
-///     )).await?;
-///
-///     // Demonstrate pdf() - generate PDF (Chromium only)
-///     let pdf_bytes = page.pdf(None).await?;
-///     assert!(!pdf_bytes.is_empty());
-///
-///     // Demonstrate set_viewport_size() - responsive testing
-///     let mobile_viewport = Viewport {
-///         width: 375,
-///         height: 667,
-///     };
-///     page.set_viewport_size(mobile_viewport).await?;
-///
-///     // Demonstrate close()
-///     page.close().await?;
-///
-///     browser.close().await?;
-///     Ok(())
-/// }
+/// page.close().await?;
+/// browser.close().await?;
+/// # Ok(())
+/// # }
 /// ```
 ///
 /// See: <https://playwright.dev/docs/api/class-page>

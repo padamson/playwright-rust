@@ -5,6 +5,21 @@ use serde::Deserialize;
 use std::sync::Arc;
 
 /// Navigation: `goto`, history, load state and URL fragments.
+///
+/// ```no_run
+/// # use playwright_rs::Playwright;
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// # let page = Playwright::launch().await?.chromium().launch().await?.new_page().await?;
+/// let response = page.goto("https://example.com", None).await?;
+/// assert!(response.is_some_and(|r| r.ok()));
+///
+/// page.goto("https://example.com/about", None).await?;
+/// page.go_back(None).await?;
+/// page.reload(None).await?;
+/// page.wait_for_load_state(None).await?;
+/// # Ok(())
+/// # }
+/// ```
 impl Page {
     /// Navigates to the specified URL.
     ///

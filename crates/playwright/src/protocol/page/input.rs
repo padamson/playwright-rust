@@ -3,6 +3,18 @@ use crate::error::Result;
 use crate::server::channel_owner::ChannelOwner;
 
 /// Input devices: keyboard, mouse and touchscreen.
+///
+/// ```no_run
+/// # use playwright_rs::Playwright;
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// # let page = Playwright::launch().await?.chromium().launch().await?.new_page().await?;
+/// page.keyboard().type_text("hello", None).await?;
+/// page.keyboard().press("Enter", None).await?;
+/// page.mouse().click(100.0, 200.0, None).await?;
+/// page.drag_and_drop("#source", "#target", None).await?;
+/// # Ok(())
+/// # }
+/// ```
 impl Page {
     /// Returns the keyboard instance for low-level keyboard control.
     ///

@@ -23,9 +23,9 @@ npm-installed playwright, which does need one.) At runtime,
 git clone https://github.com/padamson/playwright-rust.git
 cd playwright-rust
 
-# Install pre-commit hooks
-pip install pre-commit
-pre-commit install
+# Install the pre-commit hooks (prek runs the repo's .pre-commit-config.yaml)
+cargo install prek
+prek install --overwrite
 
 cargo build
 ```

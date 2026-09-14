@@ -8,6 +8,24 @@ use std::future::Future;
 use std::sync::Arc;
 
 /// Network interception: routes, HAR replay, WebSocket routes and extra headers.
+///
+/// ```no_run
+/// # use playwright_rs::Playwright;
+/// # use playwright_rs::protocol::FulfillOptions;
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// # let page = Playwright::launch().await?.chromium().launch().await?.new_page().await?;
+/// page.route("**/api/health", |route| async move {
+///     let ok = FulfillOptions::builder().status(200).body(b"ok".to_vec()).build();
+///     route.fulfill(ok).await
+/// })
+/// .await?;
+/// page.route("**/*.png", |route| async move { route.abort(None).await }).await?;
+///
+/// page.goto("https://example.com", None).await?;
+/// page.unroute_all(None).await?;
+/// # Ok(())
+/// # }
+/// ```
 impl Page {
     /// Registers a route handler for network interception.
     ///
