@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-09-14
+
 ### Security
 
 - **Bumped transitive `rustls` 0.23.44 → 0.23.45 ([RUSTSEC-2026-0285](https://rustsec.org/advisories/RUSTSEC-2026-0285))** in the workspace lockfile and in the excluded site-e2e and fuzz lockfiles. rustls accepted TLS 1.3 handshake messages sent at the wrong encryption level when they followed a key change in the same record; the transcript stays authenticated, so a network attacker cannot alter or complete a handshake, but a peer could send messages in plaintext that should have been encrypted. rustls reaches this crate through `ureq` (driver download) and the `rustls-tls` feature. The same update moves `chacha20` off a yanked 0.10.1.
@@ -881,7 +883,8 @@ Public-API type-consistency sweep — within the crate, the same conceptual quan
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/padamson/playwright-rust/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/padamson/playwright-rust/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/padamson/playwright-rust/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/padamson/playwright-rust/compare/v0.15.1...v0.16.0
