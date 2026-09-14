@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Bumped transitive `rustls` 0.23.44 → 0.23.45 ([RUSTSEC-2026-0285](https://rustsec.org/advisories/RUSTSEC-2026-0285))** in the workspace lockfile and in the excluded site-e2e and fuzz lockfiles. rustls accepted TLS 1.3 handshake messages sent at the wrong encryption level when they followed a key change in the same record; the transcript stays authenticated, so a network attacker cannot alter or complete a handshake, but a peer could send messages in plaintext that should have been encrypted. rustls reaches this crate through `ureq` (driver download) and the `rustls-tls` feature. The same update moves `chacha20` off a yanked 0.10.1.
+
 ### Fixed
 
 - **`AddStyleTagOptionsBuilder` is re-exported from `playwright_rs::protocol`** like its `AddScriptTagOptionsBuilder` sibling. It was reachable only through `protocol::page`, the one builder in that family that was not at the shared path.

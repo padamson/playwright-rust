@@ -31,6 +31,12 @@ criteria = "safe-to-deploy"
 delta = "0.23.43 -> 0.23.44"
 notes = "SignatureScheme::algorithm() now returns Option so schemes with no TLS1.2 SignatureAlgorithm (ML-DSA) are filtered out of the TLS1.2 ClientHello signature_schemes, CertificateRequest handling and server-side client-auth verify schemes; a ServerKeyExchange signed with such a scheme is rejected with an IllegalParameter alert, and verify_tls12_signature rejects it up front, where 0.23.43 fell through as Unknown(0). Adds ML-DSA signing keys under aws-lc-rs (PqdsaSigningKey, signature length checked against the algorithm). On ECH rejection the client now authenticates the outer public_name per RFC 9849 instead of the inner name. PayloadU24 gains a cardinality marker so a zero-length OCSP response is rejected at decode. SSLKEYLOGFILE is now created with mode 0o600 on Unix, the only ambient-capability change and a tightening. No new unsafe."
 
+[[audits.rustls]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.23.44 -> 0.23.45"
+notes = "Fix for RUSTSEC-2026-0285. HandshakeDeframer::is_aligned now reports aligned only when no handshake span is pending, complete or partial, and ConnectionCore records that after every handshake message it takes, so a handshake message packed into the same record as a key change is rejected as RFC 8446 section 5.1 requires. Server HelloRetryRequest hardening per RFC 9846: the second ClientHello must keep the retried cipher suite and may not withdraw a PSK offer, and TLS 1.2 is no longer offered after a retry (two new PeerMisbehaved variants, each with a unit test). Private keys handed to KeyProvider::load_private_key are wrapped in Zeroizing. No unsafe, no new dependencies."
+
 [[audits.rustls-webpki]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
