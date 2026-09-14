@@ -24,6 +24,7 @@ examine_globs = [
     "crates/playwright/src/protocol/route_params.rs",
     "crates/playwright/src/protocol/route_service.rs",
     "crates/playwright/src/protocol/resource_timing.rs",
+    "crates/playwright/src/protocol/page/mod.rs",
 ]
 
 # Only run unit tests and fast serialization tests (no Playwright server needed).
@@ -50,6 +51,12 @@ exclude_re = [
     "try_bundled_driver|try_user_cache_driver",
     "try_npm_global|try_npm_local",
     "find_playwright_in_node_modules|find_node_executable",
+
+    # page/mod.rs: LocatorHandlerEntry::take_invocation is pure and unit
+    # tested; the timeout notifier talks to the server and the Debug impl is
+    # display-only.
+    "set_timeout_and_notify",
+    "impl std::fmt::Debug for Page",
 
     # route_service.rs: the request/response conversions are pure and unit
     # tested; the fulfiller, its inner step, and the engine lookup drive a

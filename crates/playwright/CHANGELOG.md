@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Chainable `times` and `no_wait_after` setters on `AddLocatorHandlerOptions`.** The struct is `#[non_exhaustive]`, so outside the crate it could only be built with `default()` and then mutated field by field; it now takes the same setter form as the other option types.
+
+### Fixed
+
+- **A triggered locator handler no longer stalls the action that tripped it until its timeout.** After running the handler the crate told the server to resume with a method name the driver does not have (`resolveLocatorHandler`; the protocol calls it `resolveLocatorHandlerNoReply`), the rejection was discarded, and the parked click or fill waited out its full timeout and failed. Present since the feature shipped in 0.12.0; the existing test removed the overlay before acting, so no handler ever fired under test. The resume is now sent in every case, including a handler that panics or a trigger for a uid the page no longer knows, and a failed resume is logged at `warn`.
+- **`add_locator_handler` with `times: Some(0)` is now a no-op, as upstream's is.** The invocation counter was decremented past zero on the first trigger: a debug build panicked inside the dispatch task while it held the handler registry lock, so every later locator-handler call on that page panicked too; a release build wrapped to `u32::MAX` and the "zero times" handler ran on every trigger, forever. Counted handlers still run exactly `times` times and are unregistered on the last one.
+- **A locator handler that returns an error keeps its registration**, so the next actionability check retries it, matching upstream. It used to be unregistered as if it had succeeded.
+- **`remove_locator_handler` on a selector with no handler is a no-op**, matching upstream; it used to fail with a protocol error, which a `times(0)` registration or an exhausted counted handler always left behind.
+
 ## [0.18.1] - 2026-09-14
 
 ### Security

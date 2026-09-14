@@ -108,7 +108,7 @@ impl Page {
     ///
     /// When a matching element appears, Playwright sends a `locatorHandlerTriggered` event.
     /// The handler is called with the matching `Locator`. After the handler completes,
-    /// Playwright is notified via `resolveLocatorHandler` so it can resume pending actions.
+    /// Playwright is notified via `resolveLocatorHandlerNoReply` so it can resume pending actions.
     ///
     /// # Arguments
     ///
@@ -133,13 +133,19 @@ impl Page {
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
         let options = options.into();
-        let selector = locator.selector().to_string();
         let no_wait_after = options
             .as_ref()
             .and_then(|o| o.no_wait_after)
             .unwrap_or(false);
         let times = options.as_ref().and_then(|o| o.times);
 
+        // A handler allowed zero invocations is a no-op, so it is never
+        // registered, matching upstream's `addLocatorHandler`.
+        if times == Some(0) {
+            return Ok(());
+        }
+
+        let selector = locator.selector().to_string();
         // Send registerLocatorHandler RPC — returns {"uid": N}
         let params = serde_json::json!({
             "selector": selector,
@@ -203,12 +209,12 @@ impl Page {
                 .map(|e| e.uid)
         };
 
-        let uid = uid.ok_or_else(|| {
-            Error::ProtocolError(format!(
-                "No locator handler registered for selector '{}'",
-                selector
-            ))
-        })?;
+        // Nothing registered for this selector is a no-op, as upstream's
+        // `removeLocatorHandler` is; a `times(0)` registration or an exhausted
+        // counted handler leaves exactly this state behind.
+        let Some(uid) = uid else {
+            return Ok(());
+        };
 
         // Send unregisterLocatorHandler RPC
         self.channel()
@@ -267,10 +273,12 @@ impl Page {
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct AddLocatorHandlerOptions {
-    /// Whether to keep the page frozen after the handler has been called.
+    /// Whether to resume the action as soon as the handler returns.
     ///
-    /// When `false` (default), Playwright resumes normal page operation after
-    /// the handler completes. When `true`, the page stays paused.
+    /// By default Playwright waits, after the handler runs, for the matched
+    /// element to become hidden before retrying the action. With `true` it
+    /// retries immediately and leaves the element in place, which is what a
+    /// handler that does not dismiss the overlay needs.
     pub no_wait_after: Option<bool>,
 
     /// Maximum number of times to invoke this handler.
@@ -278,4 +286,19 @@ pub struct AddLocatorHandlerOptions {
     /// Once exhausted, the handler is automatically unregistered.
     /// `None` (default) means the handler runs indefinitely.
     pub times: Option<u32>,
+}
+
+impl AddLocatorHandlerOptions {
+    /// Whether to retry the action as soon as the handler returns instead of
+    /// waiting for the matched element to become hidden.
+    pub fn no_wait_after(mut self, no_wait_after: bool) -> Self {
+        self.no_wait_after = Some(no_wait_after);
+        self
+    }
+
+    /// Limits the handler to `times` invocations; `0` registers nothing.
+    pub fn times(mut self, times: u32) -> Self {
+        self.times = Some(times);
+        self
+    }
 }

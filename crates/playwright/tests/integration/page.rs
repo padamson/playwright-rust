@@ -805,3 +805,152 @@ async fn test_frame_clears_page_backref_on_close() {
 
     browser.close().await.expect("Failed to close browser");
 }
+
+/// A visible overlay that trips a registered handler on every actionability
+/// check but does not block the click, plus a handler that counts its runs
+/// and returns `outcome`.
+async fn counting_overlay_handler(
+    page: &playwright_rs::Page,
+    options: playwright_rs::protocol::AddLocatorHandlerOptions,
+    outcome: Result<(), &'static str>,
+) -> std::sync::Arc<std::sync::atomic::AtomicUsize> {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+
+    page.set_content(
+        r#"<button id="target">Target</button>
+           <div id="overlay" style="position:fixed;inset:0;pointer-events:none">overlay</div>"#,
+        None,
+    )
+    .await
+    .expect("set content");
+
+    let calls = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&calls);
+    page.add_locator_handler(
+        &page.locator("#overlay"),
+        move |_| {
+            let counter = Arc::clone(&counter);
+            async move {
+                counter.fetch_add(1, Ordering::SeqCst);
+                outcome.map_err(|m| playwright_rs::Error::ProtocolError(m.to_string()))
+            }
+        },
+        options,
+    )
+    .await
+    .expect("add handler");
+    calls
+}
+
+#[tokio::test]
+async fn test_page_add_locator_handler_times_zero_never_registers() {
+    use std::sync::atomic::Ordering;
+    let (_playwright, browser, page) = crate::common::setup().await;
+    let opts = playwright_rs::protocol::AddLocatorHandlerOptions::default().times(0);
+    let calls = counting_overlay_handler(&page, opts, Ok(())).await;
+
+    page.locator("#target").click(None).await.expect("click");
+
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+    page.remove_locator_handler(&page.locator("#overlay"))
+        .await
+        .expect("removing an unregistered handler is a no-op");
+    browser.close().await.expect("close");
+}
+
+#[tokio::test]
+async fn test_page_add_locator_handler_times_one_runs_once() {
+    use std::sync::atomic::Ordering;
+    let (_playwright, browser, page) = crate::common::setup().await;
+    // The overlay never goes away, so tell Playwright not to wait for it.
+    let opts = playwright_rs::protocol::AddLocatorHandlerOptions::default()
+        .times(1)
+        .no_wait_after(true);
+    let calls = counting_overlay_handler(&page, opts, Ok(())).await;
+
+    // The second click would trigger the handler again if it were still registered.
+    page.locator("#target")
+        .click(None)
+        .await
+        .expect("first click");
+    page.locator("#target")
+        .click(None)
+        .await
+        .expect("second click");
+
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    browser.close().await.expect("close");
+}
+
+#[tokio::test]
+async fn test_page_locator_handler_that_fails_stays_registered() {
+    use std::sync::atomic::Ordering;
+    let (_playwright, browser, page) = crate::common::setup().await;
+    let opts = playwright_rs::protocol::AddLocatorHandlerOptions::default()
+        .times(2)
+        .no_wait_after(true);
+    let calls = counting_overlay_handler(&page, opts, Err("dismiss failed")).await;
+
+    // A failed run does not unregister the handler, so both clicks reach it.
+    page.locator("#target")
+        .click(None)
+        .await
+        .expect("first click");
+    page.locator("#target")
+        .click(None)
+        .await
+        .expect("second click");
+
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
+    browser.close().await.expect("close");
+}
+
+#[tokio::test]
+async fn test_page_locator_handler_that_panics_still_resumes_the_action() {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+    let (_playwright, browser, page) = crate::common::setup().await;
+    page.set_content(
+        r#"<button id="target">Target</button>
+           <div id="overlay" style="position:fixed;inset:0;pointer-events:none">overlay</div>"#,
+        None,
+    )
+    .await
+    .expect("set content");
+
+    let calls = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&calls);
+    page.add_locator_handler(
+        &page.locator("#overlay"),
+        move |_| {
+            let counter = Arc::clone(&counter);
+            async move {
+                counter.fetch_add(1, Ordering::SeqCst);
+                panic!("handler panicked on purpose");
+            }
+        },
+        playwright_rs::protocol::AddLocatorHandlerOptions::default().no_wait_after(true),
+    )
+    .await
+    .expect("add handler");
+
+    // Without the resolve the click would wait out its timeout and fail.
+    page.locator("#target")
+        .click(None)
+        .await
+        .expect("first click");
+    page.locator("#target")
+        .click(None)
+        .await
+        .expect("second click");
+
+    // Unlimited and never dismissed, so each click can trip it more than once;
+    // what matters is that it stayed registered and both clicks completed.
+    assert!(calls.load(Ordering::SeqCst) >= 2);
+    browser.close().await.expect("close");
+}

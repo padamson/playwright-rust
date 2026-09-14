@@ -313,6 +313,40 @@ struct LocatorHandlerEntry {
     /// Remaining invocations; `None` means unlimited.
     times_remaining: Option<u32>,
 }
+
+impl LocatorHandlerEntry {
+    /// Accounts for one trigger from the server and says what to do with it:
+    /// whether to run the handler, and whether this was its last invocation
+    /// so the entry is removed and the server told to stop watching.
+    fn take_invocation(&mut self) -> Invocation {
+        match self.times_remaining {
+            // A counted handler whose last run failed keeps its entry at zero;
+            // the next trigger removes it without running, as upstream does.
+            Some(0) => Invocation {
+                run: false,
+                remove: true,
+            },
+            Some(ref mut n) => {
+                *n -= 1;
+                Invocation {
+                    run: true,
+                    remove: *n == 0,
+                }
+            }
+            None => Invocation {
+                run: true,
+                remove: false,
+            },
+        }
+    }
+}
+
+/// What a `locatorHandlerTriggered` event should do with its entry.
+#[derive(Debug, PartialEq, Eq)]
+struct Invocation {
+    run: bool,
+    remove: bool,
+}
 // Each concern is its own `impl Page` block in a child module. Rustdoc lists
 // inherent impls in declaration order, so these follow the lifecycle block
 // above in the order a reader meets the API. One comment per line on purpose:
@@ -372,5 +406,67 @@ pub(crate) async fn set_timeout_and_notify(
         .await
     {
         tracing::warn!("{} send error: {}", method, e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn entry(times: Option<u32>) -> LocatorHandlerEntry {
+        LocatorHandlerEntry {
+            uid: 1,
+            selector: "#x".into(),
+            handler: Arc::new(|_| Box::pin(async { Ok(()) })),
+            times_remaining: times,
+        }
+    }
+
+    #[test]
+    fn unlimited_handler_runs_every_time_and_is_never_removed() {
+        let mut e = entry(None);
+        for _ in 0..3 {
+            assert_eq!(
+                e.take_invocation(),
+                Invocation {
+                    run: true,
+                    remove: false
+                }
+            );
+        }
+        assert_eq!(e.times_remaining, None);
+    }
+
+    #[test]
+    fn counted_handler_runs_exactly_times_and_is_removed_on_the_last() {
+        let mut e = entry(Some(2));
+        assert_eq!(
+            e.take_invocation(),
+            Invocation {
+                run: true,
+                remove: false
+            }
+        );
+        assert_eq!(e.times_remaining, Some(1));
+        assert_eq!(
+            e.take_invocation(),
+            Invocation {
+                run: true,
+                remove: true
+            }
+        );
+    }
+
+    #[test]
+    fn zero_times_never_runs_and_is_removed_without_underflow() {
+        let mut e = entry(Some(0));
+        assert_eq!(
+            e.take_invocation(),
+            Invocation {
+                run: false,
+                remove: true
+            }
+        );
+        assert_eq!(e.times_remaining, Some(0));
     }
 }

@@ -714,60 +714,80 @@ impl ChannelOwner for Page {
                 }
             }
             "locatorHandlerTriggered" => {
-                // Server fires this when a registered locator matches an element.
+                // Server fires this when a registered locator matches an element
+                // and parks the current action until we resolve it.
                 // params: {"uid": N}
                 if let Some(uid) = params.get("uid").and_then(|v| v.as_u64()).map(|v| v as u32) {
-                    let locator_handlers = self.locator_handlers.clone();
                     let self_clone = self.clone();
 
                     tokio::spawn(
                         async move {
-                            // Look up handler and decrement times_remaining
-                            let (handler, selector, should_remove) = {
-                                let mut handlers = locator_handlers.lock().unwrap();
-                                let entry = handlers.iter_mut().find(|e| e.uid == uid);
-                                match entry {
-                                    None => return,
-                                    Some(e) => {
-                                        let handler = e.handler.clone();
-                                        let selector = e.selector.clone();
-                                        let remove = match e.times_remaining {
-                                            Some(1) => true,
-                                            Some(ref mut n) => {
-                                                *n -= 1;
-                                                false
-                                            }
-                                            None => false,
-                                        };
-                                        (handler, selector, remove)
-                                    }
-                                }
+                            // Account for the trigger under the lock; the handler is
+                            // cloned out so nothing is held across the await below.
+                            let claimed = {
+                                let mut handlers = self_clone.locator_handlers.lock().unwrap();
+                                handlers.iter_mut().find(|e| e.uid == uid).map(|e| {
+                                    (e.handler.clone(), e.selector.clone(), e.take_invocation())
+                                })
                             };
 
-                            // Build a Locator for the handler to receive
-                            let locator = self_clone.locator(&selector);
-
-                            // Run the handler
-                            if let Err(e) = handler(locator).await {
-                                tracing::warn!("locator handler error (uid={}): {}", uid, e);
+                            // An unknown uid (the registration reply has not landed
+                            // yet, or the handler was just removed) still has to
+                            // resume the parked action.
+                            let mut remove = false;
+                            if let Some((handler, selector, invocation)) = claimed {
+                                remove = invocation.remove;
+                                if invocation.run {
+                                    let locator = self_clone.locator(selector);
+                                    // Run on its own task so a panic is caught here
+                                    // and the resolve below is still sent. A handler
+                                    // that fails keeps its entry, so the next trigger
+                                    // retries it, as upstream does.
+                                    match tokio::spawn(handler(locator)).await {
+                                        Ok(Ok(())) => {}
+                                        Ok(Err(e)) => {
+                                            tracing::warn!(
+                                                "locator handler error (uid={}): {}",
+                                                uid,
+                                                e
+                                            );
+                                            remove = false;
+                                        }
+                                        Err(e) => {
+                                            tracing::warn!(
+                                                "locator handler panicked (uid={}): {}",
+                                                uid,
+                                                e
+                                            );
+                                            remove = false;
+                                        }
+                                    }
+                                }
+                                // Drop the local entry before telling the server, so a
+                                // remove_locator_handler that races the reply cannot
+                                // pick up the stale uid.
+                                if remove {
+                                    self_clone
+                                        .locator_handlers
+                                        .lock()
+                                        .unwrap()
+                                        .retain(|e| e.uid != uid);
+                                }
                             }
 
-                            // Send resolveLocatorHandler — remove=true if times exhausted
-                            let _ = self_clone
+                            if let Err(e) = self_clone
                                 .channel()
                                 .send_no_result(
-                                    "resolveLocatorHandler",
-                                    serde_json::json!({ "uid": uid, "remove": should_remove }),
+                                    "resolveLocatorHandlerNoReply",
+                                    serde_json::json!({ "uid": uid, "remove": remove }),
                                 )
-                                .await;
-
-                            // Remove from local registry if one-shot
-                            if should_remove {
-                                self_clone
-                                    .locator_handlers
-                                    .lock()
-                                    .unwrap()
-                                    .retain(|e| e.uid != uid);
+                                .await
+                            {
+                                tracing::warn!(
+                                    "resolveLocatorHandlerNoReply (uid={}) failed: {}",
+                                    uid,
+                                    e
+                                );
                             }
                         }
                         .in_current_span(),
