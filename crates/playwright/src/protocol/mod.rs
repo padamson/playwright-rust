@@ -146,9 +146,9 @@ pub use locator::{
 pub use mouse::Mouse;
 pub use page::{
     AddLocatorHandlerOptions, AddScriptTagOptions, AddScriptTagOptionsBuilder, AddStyleTagOptions,
-    ColorScheme, EmulateMediaOptions, EmulateMediaOptionsBuilder, ForcedColors, GotoOptions, Media,
-    Page, PdfMargin, PdfOptions, PdfOptionsBuilder, ReducedMotion, Response, RouteFromHarOptions,
-    WaitUntil,
+    AddStyleTagOptionsBuilder, ColorScheme, EmulateMediaOptions, EmulateMediaOptionsBuilder,
+    ForcedColors, GotoOptions, Media, Page, PdfMargin, PdfOptions, PdfOptionsBuilder,
+    ReducedMotion, Response, RouteFromHarOptions, WaitUntil,
 };
 pub use playwright::Playwright;
 pub use proxy::ProxySettings;

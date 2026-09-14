@@ -20,8 +20,7 @@ use crate::protocol::event_registry::EventRegistry;
 /// A Page is created when you call `BrowserContext::new_page()` or `Browser::new_page()`.
 /// Each page is an isolated tab/window within its parent context.
 ///
-/// Initially, pages are navigated to "about:blank". Use navigation methods
-/// Use navigation methods to navigate to URLs.
+/// A new page starts at "about:blank"; the navigation methods take it elsewhere.
 ///
 /// # Example
 ///

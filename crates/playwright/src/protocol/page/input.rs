@@ -21,7 +21,7 @@ impl Page {
     /// Returns the touchscreen instance for low-level touch input simulation.
     ///
     /// Requires a touch-enabled browser context (`has_touch: true` in
-    /// [`BrowserContextOptions`](crate::protocol::browser_context::BrowserContext)).
+    /// [`BrowserContextOptions`](crate::protocol::browser_context::BrowserContextOptions)).
     ///
     /// See: <https://playwright.dev/docs/api/class-page#page-touchscreen>
     pub fn touchscreen(&self) -> crate::protocol::Touchscreen {

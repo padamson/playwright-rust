@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`AddStyleTagOptionsBuilder` is re-exported from `playwright_rs::protocol`** like its `AddScriptTagOptionsBuilder` sibling. It was reachable only through `protocol::page`, the one builder in that family that was not at the shared path.
+
 ## [0.18.0] - 2026-09-08
 
 ### Added
