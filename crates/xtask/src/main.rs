@@ -35,6 +35,7 @@ use axum::routing::get;
 use clap::Parser;
 use playwright_rs::Playwright;
 use playwright_rs::protocol::{TracingStartOptions, TracingStopOptions};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// `cargo xtask <subcommand>`
@@ -86,6 +87,12 @@ enum Cmd {
         #[arg(long)]
         check: bool,
     },
+    /// Verify that every protocol method name the crate sends is a command
+    /// the vendored spec defines. The driver rejects an unknown method, the
+    /// crate mostly discards that rejection, and the caller sees a timeout
+    /// or nothing: `resolveLocatorHandler`, `path` and `connectToServer`
+    /// all shipped that way, each for several releases.
+    VerifyProtocolMethods,
 }
 
 #[tokio::main]
@@ -97,6 +104,7 @@ async fn main() -> Result<()> {
         Cmd::VerifyDriverVersion => verify_driver_version(),
         Cmd::VerifyChangelogLinks => verify_changelog_links(),
         Cmd::SyncProtocolSpec { check } => sync_protocol_spec(check),
+        Cmd::VerifyProtocolMethods => verify_protocol_methods(),
     }
 }
 
@@ -1057,6 +1065,142 @@ fn fetch(url: &str) -> Result<String> {
 /// Resolve the workspace root by walking up from the xtask binary's
 /// `CARGO_MANIFEST_DIR` (which Cargo sets at compile time for the
 /// xtask crate to `crates/xtask`).
+/// Every `channel.send*("name", ..)` literal under `crates/playwright/src`
+/// must name a command in `protocol-spec/*.yml`. Events are not checked:
+/// the crate receives those by string match, and an unknown one is simply
+/// never delivered, which the event tests already cover.
+fn verify_protocol_methods() -> Result<()> {
+    let root = workspace_root();
+    let spec_dir = root.join(SPEC_DIR);
+    let mut commands = BTreeSet::new();
+    for path in spec_files(&spec_dir)? {
+        let text =
+            std::fs::read_to_string(&path).with_context(|| format!("read {}", path.display()))?;
+        commands.extend(spec_commands(&text));
+    }
+    if commands.is_empty() {
+        bail!(
+            "verify-protocol-methods: no commands found under {SPEC_DIR}; run \
+             `cargo xtask sync-protocol-spec`"
+        );
+    }
+
+    let src = root.join("crates/playwright/src");
+    let mut sent = 0usize;
+    let mut unknown: Vec<String> = Vec::new();
+    for path in rust_files(&src)? {
+        let text =
+            std::fs::read_to_string(&path).with_context(|| format!("read {}", path.display()))?;
+        for (line, method) in sent_methods(&text) {
+            sent += 1;
+            if !commands.contains(method.as_str()) {
+                let rel = path.strip_prefix(&root).unwrap_or(&path).display();
+                unknown.push(format!("{rel}:{line}: `{method}`"));
+            }
+        }
+    }
+
+    if !unknown.is_empty() {
+        bail!(
+            "verify-protocol-methods: {} method name(s) sent by the crate are not commands \
+             in {SPEC_DIR}:\n  {}\n\nThe driver rejects an unknown method and the caller \
+             usually sees a timeout, not an error. Check the `commands:` block of the \
+             object's yml for the name upstream uses.",
+            unknown.len(),
+            unknown.join("\n  ")
+        );
+    }
+    println!(
+        "verify-protocol-methods: {sent} send site(s) checked against {} spec command(s)",
+        commands.len()
+    );
+    Ok(())
+}
+
+/// The command names of one protocol yml: every four-space-indented key
+/// under a two-space `commands:` key, for every object in the file.
+fn spec_commands(yml: &str) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    let mut in_commands = false;
+    for line in yml.lines() {
+        if line.starts_with("  ") && !line.starts_with("   ") {
+            in_commands = line.trim_end() == "  commands:";
+        } else if !line.starts_with(' ') && !line.trim().is_empty() {
+            in_commands = false;
+        } else if in_commands
+            && line.starts_with("    ")
+            && !line.starts_with("     ")
+            && let Some(name) = line.trim().strip_suffix(':')
+            && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+        {
+            out.insert(name.to_string());
+        }
+    }
+    out
+}
+
+/// `(line, method)` for every `.send(`, `.send_no_result(` or
+/// `.send_no_params(` whose first argument is a string literal, including
+/// calls that rustfmt split across lines. Non-literal method arguments
+/// are not this gate's business.
+fn sent_methods(source: &str) -> Vec<(usize, String)> {
+    let mut out = Vec::new();
+    let bytes = source.as_bytes();
+    let mut search = 0;
+    while let Some(found) = source[search..].find(".send") {
+        let at = search + found;
+        let rest = &source[at + ".send".len()..];
+        let rest = rest
+            .strip_prefix("_no_result")
+            .or_else(|| rest.strip_prefix("_no_params"))
+            .unwrap_or(rest);
+        // optional turbofish, then the opening paren
+        let rest = if let Some(after) = rest.strip_prefix("::<") {
+            match after.find('>') {
+                Some(end) => &after[end + 1..],
+                None => {
+                    search = at + 1;
+                    continue;
+                }
+            }
+        } else {
+            rest
+        };
+        if let Some(args) = rest.strip_prefix('(') {
+            let args = args.trim_start();
+            if let Some(lit) = args.strip_prefix('"')
+                && let Some(end) = lit.find('"')
+            {
+                let method = &lit[..end];
+                if !method.is_empty()
+                    && method
+                        .chars()
+                        .all(|c| c.is_ascii_alphanumeric() || c == '_')
+                {
+                    let line = bytes[..at].iter().filter(|&&b| b == b'\n').count() + 1;
+                    out.push((line, method.to_string()));
+                }
+            }
+        }
+        search = at + 1;
+    }
+    out
+}
+
+fn rust_files(dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(dir).with_context(|| format!("read {}", dir.display()))? {
+        let path = entry?.path();
+        if path.is_dir() {
+            out.extend(rust_files(&path)?);
+        } else if path.extension().is_some_and(|e| e == "rs") {
+            out.push(path);
+        }
+    }
+    out.sort();
+    Ok(out)
+}
+
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -1377,5 +1521,48 @@ anyhow = \"1\"
             "screenshot-diff"
         ));
         assert!(!mentions("aws-lc-rs is the backend", "aws-lc"));
+    }
+}
+
+#[cfg(test)]
+mod protocol_method_tests {
+    use super::*;
+
+    #[test]
+    fn commands_are_collected_per_object_and_events_are_not() {
+        let yml = "Page:\n  type: interface\n  commands:\n\n    goto:\n      parameters:\n        url: string\n\n    reload:\n\n  events:\n\n    load:\n\nFrame:\n  commands:\n    evaluateExpression:\n";
+        let got = spec_commands(yml);
+        assert_eq!(
+            got.iter().map(String::as_str).collect::<Vec<_>>(),
+            ["evaluateExpression", "goto", "reload"]
+        );
+    }
+
+    #[test]
+    fn literals_are_found_on_one_line_split_lines_and_with_turbofish() {
+        let src = r#"
+            self.channel().send("goto", json!({})).await?;
+            self.channel()
+                .send_no_result(
+                    "setTestIdAttributeName",
+                    json!({}),
+                )
+                .await?;
+            let v: Value = self.channel().send_no_params("pathAfterFinished").await?;
+            let r: Resp = self.channel().send::<_, Resp>("evaluate", p).await?;
+            self.channel().send(method, p).await?;
+            self.sender.send(msg).await?;
+        "#;
+        let found = sent_methods(src);
+        let got: Vec<(usize, &str)> = found.iter().map(|(l, m)| (*l, m.as_str())).collect();
+        assert_eq!(
+            got,
+            [
+                (2, "goto"),
+                (4, "setTestIdAttributeName"),
+                (9, "pathAfterFinished"),
+                (10, "evaluate")
+            ]
+        );
     }
 }

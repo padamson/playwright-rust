@@ -213,3 +213,6 @@ jobs:
 
     - name: Verify the vendored protocol spec matches the pinned driver
       run: cargo xtask sync-protocol-spec --check
+
+    - name: Verify every protocol method the crate sends exists in the spec
+      run: cargo xtask verify-protocol-methods

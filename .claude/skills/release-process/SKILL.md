@@ -26,6 +26,7 @@ cargo xtask verify-driver-version       # every pinned reference matches build.r
 cargo xtask verify-agent-docs           # skill compiles and names every feature
 cargo xtask verify-site-snippets
 cargo xtask sync-protocol-spec --check  # vendored spec is the pinned driver's
+cargo xtask verify-protocol-methods     # every method the crate sends is in that spec
 cargo vet && cargo deny check && cargo audit
 ```
 

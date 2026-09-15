@@ -287,3 +287,8 @@ Install once: `cargo install cargo-mutants`.
   parameters it does not recognize instead of rejecting them: 1.63
   renamed every `tracingStart` capture parameter and the traces came out
   empty, silently, with the whole suite still green.
+  The companion gate, `cargo xtask verify-protocol-methods`, checks every
+  method name the crate sends against the spec's `commands:` blocks: the
+  driver rejects an unknown method, and the caller usually sees a timeout
+  rather than an error. `resolveLocatorHandler`, `path` and
+  `connectToServer` each shipped that way for several releases.

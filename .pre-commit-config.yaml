@@ -118,6 +118,18 @@ repos:
         pass_filenames: false
         files: (crates/playwright/build\.rs|protocol-spec/|crates/xtask/src/)
 
+      # 5b-ter. Every method name the crate sends must be a command in that
+      # spec. The driver rejects an unknown method and the crate mostly
+      # discards the rejection, so the caller sees a timeout, not an error:
+      # three such names shipped for several releases each.
+      - id: verify-protocol-methods
+        name: cargo xtask verify-protocol-methods
+        description: Check every channel send("...") literal against the vendored spec's commands
+        entry: cargo xtask verify-protocol-methods
+        language: system
+        pass_filenames: false
+        files: (crates/playwright/src/|protocol-spec/|crates/xtask/src/)
+
       # 5c. Verify each per-crate CHANGELOG's reference-link footer still
       # agrees with its version headings. Hand-maintained at release time,
       # and it had silently drifted across three releases before this.
