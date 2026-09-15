@@ -109,6 +109,14 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
     assert!(download_opt.is_some());
     let download = download_opt.unwrap();
 
+    // The driver hands back the temp file it downloaded to, once the
+    // download has finished.
+    let downloaded = download
+        .path()
+        .await?
+        .expect("a completed download has a path");
+    assert_eq!(std::fs::read_to_string(&downloaded)?, "TestContent");
+
     let temp_dir = std::env::temp_dir();
     let save_path = temp_dir.join("playwright_test_download.txt");
     let _ = std::fs::remove_file(&save_path);

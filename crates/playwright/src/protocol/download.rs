@@ -102,7 +102,7 @@ impl Download {
             value: Option<String>,
         }
 
-        let result: PathResponse = self.channel().send("path", json!({})).await?;
+        let result: PathResponse = self.channel().send("pathAfterFinished", json!({})).await?;
 
         Ok(result.value.map(PathBuf::from))
     }
