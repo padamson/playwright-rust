@@ -360,12 +360,14 @@ impl ChannelOwner for Page {
                                     let route_clone = route.clone();
                                     tokio::spawn(
                                         async move {
+                                            let route_after = route_clone.clone();
                                             if let Err(e) = handler(route_clone).await {
                                                 tracing::error!(
                                                     "Error in webSocketRoute handler: {}",
                                                     e
                                                 );
                                             }
+                                            route_after.after_handle().await;
                                         }
                                         .in_current_span(),
                                     );

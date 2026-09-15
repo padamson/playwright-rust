@@ -1,5 +1,6 @@
 use crate::common;
 use crate::test_server::TestServer;
+use playwright_rs::expect;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 
@@ -288,10 +289,52 @@ async fn test_page_route_web_socket() {
         .await
         .expect("WebSocket route handler did not fire");
 
+    // connect_to_server proxied the page's socket to the real server, so the
+    // server's echo reaches the page.
+    expect(page.locator("#log"))
+        .to_contain_text("received: Hello Server")
+        .await
+        .expect("echo from the real server reached the page");
+
     assert!(
         handler_called.load(Ordering::Acquire),
         "WebSocket route handler should have been called"
     );
+
+    browser.close().await.unwrap();
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn test_page_route_web_socket_mock_replies_without_a_server() {
+    let (_pw, browser, page) = common::setup().await;
+    let server = TestServer::start().await;
+    let ws_url = server.url().replace("http://", "ws://") + "/ws";
+
+    // No connect_to_server: the handler answers the page itself.
+    page.route_web_socket(&ws_url, move |route| {
+        Box::pin(async move {
+            let replier = route.clone();
+            route
+                .on_message(move |message| {
+                    let replier = replier.clone();
+                    Box::pin(async move { replier.send(&format!("mock: {message}")).await })
+                })
+                .await?;
+            Ok(())
+        })
+    })
+    .await
+    .unwrap();
+
+    page.goto(&format!("{}/websocket.html", server.url()), None)
+        .await
+        .unwrap();
+
+    expect(page.locator("#log"))
+        .to_contain_text("received: mock: Hello Server")
+        .await
+        .expect("the mocked reply reached the page");
 
     browser.close().await.unwrap();
     server.shutdown();
@@ -332,6 +375,13 @@ async fn test_context_route_web_socket() {
     tokio::time::timeout(std::time::Duration::from_secs(5), notify.notified())
         .await
         .expect("Context WebSocket route handler did not fire");
+
+    // connect_to_server proxied the page's socket to the real server, so the
+    // server's echo reaches the page.
+    expect(page.locator("#log"))
+        .to_contain_text("received: Hello Server")
+        .await
+        .expect("echo from the real server reached the page");
 
     assert!(
         handler_called.load(Ordering::Acquire),

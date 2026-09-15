@@ -38,6 +38,7 @@ use serde_json::Value;
 use std::any::Any;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 /// Represents an intercepted WebSocket connection.
@@ -58,6 +59,9 @@ pub struct WebSocketRoute {
     message_handlers: Arc<Mutex<Vec<WebSocketRouteMessageHandler>>>,
     /// Close handlers registered via on_close().
     close_handlers: Arc<Mutex<Vec<WebSocketRouteCloseHandler>>>,
+    /// Set by `connect_to_server`; decides whether page messages without a
+    /// handler are forwarded to the real server or dropped.
+    connected: Arc<AtomicBool>,
 }
 
 /// Type alias for boxed WebSocketRoute message handler future.
@@ -90,6 +94,7 @@ impl WebSocketRoute {
             url,
             message_handlers: Arc::new(Mutex::new(Vec::new())),
             close_handlers: Arc::new(Mutex::new(Vec::new())),
+            connected: Arc::new(AtomicBool::new(false)),
         })
     }
 
@@ -129,10 +134,38 @@ impl WebSocketRoute {
     ///
     /// See: <https://playwright.dev/docs/api/class-websocketroute#web-socket-route-connect-to-server>
     pub async fn connect_to_server(&self) -> Result<()> {
+        if self.connected.swap(true, Ordering::SeqCst) {
+            return Err(crate::error::Error::InvalidArgument(
+                "Already connected to the server".to_string(),
+            ));
+        }
         self.base
             .channel()
-            .send_no_result("connectToServer", serde_json::json!({}))
+            .send_no_result("connect", serde_json::json!({}))
             .await
+    }
+
+    /// Whether `connect_to_server` has been called on this route.
+    pub fn is_connected(&self) -> bool {
+        self.connected.load(Ordering::SeqCst)
+    }
+
+    /// Runs after every route handler, as upstream does: a handler that
+    /// neither connected to the server nor closed the socket leaves the
+    /// page's socket reporting itself open, so the page can send into a
+    /// mocked socket.
+    pub(crate) async fn after_handle(&self) {
+        if self.is_connected() {
+            return;
+        }
+        if let Err(e) = self
+            .base
+            .channel()
+            .send_no_result("ensureOpened", serde_json::json!({}))
+            .await
+        {
+            tracing::debug!("WebSocketRoute ensureOpened failed: {}", e);
+        }
     }
 
     /// Closes the WebSocket connection.
@@ -155,9 +188,12 @@ impl WebSocketRoute {
         if let Some(reason) = opts.reason {
             params.insert("reason".to_string(), serde_json::json!(reason));
         }
+        // A close initiated by the handler is reported to the page as a clean
+        // close, as upstream's `close()` does.
+        params.insert("wasClean".to_string(), serde_json::json!(true));
         self.base
             .channel()
-            .send_no_result("close", Value::Object(params))
+            .send_no_result("closePage", Value::Object(params))
             .await
     }
 
@@ -207,11 +243,23 @@ impl WebSocketRoute {
     }
 
     /// Dispatches an incoming server-side event to registered handlers.
+    ///
+    /// Without a handler the route behaves like a transparent proxy once
+    /// `connect_to_server` has been called: page messages go to the server,
+    /// server messages and closes go to the page, and a page close closes
+    /// the server side. That is upstream's client-side contract; the driver
+    /// itself forwards nothing.
     pub(crate) fn handle_event(&self, event: &str, params: &Value) {
         match event {
             "messageFromPage" => {
-                let payload = params["message"].as_str().unwrap_or("").to_string();
                 let handlers = self.message_handlers.lock().unwrap().clone();
+                if handlers.is_empty() {
+                    if self.is_connected() {
+                        self.forward("sendToServer", params);
+                    }
+                    return;
+                }
+                let payload = params["message"].as_str().unwrap_or("").to_string();
                 for handler in handlers {
                     let p = payload.clone();
                     tokio::spawn(async move {
@@ -219,16 +267,34 @@ impl WebSocketRoute {
                     });
                 }
             }
-            "close" => {
+            "messageFromServer" => self.forward("sendToPage", params),
+            "closePage" => {
                 let handlers = self.close_handlers.lock().unwrap().clone();
+                if handlers.is_empty() {
+                    self.forward("closeServer", params);
+                    return;
+                }
                 for handler in handlers {
                     tokio::spawn(async move {
                         let _ = handler().await;
                     });
                 }
             }
+            "closeServer" => self.forward("closePage", params),
             _ => {}
         }
+    }
+
+    /// Re-sends an event's payload as the mirror-image command; the params
+    /// carry the same fields the command takes.
+    fn forward(&self, method: &'static str, params: &Value) {
+        let channel = self.base.channel().clone();
+        let params = params.clone();
+        tokio::spawn(async move {
+            if let Err(e) = channel.send_no_result(method, params).await {
+                tracing::debug!("WebSocketRoute {} forward failed: {}", method, e);
+            }
+        });
     }
 }
 

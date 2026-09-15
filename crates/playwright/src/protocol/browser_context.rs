@@ -2884,12 +2884,14 @@ impl ChannelOwner for BrowserContext {
                                 let handler = entry.handler.clone();
                                 let route_clone = route.clone();
                                 tokio::spawn(async move {
+                                    let route_after = route_clone.clone();
                                     if let Err(e) = handler(route_clone).await {
                                         tracing::error!(
                                             "Error in context webSocketRoute handler: {}",
                                             e
                                         );
                                     }
+                                    route_after.after_handle().await;
                                 });
                                 break;
                             }
