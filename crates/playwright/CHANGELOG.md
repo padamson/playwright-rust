@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Chainable `times` and `no_wait_after` setters on `AddLocatorHandlerOptions`.** The struct is `#[non_exhaustive]`, so outside the crate it could only be built with `default()` and then mutated field by field; it now takes the same setter form as the other option types.
+- **Chainable setters where an option struct had none, or was missing some.** `AddLocatorHandlerOptions` gains `times` and `no_wait_after`; `HighlightOptions` gains `style`; `StartJSCoverageOptions` gains `reset_on_navigation` and `report_anonymous_scripts`; `StartCSSCoverageOptions` gains `reset_on_navigation`; `WebSocketRouteCloseOptions` gains `code` and `reason`; `RouteFromHarOptions` gains the `update_content` and `update_mode` it lacked. These structs are `#[non_exhaustive]`, so outside the crate those fields could only be set by building `default()` and mutating field by field. `AccessibilitySnapshotOptions` deliberately gets none: its two fields are ignored, which its docs now say.
 
 ### Fixed
 

@@ -467,4 +467,38 @@ impl RouteFromHarOptions {
         self.update = Some(update);
         self
     }
+
+    /// What to record for response bodies when updating: `"embed"`,
+    /// `"attach"` or `"omit"`.
+    pub fn update_content(mut self, update_content: impl Into<String>) -> Self {
+        self.update_content = Some(update_content.into());
+        self
+    }
+
+    /// How much of each request to record when updating: `"full"` or
+    /// `"minimal"`.
+    pub fn update_mode(mut self, update_mode: impl Into<String>) -> Self {
+        self.update_mode = Some(update_mode.into());
+        self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn route_from_har_setters_write_their_own_fields() {
+        let opts = RouteFromHarOptions::default()
+            .url("**/api/**")
+            .not_found("abort")
+            .update(true)
+            .update_content("attach")
+            .update_mode("full");
+        assert_eq!(opts.url.as_deref(), Some("**/api/**"));
+        assert_eq!(opts.not_found.as_deref(), Some("abort"));
+        assert_eq!(opts.update, Some(true));
+        assert_eq!(opts.update_content.as_deref(), Some("attach"));
+        assert_eq!(opts.update_mode.as_deref(), Some("full"));
+    }
 }

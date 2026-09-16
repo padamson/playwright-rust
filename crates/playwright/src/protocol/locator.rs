@@ -518,6 +518,14 @@ pub struct HighlightOptions {
     pub style: Option<String>,
 }
 
+impl HighlightOptions {
+    /// Extra inline CSS applied to the debug highlight overlay.
+    pub fn style(mut self, style: impl Into<String>) -> Self {
+        self.style = Some(style.into());
+        self
+    }
+}
+
 /// Options for [`Locator::filter()`].
 ///
 /// Narrows an existing locator according to the specified criteria.
@@ -2412,5 +2420,11 @@ mod tests {
         assert_eq!(AriaRole::Navigation.as_str(), "navigation");
         assert_eq!(AriaRole::Progressbar.as_str(), "progressbar");
         assert_eq!(AriaRole::Treeitem.as_str(), "treeitem");
+    }
+
+    #[test]
+    fn highlight_options_style_setter_writes_the_field() {
+        let opts = HighlightOptions::default().style("outline: 2px solid red");
+        assert_eq!(opts.style.as_deref(), Some("outline: 2px solid red"));
     }
 }

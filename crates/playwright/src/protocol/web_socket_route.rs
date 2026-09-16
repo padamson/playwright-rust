@@ -308,6 +308,20 @@ pub struct WebSocketRouteCloseOptions {
     pub reason: Option<String>,
 }
 
+impl WebSocketRouteCloseOptions {
+    /// WebSocket close code (e.g. 1000 for normal closure).
+    pub fn code(mut self, code: u16) -> Self {
+        self.code = Some(code);
+        self
+    }
+
+    /// Human-readable close reason.
+    pub fn reason(mut self, reason: impl Into<String>) -> Self {
+        self.reason = Some(reason.into());
+        self
+    }
+}
+
 impl ChannelOwner for WebSocketRoute {
     fn guid(&self) -> &str {
         self.base.guid()
@@ -360,5 +374,19 @@ impl ChannelOwner for WebSocketRoute {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn close_options_setters_write_their_own_fields() {
+        let opts = WebSocketRouteCloseOptions::default()
+            .code(1000)
+            .reason("done");
+        assert_eq!(opts.code, Some(1000));
+        assert_eq!(opts.reason.as_deref(), Some("done"));
     }
 }

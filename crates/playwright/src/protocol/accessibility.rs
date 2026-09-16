@@ -9,6 +9,14 @@ use serde_json::Value;
 /// Options for `Accessibility::snapshot`.
 ///
 /// See: <https://playwright.dev/docs/api/class-accessibility#accessibility-snapshot>
+///
+/// Both fields are accepted for parity with the other bindings and are
+/// currently ignored: the driver this crate bundles has no accessibility
+/// snapshot command, so [`Accessibility::snapshot`] is emulated with a
+/// whole-page ARIA snapshot. Use [`Locator::aria_snapshot`] to scope a
+/// snapshot to an element.
+///
+/// [`Locator::aria_snapshot`]: crate::protocol::Locator::aria_snapshot
 #[derive(Debug, Default, Clone)]
 #[non_exhaustive]
 pub struct AccessibilitySnapshotOptions {
