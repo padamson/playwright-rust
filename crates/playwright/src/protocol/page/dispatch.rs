@@ -585,16 +585,13 @@ impl ChannelOwner for Page {
                     let self_clone = self.clone();
                     tokio::spawn(
                         async move {
-                            if let Err(e) = self_clone
+                            self_clone
                                 .channel()
-                                .send::<_, serde_json::Value>(
+                                .notify(
                                     "screencastFrameAck",
                                     serde_json::json!({ "frameId": frame_id }),
                                 )
-                                .await
-                            {
-                                tracing::warn!("Failed to ack screencast frame: {}", e);
-                            }
+                                .await;
                         }
                         .in_current_span(),
                     );
@@ -777,20 +774,14 @@ impl ChannelOwner for Page {
                                 }
                             }
 
-                            if let Err(e) = self_clone
+                            self_clone
                                 .channel()
-                                .send_no_result(
+                                .notify(
                                     "resolveLocatorHandlerNoReply",
                                     serde_json::json!({ "uid": uid, "remove": remove }),
                                 )
-                                .await
-                            {
-                                tracing::warn!(
-                                    "resolveLocatorHandlerNoReply (uid={}) failed: {}",
-                                    uid,
-                                    e
-                                );
-                            }
+                                .instrument(tracing::debug_span!("locator_handler", uid))
+                                .await;
                         }
                         .in_current_span(),
                     );

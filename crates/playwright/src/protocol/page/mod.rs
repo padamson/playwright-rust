@@ -272,21 +272,6 @@ impl std::fmt::Debug for Page {
     }
 }
 
-/// Shared helper: store timeout locally and notify the Playwright server.
-/// Used by both Page and BrowserContext timeout setters.
-pub(crate) async fn set_timeout_and_notify(
-    channel: &crate::server::channel::Channel,
-    method: &str,
-    timeout: f64,
-) {
-    if let Err(e) = channel
-        .send_no_result(method, serde_json::json!({ "timeout": timeout }))
-        .await
-    {
-        tracing::warn!("{} send error: {}", method, e);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

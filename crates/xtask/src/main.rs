@@ -1139,21 +1139,23 @@ fn spec_commands(yml: &str) -> BTreeSet<String> {
     out
 }
 
-/// `(line, method)` for every `.send(`, `.send_no_result(` or
-/// `.send_no_params(` whose first argument is a string literal, including
-/// calls that rustfmt split across lines. Non-literal method arguments
-/// are not this gate's business.
+/// The channel calls that take a protocol method name as their first
+/// argument. Keep in step with `server::channel::Channel`.
+const SEND_CALLS: [&str; 4] = [".send_no_result", ".send_no_params", ".notify", ".send"];
+
+/// `(line, method)` for every channel call whose first argument is a
+/// string literal, including calls that rustfmt split across lines.
+/// Non-literal method arguments are not this gate's business.
 fn sent_methods(source: &str) -> Vec<(usize, String)> {
     let mut out = Vec::new();
     let bytes = source.as_bytes();
     let mut search = 0;
-    while let Some(found) = source[search..].find(".send") {
-        let at = search + found;
-        let rest = &source[at + ".send".len()..];
-        let rest = rest
-            .strip_prefix("_no_result")
-            .or_else(|| rest.strip_prefix("_no_params"))
-            .unwrap_or(rest);
+    while let Some((at, call)) = SEND_CALLS
+        .iter()
+        .filter_map(|call| source[search..].find(call).map(|i| (search + i, *call)))
+        .min_by_key(|(i, call)| (*i, std::cmp::Reverse(call.len())))
+    {
+        let rest = &source[at + call.len()..];
         // optional turbofish, then the opening paren
         let rest = if let Some(after) = rest.strip_prefix("::<") {
             match after.find('>') {
@@ -1552,6 +1554,7 @@ mod protocol_method_tests {
             let r: Resp = self.channel().send::<_, Resp>("evaluate", p).await?;
             self.channel().send(method, p).await?;
             self.sender.send(msg).await?;
+            self.channel().notify("screencastFrameAck", p).await;
         "#;
         let found = sent_methods(src);
         let got: Vec<(usize, &str)> = found.iter().map(|(l, m)| (*l, m.as_str())).collect();
@@ -1561,7 +1564,8 @@ mod protocol_method_tests {
                 (2, "goto"),
                 (4, "setTestIdAttributeName"),
                 (9, "pathAfterFinished"),
-                (10, "evaluate")
+                (10, "evaluate"),
+                (13, "screencastFrameAck")
             ]
         );
     }

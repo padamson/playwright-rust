@@ -286,7 +286,9 @@ impl WebSocketRoute {
     }
 
     /// Re-sends an event's payload as the mirror-image command; the params
-    /// carry the same fields the command takes.
+    /// carry the same fields the command takes. Not `Channel::notify`: a
+    /// forward that fails because the other side already closed is the
+    /// normal end of a socket, so it logs at `debug`, not `warn`.
     fn forward(&self, method: &'static str, params: &Value) {
         let channel = self.base.channel().clone();
         let params = params.clone();

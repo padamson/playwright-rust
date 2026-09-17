@@ -610,12 +610,6 @@ impl BrowserContext {
         for page in pages {
             page.set_default_timeout(timeout).await;
         }
-        crate::protocol::page::set_timeout_and_notify(
-            self.channel(),
-            "setDefaultTimeoutNoReply",
-            timeout,
-        )
-        .await;
     }
 
     /// Sets the default timeout for navigation operations in this browser context.
@@ -636,12 +630,6 @@ impl BrowserContext {
         for page in pages {
             page.set_default_navigation_timeout(timeout).await;
         }
-        crate::protocol::page::set_timeout_and_notify(
-            self.channel(),
-            "setDefaultNavigationTimeoutNoReply",
-            timeout,
-        )
-        .await;
     }
 
     /// Returns the context's current default action timeout in milliseconds.

@@ -151,6 +151,16 @@ impl Channel {
         Ok(())
     }
 
+    /// Sends a call whose failure the caller cannot act on, and logs it at
+    /// `warn` instead of returning it. For acknowledgments and the
+    /// `*NoReply` notifications, where the local state has already changed
+    /// and the server is only being told.
+    pub(crate) async fn notify<P: Serialize>(&self, method: &str, params: P) {
+        if let Err(e) = self.send_no_result(method, params).await {
+            tracing::warn!("{} failed: {}", method, e);
+        }
+    }
+
     pub async fn update_subscription(&self, event: &str, enabled: bool) -> Result<()> {
         self.send_no_result(
             "updateSubscription",

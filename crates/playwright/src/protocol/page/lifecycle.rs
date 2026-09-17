@@ -1,4 +1,4 @@
-use super::{GotoOptions, Page, set_timeout_and_notify};
+use super::{GotoOptions, Page};
 use crate::error::{Error, Result};
 use crate::protocol::Worker;
 use crate::protocol::browser_context::Viewport;
@@ -271,9 +271,9 @@ impl Page {
     /// The timeout applies to actions such as `click`, `fill`, `locator.wait_for`, etc.
     /// Pass `0` to disable timeouts.
     ///
-    /// This stores the value locally so that subsequent action calls use it when
-    /// no explicit timeout is provided, and also notifies the Playwright server
-    /// so it can apply the same default on its side.
+    /// The value is kept on the client and applied to every later call that
+    /// takes a timeout and is given none, which is how upstream's bindings
+    /// handle it too; nothing is sent to the driver.
     ///
     /// # Arguments
     ///
@@ -284,7 +284,6 @@ impl Page {
     pub async fn set_default_timeout(&self, timeout: f64) {
         self.default_timeout_ms
             .store(timeout.to_bits(), Ordering::Relaxed);
-        set_timeout_and_notify(self.channel(), "setDefaultTimeoutNoReply", timeout).await;
     }
 
     /// Sets the default timeout for navigation operations on this page.
@@ -301,12 +300,6 @@ impl Page {
     pub async fn set_default_navigation_timeout(&self, timeout: f64) {
         self.default_navigation_timeout_ms
             .store(timeout.to_bits(), Ordering::Relaxed);
-        set_timeout_and_notify(
-            self.channel(),
-            "setDefaultNavigationTimeoutNoReply",
-            timeout,
-        )
-        .await;
     }
 
     /// Returns the current default action timeout in milliseconds.
