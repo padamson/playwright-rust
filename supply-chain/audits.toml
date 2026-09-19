@@ -55,6 +55,12 @@ criteria = "safe-to-deploy"
 delta = "3.4.0 -> 3.4.1"
 notes = 'No unsafe, no build script, no new deps beyond ureq-proto 0.6.2. The TLS handshake now completes inside connect() (rustls complete_io; native-tls drops its LazyStream deferral) so timeout_connect covers it. Timeout budgets: each phase starts from the latest completed predecessor instead of chaining every earlier phase, and an already-expired budget fails in Connection::transmit_output/maybe_await_input instead of getting a per-call socket grace period. The pool refuses to reuse a connection with unconsumed buffered input (server sent more than Content-Length), which closes a response-desync path. read_json buffers bodies whose Content-Length is under a third of the read limit and parses from the slice, still bounded by that limit. The std::net::TcpListener use is a cfg(not(feature = "_test")) unit test on 127.0.0.1; disable_verification(true) appears only under cfg(test).'
 
+[[audits.ureq]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "3.4.1 -> 3.4.2"
+notes = "No unsafe, no build script, no new deps beyond ureq-proto 0.6.3. Request-level configs whose connection settings differ from the Agent's (IP family, TCP_NODELAY, buffer sizes, User-Agent since it goes into proxy CONNECT, or any TLS field) now bypass the pool both ways: Config::can_share_pool_with and TlsConfig::can_share_pool_with destructure exhaustively so a new field forces a decision, TLS client certs, specific root sets and rustls crypto providers compare by Arc identity so independently built credentials never share a connection, and a bypassing connection gets a Weak::new() pool handle so it is neither borrowed from nor returned to the pool. This closes a path where a per-request TLS override could be served by a connection established under the Agent's TLS settings. TCP connect moves on to the next resolved address on HostUnreachable, NetworkUnreachable and AddrNotAvailable (plus WSAEACCES on Windows) in addition to ConnectionRefused, and reports the last real error instead of a synthesized refusal; other io errors still stop. The disable_verification(true) and client-cert constructions in the diff are all under cfg(test) against a synthetic transport."
+
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
@@ -66,6 +72,12 @@ who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.1 -> 0.6.2"
 notes = "Hardening of received-header parsing; no unsafe, no new deps. Content-Length is read from every header line as a comma list: each element must be plain digits (a sign, inner whitespace, an empty element or u64 overflow is BadContentLengthHeader) and repeated values must agree, differing values are TooManyContentLengthHeaders, with no first- or last-wins. Outgoing requests and responses reject a signed or list-valued Content-Length before it reaches the wire. A status code below 100 from httparse is now HttpParseFail instead of an unwrap panic, or unwrap_or_default's bogus 200 on the partial-response path. The partial-response header scan stops on an empty name rather than an empty value, so a Location after an empty header is no longer dropped. Connection and Expect token matching is comma-list and ASCII case-insensitive per RFC 9110."
+
+[[audits.ureq-proto]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.6.2 -> 0.6.4"
+notes = "No unsafe, no build script, no new deps. Redirect Location joining gains the RFC 3986 network-path case: a Location starting with // takes the base's scheme and its own authority, failing with BadLocationHeader when the base has no scheme or the result does not parse, so a scheme-relative redirect no longer resolves as a root-relative path on the old host. ArrayVec gains Clone, PartialEq/Eq over the active prefix, Default, and a try_push that returns CapacityError instead of indexing past the array; push itself is unchanged and now documents its panic. CapacityError is exported doc(hidden). Everything else is unit tests."
 
 [[trusted.aho-corasick]]
 criteria = "safe-to-deploy"
