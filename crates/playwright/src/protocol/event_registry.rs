@@ -162,6 +162,15 @@ mod tests {
         Arc::new(|_| Box::pin(async { Err(crate::error::Error::ProtocolError("nope".into())) }))
     }
 
+    // Dispatch wakes waiters before it returns, so the value is already in the
+    // channel. Awaiting the receiver instead would hang forever when dispatch
+    // is broken, and a hang is not a failure: cargo-mutants reports it as a
+    // timeout rather than a caught mutant.
+    fn already_received<T>(mut rx: tokio::sync::oneshot::Receiver<T>) -> T {
+        rx.try_recv()
+            .expect("the waiter must be woken before dispatch returns")
+    }
+
     #[test]
     fn the_name_survives_construction() {
         // Load-bearing, not cosmetic: subscribe_if_idle passes this to
@@ -226,11 +235,11 @@ mod tests {
         reg.dispatch(20).await;
 
         assert_eq!(
-            first.await.unwrap(),
+            already_received(first),
             10,
             "the earliest waiter gets the earliest event"
         );
-        assert_eq!(second.await.unwrap(), 20);
+        assert_eq!(already_received(second), 20);
     }
 
     #[tokio::test]
@@ -239,7 +248,7 @@ mod tests {
         let rx = reg.wait();
 
         reg.dispatch(1).await;
-        assert_eq!(rx.await.unwrap(), 1);
+        assert_eq!(already_received(rx), 1);
         assert_eq!(reg.waiter_count(), 0);
 
         // Nothing left to notify, and dispatching again must not panic.
@@ -256,7 +265,7 @@ mod tests {
         reg.dispatch(42).await;
 
         assert_eq!(
-            live.await.unwrap(),
+            already_received(live),
             42,
             "a cancelled expect_* must not consume the event for the waiter behind it"
         );
@@ -278,7 +287,7 @@ mod tests {
 
         reg.dispatch(1).await;
         order.lock().unwrap().push("dispatch returned");
-        let _ = rx.await;
+        already_received(rx);
 
         assert_eq!(*order.lock().unwrap(), vec!["handler", "dispatch returned"]);
     }
@@ -291,9 +300,9 @@ mod tests {
 
         reg.dispatch_all(9).await;
 
-        assert_eq!(first.await.unwrap(), 9);
+        assert_eq!(already_received(first), 9);
         assert_eq!(
-            second.await.unwrap(),
+            already_received(second),
             9,
             "a one-time transition must wake every queued expect, not just the oldest"
         );
