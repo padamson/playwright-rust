@@ -56,7 +56,10 @@ consequences worth knowing before they cost you time:
   cargo command there — surfacing as unrelated-looking dirt in `git status`.
   A pre-commit hook (`scripts/check-external-lockfiles.sh`) now flags it on
   the commits that cause it, with the refresh command. Nothing breaks
-  meanwhile; no CI job uses `--locked` against these crates.
+  meanwhile; no CI job uses `--locked` against these crates. Dependabot's
+  cargo entry lists all four lockfile directories, so routine bumps reach
+  them, and `scripts/audit-lockfiles.sh` (CI and pre-commit) runs
+  `cargo audit` against each lockfile rather than the root alone.
 
   **`crates/playwright/fuzz` has the same shape** (its own excluded
   workspace, its own lockfile, a path dep on `playwright-rs`) and is covered

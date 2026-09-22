@@ -1,8 +1,21 @@
 version: 2
 updates:
-  # Maintain Cargo dependencies
+  # Maintain Cargo dependencies.
+  #
+  # Every directory with a tracked Cargo.lock is listed, not just the
+  # workspace root. crates/site, crates/site-e2e and crates/playwright/fuzz
+  # are excluded from the workspace and resolve their own lockfiles, which a
+  # root-only entry never opens: a manifest range moves, the root lock
+  # follows, and the excluded locks sit where they were until a local build
+  # silently re-resolves them. One entry with several directories keeps the
+  # cooldown, the serde workaround and the groups below applying to all of
+  # them, and a group still yields one PR across every directory.
   - package-ecosystem: "cargo"
-    directory: "/"
+    directories:
+      - "/"
+      - "/crates/site"
+      - "/crates/site-e2e"
+      - "/crates/playwright/fuzz"
     schedule:
       interval: "weekly"
       day: "saturday"

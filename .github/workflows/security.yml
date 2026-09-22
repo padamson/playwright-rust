@@ -34,7 +34,7 @@ jobs:
         tool: cargo-audit
 
     - name: Run cargo audit
-      run: cargo audit
+      run: scripts/audit-lockfiles.sh
 
   deny:
     name: License & Dependency Check
