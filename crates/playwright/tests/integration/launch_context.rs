@@ -1,4 +1,5 @@
 use crate::test_server::TestServer;
+use playwright_rs::Error;
 use playwright_rs::api::IgnoreDefaultArgs;
 use playwright_rs::protocol::{BrowserContextOptions, Playwright, Viewport};
 use tempfile::TempDir;
@@ -188,34 +189,47 @@ async fn test_launch_persistent_context_storage_persistence() {
 }
 
 #[tokio::test]
-async fn test_launch_persistent_context_error_handling() {
+async fn launch_persistent_context_creates_a_missing_user_data_dir() {
     crate::common::init_tracing();
-    tracing::debug!("[TEST] test_launch_persistent_context_error_handling: Starting");
+    let playwright = Playwright::launch().await.expect("launch Playwright");
+    let temp = tempfile::tempdir().expect("create temp dir");
+    let user_data_dir = temp.path().join("profiles").join("fresh");
 
-    let playwright = Playwright::launch()
+    let context = playwright
+        .chromium()
+        .launch_persistent_context(user_data_dir.to_str().expect("utf-8 temp path"))
         .await
-        .expect("Failed to launch Playwright");
+        .expect("launch_persistent_context with a not-yet-existing directory");
 
-    let chromium = playwright.chromium();
+    assert!(
+        user_data_dir.is_dir(),
+        "the driver should create the user data dir at {}",
+        user_data_dir.display()
+    );
+    context.close().await.expect("close context");
+}
 
-    // Test with invalid user data directory (non-existent parent)
-    let invalid_dir = "/nonexistent/path/to/userdata";
+#[tokio::test]
+async fn launch_persistent_context_fails_when_the_user_data_dir_cannot_be_created() {
+    crate::common::init_tracing();
+    let playwright = Playwright::launch().await.expect("launch Playwright");
+    let temp = tempfile::tempdir().expect("create temp dir");
+    // A regular file where a parent directory is needed fails the mkdir on
+    // every platform, unlike a root-level path that Windows can create.
+    let blocker = temp.path().join("blocker");
+    std::fs::write(&blocker, b"not a directory").expect("write blocker file");
+    let user_data_dir = blocker.join("profile");
 
-    let result = chromium.launch_persistent_context(invalid_dir).await;
+    let err = playwright
+        .chromium()
+        .launch_persistent_context(user_data_dir.to_str().expect("utf-8 temp path"))
+        .await
+        .expect_err("a user data dir under a regular file cannot be created");
 
-    // Should return an error (though Playwright might create the directory)
-    // This test mainly verifies the API accepts the parameter
-    match result {
-        Ok(context) => {
-            // If it succeeds (Playwright created the directory), clean up
-            let _ = context.close().await;
-        }
-        Err(_) => {
-            // Error is acceptable
-        }
-    }
-
-    tracing::debug!("[TEST] test_launch_persistent_context_error_handling: Complete");
+    assert!(
+        matches!(&err, Error::ProtocolError(_)),
+        "expected the driver's mkdir failure as ProtocolError, got {err:?}"
+    );
 }
 
 #[tokio::test]

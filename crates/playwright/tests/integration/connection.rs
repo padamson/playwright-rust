@@ -14,65 +14,6 @@ use tokio::process::Command;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
 
-/// Test that we can establish a connection with real server and spawn message loops
-///
-/// This test verifies:
-/// - Server launches successfully
-/// - Connection can be created with server stdio
-/// - Message loops can be spawned without errors
-/// - Everything runs together and shuts down cleanly
-#[tokio::test]
-async fn test_connection_lifecycle_with_real_server() {
-    crate::common::init_tracing();
-    // Launch Playwright server
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::warn!("Skipping test: Could not launch Playwright server: {}", e);
-            tracing::warn!("This is expected if Node.js or Playwright driver is not available");
-            return;
-        }
-    };
-
-    // Take stdio handles from the process
-    let stdin = server.process.stdin.take().expect("Failed to get stdin");
-    let stdout = server.process.stdout.take().expect("Failed to get stdout");
-
-    // Create transport and split into sender/receiver
-    let (transport, message_rx) =
-        playwright_rs::server::transport::PipeTransport::new(stdin, stdout);
-    let (sender, receiver) = transport.into_parts();
-
-    // Create connection
-    let connection = Arc::new(Connection::new(sender, receiver, message_rx));
-
-    // Spawn connection message loop
-    let conn = Arc::clone(&connection);
-    let connection_handle = tokio::spawn(async move {
-        conn.run().await;
-    });
-
-    // Give the server time to start
-    tokio::time::sleep(Duration::from_millis(100)).await;
-
-    // This test verifies the connection infrastructure works:
-    // - Server launches successfully
-    // - Connection and transport loops start without errors
-    // - Everything compiles and runs together
-    // - No panics or immediate crashes
-    //
-    // Full protocol initialization testing is done in:
-    // - tests/initialization_integration.rs (complete initialization flow)
-    // - tests/playwright_launch.rs (high-level Playwright::launch() API)
-
-    // Clean up
-    // Abort the connection loop (which will also stop reading from transport)
-    connection_handle.abort();
-
-    // Shutdown server
-    server.shutdown().await.ok();
-}
-
 /// Test that connection detects server crash when sending
 ///
 /// This test verifies that when the server crashes/exits:
@@ -85,13 +26,9 @@ async fn test_connection_lifecycle_with_real_server() {
 #[tokio::test]
 async fn test_connection_detects_server_crash_on_send() {
     crate::common::init_tracing();
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::warn!("Skipping test: Could not launch Playwright server: {}", e);
-            return;
-        }
-    };
+    let mut server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     let stdin = server.process.stdin.take().expect("Failed to get stdin");
     let stdout = server.process.stdout.take().expect("Failed to get stdout");
@@ -108,16 +45,9 @@ async fn test_connection_detects_server_crash_on_send() {
         conn.run().await;
     });
 
-    // Give connection time to start
-    tokio::time::sleep(Duration::from_millis(50)).await;
-
-    // Kill the server
+    // kill() waits for the child to exit, so the pipe is already dead here.
     server.kill().await.expect("Failed to kill server");
 
-    // Give it a moment for the pipe to close
-    tokio::time::sleep(Duration::from_millis(30)).await;
-
-    // Try to send a message - this will detect the broken pipe immediately
     let send_result = connection
         .send_message(
             "test@guid".to_string(),
@@ -126,23 +56,13 @@ async fn test_connection_detects_server_crash_on_send() {
         )
         .await;
 
-    // Should fail with broken pipe error
+    // Whether the length prefix, the payload, or the flush hits the dead
+    // pipe first is platform timing; the contract is a transport error.
+    let err = send_result.expect_err("a send to a dead server must fail");
     assert!(
-        send_result.is_err(),
-        "Expected error when sending to dead server"
+        matches!(err, playwright_rs::Error::TransportError(_)),
+        "expected TransportError from a send to a dead server, got {err:?}"
     );
-
-    // Verify it's a transport error (broken pipe)
-    match send_result.unwrap_err() {
-        playwright_rs::Error::TransportError(msg) => {
-            assert!(
-                msg.contains("Broken pipe") || msg.contains("Failed to write"),
-                "Expected broken pipe error, got: {}",
-                msg
-            );
-        }
-        e => panic!("Expected TransportError, got: {:?}", e),
-    }
 
     // Note: We don't wait for the connection loop to exit because the transport
     // read loop is blocked on read_exact() and won't exit until the OS fully
@@ -256,13 +176,7 @@ async fn test_error_response_from_server() {
 async fn test_connect_over_cdp_chromium_only() {
     crate::common::init_tracing();
 
-    let playwright = match Playwright::launch().await {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::warn!("Skipping test: Failed to launch Playwright: {}", e);
-            return;
-        }
-    };
+    let playwright = Playwright::launch().await.expect("launch Playwright");
 
     // Firefox should fail
     let result = playwright
@@ -359,6 +273,7 @@ setTimeout(() => {{
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
+        .kill_on_drop(true)
         .spawn()
         .ok()?;
 
@@ -385,34 +300,18 @@ setTimeout(() => {{
 async fn test_connect_over_cdp_real_chrome() {
     crate::common::init_tracing();
 
-    let package_path = match crate::common::playwright_package_dir() {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Skipping test: Playwright driver not found");
-            return;
-        }
-    };
+    let package_path =
+        crate::common::playwright_package_dir().expect("locate the Playwright driver package");
 
     // Start Chrome with CDP
-    let (mut chrome_process, cdp_endpoint) = match start_chrome_with_cdp(&package_path).await {
-        Some(result) => result,
-        None => {
-            tracing::warn!("Skipping test: Failed to start Chrome with CDP");
-            return;
-        }
-    };
+    let (mut chrome_process, cdp_endpoint) = start_chrome_with_cdp(&package_path)
+        .await
+        .expect("start Chrome with a CDP endpoint");
 
     tracing::info!("Chrome CDP endpoint: {}", cdp_endpoint);
 
     // Launch local Playwright
-    let playwright = match Playwright::launch().await {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::warn!("Skipping test: Failed to launch Playwright: {}", e);
-            let _ = chrome_process.kill().await;
-            return;
-        }
-    };
+    let playwright = Playwright::launch().await.expect("launch Playwright");
 
     // Exercise `artifacts_dir` (Playwright 1.61): verify the option is
     // plumbed through to the CDP connect RPC and accepted, following the
@@ -669,9 +568,6 @@ async fn test_browser_type_connect() {
         conn_clone.run().await;
     });
 
-    // Give the connection a moment to start
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
     eprintln!("Initializing local playwright");
     let playwright_obj = connection
         .initialize_playwright()
@@ -741,6 +637,7 @@ const {{ chromium }} = require('{}');
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
+        .kill_on_drop(true)
         .spawn()
         .ok()?;
 
@@ -774,36 +671,20 @@ const {{ chromium }} = require('{}');
 async fn test_connect_to_real_server() {
     crate::common::init_tracing();
 
-    let package_path = match crate::common::playwright_package_dir() {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Skipping test: Playwright driver not found");
-            return;
-        }
-    };
+    let package_path =
+        crate::common::playwright_package_dir().expect("locate the Playwright driver package");
 
     tracing::info!("Starting browser server");
 
     // Start the browser server
-    let (mut server_process, ws_endpoint) = match start_browser_server(&package_path).await {
-        Some(result) => result,
-        None => {
-            tracing::warn!("Skipping test: Failed to start browser server");
-            return;
-        }
-    };
+    let (mut server_process, ws_endpoint) = start_browser_server(&package_path)
+        .await
+        .expect("start a Playwright browser server");
 
     tracing::info!("Browser server ready at {}", ws_endpoint);
 
     // Launch local Playwright to get access to BrowserType
-    let playwright = match Playwright::launch().await {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::warn!("Skipping test: Failed to launch local Playwright: {}", e);
-            let _ = server_process.kill().await;
-            return;
-        }
-    };
+    let playwright = Playwright::launch().await.expect("launch Playwright");
 
     tracing::info!("Connecting to remote server at {}", ws_endpoint);
 
@@ -865,13 +746,7 @@ async fn test_connect_timeout_when_server_unavailable() {
     crate::common::init_tracing();
 
     // Launch local Playwright
-    let playwright = match Playwright::launch().await {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::warn!("Skipping test: Failed to launch Playwright: {}", e);
-            return;
-        }
-    };
+    let playwright = Playwright::launch().await.expect("launch Playwright");
 
     // Try to connect to a port with no server (should fail quickly)
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -926,31 +801,15 @@ async fn test_connect_with_custom_headers() {
     // For now, we just verify that passing headers doesn't break the connection.
     // A full test would require a server that validates headers.
 
-    let package_path = match crate::common::playwright_package_dir() {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Skipping test: Playwright driver not found");
-            return;
-        }
-    };
+    let package_path =
+        crate::common::playwright_package_dir().expect("locate the Playwright driver package");
 
     // Start browser server
-    let (mut server_process, ws_endpoint) = match start_browser_server(&package_path).await {
-        Some(result) => result,
-        None => {
-            tracing::warn!("Skipping test: Failed to start browser server");
-            return;
-        }
-    };
+    let (mut server_process, ws_endpoint) = start_browser_server(&package_path)
+        .await
+        .expect("start a Playwright browser server");
 
-    let playwright = match Playwright::launch().await {
-        Ok(p) => p,
-        Err(e) => {
-            let _ = server_process.kill().await;
-            tracing::warn!("Skipping test: {}", e);
-            return;
-        }
-    };
+    let playwright = Playwright::launch().await.expect("launch Playwright");
 
     // Connect with custom headers
     let mut headers = std::collections::HashMap::new();

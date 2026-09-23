@@ -67,6 +67,18 @@ fn get_process_memory_mb() -> Option<f64> {
     None
 }
 
+fn memory_mb() -> f64 {
+    get_process_memory_mb().expect("measure process memory")
+}
+
+/// Second-half mean minus first-half mean of the samples: a steady leak
+/// shows up as growth between the halves, a one-off warm-up does not.
+fn growth_rate(samples: &[f64]) -> f64 {
+    let mid = samples.len() / 2;
+    let mean = |s: &[f64]| s.iter().sum::<f64>() / s.len() as f64;
+    mean(&samples[mid..]) - mean(&samples[..mid])
+}
+
 // ============================================================================
 // Memory Leak Test: Browser Launch/Close Cycles
 // ============================================================================
@@ -78,7 +90,7 @@ async fn test_no_memory_leak_browser_cycles() {
     tracing::info!("\n=== Testing Memory Leaks: Browser Launch/Close Cycles ===\n");
 
     // Record initial memory
-    let initial_memory = get_process_memory_mb().unwrap_or(0.0);
+    let initial_memory = memory_mb();
     tracing::info!("Initial memory: {:.2} MB", initial_memory);
 
     // Run 20 browser launch/close cycles (enough to detect memory growth trends)
@@ -108,46 +120,26 @@ async fn test_no_memory_leak_browser_cycles() {
         let _ = page.close().await;
         browser.close().await.expect("Failed to close browser");
 
-        // Sample memory every 10 iterations
-        if i % 10 == 9
-            && let Some(mem) = get_process_memory_mb()
-        {
-            memory_samples.push(mem);
-            tracing::debug!("After {} cycles: {:.2} MB", i + 1, mem);
+        if i % 10 == 9 {
+            memory_samples.push(memory_mb());
         }
     }
 
     // Final memory reading
-    let final_memory = get_process_memory_mb().unwrap_or(0.0);
+    let final_memory = memory_mb();
     tracing::info!("\nFinal memory: {:.2} MB", final_memory);
 
     tracing::info!("Memory growth: {:.2} MB", final_memory - initial_memory);
 
-    // Analysis: Check for memory leak
-    if memory_samples.len() >= 2 {
-        let first_half_avg: f64 = memory_samples[..memory_samples.len() / 2]
-            .iter()
-            .sum::<f64>()
-            / (memory_samples.len() / 2) as f64;
-        let second_half_avg: f64 = memory_samples[memory_samples.len() / 2..]
-            .iter()
-            .sum::<f64>()
-            / (memory_samples.len() - memory_samples.len() / 2) as f64;
+    let memory_growth_rate = growth_rate(&memory_samples);
+    tracing::info!("Growth rate: {:.2} MB", memory_growth_rate);
 
-        let memory_growth_rate = second_half_avg - first_half_avg;
-
-        tracing::info!("First half average: {:.2} MB", first_half_avg);
-        tracing::info!("Second half average: {:.2} MB", second_half_avg);
-        tracing::info!("Growth rate: {:.2} MB", memory_growth_rate);
-
-        // ASSERTION: Memory should not grow significantly (allow 50MB growth for normal variance)
-        // This is the RED phase - we expect this might fail initially
-        assert!(
-            memory_growth_rate < 50.0,
-            "Memory leak detected: growth rate {:.2} MB exceeds threshold",
-            memory_growth_rate
-        );
-    }
+    // ASSERTION: Memory should not grow significantly (allow 50MB growth for normal variance)
+    assert!(
+        memory_growth_rate < 50.0,
+        "Memory leak detected: growth rate {:.2} MB exceeds threshold",
+        memory_growth_rate
+    );
 
     tracing::info!("\n✓ No memory leak detected in browser cycles");
 }
@@ -173,7 +165,7 @@ async fn test_no_memory_leak_page_cycles() {
         .expect("Failed to launch browser");
 
     // Record initial memory
-    let initial_memory = get_process_memory_mb().unwrap_or(0.0);
+    let initial_memory = memory_mb();
     tracing::info!("Initial memory: {:.2} MB", initial_memory);
 
     // Run 25 page creation/destruction cycles
@@ -190,45 +182,26 @@ async fn test_no_memory_leak_page_cycles() {
         // Close page
         page.close().await.expect("Failed to close page");
 
-        // Sample memory every 5 iterations
-        if i % 5 == 4
-            && let Some(mem) = get_process_memory_mb()
-        {
-            memory_samples.push(mem);
-            tracing::debug!("After {} page cycles: {:.2} MB", i + 1, mem);
+        if i % 5 == 4 {
+            memory_samples.push(memory_mb());
         }
     }
 
     // Final memory reading
-    let final_memory = get_process_memory_mb().unwrap_or(0.0);
+    let final_memory = memory_mb();
     tracing::info!("\nFinal memory: {:.2} MB", final_memory);
 
     tracing::info!("Memory growth: {:.2} MB", final_memory - initial_memory);
 
-    // Analysis: Check for memory leak
-    if memory_samples.len() >= 2 {
-        let first_half_avg: f64 = memory_samples[..memory_samples.len() / 2]
-            .iter()
-            .sum::<f64>()
-            / (memory_samples.len() / 2) as f64;
-        let second_half_avg: f64 = memory_samples[memory_samples.len() / 2..]
-            .iter()
-            .sum::<f64>()
-            / (memory_samples.len() - memory_samples.len() / 2) as f64;
+    let memory_growth_rate = growth_rate(&memory_samples);
+    tracing::info!("Growth rate: {:.2} MB", memory_growth_rate);
 
-        let memory_growth_rate = second_half_avg - first_half_avg;
-
-        tracing::info!("First half average: {:.2} MB", first_half_avg);
-        tracing::info!("Second half average: {:.2} MB", second_half_avg);
-        tracing::info!("Growth rate: {:.2} MB", memory_growth_rate);
-
-        // ASSERTION: Memory should not grow significantly (allow 30MB growth for pages)
-        assert!(
-            memory_growth_rate < 30.0,
-            "Memory leak detected: growth rate {:.2} MB exceeds threshold",
-            memory_growth_rate
-        );
-    }
+    // ASSERTION: Memory should not grow significantly (allow 30MB growth for pages)
+    assert!(
+        memory_growth_rate < 30.0,
+        "Memory leak detected: growth rate {:.2} MB exceeds threshold",
+        memory_growth_rate
+    );
 
     browser.close().await.expect("Failed to close browser");
 
@@ -256,7 +229,7 @@ async fn test_no_memory_leak_context_cycles() {
         .expect("Failed to launch browser");
 
     // Record initial memory
-    let initial_memory = get_process_memory_mb().unwrap_or(0.0);
+    let initial_memory = memory_mb();
     tracing::info!("Initial memory: {:.2} MB", initial_memory);
 
     // Run 25 context creation/destruction cycles
@@ -280,45 +253,26 @@ async fn test_no_memory_leak_context_cycles() {
         let _ = page.close().await;
         context.close().await.expect("Failed to close context");
 
-        // Sample memory every 5 iterations
-        if i % 5 == 4
-            && let Some(mem) = get_process_memory_mb()
-        {
-            memory_samples.push(mem);
-            tracing::debug!("After {} context cycles: {:.2} MB", i + 1, mem);
+        if i % 5 == 4 {
+            memory_samples.push(memory_mb());
         }
     }
 
     // Final memory reading
-    let final_memory = get_process_memory_mb().unwrap_or(0.0);
+    let final_memory = memory_mb();
     tracing::info!("\nFinal memory: {:.2} MB", final_memory);
 
     tracing::info!("Memory growth: {:.2} MB", final_memory - initial_memory);
 
-    // Analysis: Check for memory leak
-    if memory_samples.len() >= 2 {
-        let first_half_avg: f64 = memory_samples[..memory_samples.len() / 2]
-            .iter()
-            .sum::<f64>()
-            / (memory_samples.len() / 2) as f64;
-        let second_half_avg: f64 = memory_samples[memory_samples.len() / 2..]
-            .iter()
-            .sum::<f64>()
-            / (memory_samples.len() - memory_samples.len() / 2) as f64;
+    let memory_growth_rate = growth_rate(&memory_samples);
+    tracing::info!("Growth rate: {:.2} MB", memory_growth_rate);
 
-        let memory_growth_rate = second_half_avg - first_half_avg;
-
-        tracing::info!("First half average: {:.2} MB", first_half_avg);
-        tracing::info!("Second half average: {:.2} MB", second_half_avg);
-        tracing::info!("Growth rate: {:.2} MB", memory_growth_rate);
-
-        // ASSERTION: Memory should not grow significantly (allow 30MB growth for contexts)
-        assert!(
-            memory_growth_rate < 30.0,
-            "Memory leak detected: growth rate {:.2} MB exceeds threshold",
-            memory_growth_rate
-        );
-    }
+    // ASSERTION: Memory should not grow significantly (allow 30MB growth for contexts)
+    assert!(
+        memory_growth_rate < 30.0,
+        "Memory leak detected: growth rate {:.2} MB exceeds threshold",
+        memory_growth_rate
+    );
 
     browser.close().await.expect("Failed to close browser");
 
@@ -470,7 +424,7 @@ async fn test_file_descriptor_cleanup() {
     tracing::info!("\n=== Testing File Descriptor Cleanup ===\n");
 
     // Record initial FD count
-    let initial_fds = count_open_file_descriptors().unwrap_or(0);
+    let initial_fds = count_open_file_descriptors().expect("count open file descriptors");
     tracing::info!("Initial file descriptors: {}", initial_fds);
 
     // Launch and close Playwright multiple times
@@ -501,7 +455,7 @@ async fn test_file_descriptor_cleanup() {
         tokio::time::sleep(Duration::from_millis(50)).await;
 
         if i % 2 == 1 {
-            let current_fds = count_open_file_descriptors().unwrap_or(0);
+            let current_fds = count_open_file_descriptors().expect("count open file descriptors");
             tracing::debug!("After cycle {}: {} FDs", i + 1, current_fds);
         }
     }
@@ -510,7 +464,7 @@ async fn test_file_descriptor_cleanup() {
     tokio::time::sleep(Duration::from_millis(200)).await;
 
     // Check final FD count
-    let final_fds = count_open_file_descriptors().unwrap_or(0);
+    let final_fds = count_open_file_descriptors().expect("count open file descriptors");
     tracing::info!("\nFinal file descriptors: {}", final_fds);
     tracing::info!("FD growth: {}", final_fds as i32 - initial_fds as i32);
 
@@ -537,7 +491,7 @@ async fn test_process_cleanup() {
     tracing::info!("\n=== Testing Process Cleanup ===\n");
 
     // Record initial child process count
-    let initial_children = count_child_processes().unwrap_or(0);
+    let initial_children = count_child_processes().expect("count child processes");
     tracing::info!("Initial child processes: {}", initial_children);
 
     // Launch and close Playwright
@@ -545,33 +499,19 @@ async fn test_process_cleanup() {
         .await
         .expect("Failed to launch Playwright");
 
-    // During operation, should have child processes
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    let during_children = count_child_processes().unwrap_or(0);
-    tracing::info!("Child processes during operation: {}", during_children);
+    assert!(
+        count_child_processes().expect("count child processes") > initial_children,
+        "launching Playwright should spawn a driver child process"
+    );
 
     // Close (Playwright has Drop implementation that should clean up)
     drop(playwright);
 
-    // Wait for cleanup using polling
-    let start = std::time::Instant::now();
-    let timeout = Duration::from_secs(2);
-    let mut final_children = 0;
-    let mut success = false;
-
-    while start.elapsed() < timeout {
-        final_children = count_child_processes().unwrap_or(0);
-        if final_children <= initial_children {
-            success = true;
-            break;
-        }
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
-
-    tracing::info!("Final child processes: {}", final_children);
-
-    // ASSERTION: Child processes should return to initial count
+    let success = crate::common::poll_until(Duration::from_secs(2), || {
+        count_child_processes().expect("count child processes") <= initial_children
+    })
+    .await;
+    let final_children = count_child_processes().expect("count child processes");
     assert!(
         success,
         "Process leak detected: {} child processes not cleaned up (expected {})",
@@ -580,6 +520,38 @@ async fn test_process_cleanup() {
     );
 
     tracing::info!("\n✓ Child processes cleaned up properly");
+}
+
+// Drop without close() is what a test that panics or times out does. The
+// Drop impls have to tear the browser and the driver down on their own.
+#[tokio::test]
+#[cfg(unix)]
+async fn dropping_a_live_browser_and_playwright_reaps_the_driver() {
+    crate::common::init_tracing();
+    let initial_children = count_child_processes().expect("count child processes");
+
+    let playwright = Playwright::launch().await.expect("launch Playwright");
+    let browser = playwright
+        .chromium()
+        .launch()
+        .await
+        .expect("launch browser");
+    let page = browser.new_page().await.expect("new page");
+
+    drop(page);
+    drop(browser);
+    drop(playwright);
+
+    let reaped = crate::common::poll_until(Duration::from_secs(5), || {
+        count_child_processes().expect("count child processes") <= initial_children
+    })
+    .await;
+    let final_children = count_child_processes().expect("count child processes");
+    assert!(
+        reaped,
+        "{} child process(es) survived dropping Playwright without close()",
+        final_children.saturating_sub(initial_children)
+    );
 }
 
 // ============================================================================
@@ -600,14 +572,18 @@ async fn test_no_zombie_processes() {
 
         let count = output_str
             .lines()
-            .filter(|line| line.contains("<defunct>") || line.contains("Z"))
+            .filter(|line| {
+                line.split_whitespace()
+                    .nth(7)
+                    .is_some_and(|stat| stat.starts_with('Z'))
+            })
             .count();
 
         Some(count)
     }
 
     // Record initial zombie count
-    let initial_zombies = count_zombies().unwrap_or(0);
+    let initial_zombies = count_zombies().expect("count zombie processes");
     tracing::info!("Initial zombies: {}", initial_zombies);
 
     // Allow small tolerance for system noise (other processes may create/clean zombies)
@@ -635,28 +611,12 @@ async fn test_no_zombie_processes() {
         let _ = page.close().await;
         browser.close().await.expect("Failed to close browser");
 
-        // Poll for zombies to be cleaned up
-        // Instead of fixed sleep, we poll until count is within tolerance or timeout
-        let start = std::time::Instant::now();
-        let timeout = Duration::from_secs(2);
-        let mut current_zombies = 0;
-        let mut success = false;
         let max_allowed = initial_zombies + ZOMBIE_TOLERANCE;
-
-        while start.elapsed() < timeout {
-            current_zombies = count_zombies().unwrap_or(0);
-            if current_zombies <= max_allowed {
-                success = true;
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(50)).await;
-        }
-
-        if i % 2 == 1 {
-            tracing::debug!("After cycle {}: {} zombies", i + 1, current_zombies);
-        }
-
-        // ASSERTION: Zombie count should stay within tolerance of initial
+        let success = crate::common::poll_until(Duration::from_secs(2), || {
+            count_zombies().expect("count zombie processes") <= max_allowed
+        })
+        .await;
+        let current_zombies = count_zombies().expect("count zombie processes");
         assert!(
             success,
             "Zombie process leak detected after cycle {}: {} zombies (max allowed: {})",
@@ -1134,85 +1094,6 @@ async fn test_error_quality_error_sequence() {
 }
 
 // ============================================================================
-// Error Quality Audit: Review All Error Types
-// ============================================================================
-
-#[tokio::test]
-async fn test_error_quality_audit() {
-    crate::common::init_tracing();
-    tracing::info!("\n=== Error Quality Audit ===\n");
-
-    // This test documents expected error message improvements
-    // for each error variant in error.rs
-
-    tracing::info!("Error Quality Expectations:");
-    tracing::info!("1. ServerNotFound:");
-    tracing::info!("   Current: 'Playwright server not found at expected location'");
-    tracing::info!(
-        "   Improved: 'Playwright server not found. Install with: npm install playwright'"
-    );
-    tracing::info!("2. LaunchFailed:");
-    tracing::info!("   Current: 'Failed to launch Playwright server: <details>'");
-    tracing::info!(
-        "   Improved: 'Failed to launch Playwright server: <details>. Check that Node.js is installed.'"
-    );
-    tracing::info!("3. ElementNotFound:");
-    tracing::info!("   Current: 'Element not found: <selector>'");
-    tracing::info!(
-        "   Improved: 'Element not found: <selector>. Waited for <timeout>. Retry with longer timeout or check selector.'"
-    );
-    tracing::info!("4. Timeout:");
-    tracing::info!("   Current: 'Timeout: <message>'");
-    tracing::info!(
-        "   Improved: 'Timeout after <duration>: <operation> (<url>). Increase timeout or check network.'"
-    );
-    tracing::info!("5. TargetClosed:");
-    tracing::info!("   Current: 'Target closed: <message>'");
-    tracing::info!("   Improved: 'Target closed: Cannot perform <operation> on closed <target>.'");
-
-    tracing::info!("\n✓ Error quality audit documented");
-}
-
-// ============================================================================
-// Graceful Shutdown Test: Drop Cleanup
-// ============================================================================
-
-#[tokio::test]
-async fn test_graceful_shutdown_on_drop() {
-    crate::common::init_tracing();
-    tracing::info!("\n=== Testing Graceful Shutdown: Drop Cleanup ===\n");
-
-    // Test that Playwright cleans up properly when dropped
-    {
-        let playwright = Playwright::launch()
-            .await
-            .expect("Failed to launch Playwright");
-
-        let browser = playwright
-            .chromium()
-            .launch()
-            .await
-            .expect("Failed to launch browser");
-
-        let page = browser.new_page().await.expect("Failed to create page");
-        let _ = page.goto("about:blank", None).await;
-
-        tracing::info!("Playwright, browser, and page created");
-        tracing::info!("Dropping all objects...");
-
-        // Explicit drops to test cleanup order
-        drop(page);
-        drop(browser);
-        drop(playwright);
-    }
-
-    // Wait for cleanup to complete
-    tokio::time::sleep(Duration::from_secs(1)).await;
-
-    tracing::info!("\n✓ Graceful shutdown on drop completed");
-}
-
-// ============================================================================
 // Graceful Shutdown Test: Explicit Close
 // ============================================================================
 
@@ -1607,42 +1488,4 @@ async fn test_error_recovery_stress() {
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
-}
-
-// ============================================================================
-// Signal Handling Test: Ctrl+C Simulation (Unix only)
-// ============================================================================
-
-#[tokio::test]
-#[cfg(unix)]
-async fn test_signal_handling_cleanup() {
-    crate::common::init_tracing();
-    tracing::info!("\n=== Testing Signal Handling: Cleanup ===\n");
-
-    // Note: We can't actually send SIGINT/SIGTERM to our own process in tests,
-    // but we can verify that Drop handlers work correctly, which is what
-    // signal handlers would ultimately call.
-
-    let playwright = Playwright::launch()
-        .await
-        .expect("Failed to launch Playwright");
-
-    let browser = playwright
-        .chromium()
-        .launch()
-        .await
-        .expect("Failed to launch browser");
-
-    // Simulate abrupt shutdown by just dropping
-    // Drop implementations should handle cleanup
-    drop(browser);
-    drop(playwright);
-
-    // Wait for cleanup
-    tokio::time::sleep(Duration::from_millis(500)).await;
-
-    tracing::info!("✓ Cleanup handlers work for signal simulation");
-
-    // Note: Real signal handling would require tokio::signal
-    // and is better tested in integration/manual testing
 }

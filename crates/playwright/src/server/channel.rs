@@ -177,18 +177,3 @@ impl Channel {
         &self.guid
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_channel_creation() {
-        // Channel creation will be tested in integration tests
-        // with a real Connection
-    }
-
-    #[test]
-    fn test_channel_send() {
-        // Channel send will be tested in integration tests
-        // with a real server connection
-    }
-}

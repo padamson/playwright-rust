@@ -10,14 +10,9 @@ use tokio::time::{Duration, timeout};
 async fn test_transport_with_real_server() {
     crate::common::init_tracing();
     // Launch Playwright server
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::warn!("Skipping test: Could not launch Playwright server: {}", e);
-            tracing::warn!("This is expected if Node.js or Playwright driver is not available");
-            return;
-        }
-    };
+    let mut server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     // Get stdin and stdout from the server process
     let stdin = server.process.stdin.take().expect("Failed to get stdin");
@@ -78,13 +73,9 @@ async fn test_transport_with_real_server() {
 async fn test_send_message_to_real_server() {
     crate::common::init_tracing();
     // Launch Playwright server
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::warn!("Skipping test: Could not launch Playwright server: {}", e);
-            return;
-        }
-    };
+    let mut server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     let stdin = server.process.stdin.take().expect("Failed to get stdin");
     let stdout = server.process.stdout.take().expect("Failed to get stdout");
@@ -114,13 +105,9 @@ async fn test_send_message_to_real_server() {
 #[tokio::test]
 async fn test_transport_handles_server_crash() {
     crate::common::init_tracing();
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::warn!("Skipping test: Could not launch Playwright server: {}", e);
-            return;
-        }
-    };
+    let mut server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     let stdin = server.process.stdin.take().expect("Failed to get stdin");
     let stdout = server.process.stdout.take().expect("Failed to get stdout");

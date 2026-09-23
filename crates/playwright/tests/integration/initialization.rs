@@ -3,7 +3,6 @@ use playwright_rs::server::{
     transport::PipeTransport,
 };
 use std::sync::Arc;
-use std::time::Duration;
 
 /// Test the complete initialization flow with a real Playwright server
 #[tokio::test]
@@ -11,14 +10,9 @@ async fn test_initialize_playwright_with_real_server() {
     crate::common::init_tracing();
 
     // 1. Launch server
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::warn!("Skipping test - server launch failed: {}", e);
-            tracing::warn!("This is expected if Node.js or Playwright is not installed");
-            return;
-        }
-    };
+    let mut server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     // 2. Create transport from stdio pipes
     let stdin = server.process.stdin.take().expect("Failed to take stdin");
@@ -36,22 +30,11 @@ async fn test_initialize_playwright_with_real_server() {
         conn_for_loop.run().await;
     });
 
-    // Give the connection a moment to start
-    tokio::time::sleep(Duration::from_millis(100)).await;
-
-    tracing::info!("About to call initialize_playwright...");
-
     // 5. Initialize Playwright
-    let playwright_obj = match connection.initialize_playwright().await {
-        Ok(obj) => {
-            tracing::info!("initialize_playwright succeeded!");
-            obj
-        }
-        Err(e) => {
-            tracing::error!("initialize_playwright failed: {:?}", e);
-            panic!("Failed to initialize Playwright: {:?}", e);
-        }
-    };
+    let playwright_obj = connection
+        .initialize_playwright()
+        .await
+        .expect("initialize Playwright");
 
     // 6. Downcast to Playwright type
     use playwright_rs::protocol::Playwright;
@@ -83,62 +66,4 @@ async fn test_initialize_playwright_with_real_server() {
     tracing::info!("✓ Connection created successfully");
     tracing::info!("✓ Playwright initialized successfully");
     tracing::info!("✓ All three browser types accessible");
-}
-
-/// Test timeout handling for initialize.
-///
-/// The timeout mechanism lives in the connection layer (`Connection::send_message`
-/// uses `tokio::select!` with a timeout). Broken-pipe detection is covered
-/// directly by `test_connection_detects_server_crash_on_send` in connection.rs.
-#[tokio::test]
-async fn test_initialize_timeout() {
-    tracing::info!("✓ Timeout mechanism verified via connection layer tests");
-}
-
-/// Test error handling when server crashes during init
-///
-/// Verifies proper error propagation when the server process
-/// terminates unexpectedly during initialization.
-///
-/// NOTE: This functionality is already tested in connection.rs
-/// via test_connection_detects_server_crash_on_send which verifies
-/// that broken pipes are detected within ~150ms.
-#[tokio::test]
-async fn test_initialize_with_server_crash() {
-    // This scenario is covered by the connection layer test:
-    // test_connection_detects_server_crash_on_send in connection.rs
-    //
-    // That test verifies:
-    // 1. Server launches successfully
-    // 2. Server is killed
-    // 3. Next send_message call fails with appropriate error
-    // 4. Error is detected quickly (no long hangs)
-    //
-    // For initialization specifically, if the server crashes during
-    // initialize_playwright(), the send_message call will fail with
-    // a transport error, which propagates up correctly.
-
-    tracing::info!("✓ Server crash handling verified via connection layer tests");
-}
-
-/// Test that initialize creates all expected objects
-///
-/// Verifies that after initialization:
-/// - Playwright object exists in registry
-/// - All three BrowserType objects exist
-/// - Objects have correct GUIDs and types
-///
-/// NOTE: This functionality is already verified in the main
-/// test_initialize_playwright_with_real_server test above.
-#[tokio::test]
-async fn test_initialize_creates_all_objects() {
-    // This is already thoroughly tested by test_initialize_playwright_with_real_server
-    // which verifies:
-    // 1. Playwright object is created and has correct GUID
-    // 2. All three BrowserType objects (chromium, firefox, webkit) exist
-    // 3. Each BrowserType has correct name and executable_path
-    //
-    // No need to duplicate that logic here.
-
-    tracing::info!("✓ Object creation verified via test_initialize_playwright_with_real_server");
 }

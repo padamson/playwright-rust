@@ -18,16 +18,9 @@ use std::time::Duration;
 async fn test_server_shutdown_no_hang() {
     crate::common::init_tracing();
     // Launch server
-    let server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(_) => {
-            tracing::warn!("Skipping test - Playwright not available");
-            return;
-        }
-    };
-
-    // Give server time to start
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    let server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     // Shutdown with timeout - should complete without hanging
     let shutdown_result = tokio::time::timeout(Duration::from_secs(5), server.shutdown()).await;
@@ -50,15 +43,9 @@ async fn test_repeated_server_lifecycle() {
     for i in 0..3 {
         tracing::debug!("Iteration {}", i + 1);
 
-        let server = match PlaywrightServer::launch().await {
-            Ok(s) => s,
-            Err(_) => {
-                tracing::warn!("Skipping test - Playwright not available");
-                return;
-            }
-        };
-
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        let server = PlaywrightServer::launch()
+            .await
+            .expect("launch the Playwright server");
 
         let shutdown_result = tokio::time::timeout(Duration::from_secs(5), server.shutdown()).await;
 
@@ -77,15 +64,9 @@ async fn test_repeated_server_lifecycle() {
 #[tokio::test]
 async fn test_server_kill_no_hang() {
     crate::common::init_tracing();
-    let server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(_) => {
-            tracing::warn!("Skipping test - Playwright not available");
-            return;
-        }
-    };
-
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    let server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     // Kill with timeout
     let kill_result = tokio::time::timeout(Duration::from_secs(5), server.kill()).await;
@@ -105,13 +86,9 @@ async fn test_server_kill_no_hang() {
 #[tokio::test]
 async fn test_connection_cleanup_no_hang() {
     crate::common::init_tracing();
-    let mut server = match PlaywrightServer::launch().await {
-        Ok(s) => s,
-        Err(_) => {
-            tracing::warn!("Skipping test - Playwright not available");
-            return;
-        }
-    };
+    let mut server = PlaywrightServer::launch()
+        .await
+        .expect("launch the Playwright server");
 
     // Take stdio handles
     let stdin = server.process.stdin.take().expect("stdin should exist");

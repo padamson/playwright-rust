@@ -1062,9 +1062,16 @@ mod tests {
 
     #[test]
     fn without_overrides_resolution_still_reaches_the_bundled_driver() {
-        let Some(bundled) = try_bundled_driver().unwrap() else {
-            return; // compile-only builds skip the driver download
+        // Read the build record the way a failed launch does: `Missing` is
+        // the arm where the build assembled a driver somewhere. A skipped or
+        // failed download leaves nothing to reach, and the build-record tests
+        // cover those.
+        let BundledDriver::Missing(_) = BundledDriver::for_this_build() else {
+            return;
         };
+        let bundled = try_bundled_driver()
+            .unwrap()
+            .expect("the build recorded a driver dir, so the bundled driver must resolve");
 
         assert_eq!(resolve_driver(|_| None).unwrap(), bundled);
     }
