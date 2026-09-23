@@ -34,9 +34,8 @@ async fn test_page_screenshot_saves_to_file() {
         .await
         .expect("Failed to navigate");
 
-    // Create temp file path
-    let temp_dir = std::env::temp_dir();
-    let screenshot_path = temp_dir.join("playwright_test_screenshot.png");
+    let temp_dir = tempfile::tempdir().expect("create temp dir");
+    let screenshot_path = temp_dir.path().join("playwright_test_screenshot.png");
 
     // Test: Screenshot saves to file
     let bytes = page
@@ -55,7 +54,6 @@ async fn test_page_screenshot_saves_to_file() {
     assert_eq!(bytes, file_bytes);
 
     // Cleanup
-    std::fs::remove_file(screenshot_path).expect("Failed to remove screenshot file");
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }

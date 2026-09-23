@@ -78,9 +78,6 @@ fn test_browser_not_installed_error_is_helpful() {
     // Should mention the specific browser
     assert!(error_message.contains("chromium"));
 
-    // Should explain what to do
-    assert!(error_message.contains("install") || error_message.contains("Install"));
-
     // Should lead with the version-safe crate-native path, and keep the
     // one-off npx command with a warning against hardcoding it
     assert!(error_message.contains("install_browsers"));

@@ -1851,8 +1851,12 @@ async fn test_locator_aria_snapshot() {
         .await
         .expect("aria_snapshot should succeed");
 
-    assert!(snapshot.contains("heading") || snapshot.contains("Hello"));
-    assert!(snapshot.contains("button") || snapshot.contains("Click me"));
+    for line in ["- heading \"Hello\" [level=1]", "- button \"Click me\""] {
+        assert!(
+            snapshot.lines().any(|l| l.trim_end() == line),
+            "aria snapshot is missing the line {line:?}; got:\n{snapshot}"
+        );
+    }
 
     browser.close().await.expect("Failed to close browser");
 }

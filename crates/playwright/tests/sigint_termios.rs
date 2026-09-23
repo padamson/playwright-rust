@@ -11,8 +11,8 @@
 //        - snapshots `stty -a` afterwards.
 //   3. Diff the two snapshots — any change is the bug.
 //
-// Skipped on Windows (no expect/pty pair model) and when `expect` isn't
-// installed on the runner. The CI workflow installs expect on Linux/macOS.
+// Skipped on Windows (no expect/pty pair model). The CI workflow installs
+// expect on Linux; macOS ships it.
 
 #![cfg(unix)]
 
@@ -45,10 +45,12 @@ fn expect_available() -> bool {
 #[test]
 #[ignore = "heavy pty/expect + chromium harness; runs in CI's --run-ignored lane"]
 fn sigint_does_not_break_terminal_termios() {
-    if !expect_available() {
-        eprintln!("[sigint_termios] `expect` not on PATH — skipping");
-        return;
-    }
+    // macOS ships expect and the Linux job installs it; a missing binary is
+    // a broken lane, not a reason to report a pass.
+    assert!(
+        expect_available(),
+        "`expect` is not on PATH; install it (apt-get install expect) to run this lane"
+    );
 
     let root = workspace_root();
 
@@ -73,8 +75,32 @@ fn sigint_does_not_break_terminal_termios() {
     let bin = root.join("target/debug/examples/sigint_repro");
     assert!(bin.is_file(), "expected built example at {}", bin.display());
 
-    let scratch = std::env::temp_dir().join("playwright-rs-sigint-termios");
-    let _ = std::fs::remove_dir_all(&scratch);
+    // Kept when the test panics on any path (harness exit, missing snapshot,
+    // termios diff), since the captures are what a reader of the failure
+    // needs; a passing run leaves nothing behind.
+    struct KeepOnPanic(Option<tempfile::TempDir>);
+    impl Drop for KeepOnPanic {
+        fn drop(&mut self) {
+            if std::thread::panicking()
+                && let Some(dir) = self.0.take()
+            {
+                let kept = dir.keep();
+                eprintln!("[sigint_termios] raw captures kept in {}", kept.display());
+            }
+        }
+    }
+    let scratch_dir = KeepOnPanic(Some(
+        tempfile::Builder::new()
+            .prefix("playwright-rs-sigint-termios")
+            .tempdir()
+            .expect("create scratch dir"),
+    ));
+    let scratch = scratch_dir
+        .0
+        .as_ref()
+        .expect("scratch dir is set until drop")
+        .path()
+        .to_path_buf();
 
     let harness =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/sigint_termios_harness.exp");
@@ -119,9 +145,7 @@ fn sigint_does_not_break_terminal_termios() {
 
     assert!(
         bugs.is_empty(),
-        "termios changed across Ctrl-C in scenarios: {bugs:?} (issue #59)\n\
-         (raw captures in {})",
-        scratch.display()
+        "termios changed across Ctrl-C in scenarios: {bugs:?} (issue #59)"
     );
 }
 

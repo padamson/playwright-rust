@@ -117,9 +117,8 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
         .expect("a completed download has a path");
     assert_eq!(std::fs::read_to_string(&downloaded)?, "TestContent");
 
-    let temp_dir = std::env::temp_dir();
-    let save_path = temp_dir.join("playwright_test_download.txt");
-    let _ = std::fs::remove_file(&save_path);
+    let temp_dir = tempfile::tempdir()?;
+    let save_path = temp_dir.path().join("playwright_test_download.txt");
 
     download.save_as(&save_path).await?;
 
@@ -127,8 +126,6 @@ async fn test_download_methods() -> Result<(), Box<dyn std::error::Error>> {
         save_path.exists(),
         "Downloaded file should exist at save path"
     );
-
-    std::fs::remove_file(&save_path)?;
 
     browser.close().await?;
     Ok(())

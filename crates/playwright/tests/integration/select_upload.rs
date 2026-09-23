@@ -100,10 +100,10 @@ async fn test_file_upload_methods() {
         .await
         .expect("Failed to navigate");
 
-    let temp_dir = std::env::temp_dir();
+    let temp_dir = tempfile::tempdir().expect("create temp dir");
 
     // Test 1: Upload single file
-    let test_file = temp_dir.join("playwright_test_file.txt");
+    let test_file = temp_dir.path().join("playwright_test_file.txt");
     let mut file = fs::File::create(&test_file).expect("Failed to create test file");
     file.write_all(b"Test file content")
         .expect("Failed to write to test file");
@@ -120,8 +120,8 @@ async fn test_file_upload_methods() {
     assert!(text.unwrap().contains("playwright_test_file.txt"));
 
     // Test 2: Upload multiple files
-    let test_file1 = temp_dir.join("playwright_test_file1.txt");
-    let test_file2 = temp_dir.join("playwright_test_file2.txt");
+    let test_file1 = temp_dir.path().join("playwright_test_file1.txt");
+    let test_file2 = temp_dir.path().join("playwright_test_file2.txt");
 
     let mut file1 = fs::File::create(&test_file1).expect("Failed to create test file 1");
     file1
@@ -153,9 +153,6 @@ async fn test_file_upload_methods() {
         .expect("Failed to clear input files");
 
     // Cleanup
-    fs::remove_file(test_file).expect("Failed to remove test file");
-    fs::remove_file(test_file1).expect("Failed to remove test file 1");
-    fs::remove_file(test_file2).expect("Failed to remove test file 2");
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
 }
@@ -231,8 +228,8 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to navigate");
 
-    let temp_dir = std::env::temp_dir();
-    let test_file = temp_dir.join("playwright_webkit_test.txt");
+    let temp_dir = tempfile::tempdir().expect("create temp dir");
+    let test_file = temp_dir.path().join("playwright_webkit_test.txt");
     let mut file = fs::File::create(&test_file).expect("Failed to create test file");
     file.write_all(b"WebKit test content")
         .expect("Failed to write to test file");
@@ -244,7 +241,6 @@ async fn test_cross_browser_smoke() {
         .expect("Failed to set input file");
 
     // Cleanup
-    fs::remove_file(test_file).expect("Failed to remove test file");
     webkit.close().await.expect("Failed to close WebKit");
     server.shutdown();
 }

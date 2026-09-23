@@ -476,8 +476,8 @@ async fn test_context_with_storage_state_from_file() {
         .expect("Failed to launch browser");
 
     // Create a temporary storage state file
-    let temp_dir = std::env::temp_dir();
-    let storage_file = temp_dir.join("test_storage_state.json");
+    let temp_dir = tempfile::tempdir().expect("create temp dir");
+    let storage_file = temp_dir.path().join("test_storage_state.json");
 
     // Write storage state to file
     let storage_json = r#"{
@@ -539,7 +539,6 @@ async fn test_context_with_storage_state_from_file() {
     browser.close().await.expect("Failed to close browser");
 
     // Cleanup
-    std::fs::remove_file(&storage_file).ok();
 }
 
 #[tokio::test]

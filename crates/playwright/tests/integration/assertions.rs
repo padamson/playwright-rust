@@ -1,5 +1,61 @@
 use crate::test_server::TestServer;
-use playwright_rs::{expect, protocol::Playwright};
+use playwright_rs::{
+    expect,
+    protocol::{Page, Playwright},
+};
+
+/// A page with `script` run against the test server's root document.
+async fn root_page_with(page: &Page, server: &TestServer, script: &str) {
+    page.goto(&format!("{}/", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+    page.evaluate_expression(script)
+        .await
+        .expect("Failed to inject script");
+}
+
+/// A script that appends the element `create` evaluates to under `id`, then
+/// runs `setup` on it as `el`: inline for a delay of 0, otherwise after
+/// `delay_ms` so an auto-retrying assertion has something to wait for.
+fn fixture(create: &str, id: &str, later: Option<(&str, u32)>) -> String {
+    let later = match later {
+        None => String::new(),
+        Some((setup, 0)) => setup.to_string(),
+        Some((setup, ms)) => format!(
+            "setTimeout(() => {{ const el = document.getElementById('{id}'); {setup} }}, {ms});"
+        ),
+    };
+    format!("const el = {create}; el.id = '{id}'; document.body.appendChild(el); {later}")
+}
+
+/// A disabled button, enabled after `enable_after_ms` when given.
+fn button(id: &str, enable_after_ms: Option<u32>) -> String {
+    fixture(
+        "Object.assign(document.createElement('button'), { disabled: true })",
+        id,
+        enable_after_ms.map(|ms| ("el.disabled = false;", ms)),
+    )
+}
+
+/// A checkbox in state `checked`, checked after `check_after_ms` when given.
+fn checkbox(id: &str, checked: bool, check_after_ms: Option<u32>) -> String {
+    fixture(
+        &format!(
+            "Object.assign(document.createElement('input'), {{ type: 'checkbox', checked: {checked} }})"
+        ),
+        id,
+        check_after_ms.map(|ms| ("el.checked = true;", ms)),
+    )
+}
+
+/// A text input, focused after `focus_after_ms` when given.
+fn text_input(id: &str, focus_after_ms: Option<u32>) -> String {
+    fixture(
+        "Object.assign(document.createElement('input'), { type: 'text' })",
+        id,
+        focus_after_ms.map(|ms| ("el.focus();", ms)),
+    )
+}
 
 // ============================================================================
 // to_be_visible() Assertions
@@ -242,73 +298,63 @@ async fn test_cross_browser_smoke() {
 // ============================================================================
 
 #[tokio::test]
-async fn test_button_state_assertions() {
+async fn to_be_enabled_holds_for_an_enabled_button() {
     let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
-
-    // Test 1: to_be_enabled() with existing button
     page.goto(&format!("{}/button.html", server.url()), None)
         .await
         .expect("Failed to navigate");
 
-    let button = page.locator("#btn");
-    expect(button)
+    expect(page.locator("#btn"))
         .to_be_enabled()
         .await
         .expect("Button should be enabled");
 
-    // Test 2: to_be_disabled() with disabled button
-    page.goto(&format!("{}/", server.url()), None)
-        .await
-        .expect("Failed to navigate");
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
 
-    page.evaluate_expression(
-        r#"
-        const btn = document.createElement('button');
-        btn.id = 'disabled-btn';
-        btn.textContent = 'Disabled';
-        btn.disabled = true;
-        document.body.appendChild(btn);
-        "#,
-    )
-    .await
-    .expect("Failed to inject script");
+#[tokio::test]
+async fn to_be_disabled_holds_for_a_disabled_button() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(&page, &server, &button("disabled-btn", None)).await;
 
-    let disabled_button = page.locator("#disabled-btn");
-    expect(disabled_button.clone())
+    expect(page.locator("#disabled-btn"))
         .to_be_disabled()
         .await
         .expect("Button should be disabled");
 
-    // Test 3: to_be_enabled() with auto-retry (delayed enable)
-    page.evaluate_expression(
-        r#"
-        const btn = document.createElement('button');
-        btn.id = 'delayed-btn';
-        btn.textContent = 'Will be enabled';
-        btn.disabled = true;
-        document.body.appendChild(btn);
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
 
-        setTimeout(() => {
-            btn.disabled = false;
-        }, 100);
-        "#,
-    )
-    .await
-    .expect("Failed to inject script");
+#[tokio::test]
+async fn not_to_be_enabled_holds_for_a_disabled_button() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(&page, &server, &button("disabled-btn", None)).await;
 
-    let delayed_button = page.locator("#delayed-btn");
-    expect(delayed_button)
-        .to_be_enabled()
-        .await
-        .expect("Button should eventually be enabled");
-
-    // Test 4: .not().to_be_enabled() - negation test
-    expect(disabled_button.clone())
+    expect(page.locator("#disabled-btn"))
         .not()
         .to_be_enabled()
         .await
         .expect("Disabled button should NOT be enabled");
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn to_be_enabled_retries_until_the_button_is_enabled() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(&page, &server, &button("delayed-btn", Some(100))).await;
+
+    expect(page.locator("#delayed-btn"))
+        .to_be_enabled()
+        .await
+        .expect("Button should eventually be enabled");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();
@@ -319,71 +365,47 @@ async fn test_button_state_assertions() {
 // ============================================================================
 
 #[tokio::test]
-async fn test_checkbox_state_assertions() {
+async fn to_be_checked_holds_for_a_checked_checkbox() {
     let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
+    root_page_with(&page, &server, &checkbox("checked-box", true, None)).await;
 
-    page.goto(&format!("{}/", server.url()), None)
-        .await
-        .expect("Failed to navigate");
-
-    // Test 1: to_be_checked() with checked checkbox
-    page.evaluate_expression(
-        r#"
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = 'checked-box';
-        checkbox.checked = true;
-        document.body.appendChild(checkbox);
-        "#,
-    )
-    .await
-    .expect("Failed to inject script");
-
-    let checked_checkbox = page.locator("#checked-box");
-    expect(checked_checkbox)
+    expect(page.locator("#checked-box"))
         .to_be_checked()
         .await
         .expect("Checkbox should be checked");
 
-    // Test 2: to_be_unchecked() with unchecked checkbox
-    page.evaluate_expression(
-        r#"
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = 'unchecked-box';
-        checkbox.checked = false;
-        document.body.appendChild(checkbox);
-        "#,
-    )
-    .await
-    .expect("Failed to inject script");
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
 
-    let unchecked_checkbox = page.locator("#unchecked-box");
-    expect(unchecked_checkbox)
+#[tokio::test]
+async fn to_be_unchecked_holds_for_an_unchecked_checkbox() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(&page, &server, &checkbox("unchecked-box", false, None)).await;
+
+    expect(page.locator("#unchecked-box"))
         .to_be_unchecked()
         .await
         .expect("Checkbox should be unchecked");
 
-    // Test 3: to_be_checked() with auto-retry (delayed check)
-    page.evaluate_expression(
-        r#"
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = 'delayed-checkbox';
-        checkbox.checked = false;
-        document.body.appendChild(checkbox);
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
 
-        setTimeout(() => {
-            checkbox.checked = true;
-        }, 100);
-        "#,
+#[tokio::test]
+async fn to_be_checked_retries_until_the_checkbox_is_checked() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(
+        &page,
+        &server,
+        &checkbox("delayed-checkbox", false, Some(100)),
     )
-    .await
-    .expect("Failed to inject script");
+    .await;
 
-    let delayed_checkbox = page.locator("#delayed-checkbox");
-    expect(delayed_checkbox)
+    expect(page.locator("#delayed-checkbox"))
         .to_be_checked()
         .await
         .expect("Checkbox should eventually be checked");
@@ -452,70 +474,48 @@ async fn test_editable_assertions() {
 // ============================================================================
 
 #[tokio::test]
-async fn test_focus_assertions() {
+async fn to_be_focused_holds_for_the_focused_input() {
     let (_pw, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
+    root_page_with(&page, &server, &text_input("focused-input", Some(0))).await;
 
-    page.goto(&format!("{}/", server.url()), None)
-        .await
-        .expect("Failed to navigate");
-
-    // Test 1: to_be_focused() with focused input
-    page.evaluate_expression(
-        r#"
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'focused-input';
-        document.body.appendChild(input);
-        input.focus();
-        "#,
-    )
-    .await
-    .expect("Failed to inject script");
-
-    let focused_input = page.locator("#focused-input");
-    expect(focused_input)
+    expect(page.locator("#focused-input"))
         .to_be_focused()
         .await
         .expect("Input should be focused");
 
-    // Test 2: .not().to_be_focused() with unfocused input
-    page.evaluate_expression(
-        r#"
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'unfocused-input';
-        document.body.appendChild(input);
-        "#,
-    )
-    .await
-    .expect("Failed to inject script");
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
 
-    let unfocused_input = page.locator("#unfocused-input");
-    expect(unfocused_input)
+#[tokio::test]
+async fn not_to_be_focused_holds_for_an_unfocused_input() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(&page, &server, &text_input("unfocused-input", None)).await;
+
+    expect(page.locator("#unfocused-input"))
         .not()
         .to_be_focused()
         .await
         .expect("Input should NOT be focused");
 
-    // Test 3: to_be_focused() with auto-retry (delayed focus)
-    page.evaluate_expression(
-        r#"
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'delayed-focused-input';
-        document.body.appendChild(input);
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
 
-        setTimeout(() => {
-            input.focus();
-        }, 100);
-        "#,
+#[tokio::test]
+async fn to_be_focused_retries_until_the_input_is_focused() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(
+        &page,
+        &server,
+        &text_input("delayed-focused-input", Some(100)),
     )
-    .await
-    .expect("Failed to inject script");
+    .await;
 
-    let delayed_focused_input = page.locator("#delayed-focused-input");
-    expect(delayed_focused_input)
+    expect(page.locator("#delayed-focused-input"))
         .to_be_focused()
         .await
         .expect("Input should eventually be focused");

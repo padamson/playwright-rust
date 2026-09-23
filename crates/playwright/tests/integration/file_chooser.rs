@@ -106,9 +106,8 @@ async fn test_filechooser_set_files() {
         .await
         .expect("Failed to set content");
 
-    // Create a temp file to upload
-    let temp_dir = std::env::temp_dir();
-    let test_file = temp_dir.join("playwright_fc_test.txt");
+    let temp_dir = tempfile::tempdir().expect("create temp dir");
+    let test_file = temp_dir.path().join("playwright_fc_test.txt");
     {
         let mut f = fs::File::create(&test_file).expect("Failed to create temp file");
         f.write_all(b"hello from filechooser test")
@@ -139,8 +138,6 @@ async fn test_filechooser_set_files() {
         .await
         .expect("DOM #file-info did not update with uploaded filename");
 
-    // Cleanup
-    let _ = fs::remove_file(&test_file);
     browser.close().await.expect("Failed to close browser");
 }
 
@@ -219,9 +216,8 @@ async fn test_expect_file_chooser_set_files() {
         .await
         .expect("Failed to set content");
 
-    // Create temp file
-    let temp_dir = std::env::temp_dir();
-    let test_file = temp_dir.join("playwright_expect_fc_test.txt");
+    let temp_dir = tempfile::tempdir().expect("create temp dir");
+    let test_file = temp_dir.path().join("playwright_expect_fc_test.txt");
     {
         let mut f = fs::File::create(&test_file).expect("Failed to create temp file");
         f.write_all(b"expect_file_chooser test content")
@@ -255,8 +251,6 @@ async fn test_expect_file_chooser_set_files() {
         .await
         .expect("DOM #file-info did not update with uploaded filename");
 
-    // Cleanup
-    let _ = fs::remove_file(&test_file);
     browser.close().await.expect("Failed to close browser");
 }
 

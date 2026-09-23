@@ -335,7 +335,8 @@ async fn test_page_route_from_har() {
     let (playwright, browser, page) = crate::common::setup().await;
     let server = TestServer::start().await;
 
-    let har_path = std::env::temp_dir().join("test_route_from_har.har");
+    let har_dir = tempfile::tempdir().expect("create temp dir");
+    let har_path = har_dir.path().join("test_route_from_har.har");
     let har_url = format!("{}/api/har-test", server.url());
     let har_content = serde_json::json!({
         "log": {
@@ -401,7 +402,6 @@ async fn test_page_route_from_har() {
         .expect("Failed to evaluate fetch");
     assert_eq!(fetch_result, "200:true");
 
-    std::fs::remove_file(&har_path).ok();
     browser.close().await.expect("Failed to close browser");
     let _ = playwright;
     server.shutdown();
@@ -412,7 +412,8 @@ async fn test_context_route_from_har() {
     let server = TestServer::start().await;
     let (playwright, browser, context) = crate::common::setup_context().await;
 
-    let har_path = std::env::temp_dir().join("test_context_route_from_har.har");
+    let har_dir = tempfile::tempdir().expect("create temp dir");
+    let har_path = har_dir.path().join("test_context_route_from_har.har");
     let har_url = format!("{}/api/har-test", server.url());
     let har_content = serde_json::json!({
         "log": {
@@ -481,7 +482,6 @@ async fn test_context_route_from_har() {
         .expect("Failed to evaluate fetch");
     assert_eq!(fetch_result, "200:true");
 
-    std::fs::remove_file(&har_path).ok();
     context.close().await.expect("Failed to close context");
     browser.close().await.expect("Failed to close browser");
     let _ = playwright;

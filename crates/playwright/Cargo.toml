@@ -92,7 +92,9 @@ tower-http = { version = "0.7", features = ["fs"] }
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 criterion = { version = "0.8", features = ["html_reports", "async_tokio"] }
 urlencoding = "2"
-tempfile = "3"
+# 3.15 for TempDir::keep, which the sigint harness uses to hold onto its
+# captures only when the test fails.
+tempfile = "3.15"
 # Also a dev-dependency, so the tracing test reads its trace back whether
 # or not the `trace` feature is on.
 playwright-rs-trace = { version = "0.2", path = "../playwright-rs-trace" }
