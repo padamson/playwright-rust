@@ -435,10 +435,11 @@ pub use playwright_rs_macros::locator;
 #[cfg(feature = "trace")]
 pub use playwright_rs_trace as trace;
 
-// The pure driver-acquisition mapping (platform → Node triple, download URLs)
-// that build.rs and the cli binary `include!`. std-only, so compiling it into
-// the lib's test suite costs nothing at runtime and keeps its unit tests in
-// the always-run `cargo nextest` pass.
-#[cfg(test)]
+// The pure driver-acquisition mapping (platform → Node triple, download URLs,
+// the cached-driver layout) that build.rs and the cli binary `include!`.
+// std-only and compiled into the lib as well: the runtime's user-cache lookup
+// shares `cached_driver_dir` with the build script so the two cannot name
+// different paths, and its unit tests ride the always-run `cargo nextest`
+// pass. The rest is dead code here, which the file allows.
 #[path = "build_support/driver_urls.rs"]
 mod driver_urls;

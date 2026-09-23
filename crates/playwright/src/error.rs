@@ -9,12 +9,16 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
-    /// Playwright server binary was not found
+    /// No Playwright driver could be located
     ///
-    /// The Playwright Node.js driver could not be located.
-    /// To resolve this, install Playwright using: `npm install playwright`
-    /// Or ensure the PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD environment variable is not set.
-    #[error("Playwright server not found. Install with: npm install playwright")]
+    /// The crate's build script normally assembles the driver at compile
+    /// time. The message says what became of that driver for this build:
+    /// the download failed (cargo hides a dependency's build warnings, so
+    /// this is the first place a consumer hears of it), it was skipped with
+    /// `PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD`, or it has since gone missing. It
+    /// then names the ways to provide one: rebuilding, `playwright-rs
+    /// install`, or `PLAYWRIGHT_DRIVER_PATH`.
+    #[error("{}", crate::server::driver::BundledDriver::for_this_build().server_not_found_message())]
     ServerNotFound,
 
     /// Failed to launch the Playwright server process

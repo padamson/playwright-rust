@@ -13,8 +13,12 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 /// The driver directory is located in this order:
 /// 1. `PLAYWRIGHT_DRIVER_PATH` (user override: a directory holding `node`, or
 ///    `node.exe` on Windows, and `package/cli.js`)
-/// 2. Bundled driver assembled by build.rs (the default; matches official bindings)
-/// 3. User cache populated by `playwright-rs install` (stable across cargo install)
+/// 2. The driver build.rs assembled, at the path it recorded (by default the
+///    user cache; `PLAYWRIGHT_DRIVER_CACHE_DIR` moves it)
+/// 3. The user cache at this crate's version and platform, which
+///    `playwright-rs install` also populates; the same path as 2 for a
+///    default build, and the one that still resolves when 2's record is
+///    stale, as after `cargo install` or a build that skipped the download
 /// 4. Global npm installation (`npm root -g`) (development fallback)
 /// 5. Local npm installation (`npm root`) (development fallback)
 ///
@@ -100,12 +104,106 @@ fn resolve_driver_dir(env: &impl Fn(&str) -> Option<String>) -> Result<Option<(P
     Ok(None)
 }
 
-/// The two files every driver directory holds: the runtime binary (`node`,
-/// or `node.exe` for Windows) and the CLI script at `package/cli.js`.
-fn driver_layout(driver_dir: &Path, windows: bool) -> (PathBuf, PathBuf) {
-    let node_exe = driver_dir.join(if windows { "node.exe" } else { "node" });
+/// What became of the driver the build script was meant to bundle, read
+/// back from its `PLAYWRIGHT_DRIVER_DIR_SOURCE` and `PLAYWRIGHT_DRIVER_DIR`
+/// markers when a launch finds no driver at all.
+///
+/// A consumer never sees the build script's warning: cargo shows
+/// `cargo:warning` lines for workspace members only, so a dependency whose
+/// driver download failed compiles clean and the first launch is the first
+/// sign. [`Error::ServerNotFound`] renders this, which makes it the one
+/// channel that reaches them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum BundledDriver {
+    /// The download or assembly failed at build time.
+    DownloadFailed,
+    /// `PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD` (or docs.rs) turned the download off.
+    Skipped,
+    /// Assembled into this directory, which no longer holds a driver.
+    Missing(String),
+    /// The build left no usable record.
+    NoRecord,
+}
+
+impl BundledDriver {
+    /// The record for the build that compiled this crate.
+    pub(crate) fn for_this_build() -> Self {
+        Self::from_build_record(
+            option_env!("PLAYWRIGHT_DRIVER_DIR_SOURCE"),
+            option_env!("PLAYWRIGHT_DRIVER_DIR"),
+        )
+    }
+
+    /// `source` is `user_cache`, `cache_dir`, or `out_dir` when the build
+    /// script assembled a driver, `skipped` when asked not to, `failed` when
+    /// the download broke;
+    /// `dir` is where it put the driver, and is empty in the last two cases.
+    /// An exported-but-empty directory counts as unset, as it does everywhere
+    /// else in this module.
+    pub(crate) fn from_build_record(source: Option<&str>, dir: Option<&str>) -> Self {
+        match (source, dir.filter(|dir| !dir.is_empty())) {
+            (Some("failed"), _) => Self::DownloadFailed,
+            (Some("skipped"), _) => Self::Skipped,
+            (Some(_), Some(dir)) => Self::Missing(dir.to_string()),
+            _ => Self::NoRecord,
+        }
+    }
+
+    /// The build-time part of the message: what happened and what undoes it.
+    fn explain(&self) -> String {
+        match self {
+            Self::DownloadFailed => "The build script could not assemble the driver when \
+                playwright-rs was compiled: the download from registry.npmjs.org or nodejs.org \
+                failed, and cargo does not show a dependency's build warnings, so nothing reported \
+                it until now. Rebuild with network access: `cargo clean -p playwright-rs` forces \
+                the build script to run again, and it assembles into the user cache, so the \
+                download happens once per machine."
+                .to_string(),
+            Self::Skipped => "The driver download was skipped when playwright-rs was compiled \
+                (PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD was set, or this is a docs.rs build). That knob \
+                is for compile-only jobs; unset it for a build that launches a browser."
+                .to_string(),
+            Self::Missing(dir) => format!(
+                "The driver assembled at build time is no longer at {dir}: the cache was cleaned, \
+                or the directory was moved. Rebuild (the build script reassembles it), or use one \
+                of the options below."
+            ),
+            Self::NoRecord => {
+                "This build of playwright-rs has no record of a bundled driver.".to_string()
+            }
+        }
+    }
+
+    /// The full text of [`Error::ServerNotFound`] for this record.
+    pub(crate) fn server_not_found_message(&self) -> String {
+        format!(
+            "Playwright server not found: no Playwright driver could be located.\n\n\
+            {}\n\n\
+            Other ways to provide one:\n  \
+            playwright-rs install   (cargo install playwright-rs --features cli) puts a driver in \
+            the user cache, which every build finds\n  \
+            PLAYWRIGHT_DRIVER_PATH=<dir>   a directory holding node (node.exe on Windows) and \
+            package/cli.js",
+            self.explain()
+        )
+    }
+}
+
+/// The two files every driver directory holds for a Playwright platform:
+/// the runtime binary (`node`, or `node.exe` on Windows targets) and the CLI
+/// script at `package/cli.js`.
+fn driver_layout(driver_dir: &Path, platform: &str) -> (PathBuf, PathBuf) {
+    let node_exe = driver_dir.join(crate::driver_urls::node_exe_name(platform));
     let cli_js = driver_dir.join("package").join("cli.js");
     (node_exe, cli_js)
+}
+
+/// The Playwright platform identifier of the machine this code runs on,
+/// for driver directories a user points at rather than ones a build
+/// recorded. Unsupported hosts fall back to `linux`, as build.rs does.
+fn host_platform() -> &'static str {
+    crate::driver_urls::playwright_platform(std::env::consts::OS, std::env::consts::ARCH)
+        .unwrap_or("linux")
 }
 
 /// `PLAYWRIGHT_NODE_EXE`: a bare command name (no directory component) is
@@ -141,7 +239,8 @@ fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
     else {
         return Ok(None);
     };
-    let (node_exe, cli_js) = driver_layout(Path::new(driver_dir), cfg!(windows));
+    let platform = option_env!("PLAYWRIGHT_DRIVER_PLATFORM").unwrap_or(host_platform());
+    let (node_exe, cli_js) = driver_layout(Path::new(driver_dir), platform);
     if node_exe.exists() && cli_js.exists() {
         Ok(Some((node_exe, cli_js)))
     } else {
@@ -149,11 +248,13 @@ fn try_bundled_driver() -> Result<Option<(PathBuf, PathBuf)>> {
     }
 }
 
-/// Try to find driver in the user cache populated by `playwright-rs install`.
+/// Try to find the driver in the user cache.
 ///
-/// The CLI bootstrap drops the driver at
-/// `<cache>/playwright-rust/<version>/playwright-<version>-<platform>/`,
-/// which survives `cargo install` cleanup of the build's `target/`. The
+/// `build.rs` assembles there by default and `playwright-rs install` writes
+/// the same path, `<cache>/playwright-rust/<version>/playwright-<version>-
+/// <platform>/`, so this finds a driver from either. It matters on its own
+/// when the bundled lookup fails: a build that skipped or relocated the
+/// download, or a `cargo install`ed binary whose recorded path is gone. The
 /// version and platform come from compile-time env vars emitted by build.rs.
 fn try_user_cache_driver() -> Result<Option<(PathBuf, PathBuf)>> {
     let Some(cache_dir) = dirs::cache_dir() else {
@@ -176,11 +277,8 @@ fn try_user_cache_driver_in(
     version: &str,
     platform: &str,
 ) -> Result<Option<(PathBuf, PathBuf)>> {
-    let driver_dir = cache_root
-        .join("playwright-rust")
-        .join(version)
-        .join(format!("playwright-{}-{}", version, platform));
-    let (node_exe, cli_js) = driver_layout(&driver_dir, platform.starts_with("win32"));
+    let driver_dir = crate::driver_urls::cached_driver_dir(cache_root, version, platform);
+    let (node_exe, cli_js) = driver_layout(&driver_dir, platform);
 
     if node_exe.exists() && cli_js.exists() {
         Ok(Some((node_exe, cli_js)))
@@ -201,7 +299,7 @@ fn try_driver_path_env(
         return Ok(None);
     };
     let driver_dir = PathBuf::from(driver_path);
-    let (node_exe, cli_js) = driver_layout(&driver_dir, cfg!(windows));
+    let (node_exe, cli_js) = driver_layout(&driver_dir, host_platform());
 
     if node_exe.exists() && cli_js.exists() {
         Ok(Some((node_exe, cli_js)))
@@ -209,7 +307,7 @@ fn try_driver_path_env(
         Err(Error::DriverMisconfigured(format!(
             "PLAYWRIGHT_DRIVER_PATH is set to {} but it does not contain both {} and package/cli.js",
             driver_dir.display(),
-            if cfg!(windows) { "node.exe" } else { "node" }
+            crate::driver_urls::node_exe_name(host_platform())
         )))
     }
 }
@@ -730,11 +828,31 @@ mod tests {
     }
 
     #[test]
+    fn a_user_cache_build_records_the_path_the_runtime_lookup_probes() {
+        // Meaningful only where build.rs assembled into the user cache, which
+        // is the default; a relocated, skipped, or homeless build records a
+        // different source. This is the agreement the whole scheme rests on:
+        // the bundled lookup and the user-cache lookup must name one path.
+        if env!("PLAYWRIGHT_DRIVER_DIR_SOURCE") != "user_cache" {
+            return;
+        }
+        let expected = crate::driver_urls::cached_driver_dir(
+            &dirs::cache_dir().unwrap(),
+            env!("PLAYWRIGHT_DRIVER_VERSION"),
+            env!("PLAYWRIGHT_DRIVER_PLATFORM"),
+        );
+        assert_eq!(Path::new(env!("PLAYWRIGHT_DRIVER_DIR")), expected);
+        assert_eq!(
+            try_user_cache_driver().unwrap(),
+            try_bundled_driver().unwrap()
+        );
+    }
+
+    #[test]
     fn bundled_driver_dir_lives_under_out_dir() {
-        // Only meaningful for the default download location. CI relocates the
-        // driver via PLAYWRIGHT_DRIVER_CACHE_DIR (cached on its own key) and
-        // compile-only jobs skip the download entirely; in those modes the
-        // OUT_DIR layout intentionally does not apply.
+        // Meaningful only for the fallback a build takes when no cache root
+        // resolves; the default records user_cache, CI's explicit location
+        // records cache_dir, and compile-only jobs skip the download.
         if env!("PLAYWRIGHT_DRIVER_DIR_SOURCE") != "out_dir" {
             return;
         }
@@ -773,7 +891,7 @@ mod tests {
     }
 
     fn fake_driver_dir(temp: &Path) -> (PathBuf, PathBuf) {
-        let (node, cli) = driver_layout(temp, cfg!(windows));
+        let (node, cli) = driver_layout(temp, host_platform());
         std::fs::create_dir_all(cli.parent().unwrap()).unwrap();
         std::fs::write(&node, b"").unwrap();
         std::fs::write(&cli, b"").unwrap();
@@ -790,6 +908,18 @@ mod tests {
 
     fn s(path: &Path) -> String {
         path.to_string_lossy().into_owned()
+    }
+
+    #[test]
+    fn the_host_platform_is_a_known_target_of_this_os_family() {
+        // A wrong answer here is invisible on a non-Windows host, where any
+        // unknown string still maps to `node`; pin it to the target table
+        // and to the OS family the binary was compiled for instead.
+        let host = host_platform();
+        assert!(crate::driver_urls::node_triple(host).is_some(), "{host}");
+        assert_eq!(host.starts_with("mac"), cfg!(target_os = "macos"));
+        assert_eq!(host.starts_with("linux"), cfg!(target_os = "linux"));
+        assert_eq!(crate::driver_urls::is_windows_platform(host), cfg!(windows));
     }
 
     #[test]
@@ -937,5 +1067,109 @@ mod tests {
         };
 
         assert_eq!(resolve_driver(|_| None).unwrap(), bundled);
+    }
+
+    #[test]
+    fn the_build_record_classifies_what_became_of_the_driver() {
+        use BundledDriver::*;
+        for (source, dir, expected) in [
+            (Some("failed"), Some(""), DownloadFailed),
+            (Some("skipped"), Some(""), Skipped),
+            (
+                Some("out_dir"),
+                Some("/t/out/pw"),
+                Missing("/t/out/pw".into()),
+            ),
+            (
+                Some("cache_dir"),
+                Some("/t/cache/pw"),
+                Missing("/t/cache/pw".into()),
+            ),
+            (None, None, NoRecord),
+            (None, Some("/t/out/pw"), NoRecord),
+            // A failure is a failure whatever directory the record names.
+            (Some("failed"), Some("/t/out/pw"), DownloadFailed),
+        ] {
+            assert_eq!(
+                BundledDriver::from_build_record(source, dir),
+                expected,
+                "source {source:?}, dir {dir:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_empty_recorded_directory_counts_as_unset() {
+        assert_eq!(
+            BundledDriver::from_build_record(Some("out_dir"), Some("")),
+            BundledDriver::NoRecord
+        );
+    }
+
+    #[test]
+    fn each_outcome_names_what_the_user_can_act_on() {
+        use BundledDriver::*;
+        for (record, tokens) in [
+            (DownloadFailed, vec!["cargo clean -p playwright-rs"]),
+            (Skipped, vec!["PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD"]),
+            (Missing("/t/out/pw".into()), vec!["/t/out/pw"]),
+        ] {
+            let msg = record.server_not_found_message();
+            for token in tokens {
+                assert!(msg.contains(token), "{record:?} must name {token}:\n{msg}");
+            }
+        }
+    }
+
+    #[test]
+    fn every_outcome_keeps_the_headline_and_the_two_fallbacks() {
+        use BundledDriver::*;
+        for record in [
+            DownloadFailed,
+            Skipped,
+            Missing("/t/out/pw".into()),
+            NoRecord,
+        ] {
+            let msg = record.server_not_found_message();
+            // The headline is what an integration test and a consumer's log
+            // search key on; the fallbacks are the two remedies that work
+            // whatever the build did.
+            assert!(
+                msg.starts_with("Playwright server not found"),
+                "{record:?}:\n{msg}"
+            );
+            for token in [
+                "playwright-rs install",
+                "--features cli",
+                "PLAYWRIGHT_DRIVER_PATH",
+            ] {
+                assert!(msg.contains(token), "{record:?} must name {token}:\n{msg}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_error_renders_the_record_for_this_build() {
+        // Guards the #[error] wiring in error.rs, which is the only place the
+        // record reaches a consumer.
+        assert_eq!(
+            Error::ServerNotFound.to_string(),
+            BundledDriver::for_this_build().server_not_found_message()
+        );
+    }
+
+    #[test]
+    fn a_build_that_skipped_the_download_says_so_at_launch() {
+        // Meaningful only where build.rs recorded a skip; the mutation and
+        // MSRV jobs build that way, so CI exercises the real markers.
+        if env!("PLAYWRIGHT_DRIVER_DIR_SOURCE") != "skipped" {
+            return;
+        }
+        assert_eq!(BundledDriver::for_this_build(), BundledDriver::Skipped);
+        assert!(
+            Error::ServerNotFound
+                .to_string()
+                .contains("PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD")
+        );
     }
 }

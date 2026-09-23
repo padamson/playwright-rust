@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.15.1"
+  version: "0.15.2"
 ---
 
 # Using playwright-rs
@@ -96,6 +96,37 @@ surfaces later as a browser that will not launch. Two traps worth naming:
 `cargo run --example` only resolves examples in the current package, so a
 consumer copies the file into their own `examples/` first; and Linux is not
 special-cased, so a call that omits the flag there installs no libraries.
+
+**The driver, which the build script downloads.** The Playwright server and
+its Node runtime, about 130 MB, are assembled when the crate first compiles,
+so a fresh build needs network access and a browser launch never does. Every
+job that compiles the crate pays for it, including ones that only lint or
+run unit tests, and a mutation runner that builds in several copies pays
+several times. Two environment variables fix that, set at the job level
+because a value that differs between steps reruns the build script:
+
+```yaml
+jobs:
+  lint:                       # compiles the crate, launches nothing
+    env:
+      PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
+  test:                       # launches browsers
+    env:
+      PLAYWRIGHT_DRIVER_CACHE_DIR: ${{ github.workspace }}/.playwright-driver
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.playwright-driver   # beside the browsers
+          # The lockfile hash moves on every playwright-rs bump. An
+          # unversioned key keeps hitting after a bump, so the new driver is
+          # downloaded every run and never saved.
+          key: ${{ runner.os }}-playwright-driver-${{ hashFiles('**/Cargo.lock') }}
+```
+
+The same skip knob belongs in a local mutation-testing script. A failed
+download does not fail the build: cargo hides a dependency's build
+warnings, so the first sign is the launch error, and a lib-only gate never
+notices at all.
 
 ## Object model
 

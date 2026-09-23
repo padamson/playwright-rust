@@ -101,6 +101,9 @@ playwright-rs-trace = { version = "0.2", path = "../playwright-rs-trace" }
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef"] }
 
 [build-dependencies]
+# The default assembly location is the user cache (ADR 0007); the same
+# crate resolves it at runtime and in the cli, so the three agree.
+dirs = "6"
 # ureq (~5 transitive deps) covers the one blocking HTTP GET in
 # build.rs without dragging in the hyper/tower/h2 stack reqwest
 # would.

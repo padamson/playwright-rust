@@ -197,6 +197,12 @@ directly. Outside a Cargo project, the `cli` feature provides an installer
 binary (`cargo install playwright-rs --features cli`, then
 `playwright-rs install`).
 
+The driver itself (about 130 MB) is assembled by the crate's build script
+the first time the crate compiles, so that step needs network access and
+the runtime never does. For CI, `PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD=1` skips it
+on jobs that never launch a browser and `PLAYWRIGHT_DRIVER_CACHE_DIR=<dir>`
+puts it where a cache step can keep it; the skill below has the recipe.
+
 ## Using with Claude Code / AI agents
 
 This repo ships an [Agent Skill](https://agentskills.io) so your agent writes

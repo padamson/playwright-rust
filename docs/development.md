@@ -30,9 +30,15 @@ prek install --overwrite
 cargo build
 ```
 
-The build script downloads the Playwright driver into the build directory
-(`$OUT_DIR/playwright-driver`); set `PLAYWRIGHT_DRIVER_CACHE_DIR` to relocate
-it to a stable path that survives `cargo clean`, which is what CI does.
+The build script assembles the Playwright driver into the user cache
+(`~/.cache/playwright-rust/<version>/` on Linux, `~/Library/Caches/` on
+macOS, `%LOCALAPPDATA%` on Windows), the same place `playwright-rs install`
+and the runtime lookup use, so one download serves every target directory,
+every cargo-mutants copy, and `cargo clean`. Deleting it is safe: the build
+script watches the assembled files and reassembles on the next build. Set
+`PLAYWRIGHT_DRIVER_CACHE_DIR` to put it somewhere else, and
+`PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD=1` on jobs that compile but never launch a
+browser. CI caches the user-cache directory alongside the browsers.
 
 ## Installing browsers
 

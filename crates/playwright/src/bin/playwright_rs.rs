@@ -1,9 +1,11 @@
 //! playwright-rs CLI — bootstrap the Playwright driver into a stable
 //! user cache and install browsers.
 //!
-//! For downstream binaries distributed via `cargo install`, the
-//! compile-time `$OUT_DIR` driver path is invalidated when Cargo cleans
-//! up the build's `target/`. Running `playwright-rs install` populates
+//! The build script assembles the driver into the same user-cache path by
+//! default, so a project that has built the crate already has one. This
+//! binary covers the other cases: a build that skipped or relocated the
+//! download, a cache that was cleaned, or a `cargo install`ed tool whose
+//! build directory is gone. It populates
 //! `dirs::cache_dir()/playwright-rust/<version>/`, which the library's
 //! runtime resolution chain probes after the bundled lookup.
 
@@ -112,10 +114,7 @@ fn ensure_driver_in_user_cache(
     platform: &str,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let cache_root = dirs::cache_dir().ok_or("could not determine user cache directory")?;
-    let driver_dir = cache_root
-        .join("playwright-rust")
-        .join(version)
-        .join(format!("playwright-{version}-{platform}"));
+    let driver_dir = cached_driver_dir(&cache_root, version, platform);
 
     let cli_js = driver_dir.join("package").join("cli.js");
     if cli_js.exists() {

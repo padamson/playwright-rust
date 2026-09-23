@@ -42,8 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # push to gh-pages
-    env:
-      PLAYWRIGHT_DRIVER_CACHE_DIR: ${{ github.workspace }}/.playwright-driver
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -86,17 +84,15 @@ jobs:
         with:
           tool: trunk
 
-      - name: Cache Playwright driver
+      # The driver is assembled by build.rs into the user cache beside the
+      # browsers, so one cache entry holds both.
+      - name: Cache Playwright driver and browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: ${{ github.workspace }}/.playwright-driver
-          key: ${{ runner.os }}-pw-driver-1.63.0-assembled
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-browsers-1.63.0-v2
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/playwright-rust
+          key: ${{ runner.os }}-playwright-browsers-1.63.0-v3
           restore-keys: ${{ runner.os }}-playwright-browsers-1.63.0-
 
       - name: Format + lint site crates

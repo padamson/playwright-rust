@@ -15,7 +15,7 @@ const NODE_VERSION: &str = "24.17.0";
 /// Playwright platform identifier for an (os, arch) pair, e.g.
 /// `("macos", "aarch64")` → `mac-arm64`. `None` for unsupported pairs.
 #[allow(dead_code)]
-fn playwright_platform(os: &str, arch: &str) -> Option<&'static str> {
+pub(crate) fn playwright_platform(os: &str, arch: &str) -> Option<&'static str> {
     match (os, arch) {
         ("macos", "x86_64") => Some("mac"),
         ("macos", "aarch64") => Some("mac-arm64"),
@@ -30,7 +30,7 @@ fn playwright_platform(os: &str, arch: &str) -> Option<&'static str> {
 /// Node dist triple for a Playwright platform identifier, e.g.
 /// `mac-arm64` → `darwin-arm64` (Node names platforms differently).
 #[allow(dead_code)]
-fn node_triple(playwright_platform: &str) -> Option<&'static str> {
+pub(crate) fn node_triple(playwright_platform: &str) -> Option<&'static str> {
     match playwright_platform {
         "mac" => Some("darwin-x64"),
         "mac-arm64" => Some("darwin-arm64"),
@@ -45,7 +45,7 @@ fn node_triple(playwright_platform: &str) -> Option<&'static str> {
 /// Whether a Playwright platform identifier is a Windows target (Node ships
 /// a `.zip` with `node.exe` there; `.tar.gz` with `bin/node` elsewhere).
 #[allow(dead_code)]
-fn is_windows_platform(playwright_platform: &str) -> bool {
+pub(crate) fn is_windows_platform(playwright_platform: &str) -> bool {
     playwright_platform.starts_with("win32")
 }
 
@@ -64,6 +64,36 @@ fn node_archive_url(node_version: &str, triple: &str) -> String {
         "tar.gz"
     };
     format!("https://nodejs.org/dist/v{node_version}/node-v{node_version}-{triple}.{ext}")
+}
+
+/// Name of the runtime binary inside a driver directory for a Playwright
+/// platform identifier: `node.exe` on Windows targets, `node` elsewhere.
+///
+/// The one place this is spelled out. The build script, the assembler, and
+/// the runtime lookup all probe for this file, and they must agree.
+pub(crate) fn node_exe_name(playwright_platform: &str) -> &'static str {
+    if is_windows_platform(playwright_platform) {
+        "node.exe"
+    } else {
+        "node"
+    }
+}
+
+/// Where an assembled driver lives under a cache root:
+/// `<root>/playwright-rust/<version>/playwright-<version>-<platform>`.
+///
+/// One layout shared by the build script (which assembles there by
+/// default), the CLI (`playwright-rs install`), and the runtime lookup, so
+/// a driver produced by any of them is found by the others.
+pub(crate) fn cached_driver_dir(
+    cache_root: &std::path::Path,
+    version: &str,
+    platform: &str,
+) -> std::path::PathBuf {
+    cache_root
+        .join("playwright-rust")
+        .join(version)
+        .join(format!("playwright-{version}-{platform}"))
 }
 
 /// Path of the `node` executable inside the Node dist archive.
@@ -132,6 +162,22 @@ mod driver_urls_tests {
         assert_eq!(
             node_archive_exe_path("24.17.0", "win-arm64"),
             "node-v24.17.0-win-arm64/node.exe"
+        );
+    }
+
+    #[test]
+    fn the_runtime_binary_is_node_exe_only_on_windows_targets() {
+        assert_eq!(node_exe_name("win32_x64"), "node.exe");
+        assert_eq!(node_exe_name("win32_arm64"), "node.exe");
+        assert_eq!(node_exe_name("mac-arm64"), "node");
+        assert_eq!(node_exe_name("linux"), "node");
+    }
+
+    #[test]
+    fn cached_driver_dir_is_keyed_by_version_and_platform() {
+        assert_eq!(
+            cached_driver_dir(std::path::Path::new("/c"), "1.63.0", "mac-arm64"),
+            std::path::PathBuf::from("/c/playwright-rust/1.63.0/playwright-1.63.0-mac-arm64")
         );
     }
 

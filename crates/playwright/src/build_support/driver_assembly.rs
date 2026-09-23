@@ -33,8 +33,9 @@ fn tls_crypto_provider() -> rustls::crypto::CryptoProvider {
 ///
 /// Assembles into a sibling temp directory and renames into place, so an
 /// interrupted run can't leave a half-populated `driver_dir` that a later
-/// exists()-check mistakes for a complete driver. Errors name the URL or
-/// archive entry that failed, so an upstream move is a one-line diagnosis.
+/// check mistakes for a complete driver, and a concurrent run that finishes
+/// first wins cleanly. Errors name the URL or archive entry that failed, so
+/// an upstream move is a one-line diagnosis.
 #[allow(dead_code)]
 fn assemble_driver(
     driver_dir: &std::path::Path,
@@ -74,12 +75,10 @@ fn assemble_driver(
         )?;
 
         // The layout contract the runtime launch path depends on.
-        let node_name = if is_windows_platform(platform) {
-            "node.exe"
-        } else {
-            "node"
-        };
-        for required in [tmp.join(node_name), tmp.join("package").join("cli.js")] {
+        for required in [
+            tmp.join(node_exe_name(platform)),
+            tmp.join("package").join("cli.js"),
+        ] {
             if !required.exists() {
                 return Err(io::Error::other(format!(
                     "assembled driver is missing {}",
@@ -96,11 +95,30 @@ fn assemble_driver(
     }
 
     // A concurrent run may have completed first; its result is equally good.
-    if driver_dir.exists() {
+    // Checked before the rename, and again if the rename fails, because the
+    // other run can land between the two: renaming onto a populated
+    // directory fails (ENOTEMPTY, or ERROR_ALREADY_EXISTS on Windows) and
+    // must not be reported as a broken download when a whole driver now
+    // sits at the destination.
+    if driver_complete(driver_dir, platform) {
         let _ = std::fs::remove_dir_all(&tmp);
         return Ok(());
     }
-    std::fs::rename(&tmp, driver_dir)
+    match std::fs::rename(&tmp, driver_dir) {
+        Ok(()) => Ok(()),
+        Err(_) if driver_complete(driver_dir, platform) => {
+            let _ = std::fs::remove_dir_all(&tmp);
+            Ok(())
+        }
+        Err(e) => Err(e),
+    }
+}
+
+/// Whether `driver_dir` holds the two files the runtime launches with.
+#[allow(dead_code)]
+fn driver_complete(driver_dir: &std::path::Path, platform: &str) -> bool {
+    driver_dir.join(node_exe_name(platform)).exists()
+        && driver_dir.join("package").join("cli.js").exists()
 }
 
 /// GET `url` fully into memory (driver artifacts are tens of MB; ureq's
