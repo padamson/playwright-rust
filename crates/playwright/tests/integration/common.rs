@@ -122,12 +122,23 @@ pub async fn setup_context() -> (Playwright, Browser, BrowserContext) {
     (playwright, browser, context)
 }
 
-/// Resolve the Playwright `package/` directory via the crate's public driver
-/// lookup. Returns `None` if the driver can't be found anywhere, so tests
-/// that need to exec `node ... cli.js` can skip cleanly.
-pub fn playwright_package_dir() -> Option<PathBuf> {
-    let (_node, cli_js) = playwright_rs::server::driver::get_driver_executable().ok()?;
-    cli_js.parent().map(PathBuf::from)
+/// The driver's own Node runtime and its `package/` directory, for tests
+/// that script the driver directly. The bundled runtime, not whatever
+/// `node` is on PATH, so the script sees the same Playwright the crate does.
+pub fn driver_node_and_package() -> (PathBuf, PathBuf) {
+    let (node, cli_js) =
+        playwright_rs::server::driver::get_driver_executable().expect("locate the driver");
+    let package = cli_js
+        .parent()
+        .expect("cli.js sits inside the package directory")
+        .to_path_buf();
+    (node, package)
+}
+
+/// A JavaScript string literal for `path`, so a Windows path with
+/// backslashes survives being pasted into a `require(...)`.
+pub fn js_string(path: &std::path::Path) -> String {
+    serde_json::to_string(&path.to_string_lossy()).expect("a string always serializes")
 }
 
 /// Poll `cond` until it returns `true` or `timeout` elapses; returns whether

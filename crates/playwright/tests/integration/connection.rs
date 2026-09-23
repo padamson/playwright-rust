@@ -207,13 +207,38 @@ async fn test_connect_over_cdp_chromium_only() {
     playwright.shutdown().await.ok();
 }
 
+/// What a driver script left on stderr when it did not print its endpoint,
+/// so a failure names the cause rather than "no endpoint".
+async fn script_failure(
+    what: &str,
+    mut child: tokio::process::Child,
+    timed_out: bool,
+) -> anyhow::Error {
+    let _ = child.kill().await;
+    let mut stderr = String::new();
+    if let Some(mut pipe) = child.stderr.take() {
+        use tokio::io::AsyncReadExt;
+        let _ = pipe.read_to_string(&mut stderr).await;
+    }
+    let why = if timed_out {
+        "timed out waiting for"
+    } else {
+        "exited without printing"
+    };
+    anyhow::anyhow!(
+        "{why} the {what} endpoint; script stderr:\n{}",
+        stderr.trim()
+    )
+}
+
 /// Launch Chrome with --remote-debugging-port and return the CDP endpoint URL.
 ///
 /// Uses Playwright Node.js to find the Chrome binary and launch it with
 /// remote debugging enabled, then discovers the CDP endpoint via /json/version.
 async fn start_chrome_with_cdp(
+    node: &std::path::Path,
     package_path: &std::path::Path,
-) -> Option<(tokio::process::Child, String)> {
+) -> anyhow::Result<(tokio::process::Child, String)> {
     // Node.js script that:
     // 1. Gets Chrome executable path from Playwright
     // 2. Spawns Chrome with --remote-debugging-port=0
@@ -221,7 +246,7 @@ async fn start_chrome_with_cdp(
     // 4. Outputs the HTTP endpoint to stdout
     let script = format!(
         r#"
-const {{ chromium }} = require('{}');
+const {{ chromium }} = require({});
 const {{ spawn }} = require('child_process');
 const http = require('http');
 
@@ -264,23 +289,21 @@ setTimeout(() => {{
     process.exit(1);
 }}, 25000);
 "#,
-        package_path.display()
+        crate::common::js_string(package_path)
     );
 
-    let mut child = Command::new("node")
+    let mut child = Command::new(node)
         .arg("-e")
         .arg(&script)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true)
-        .spawn()
-        .ok()?;
+        .spawn()?;
 
-    let stdout = child.stdout.take()?;
+    let stdout = child.stdout.take().expect("stdout was piped");
     let mut reader = tokio::io::BufReader::new(stdout).lines();
 
-    // Wait for the CDP endpoint with timeout
     let endpoint = tokio::time::timeout(Duration::from_secs(15), async {
         while let Ok(Some(line)) = reader.next_line().await {
             if line.starts_with("http://") || line.starts_with("ws://") {
@@ -289,10 +312,11 @@ setTimeout(() => {{
         }
         None
     })
-    .await
-    .ok()??;
-
-    Some((child, endpoint))
+    .await;
+    match endpoint {
+        Ok(Some(endpoint)) => Ok((child, endpoint)),
+        outcome => Err(script_failure("Chrome with CDP", child, outcome.is_err()).await),
+    }
 }
 
 /// Test connecting to a real Chrome via CDP
@@ -300,13 +324,12 @@ setTimeout(() => {{
 async fn test_connect_over_cdp_real_chrome() {
     crate::common::init_tracing();
 
-    let package_path =
-        crate::common::playwright_package_dir().expect("locate the Playwright driver package");
+    let (node, package_path) = crate::common::driver_node_and_package();
 
     // Start Chrome with CDP
-    let (mut chrome_process, cdp_endpoint) = start_chrome_with_cdp(&package_path)
+    let (mut chrome_process, cdp_endpoint) = start_chrome_with_cdp(&node, &package_path)
         .await
-        .expect("start Chrome with a CDP endpoint");
+        .unwrap_or_else(|e| panic!("{e}"));
 
     tracing::info!("Chrome CDP endpoint: {}", cdp_endpoint);
 
@@ -606,12 +629,13 @@ async fn test_browser_type_connect() {
 /// 3. Outputs the WebSocket endpoint to stdout
 /// 4. Waits for stdin to close before shutting down
 async fn start_browser_server(
+    node: &std::path::Path,
     package_path: &std::path::Path,
-) -> Option<(tokio::process::Child, String)> {
+) -> anyhow::Result<(tokio::process::Child, String)> {
     // Node.js script to launch browser server
     let script = format!(
         r#"
-const {{ chromium }} = require('{}');
+const {{ chromium }} = require({});
 
 (async () => {{
     const server = await chromium.launchServer({{ headless: true }});
@@ -628,23 +652,21 @@ const {{ chromium }} = require('{}');
     process.exit(1);
 }});
 "#,
-        package_path.display()
+        crate::common::js_string(package_path)
     );
 
-    let mut child = Command::new("node")
+    let mut child = Command::new(node)
         .arg("-e")
         .arg(&script)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true)
-        .spawn()
-        .ok()?;
+        .spawn()?;
 
-    let stdout = child.stdout.take()?;
+    let stdout = child.stdout.take().expect("stdout was piped");
     let mut reader = BufReader::new(stdout).lines();
 
-    // Wait for the WebSocket endpoint with timeout
     let ws_endpoint = tokio::time::timeout(Duration::from_secs(30), async {
         if let Ok(Some(line)) = reader.next_line().await
             && line.starts_with("ws://")
@@ -653,10 +675,11 @@ const {{ chromium }} = require('{}');
         }
         None
     })
-    .await
-    .ok()??;
-
-    Some((child, ws_endpoint))
+    .await;
+    match ws_endpoint {
+        Ok(Some(ws_endpoint)) => Ok((child, ws_endpoint)),
+        outcome => Err(script_failure("browser server", child, outcome.is_err()).await),
+    }
 }
 
 /// Test connecting to a real Playwright browser server
@@ -671,15 +694,14 @@ const {{ chromium }} = require('{}');
 async fn test_connect_to_real_server() {
     crate::common::init_tracing();
 
-    let package_path =
-        crate::common::playwright_package_dir().expect("locate the Playwright driver package");
+    let (node, package_path) = crate::common::driver_node_and_package();
 
     tracing::info!("Starting browser server");
 
     // Start the browser server
-    let (mut server_process, ws_endpoint) = start_browser_server(&package_path)
+    let (mut server_process, ws_endpoint) = start_browser_server(&node, &package_path)
         .await
-        .expect("start a Playwright browser server");
+        .unwrap_or_else(|e| panic!("{e}"));
 
     tracing::info!("Browser server ready at {}", ws_endpoint);
 
@@ -801,13 +823,12 @@ async fn test_connect_with_custom_headers() {
     // For now, we just verify that passing headers doesn't break the connection.
     // A full test would require a server that validates headers.
 
-    let package_path =
-        crate::common::playwright_package_dir().expect("locate the Playwright driver package");
+    let (node, package_path) = crate::common::driver_node_and_package();
 
     // Start browser server
-    let (mut server_process, ws_endpoint) = start_browser_server(&package_path)
+    let (mut server_process, ws_endpoint) = start_browser_server(&node, &package_path)
         .await
-        .expect("start a Playwright browser server");
+        .unwrap_or_else(|e| panic!("{e}"));
 
     let playwright = Playwright::launch().await.expect("launch Playwright");
 
