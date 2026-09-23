@@ -16,7 +16,7 @@ publish = false
 leptos = { version = "0.8", features = ["csr"] }
 # Fetch /versions.json at runtime so a deployed snapshot can list versions
 # released after it was built (the version dropdown). `http` only.
-gloo-net = { version = "0.6", default-features = false, features = ["http"] }
+gloo-net = { version = "0.7", default-features = false, features = ["http", "json"] }
 # Deserialize the versions manifest.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
