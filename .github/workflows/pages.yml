@@ -6,10 +6,20 @@ name: Pages
 #                                (bootstrap of /v0.14.0/, and each release: a
 #                                release runs `gh workflow run pages.yml -f
 #                                version=X.Y.Z` from the tag — see release docs)
+#   - pull request            -> builds and gates only, no deploy
 # Each run regenerates /versions.json (the dropdown manifest) + the root
 # redirect to the latest release. Deploys only if the playwright-rs dogfood
 # test passes against the built output. The site crates are excluded from the
-# root workspace, so this is the only workflow that builds/tests them.
+# root workspace, so this is the only workflow that builds/tests them, and
+# the pull-request trigger is what makes it a check. Dependabot bumps these
+# crates' lockfiles and its PRs auto-merge once main's required checks pass,
+# and a merge made with the GitHub token triggers no workflow, so without
+# this a site-breaking bump merges itself and nothing runs here until the
+# next human push touches the site. The first such bump (gloo-net 0.7 moving
+# Response::json behind a feature) was held back only because cargo vet
+# failed on the same PR. This job is in the ruleset's required checks, which
+# is why the pull-request trigger has no paths filter: a required check that
+# never reports leaves a PR waiting forever, so every PR runs it.
 #
 # One-time setup after the first run: Settings -> Pages -> Build and deployment
 # -> Source: "Deploy from a branch" -> Branch: gh-pages / (root).
@@ -21,6 +31,8 @@ on:
       - "crates/site/**"
       - "crates/site-e2e/**"
       - ".github/workflows/pages.yml"
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -31,17 +43,19 @@ on:
 permissions:
   contents: read
 
-# One deploy at a time; don't cancel an in-progress deploy.
+# One deploy at a time; don't cancel an in-progress deploy. Pull-request
+# runs deploy nothing, so they get their own group and never queue behind
+# a deploy or hold one up.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.number) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   deploy:
     name: Build, dogfood-gate, and deploy
     runs-on: ubuntu-latest
     permissions:
-      contents: write # push to gh-pages
+      contents: write # push to gh-pages (read-only on a pull request, which deploys nothing)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -151,6 +165,7 @@ jobs:
         run: cargo test --manifest-path crates/site-e2e/Cargo.toml deployed_snapshot_is_sound
 
       - name: Check out gh-pages
+        if: github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -167,6 +182,7 @@ jobs:
           fi
 
       - name: Assemble snapshot + manifest
+        if: github.event_name != 'pull_request'
         run: |
           dest="${{ steps.target.outputs.dest }}"
           rm -rf "gh/$dest"
@@ -177,6 +193,7 @@ jobs:
           touch gh/.nojekyll
 
       - name: Commit + push gh-pages
+        if: github.event_name != 'pull_request'
         run: |
           cd gh
           git add -A

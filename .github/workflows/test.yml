@@ -144,9 +144,8 @@ jobs:
       # Deliberately the `install-browsers` example, not the `cli` binary: the
       # README tells consumers to copy this example into their own project, so
       # running it here is the only thing that stops a regression in its
-      # argument handling shipping green. It also avoids a second driver
-      # assembly, since the cli binary builds into the user cache that no cache
-      # key above covers.
+      # argument handling shipping green. It also avoids building the cli
+      # binary, a second copy of the crate, for nothing.
       #
       # Bounded because a contended apt blocks indefinitely rather than failing:
       # this step once sat 20+ minutes with no output. Fail fast and re-run.
