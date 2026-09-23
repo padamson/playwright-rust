@@ -442,13 +442,13 @@ async fn test_websocket_interception() {
 
     // Setup WebSocket event handler
     // This API does not exist yet -> RED
-    let ws_event_fired = std::sync::Arc::new(tokio::sync::Mutex::new(false));
+    let ws_event_fired = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let ws_event_fired_clone = ws_event_fired.clone();
 
     page.on_websocket(move |ws| {
         let fired = ws_event_fired_clone.clone();
         Box::pin(async move {
-            *fired.lock().await = true;
+            fired.store(true, std::sync::atomic::Ordering::SeqCst);
             println!("WebSocket opened: {}", ws.url());
 
             // Verify URL
@@ -476,13 +476,11 @@ async fn test_websocket_interception() {
         .await
         .expect("Failed to navigate");
 
-    // Wait a bit for the connection
-    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
-
-    assert!(
-        *ws_event_fired.lock().await,
-        "on_websocket handler should have been called"
-    );
+    let fired = crate::common::poll_until(std::time::Duration::from_secs(5), || {
+        ws_event_fired.load(std::sync::atomic::Ordering::SeqCst)
+    })
+    .await;
+    assert!(fired, "on_websocket handler should have been called");
 
     browser.close().await.expect("Failed to close browser");
     server.shutdown();

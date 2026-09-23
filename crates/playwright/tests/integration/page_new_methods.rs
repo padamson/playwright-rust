@@ -356,17 +356,29 @@ async fn test_page_pick_locator_cancel_releases_handle() {
     let page_for_pick = page.clone();
     let pick_handle = tokio::spawn(async move { page_for_pick.pick_locator().await });
 
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-    page.cancel_pick_locator()
-        .await
-        .expect("cancel_pick_locator should succeed");
-
-    // Whether pick_locator returns Ok or Err on cancel is server-defined;
-    // the contract under test is that cancel unblocks the call.
-    let outcome = tokio::time::timeout(std::time::Duration::from_secs(5), pick_handle)
-        .await
-        .expect("pick_locator did not resolve within 5s of cancel");
-    let _ = outcome.expect("spawned task panicked");
+    // Nothing observable says when the picker is armed, and a cancel that
+    // lands first is a no-op, so cancel repeatedly until the pick resolves
+    // rather than guessing a delay. The cancel comes before each check, so a
+    // pass always sent one. Whether pick_locator returns Ok or Err on cancel
+    // is server-defined; the contract under test is that cancel unblocks it.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    loop {
+        page.cancel_pick_locator()
+            .await
+            .expect("cancel_pick_locator should succeed");
+        let resolved = crate::common::poll_until(std::time::Duration::from_millis(200), || {
+            pick_handle.is_finished()
+        })
+        .await;
+        if resolved {
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "pick_locator did not resolve within 5s of repeated cancels"
+        );
+    }
+    let _ = pick_handle.await.expect("spawned task panicked");
 
     browser.close().await.expect("Failed to close browser");
 }

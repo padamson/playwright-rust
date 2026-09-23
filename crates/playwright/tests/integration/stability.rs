@@ -430,7 +430,7 @@ async fn test_file_descriptor_cleanup() {
     // Launch and close Playwright multiple times
     const CYCLES: usize = 10;
 
-    for i in 0..CYCLES {
+    for _ in 0..CYCLES {
         // Launch Playwright
         let playwright = Playwright::launch()
             .await
@@ -450,31 +450,23 @@ async fn test_file_descriptor_cleanup() {
         // Close everything
         let _ = page.close().await;
         browser.close().await.expect("Failed to close browser");
-
-        // Give system time to clean up
-        tokio::time::sleep(Duration::from_millis(50)).await;
-
-        if i % 2 == 1 {
-            let current_fds = count_open_file_descriptors().expect("count open file descriptors");
-            tracing::debug!("After cycle {}: {} FDs", i + 1, current_fds);
-        }
     }
 
-    // Wait for final cleanup
-    tokio::time::sleep(Duration::from_millis(200)).await;
-
-    // Check final FD count
-    let final_fds = count_open_file_descriptors().expect("count open file descriptors");
-    tracing::info!("\nFinal file descriptors: {}", final_fds);
-    tracing::info!("FD growth: {}", final_fds as i32 - initial_fds as i32);
-
-    // ASSERTION: FD count should not grow significantly
-    // Allow some variance (10 FDs) for normal system behavior
-    let fd_growth = (final_fds as i32 - initial_fds as i32).abs();
+    // close() returns before the pipes to the driver are torn down, so the
+    // count settles shortly after the last cycle rather than at it. Twenty
+    // is the variance seen on a clean run, not a leak allowance, and fewer
+    // open descriptors than at the start is not a leak. Each probe shells
+    // out to lsof on macOS, so the window is sized for a few slow samples.
+    let mut growth = 0;
+    let settled = crate::common::poll_until(Duration::from_secs(10), || {
+        let now = count_open_file_descriptors().expect("count open file descriptors");
+        growth = now as i32 - initial_fds as i32;
+        growth < 20
+    })
+    .await;
     assert!(
-        fd_growth < 20,
-        "File descriptor leak detected: {} FDs not cleaned up",
-        fd_growth
+        settled,
+        "File descriptor leak detected: {growth} FDs not cleaned up"
     );
 
     tracing::info!("\n✓ File descriptors cleaned up properly");
@@ -667,9 +659,6 @@ async fn test_multiple_server_cycles() {
 
         // Explicitly drop Playwright to trigger shutdown
         drop(playwright);
-
-        // Wait between cycles to ensure clean shutdown
-        tokio::time::sleep(Duration::from_millis(500)).await;
     }
 
     tracing::info!("\n✓ Multiple server cycles handled successfully");
@@ -710,9 +699,6 @@ async fn test_concurrent_browser_cleanup() {
         browser.close().await.expect("Failed to close browser");
         tracing::info!("Closed browser {}/{}", i + 1, BROWSER_COUNT);
     }
-
-    // Wait for cleanup
-    tokio::time::sleep(Duration::from_millis(500)).await;
 
     tracing::info!("\n✓ Concurrent browsers cleaned up successfully");
 }
@@ -1125,8 +1111,6 @@ async fn test_graceful_shutdown_explicit_close() {
     tracing::info!("Dropping playwright...");
     drop(playwright);
 
-    tokio::time::sleep(Duration::from_millis(500)).await;
-
     tracing::info!("\n✓ Explicit close completed successfully");
 }
 
@@ -1167,8 +1151,6 @@ async fn test_graceful_shutdown_multiple_browsers() {
 
     tracing::info!("Dropping playwright...");
     drop(playwright);
-
-    tokio::time::sleep(Duration::from_millis(500)).await;
 
     tracing::info!("\n✓ Multiple browsers shut down successfully");
 }

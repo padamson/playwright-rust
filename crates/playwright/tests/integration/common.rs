@@ -1,4 +1,4 @@
-use playwright_rs::protocol::{Browser, BrowserContext, GotoOptions, Page, Playwright};
+use playwright_rs::protocol::{Browser, BrowserContext, GotoOptions, Page, Playwright, WebSocket};
 use std::path::PathBuf;
 use std::sync::Once;
 
@@ -166,4 +166,35 @@ pub async fn echoed_request(page: &Page) -> serde_json::Value {
         .await
         .expect("read echoed request");
     serde_json::from_str(&text).unwrap_or_else(|e| panic!("echo endpoint returned {text:?}: {e}"))
+}
+
+/// The first WebSocket a page opens after [`capture_websocket`] was called.
+pub struct CapturedWebSocket(tokio::sync::oneshot::Receiver<WebSocket>);
+
+impl CapturedWebSocket {
+    pub async fn wait(self) -> WebSocket {
+        tokio::time::timeout(std::time::Duration::from_secs(5), self.0)
+            .await
+            .expect("no websocket event within 5s")
+            .expect("websocket handler was dropped before a socket opened")
+    }
+}
+
+/// Registers a `websocket` handler that hands out the first socket the page
+/// opens. Call before the navigation that opens it.
+pub async fn capture_websocket(page: &Page) -> CapturedWebSocket {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let tx = std::sync::Arc::new(std::sync::Mutex::new(Some(tx)));
+    page.on_websocket(move |ws| {
+        let tx = tx.clone();
+        Box::pin(async move {
+            if let Some(tx) = tx.lock().unwrap().take() {
+                let _ = tx.send(ws);
+            }
+            Ok(())
+        })
+    })
+    .await
+    .expect("register on_websocket");
+    CapturedWebSocket(rx)
 }

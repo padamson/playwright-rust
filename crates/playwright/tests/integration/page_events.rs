@@ -831,7 +831,8 @@ async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
     let playwright = Playwright::launch().await?;
     let browser = playwright.chromium().launch().await?;
 
-    let video_dir = std::env::temp_dir().join("playwright_video_test_dir");
+    let temp = tempfile::tempdir()?;
+    let video_dir = temp.path().join("videos");
     std::fs::create_dir_all(&video_dir)?;
 
     let options = BrowserContextOptions::builder()
@@ -848,9 +849,6 @@ async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await;
 
-    // Intentional delay: give the page time to render at least one video frame before closing
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-
     // page.video() must return Some when record_video is set
     let video: Video = page
         .video()
@@ -861,8 +859,7 @@ async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
 
     // Save video to a custom path
     // (save_as() waits internally for the artifact to arrive)
-    let save_path: PathBuf = std::env::temp_dir().join("playwright_test_video.webm");
-    let _ = std::fs::remove_file(&save_path);
+    let save_path: PathBuf = temp.path().join("saved.webm");
 
     video.save_as(&save_path).await?;
 
@@ -874,9 +871,6 @@ async fn test_page_video_save_as() -> Result<(), Box<dyn std::error::Error>> {
         save_path.metadata()?.len() > 0,
         "saved video file should be non-empty"
     );
-
-    // Cleanup
-    let _ = std::fs::remove_file(&save_path);
 
     context.close().await?;
     browser.close().await?;

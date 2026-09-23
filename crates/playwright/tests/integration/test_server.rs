@@ -43,6 +43,7 @@ impl TestServer {
             .route("/click_options.html", get(click_options_page))
             .route("/text.html", get(text_page))
             .route("/websocket.html", get(websocket_page))
+            .route("/websocket_quiet.html", get(websocket_quiet_page))
             .route("/anchors.html", get(anchors_page))
             .route("/filter.html", get(filter_page))
             .route("/ws", get(ws_handler))
@@ -546,6 +547,32 @@ async fn websocket_page() -> Response<Body> {
     ws.onclose = () => {
         log.textContent += 'closed\n';
     };
+  </script>
+</body>
+</html>"#,
+        ))
+        .unwrap()
+}
+
+/// Like `/websocket.html`, but the page sends nothing on open, so a test can
+/// arm a frame waiter and then trigger the only frame in flight itself.
+async fn websocket_quiet_page() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "text/html")
+        .body(Body::from(
+            r#"<!DOCTYPE html>
+<html>
+<head><title>Quiet WebSocket Test</title></head>
+<body>
+  <div id="log"></div>
+  <script>
+    const log = document.getElementById('log');
+    const ws = new WebSocket('ws://' + location.host + '/ws');
+    const opened = new Promise(resolve => ws.addEventListener('open', resolve));
+    // Resolves once the frame is on the wire, whether or not open has fired yet.
+    function send(text) { return opened.then(() => ws.send(text)); }
+    ws.onmessage = (event) => { log.textContent += 'received: ' + event.data + '\n'; };
   </script>
 </body>
 </html>"#,
