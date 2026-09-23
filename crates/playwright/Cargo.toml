@@ -55,7 +55,7 @@ regex = "1.10"
 tokio-tungstenite = { version = "0.30" }
 futures-util = "0.3"
 url = "2.5"
-dirs = "6"
+dirs = "7"
 image = { version = "0.25", default-features = false, features = ["png"], optional = true }
 http = { version = "1", optional = true }
 http-body = { version = "1", optional = true }
@@ -103,7 +103,7 @@ winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef
 [build-dependencies]
 # The default assembly location is the user cache (ADR 0007); the same
 # crate resolves it at runtime and in the cli, so the three agree.
-dirs = "6"
+dirs = "7"
 # ureq (~5 transitive deps) covers the one blocking HTTP GET in
 # build.rs without dragging in the hyper/tower/h2 stack reqwest
 # would.
