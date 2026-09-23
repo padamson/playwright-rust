@@ -419,7 +419,7 @@ async fn test_route_extension_patterns() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_route_firefox_methods() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -586,7 +586,7 @@ async fn test_route_firefox_methods() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_route_webkit_methods() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

@@ -4,43 +4,36 @@
 [store]
 dir = "target/nextest"
 
-# Default profile
 [profile.default]
+# A hung browser or driver fails the test in a minute instead of holding
+# the run open. terminate-after counts periods: SIGTERM after the second.
 slow-timeout = { period = "30s", terminate-after = 2 }
 fail-fast = false
 # Browser/driver processes can take longer than nextest's 100ms default to be
 # reaped after a test ends; without this, an otherwise-passing test is
 # intermittently flagged "leaky" and fails the run (and the pre-commit hook).
 leak-timeout = "1s"
+# No retries here: a test that fails one run in three is a bug to look at,
+# not a flake to paper over.
 
-# CI profile - retries for flaky browser tests
 [profile.ci]
+# A retried pass is reported FLAKY: rerun the job, note the run, and
+# harden the test when it repeats.
 retries = 1
 slow-timeout = { period = "60s", terminate-after = 2 }
 fail-fast = false
-# See profile.default: give browser-process teardown room before flagging a
-# passing test "leaky".
 leak-timeout = "1s"
 
-# Cross-browser tests launch Firefox/WebKit, which are slow to start (especially
-# on Windows). The stress step runs `--profile ci`, so the per-browser headroom
-# must live here too, not only on `default`.
-[[profile.ci.overrides]]
+# Overrides on the default profile apply to every profile, so each filter is
+# written once and the ci profile inherits it.
+
+# Cross-browser tests launch Firefox/WebKit, which are slow to start
+# (especially on Windows).
+[[profile.default.overrides]]
 filter = "test(/cross_browser/) | test(/firefox/) | test(/webkit/)"
 slow-timeout = { period = "60s", terminate-after = 3 }
 
-# The stress step runs `--profile ci`, so the stability stress tests need
-# their headroom here too, not only on `default` (same trap as above).
-[[profile.ci.overrides]]
-filter = "test(/test_no_memory_leak/) | test(test_rapid_browser) | test(test_file_descriptor) | test(test_resource_limit_stress) | test(test_concurrent_browser_cleanup) | test(test_multiple_server_cycles) | test(test_error_recovery_stress)"
-slow-timeout = { period = "60s", terminate-after = 2 }
-
-# Longer timeouts for stability stress tests
+# Stress tests run dozens of launch/close cycles.
 [[profile.default.overrides]]
 filter = "test(/test_no_memory_leak/) | test(test_rapid_browser) | test(test_file_descriptor) | test(test_resource_limit_stress) | test(test_concurrent_browser_cleanup) | test(test_multiple_server_cycles) | test(test_error_recovery_stress)"
 slow-timeout = { period = "60s", terminate-after = 2 }
-
-# Longer timeouts for cross-browser tests (Firefox/WebKit are slower)
-[[profile.default.overrides]]
-filter = "test(/cross_browser/) | test(/firefox/) | test(/webkit/)"
-slow-timeout = { period = "45s", terminate-after = 2 }

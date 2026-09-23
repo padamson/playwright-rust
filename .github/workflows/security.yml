@@ -92,9 +92,10 @@ jobs:
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch'
 
-    # mutants runs lib + serialization tests only (no browser) so skip the
-    # 42 MB driver download, and re-enable incremental (off globally) since
-    # cargo-mutants rebuilds once per mutant and benefits from it.
+    # mutants runs the unit tests and the browser-free test binaries listed
+    # in .cargo/mutants.toml (never a browser) so skip the 42 MB driver
+    # download, and re-enable incremental (off globally) since cargo-mutants
+    # rebuilds once per mutant and benefits from it.
     env:
       PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
       CARGO_INCREMENTAL: "1"
@@ -272,6 +273,11 @@ jobs:
           echo "unreachable base ${{ github.event.before }}; mutating HEAD alone"
           echo "ref=HEAD~1" >> $GITHUB_OUTPUT
         fi
+
+    # The hook of the same name is per-clone; a hookless clone would
+    # otherwise land a test binary that the mutation runs never execute.
+    - name: Check the mutation kill set names every test binary
+      run: ./scripts/check-mutants-test-targets.sh
 
     - name: Run mutation testing on diff
       run: ./scripts/mutants.sh ${{ steps.base.outputs.ref }}

@@ -191,7 +191,7 @@ async fn test_page_content_with_dynamic_changes() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_page_content_cross_browser() {
     crate::common::init_tracing();
     let playwright = Playwright::launch()
@@ -439,7 +439,7 @@ async fn test_set_viewport_size_different_dimensions() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_set_viewport_size_cross_browser() {
     crate::common::init_tracing();
     let playwright = Playwright::launch()

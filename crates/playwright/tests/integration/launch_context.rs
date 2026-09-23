@@ -233,7 +233,7 @@ async fn launch_persistent_context_fails_when_the_user_data_dir_cannot_be_create
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_launch_persistent_context_cross_browser() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_persistent_context_cross_browser: Starting");

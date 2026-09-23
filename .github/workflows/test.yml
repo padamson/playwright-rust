@@ -60,6 +60,8 @@ jobs:
   test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # nextest bounds a hung test; this bounds a hung driver install or runner.
+    timeout-minutes: 90
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]

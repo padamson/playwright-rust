@@ -201,7 +201,7 @@ async fn test_dblclick_with_options() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_click_options_firefox() {
     crate::common::init_tracing();
     // Cross-browser test: Firefox
@@ -239,7 +239,7 @@ async fn test_click_options_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_click_options_webkit() {
     crate::common::init_tracing();
     // Cross-browser test: WebKit

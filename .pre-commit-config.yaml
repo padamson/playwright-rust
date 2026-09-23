@@ -184,6 +184,14 @@ repos:
         # Only run when dependency or supply-chain config files change
         files: (Cargo\.toml|Cargo\.lock|^supply-chain/)
 
+      - id: mutants-test-targets
+        name: mutation kill set names every test binary
+        description: a browser-free test binary missing from .cargo/mutants.toml kills nothing
+        entry: scripts/check-mutants-test-targets.sh
+        language: system
+        pass_filenames: false
+        files: ^(crates/playwright/tests/[^/]+\.rs|\.cargo/mutants\.toml|scripts/check-mutants-test-targets\.sh)$
+
       - id: external-lockfiles-current
         name: out-of-workspace lockfiles current
         description: site, site-e2e and fuzz sit outside the workspace, so their lockfiles go stale when workspace deps move

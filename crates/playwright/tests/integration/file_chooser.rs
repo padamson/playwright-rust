@@ -265,7 +265,7 @@ async fn test_expect_file_chooser_set_files() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_filechooser_cross_browser_smoke() {
     crate::common::init_tracing();
     let playwright = Playwright::launch()

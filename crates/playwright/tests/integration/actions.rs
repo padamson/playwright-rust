@@ -149,7 +149,7 @@ async fn test_keyboard_actions() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify actions work in Firefox and WebKit
@@ -383,7 +383,7 @@ async fn test_action_options_methods() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_action_options_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify action options work in Firefox and WebKit

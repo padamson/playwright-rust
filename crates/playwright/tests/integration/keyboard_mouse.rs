@@ -252,7 +252,7 @@ async fn test_page_touchscreen_tap() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify keyboard and mouse work in Firefox and WebKit

@@ -84,7 +84,7 @@ fn growth_rate(samples: &[f64]) -> f64 {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: runs 20 full Playwright+browser launch/close cycles. Run with --run-ignored.
+#[ignore = "stress: runs 20 full Playwright+browser launch/close cycles; runs in CI's --run-ignored lane"]
 async fn test_no_memory_leak_browser_cycles() {
     crate::common::init_tracing();
     tracing::info!("\n=== Testing Memory Leaks: Browser Launch/Close Cycles ===\n");
@@ -149,7 +149,7 @@ async fn test_no_memory_leak_browser_cycles() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: runs 25 page creation/destruction cycles. Run with --run-ignored.
+#[ignore = "stress: runs 25 page creation/destruction cycles; runs in CI's --run-ignored lane"]
 async fn test_no_memory_leak_page_cycles() {
     crate::common::init_tracing();
     tracing::info!("\n=== Testing Memory Leaks: Page Creation/Destruction ===\n");
@@ -213,7 +213,7 @@ async fn test_no_memory_leak_page_cycles() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: runs 25 context creation/destruction cycles. Run with --run-ignored.
+#[ignore = "stress: runs 25 context creation/destruction cycles; runs in CI's --run-ignored lane"]
 async fn test_no_memory_leak_context_cycles() {
     crate::common::init_tracing();
     tracing::info!("\n=== Testing Memory Leaks: Context Creation/Destruction ===\n");
@@ -284,7 +284,7 @@ async fn test_no_memory_leak_context_cycles() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: rapid browser creation/destruction. Run with --run-ignored.
+#[ignore = "stress: rapid browser creation/destruction; runs in CI's --run-ignored lane"]
 async fn test_rapid_browser_creation() {
     crate::common::init_tracing();
     tracing::info!("\n=== Stress Test: Rapid Browser Creation ===\n");
@@ -416,8 +416,7 @@ fn count_playwright_processes() -> Option<usize> {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: 10 Playwright launch/close cycles with FD tracking. Run with --run-ignored.
-#[cfg(unix)]
+#[ignore = "stress: 10 Playwright launch/close cycles with FD tracking; runs in CI's --run-ignored lane"]
 #[cfg(unix)]
 async fn test_file_descriptor_cleanup() {
     crate::common::init_tracing();
@@ -669,7 +668,7 @@ async fn test_multiple_server_cycles() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: launches 3 concurrent browser instances. Run with --run-ignored.
+#[ignore = "stress: launches 3 concurrent browser instances; runs in CI's --run-ignored lane"]
 async fn test_concurrent_browser_cleanup() {
     crate::common::init_tracing();
     tracing::info!("\n=== Testing Concurrent Browser Cleanup ===\n");
@@ -708,7 +707,7 @@ async fn test_concurrent_browser_cleanup() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: creates 20 pages rapidly. Run with --run-ignored.
+#[ignore = "stress: creates 20 pages rapidly; runs in CI's --run-ignored lane"]
 async fn test_resource_limit_stress() {
     crate::common::init_tracing();
     tracing::info!("\n=== Stress Test: Resource Limits ===\n");
@@ -1428,7 +1427,7 @@ async fn test_error_recovery_browser_relaunch() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Stress test: 10 rapid error/success navigation cycles. Run with --run-ignored.
+#[ignore = "stress: 10 rapid error/success navigation cycles; runs in CI's --run-ignored lane"]
 async fn test_error_recovery_stress() {
     crate::common::init_tracing();
     tracing::info!("\n=== Stress Test: Error Recovery Under Load ===\n");

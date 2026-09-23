@@ -270,7 +270,7 @@ async fn test_page_add_script_tag() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_page_add_script_tag_cross_browser_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -308,7 +308,7 @@ async fn test_page_add_script_tag_cross_browser_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_page_add_script_tag_cross_browser_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

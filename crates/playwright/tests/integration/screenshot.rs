@@ -111,7 +111,7 @@ async fn test_locator_screenshot() {
 // Cross-browser tests
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_screenshot_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -142,7 +142,7 @@ async fn test_screenshot_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_screenshot_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -312,7 +312,7 @@ async fn test_screenshot_element_and_locator_with_options() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_screenshot_options_firefox() {
     crate::common::init_tracing();
     // Cross-browser test: Firefox
@@ -347,7 +347,7 @@ async fn test_screenshot_options_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_screenshot_options_webkit() {
     crate::common::init_tracing();
     // Cross-browser test: WebKit

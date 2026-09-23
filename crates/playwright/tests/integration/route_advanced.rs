@@ -243,7 +243,7 @@ async fn test_route_fulfill_main_document() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_route_fulfill_main_document_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -264,7 +264,7 @@ async fn test_route_fulfill_main_document_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_route_fulfill_main_document_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

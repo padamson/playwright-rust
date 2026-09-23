@@ -152,7 +152,7 @@ async fn test_to_be_hidden_assertions() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify assertions work in Firefox and WebKit
@@ -529,7 +529,7 @@ async fn test_focus_assertions() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_state_assertions_cross_browser_smoke() {
     // Smoke test to verify assertions work in Firefox and WebKit
     // (Rust bindings use the same protocol layer for all browsers,
@@ -1010,7 +1010,7 @@ async fn test_to_have_count_assertions() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_text_assertions_cross_browser_smoke() {
     // Smoke test to verify assertions work in Firefox and WebKit
     // (Rust bindings use the same protocol layer for all browsers,

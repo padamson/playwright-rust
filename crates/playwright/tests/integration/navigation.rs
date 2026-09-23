@@ -149,7 +149,7 @@ async fn test_multiple_pages_independent_urls() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify navigation works in Firefox and WebKit
@@ -389,7 +389,7 @@ async fn test_wait_until_options() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_navigation_errors_cross_browser_smoke() {
     crate::common::init_tracing();
     // Smoke test to verify navigation errors work in Firefox and WebKit
@@ -562,7 +562,7 @@ async fn test_url_includes_hash_after_js_navigation() {
 
 /// Test cross-browser: Hash navigation works on Chromium, Firefox, and WebKit
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_url_hash_cross_browser() {
     crate::common::init_tracing();
 

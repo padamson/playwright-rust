@@ -196,7 +196,11 @@ Just-in-time philosophy — write the right thing in the right file:
   use `common::poll_until(timeout, cond)` — never a fixed
   `tokio::time::sleep` before an assertion (flakes on loaded CI)
 - **Doctests** — see the **doctest-conventions** skill
-- **CI** runs Linux, macOS, Windows with Chromium + Firefox + WebKit
+- **CI** runs Linux, macOS, Windows with Chromium + Firefox + WebKit.
+  Firefox/WebKit and stress tests are `#[ignore = "..."]` with the lane
+  named in the reason; CI runs them with `--run-ignored ignored-only`
+- **No coverage job**, on purpose. Mutation testing (below) subsumes line
+  coverage for tested code; a lint on never-executed lines is not wanted
 
 ## Development Commands
 
@@ -262,8 +266,11 @@ run manually if you want full coverage before cutting a release.
 
 Scope is set by [`.cargo/mutants.toml`](.cargo/mutants.toml)
 (`examine_globs` lists the files that get mutated at all; `exclude_re`
-removes mutants that are only testable via integration tests).
-`--in-diff` narrows from there.
+removes mutants that are only testable via integration tests;
+`additional_cargo_test_args` names the unit tests and every browser-free
+test binary, so a new one must be added there to count). `--in-diff`
+narrows from there. `./scripts/mutants.sh --working` gates uncommitted
+edits before the commit exists.
 
 Install once: `cargo install cargo-mutants`.
 

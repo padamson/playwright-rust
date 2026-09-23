@@ -182,7 +182,7 @@ async fn test_hover() {
 // Cross-browser tests
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_check_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -214,7 +214,7 @@ async fn test_check_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_hover_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -434,7 +434,7 @@ async fn test_set_checked_with_options() {
 // Cross-browser tests
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_set_checked_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -474,7 +474,7 @@ async fn test_set_checked_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_set_checked_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;

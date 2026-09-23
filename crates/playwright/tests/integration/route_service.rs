@@ -84,7 +84,7 @@ async fn cookies_the_service_sets_come_back_on_later_requests() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn cookies_round_trip_on_firefox() {
     crate::common::init_tracing();
     let playwright = playwright_rs::protocol::Playwright::launch()
@@ -99,7 +99,7 @@ async fn cookies_round_trip_on_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn cookies_round_trip_on_webkit() {
     crate::common::init_tracing();
     let playwright = playwright_rs::protocol::Playwright::launch()
@@ -314,7 +314,7 @@ async fn requests_outside_the_pattern_reach_the_network() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn a_redirecting_service_fails_fast_on_webkit_instead_of_hanging() {
     crate::common::init_tracing();
     let playwright = playwright_rs::protocol::Playwright::launch()

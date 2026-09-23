@@ -2,8 +2,14 @@
 # Run with: cargo mutants
 # See: https://mutants.rs/config.html
 
-# Only mutate source files with unit test coverage.
-# Integration tests (requiring Playwright server) are too slow for mutation testing.
+# nextest reports a hung test as TIMEOUT the same way the test job does,
+# and with --fail-fast below it stops at the first test that kills a mutant.
+test_tool = "nextest"
+
+# Only the files with unit-test coverage. Most of this crate is RPC
+# delegation that only a live browser exercises; a directory glob would
+# turn every such method into a MISSED that nothing but the integration
+# suite could kill, and that suite is far too slow to run per mutant.
 examine_globs = [
     "crates/playwright/src/protocol/event_registry.rs",
     "crates/playwright/src/protocol/locator.rs",
@@ -27,12 +33,24 @@ examine_globs = [
     "crates/playwright/src/protocol/page/mod.rs",
 ]
 
-# Only run unit tests and fast serialization tests (no Playwright server needed).
+# The unit tests plus every test binary that runs without a browser. The
+# browser suites (`integration`, `sigint_termios`) are left out by target
+# rather than by nextest filter because cargo would otherwise relink them
+# for every mutant. A new browser-free test binary has to be added here or
+# its kills are never counted; `tests/properties.rs` sat outside this list
+# for months; scripts/check-mutants-test-targets.sh now fails the commit
+# instead.
 additional_cargo_test_args = [
+    # The default profile keeps every failure visible; per mutant the first
+    # kill is all that matters.
+    "--fail-fast",
     "--lib",
+    "--test", "browser_context_proxy_test",
     "--test", "browser_context_serialization_test",
+    "--test", "browser_install_error_test",
     "--test", "file_payload_test",
     "--test", "playwright_version_test",
+    "--test", "properties",
 ]
 
 # Exclude mutations that are only testable via integration tests (require Playwright server)

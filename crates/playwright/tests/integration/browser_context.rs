@@ -347,7 +347,7 @@ async fn test_context_no_viewport() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_context_cross_browser_options() {
     crate::common::init_tracing();
     // Verify context options work across Chromium, Firefox, and WebKit
@@ -572,7 +572,7 @@ async fn test_context_storage_state_invalid_file() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_context_storage_state_cross_browser() {
     use playwright_rs::protocol::{Cookie, LocalStorageItem, Origin, StorageState};
     crate::common::init_tracing();
@@ -845,7 +845,7 @@ async fn test_context_browser_returns_browser_for_persistent_context() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_context_pages_cross_browser() {
     let playwright = Playwright::launch().await.unwrap();
 
@@ -913,21 +913,20 @@ async fn assert_context_browser(browser_type: &BrowserType, name: &str) {
 }
 
 #[tokio::test]
-#[ignore]
 async fn test_context_browser_chromium() {
     let pw = Playwright::launch().await.unwrap();
     assert_context_browser(pw.chromium(), "chromium").await;
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_context_browser_firefox() {
     let pw = Playwright::launch().await.unwrap();
     assert_context_browser(pw.firefox(), "firefox").await;
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_context_browser_webkit() {
     let pw = Playwright::launch().await.unwrap();
     assert_context_browser(pw.webkit(), "webkit").await;

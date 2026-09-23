@@ -129,7 +129,7 @@ async fn test_element_handle_content_frame() {
 // Cross-browser tests
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_element_handle_screenshot_firefox() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
@@ -166,7 +166,7 @@ async fn test_element_handle_screenshot_firefox() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "launches WebKit; runs in CI's --run-ignored lane"]
 async fn test_element_handle_screenshot_webkit() {
     crate::common::init_tracing();
     let server = TestServer::start().await;
