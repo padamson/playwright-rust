@@ -48,9 +48,12 @@ process-per-test runners), and component testing for Rust web frameworks.
 
 ## Deliberately not planned
 
-- **A native Rust driver replacing the Node server.** Explored and parked.
-  The point of the crate is the official architecture, which gives feature
-  parity with every upstream release for free; see [WHY.md](../WHY.md) and
+- **A native Rust driver replacing the Node server.** The driver is
+  Playwright's server (actionability, auto-wait, selector engines, routing,
+  tracing), not a wire protocol, and a Rust rewrite of it is a different
+  product with a different parity story. The point of this crate is the
+  official architecture, which gives feature parity with every upstream
+  release for free; see [WHY.md](../WHY.md) and
   [ADR 0001](adr/0001-protocol-architecture.md).
 - **Protocol code generation from the spec.** The official ports hand-write
   their APIs for ergonomics, and so does this one. Revisited only if
