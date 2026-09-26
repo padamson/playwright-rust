@@ -217,18 +217,11 @@ npx skills add padamson/playwright-rust
 
 Works with [Claude Code](https://claude.ai/code),
 [Codex](https://openai.com/codex/), [Cursor](https://cursor.com), and any
-other [compatible agent](https://agentskills.io/clients).
-
-Claude Code can also install it as a plugin, which tracks this repo:
-
-```bash
-/plugin marketplace add padamson/playwright-rust
-/plugin install playwright-rs@playwright-rust
-```
-
-Third-party marketplaces don't refresh on their own; update with
-`/plugin marketplace update playwright-rust` followed by
-`/plugin update playwright-rs@playwright-rust`.
+other [compatible agent](https://agentskills.io/clients). The install copies
+the skill into your repo and records its source in `skills-lock.json`;
+`npx skills update` takes a newer one. The skill carries its own version in
+its frontmatter, bumped whenever its content changes and enforced by a hook,
+so the installed copy always says which playwright-rs it describes.
 
 The skill lives at
 [`skills/playwright-rs-usage/`](skills/playwright-rs-usage/) and points back

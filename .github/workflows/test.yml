@@ -15,8 +15,8 @@ permissions:
   contents: read
 
 jobs:
-  plugin-version:
-    name: Plugin version guard
+  skill-version:
+    name: Skill version guard
     runs-on: ubuntu-latest
     # The pre-commit hook of the same name is per-clone and opt-in, so a
     # hookless clone or a --no-verify commit would ship a skill edit without
@@ -27,7 +27,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Check plugin version against the base ref
+    - name: Check the skill version against the base ref
       env:
         BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
       run: |
@@ -35,7 +35,7 @@ jobs:
           echo "No reachable base ref (new branch, force push, or manual run); nothing to compare."
           exit 0
         fi
-        scripts/check-plugin-version-bumped.sh --base "$BASE"
+        scripts/check-skill-version-bumped.sh --base "$BASE"
 
   msrv:
     name: MSRV Check

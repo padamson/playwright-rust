@@ -8,15 +8,8 @@ npx skills add padamson/playwright-rust
 ```
 
 It works with Claude Code, Codex, Cursor, and any other
-[compatible agent](https://agentskills.io/clients), and Claude Code can
-take it as a plugin instead:
-
-```bash
-/plugin marketplace add padamson/playwright-rust
-/plugin install playwright-rs@playwright-rust
-```
-
-Either route updates with one command. A pasted copy does not: it goes
+[compatible agent](https://agentskills.io/clients), and `npx skills update`
+refreshes it in one command. A pasted copy does not: it goes
 stale the moment the crate changes and then actively teaches the old API,
 which is why this file no longer carries the content. The skill is
 [`skills/playwright-rs-usage/`](../../skills/playwright-rs-usage/), and a

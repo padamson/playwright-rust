@@ -141,18 +141,18 @@ repos:
         pass_filenames: false
         files: (crates/(playwright|playwright-rs-macros|playwright-rs-trace)/CHANGELOG\.md|crates/xtask/src/)
 
-      # The plugin.json version is the update gate for consumers who
-      # installed the skill via /plugin: until it moves, /plugin update
-      # reports "already at the latest version" and a skill edit reaches
-      # nobody. Pure bookkeeping, so easy to forget; the hook makes it
+      # The skill's metadata.version is the only version an installed copy
+      # carries: `npx skills add` copies the skill and has no version of its
+      # own, so a content change without a bump is invisible to every
+      # consumer. Pure bookkeeping, so easy to forget; the hook makes it
       # impossible.
-      - id: plugin-version-bumped
-        name: plugin version bumped
-        description: Skill/plugin edits must bump plugin.json version (the consumer update gate)
-        entry: ./scripts/check-plugin-version-bumped.sh
+      - id: skill-version-bumped
+        name: skill version bumped
+        description: Skill edits must bump metadata.version (the consumer update gate)
+        entry: ./scripts/check-skill-version-bumped.sh
         language: system
         pass_filenames: false
-        files: ^(skills/|\.claude-plugin/)
+        files: ^skills/
 
       # 6. Security audit (same as CI: cargo audit)
       - id: cargo-audit

@@ -78,9 +78,8 @@ symlink support that link lands as a stray text file and the skill simply
 does not auto-load in-repo, which costs nothing else.
 
 **The directory split alone does not keep the contributor skills
-unpublished.** It gates the Claude Code plugin, whose default discovery
-reads `skills/` only, but the Agent Skills CLI scans `.claude/skills/`
-too and happily offered all four to downstream users. Each
+unpublished.** The Agent Skills CLI scans `.claude/skills/` as well as
+`skills/` and happily offered all four to downstream users. Each
 contributor-only skill therefore carries `metadata.internal: true`, which
 hides it from `npx skills add` unless the caller sets
 `INSTALL_INTERNAL_SKILLS=1`. **Any new skill added under
@@ -130,7 +129,8 @@ Just-in-time philosophy — write the right thing in the right file:
    per the doctest-conventions skill, not on individual functions.
 6. **`skills/playwright-rs-usage/SKILL.md`** — the single agent-facing
    artifact distributed to downstream Rust projects. Installed with
-   `npx skills add padamson/playwright-rust` or as a Claude Code plugin.
+   `npx skills add padamson/playwright-rust`, the one channel it ships
+   through.
    `docs/agent/CLAUDE_SNIPPET.md` is now only a pointer to it: it used
    to be a hand-synced copy-paste duplicate, which is exactly the shape
    that goes stale and then teaches the old API. There is no second
@@ -144,20 +144,17 @@ Just-in-time philosophy — write the right thing in the right file:
    Neither checks that the surrounding prose is accurate. That residue
    is real, and the skill says so itself.
 
-   The same skill is also installable as a Claude Code plugin:
-   [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
-   makes this repo a marketplace. Default discovery picks up `skills/`
-   and nothing else, so the contributor-facing skills in
-   `.claude/skills/` stay in-repo without the manifest naming paths.
-   **Editing the
-   skill means bumping `version` in
-   [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)** — that
-   version is the update gate, and until it moves `/plugin update`
-   tells installed consumers they are already current. A pre-commit
-   hook (`scripts/check-plugin-version-bumped.sh`) enforces it, and the
-   `Plugin version guard` job in `test.yml` runs the same script against
+   **Editing the skill means bumping `metadata.version` in its
+   frontmatter**, written as a double-quoted string. `npx skills add`
+   copies the skill and has no version of its own, so that field is the
+   only version an installed copy carries, and until it moves a content
+   change reaches nobody. A pre-commit hook
+   (`scripts/check-skill-version-bumped.sh`) enforces it, and the
+   `Skill version guard` job in `test.yml` runs the same script against
    the PR base or pre-push tip, so a hookless clone cannot slip past.
-   Validate manifest changes with `claude plugin validate .`.
+   The Claude Code plugin channel (`.claude-plugin/` manifests, `/plugin
+   install`) was retired in favor of this one channel; do not re-add a
+   manifest.
 
 ## Working on Features
 
