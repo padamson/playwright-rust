@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>playwright-rust · playwright-rust</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><a class="site" href="index.html">playwright-rust</a><nav><a href="containers/playwright_rs.html">playwright-rs</a> <a href="containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a> <a href="containers/playwright_rs_macros.html">playwright-rs-macros</a> <a href="containers/playwright_rs_site.html">playwright-rs-site</a> <a href="containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a> <a href="containers/playwright_rs_trace.html">playwright-rs-trace</a> <a href="containers/xtask.html">xtask</a> </nav></header>
+<main>
+<h1>playwright-rust</h1>
+<figure><img src="views/index.svg" alt="Overview" loading="lazy"></figure>
+<h2>Containers</h2>
+<table><thead><tr><th>Name</th><th>Technology</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="containers/playwright_rs.html">playwright-rs</a></td><td>library crate</td><td><p>playwright: High-level Rust bindings for Microsoft Playwright</p>
+</td></tr>
+<tr><td><a href="containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a></td><td>binary</td><td></td></tr>
+<tr><td><a href="containers/playwright_rs_macros.html">playwright-rs-macros</a></td><td>proc-macro crate</td><td><p>Compile-time-validated selector macros for [playwright-rs].</p>
+</td></tr>
+<tr><td><a href="containers/playwright_rs_site.html">playwright-rs-site</a></td><td>binary</td><td></td></tr>
+<tr><td><a href="containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a></td><td>test crate</td><td></td></tr>
+<tr><td><a href="containers/playwright_rs_trace.html">playwright-rs-trace</a></td><td>library crate</td><td><p>Programmatic parser for [Playwright][pw] trace zip files
+(trace formats v8 and v9, v9 from 0.2.0; verified against traces
+recorded by the bundled driver, playwright@1.63.0).</p>
+</td></tr>
+<tr><td><a href="containers/xtask.html">xtask</a></td><td>binary</td><td><p>Workspace build-tooling binary. See <code>cargo xtask --help</code>.</p>
+</td></tr>
+</tbody></table>
+<h2>Externals</h2>
+<table><thead><tr><th>Name</th><th>Kind</th><th>Technology</th><th>Description</th><th>Used by</th></tr></thead><tbody>
+<tr id="browsers"><td>Browsers</td><td>process</td><td>Chromium, Firefox, WebKit</td><td><p>The browser processes the driver launches and controls; never spoken to directly from Rust.</p>
+</td><td><a href="index.html#node_driver">node_driver</a> (uses: drives)</td></tr>
+<tr id="node_driver"><td>Playwright driver</td><td>process</td><td>Node.js process</td><td><p>The official Playwright server, assembled by build.rs from the pinned playwright-core npm package.</p>
+</td><td><a href="containers/playwright_rs.html#playwright_rs.server.playwright_server">playwright_rs.server.playwright_server</a> (uses: spawns)<br><a href="containers/playwright_rs.html#playwright_rs.server.transport">playwright_rs.server.transport</a> (uses: exchanges JSON-RPC frames with)</td></tr>
+</tbody></table>
+</main>
+</body>
+</html>

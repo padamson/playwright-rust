@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>playwright-rs-trace · playwright-rust</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header><a class="site" href="../index.html">playwright-rust</a><nav><a href="../containers/playwright_rs.html">playwright-rs</a> <a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a> <a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a> <a href="../containers/playwright_rs_site.html">playwright-rs-site</a> <a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a> <a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a> <a href="../containers/xtask.html">xtask</a> </nav></header>
+<main>
+<nav class="crumbs"><a href="../index.html">playwright-rust</a> / playwright-rs-trace</nav>
+<h1>playwright-rs-trace</h1>
+<p class="meta">library crate · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace"><code>crates/playwright-rs-trace</code></a></p>
+<p>Programmatic parser for [Playwright][pw] trace zip files
+(trace formats v8 and v9, v9 from 0.2.0; verified against traces
+recorded by the bundled driver, playwright@1.63.0).</p>
+<figure><img src="../views/view_playwright_rs_trace.svg" alt="playwright-rs-trace" loading="lazy"></figure>
+<h2>Modules</h2>
+<div class="modules"><ul>
+<li><a href="#playwright_rs_trace.action">action</a></li>
+<li><a href="#playwright_rs_trace.error">error</a></li>
+<li><a href="#playwright_rs_trace.event">event</a></li>
+<li><a href="#playwright_rs_trace.jsonl">jsonl</a></li>
+<li><a href="#playwright_rs_trace.network">network</a></li>
+<li><a href="#playwright_rs_trace.tests">tests</a></li>
+<li><a href="#playwright_rs_trace.trace">trace</a></li>
+</ul>
+</div>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>uses</td><td><a href="../containers/playwright_rs.html">playwright_rs</a></td><td>playwright_rs_trace</td><td></td></tr>
+</tbody></table>
+<section id="playwright_rs_trace.action">
+<h2>action <small>playwright_rs_trace.action</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/action.rs"><code>crates/playwright-rs-trace/src/action.rs</code></a></p>
+<p>Action — reassembled from <code>before</code> + optional <code>input</code> + zero-or-more
+<code>log</code> + <code>after</code> events sharing a <code>call_id</code>.</p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>Result</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ActionError, AfterEvent, BeforeEvent, InputEvent, LogEvent, Point, TraceEvent</td><td></td></tr>
+</tbody></table>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>Action, ActionStream</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.error">
+<h2>error <small>playwright_rs_trace.error</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/error.rs"><code>crates/playwright-rs-trace/src/error.rs</code></a></p>
+<p>Error types for trace parsing.</p>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>Result</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl">playwright_rs_trace.jsonl</a></td><td>Result, TraceError</td><td></td></tr>
+<tr><td>uses</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>TraceError</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>Result, TraceError</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.event">
+<h2>event <small>playwright_rs_trace.event</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/event.rs"><code>crates/playwright-rs-trace/src/event.rs</code></a></p>
+<p>Trace event types.</p>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>uses</td><td><a href="../containers/playwright_rs.html#playwright_rs.tests">playwright_rs.tests</a></td><td>TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>ActionError, AfterEvent, BeforeEvent, InputEvent, LogEvent, Point, TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>ContextOptions, RawEvent, TraceEvent</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.jsonl">
+<h2>jsonl <small>playwright_rs_trace.jsonl</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/jsonl.rs"><code>crates/playwright-rs-trace/src/jsonl.rs</code></a></p>
+<p>Tiny JSONL line iterator.</p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>Result, TraceError</td><td></td></tr>
+</tbody></table>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>JsonLines</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.network">
+<h2>network <small>playwright_rs_trace.network</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/network.rs"><code>crates/playwright-rs-trace/src/network.rs</code></a></p>
+<p><code>trace.network</code> — HAR-like resource snapshots.</p>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>NetworkEntry</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>NetworkEntry</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.tests">
+<h2>tests <small>playwright_rs_trace.tests</small></h2>
+<p class="meta"><span class="tag">tests</span> · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/tests"><code>crates/playwright-rs-trace/tests</code></a></p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>uses</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>TraceError</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.network">playwright_rs_trace.network</a></td><td>NetworkEntry</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>TraceReader</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.trace">
+<h2>trace <small>playwright_rs_trace.trace</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/trace.rs"><code>crates/playwright-rs-trace/src/trace.rs</code></a></p>
+<p>[<code>TraceReader</code>] — open a Playwright trace zip and stream its
+contents lazily.</p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>Action, ActionStream</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>Result, TraceError</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ContextOptions, RawEvent, TraceEvent</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl">playwright_rs_trace.jsonl</a></td><td>JsonLines</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.network">playwright_rs_trace.network</a></td><td>NetworkEntry</td><td></td></tr>
+</tbody></table>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>calls</td><td><a href="../containers/playwright_rs.html#playwright_rs.tests">playwright_rs.tests</a></td><td>open</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>TraceReader</td><td></td></tr>
+</tbody></table>
+</section>
+</main>
+</body>
+</html>

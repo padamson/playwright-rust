@@ -1,0 +1,20 @@
+:root { color-scheme: light dark; --rule: #8884; --muted: #777; --code: #8882; }
+body { font: 16px/1.5 system-ui, sans-serif; margin: 0; max-width: 64rem; padding: 0 1rem 3rem; margin-inline: auto; }
+header { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: baseline; padding: 0.75rem 0; border-bottom: 1px solid var(--rule); }
+header .site { font-weight: 700; }
+header nav a { color: var(--muted); }
+nav.crumbs { color: var(--muted); margin: 1rem 0 0; }
+h1 { margin: 0.5rem 0 0.25rem; }
+h2 { border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 2rem; }
+h2 small { font-weight: 400; color: var(--muted); }
+code { background: var(--code); padding: 0 0.25em; border-radius: 3px; }
+.meta { color: var(--muted); margin: 0 0 0.75rem; }
+.tag { display: inline-block; font-size: 0.8em; border: 1px solid var(--rule); border-radius: 1em; padding: 0 0.6em; margin-right: 0.25em; }
+figure { margin: 1rem 0; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--rule); background: #fff; }
+figcaption { color: var(--muted); font-size: 0.9em; }
+.missing { color: var(--muted); font-style: italic; }
+table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule); }
+th { color: var(--muted); font-weight: 600; font-size: 0.85em; }
+ul.modules ul { margin: 0; }

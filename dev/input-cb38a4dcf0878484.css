@@ -248,6 +248,9 @@
   .block {
     display: block;
   }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
   }
@@ -697,6 +700,48 @@
     @media (width >= 48rem) {
       align-items: flex-start;
     }
+  }
+}
+@font-face {
+  font-family: "Bungee";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/bungee-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Bungee Shade";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/bungee-shade-latin.woff2") format("woff2");
+}
+@layer components {
+  .wordmark {
+    --shade: 0.119em;
+    --desc: 0.3em;
+    --gap: 0.08em;
+    --seam: 0.025em;
+    font-family: "Bungee", system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .wordmark-as {
+    font-family: "Bungee Shade", "Bungee", system-ui, sans-serif;
+    color: var(--color-rust-300);
+  }
+  .wordmark-built {
+    position: relative;
+  }
+  .wordmark-built::after {
+    content: "";
+    position: absolute;
+    left: calc(-0.26em + var(--gap));
+    right: 0.211em;
+    bottom: calc(var(--desc) - var(--shade));
+    height: calc(var(--shade) - var(--seam));
+    background: var(--color-rust-300);
+    clip-path: polygon(calc(var(--shade) - var(--seam)) 0, 100% 0, 100% 100%, 0 100%);
   }
 }
 @property --tw-border-style {
