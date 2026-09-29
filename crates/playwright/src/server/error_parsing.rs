@@ -199,7 +199,9 @@ mod tests {
         let mut payload = payload("locator.click: Timeout 30000ms exceeded.");
         payload.name = Some("TimeoutError".to_string());
         let err = parse_protocol_error(payload, None);
-        assert!(matches!(err, Error::Timeout(msg) if msg.starts_with("locator.click: Timeout 30000ms exceeded.")));
+        assert!(
+            matches!(err, Error::Timeout(msg) if msg.starts_with("locator.click: Timeout 30000ms exceeded."))
+        );
     }
 
     #[test]
