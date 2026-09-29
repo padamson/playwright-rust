@@ -76,6 +76,17 @@ pub(crate) fn parse_protocol_error(
         };
     }
 
+    // Action/navigation timeouts (e.g. `locator.click` exceeding its timeout)
+    // arrive as a plain error with `name: "TimeoutError"`, distinct from the
+    // `errorDetails`-carrying timeouts `expect` reports above.
+    if payload.name.as_deref() == Some("TimeoutError") {
+        return Error::Timeout(format!(
+            "{} \n {}",
+            payload.message,
+            payload.stack.unwrap_or_default()
+        ));
+    }
+
     // Default: return as protocol error
     Error::ProtocolError(format!(
         "{} \n {}",
@@ -181,6 +192,14 @@ mod tests {
             Some(details(None, None, Some(serde_json::json!({ "value": 1 })))),
         );
         assert!(matches!(err, Error::AssertionFailed(_)));
+    }
+
+    #[test]
+    fn timeout_error_name_maps_to_timeout() {
+        let mut payload = payload("locator.click: Timeout 30000ms exceeded.");
+        payload.name = Some("TimeoutError".to_string());
+        let err = parse_protocol_error(payload, None);
+        assert!(matches!(err, Error::Timeout(msg) if msg.starts_with("locator.click: Timeout 30000ms exceeded.")));
     }
 
     #[test]
