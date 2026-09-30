@@ -1,18 +1,88 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-theme-default="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>playwright-rs-site · playwright-rust</title>
+<meta name="generator" content="asbuilt docs">
+<title>playwright-rs-site · Architecture</title>
 <link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../theme.css">
+<script src="../theme.js"></script>
+<link rel="stylesheet" href="../../architecture.css">
 </head>
 <body>
-<header><a class="site" href="../index.html">playwright-rust</a><nav><a href="../containers/playwright_rs.html">playwright-rs</a> <a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a> <a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a> <a href="../containers/playwright_rs_site.html">playwright-rs-site</a> <a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a> <a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a> <a href="../containers/xtask.html">xtask</a> </nav></header>
+<header><div class="bar"><nav class="trail" aria-label="Breadcrumb"><a class="home" href="../../">playwright-rust</a><span class="sep" aria-hidden="true">/</span><a class="site" href="../index.html"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.24 3.21L17.61 1.26L21.97 8.81L18.6 10.76zM3.06 11.38L15.28 4.33L18.15 9.3L5.93 16.36zM1 13.77L3.88 12.1L5.71 15.29L2.84 16.96zM20.65 13.45A10.32 10.32 0 0 1 17.16 18.37L15.06 15.65A6.88 6.88 0 0 0 17.39 12.37zM14.78 19.74A10.32 10.32 0 0 1 6.06 19.34L7.65 16.29A6.88 6.88 0 0 0 13.47 16.57zM17.95 12.13L23 14.59L21.8 17.07L16.75 14.6zM9.67 17.46L7.76 22.74L5.16 21.8L7.09 16.52zM10.36 10.49L11.79 12.97L12.78 12.4L11.35 9.91zM13.31 11.7L18.47 20.64L17.77 21.04L12.61 12.1zM11.62 12.68L16.78 21.61L16.08 22.01L10.92 13.08zM18.07 19.94L18.47 20.64L16.08 22.01L15.68 21.31z"/></svg>Architecture</a></nav><label class="scheme" hidden>Theme <select id="scheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div><nav class="containers" aria-label="Containers"><a href="../containers/playwright_rs.html">playwright-rs</a><a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a><a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a><span aria-current="page">playwright-rs-site</span><a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a><a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a><a href="../containers/xtask.html">xtask</a></nav></header>
 <main>
-<nav class="crumbs"><a href="../index.html">playwright-rust</a> / playwright-rs-site</nav>
 <h1>playwright-rs-site</h1>
 <p class="meta">binary · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/site"><code>crates/site</code></a></p>
-<figure><img src="../views/view_playwright_rs_site.svg" alt="playwright-rs-site" loading="lazy"></figure>
+<figure class="view"><svg viewBox="0.00 0.00 1322.10 647.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_site" role="img" aria-label="playwright-rs-site">
+<g id="view_playwright_rs_site-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 632.05)">
+
+<g id="view_playwright_rs_site-clust1" class="cluster c4-k-container">
+
+<polygon fill="#722f24" stroke="#57130f" points="8,-8 8,-609 1284,-609 1284,-8 8,-8"/>
+<text text-anchor="start" x="16" y="-597.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#ffffe5" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;SITE</text>
+</g>
+
+<g id="view_playwright_rs_site-node1" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1244,-549 924,-549 924,-369 1244,-369 1244,-549"/>
+<text text-anchor="start" x="1067" y="-454" font-family="Arial" font-size="20.00" fill="#5b5b5b">app</text>
+</g>
+
+<g id="view_playwright_rs_site-node2" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="806,-228 486,-228 486,-48 806,-48 806,-228"/>
+<text text-anchor="start" x="591.5" y="-133" font-family="Arial" font-size="20.00" fill="#5b5b5b">components</text>
+</g>
+
+<g id="view_playwright_rs_site-node3" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="814,-549 478,-549 478,-369 814,-369 814,-549"/>
+<text text-anchor="start" x="608.5" y="-498" font-family="Arial" font-size="20.00" fill="#5b5b5b">snippets</text>
+<text text-anchor="start" x="498" y="-476" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Syntax&#45;highlighted code snippets, generated</text>
+<text text-anchor="start" x="546" y="-459" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">at build time by `build.rs` from</text>
+<text text-anchor="start" x="502.5" y="-442" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">the files in `snippets/`. Each constant holds</text>
+<text text-anchor="start" x="569" y="-425" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">highlighted inner HTML</text>
+<text text-anchor="start" x="499.5" y="-408" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">(token spans with inline colors) rendered via</text>
+</g>
+
+<g id="view_playwright_rs_site-node4" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="368,-549 48,-549 48,-369 368,-369 368,-549"/>
+<text text-anchor="start" x="175.5" y="-498" font-family="Arial" font-size="20.00" fill="#5b5b5b">version</text>
+<text text-anchor="start" x="87.5" y="-476" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">The build&#39;s version identity, from the</text>
+<text text-anchor="start" x="87.5" y="-459" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`SITE_VERSION` env that `build.rs`</text>
+<text text-anchor="start" x="84" y="-442" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">injects. Single source for the `dev` vs</text>
+<text text-anchor="start" x="102.5" y="-425" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">release&#45;snapshot distinction the</text>
+<text text-anchor="start" x="129" y="-408" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">components branch on.</text>
+</g>
+
+<g id="view_playwright_rs_site-edge1" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M961.7,-368.93C903.46,-326.51 833.8,-275.78 774.75,-232.77"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="775.94,-230.39 768.34,-228.1 772.85,-234.64 775.94,-230.39"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="878,-288 878,-309 905,-309 905,-288 878,-288" class="c4-label-bg"/>
+<text text-anchor="start" x="881.5" y="-295.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
+</g>
+
+<g id="view_playwright_rs_site-edge2" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M646,-228.26C646,-269.64 646,-318.9 646,-361.18"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="643.38,-361.22 646,-368.72 648.63,-361.22 643.38,-361.22"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="646,-288 646,-309 673,-309 673,-288 646,-288" class="c4-label-bg"/>
+<text text-anchor="start" x="649.5" y="-295.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
+</g>
+
+<g id="view_playwright_rs_site-edge3" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M523.66,-228.1C465.42,-270.52 395.76,-321.26 336.71,-364.26"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="334.82,-362.39 330.3,-368.93 337.91,-366.64 334.82,-362.39"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="440,-288 440,-309 467,-309 467,-288 440,-288" class="c4-label-bg"/>
+<text text-anchor="start" x="443.5" y="-295.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
+</g>
+</g>
+</svg></figure>
 <h2>Modules</h2>
 <div class="modules"><ul>
 <li><a href="#playwright_rs_site.app">app</a></li>
@@ -55,7 +125,350 @@
 <section id="playwright_rs_site.components">
 <h2>components <small>playwright_rs_site.components</small></h2>
 <p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/site/src/components/mod.rs"><code>crates/site/src/components/mod.rs</code></a></p>
-<figure><img src="../views/view_playwright_rs_site_components.svg" alt="playwright_rs_site.components" loading="lazy"></figure>
+<figure class="view"><svg viewBox="0.00 0.00 6607.10 925.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_site_components" role="img" aria-label="playwright_rs_site.components">
+<g id="view_playwright_rs_site_components-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 910.05)">
+
+<g id="view_playwright_rs_site_components-clust1" class="cluster c4-k-component">
+
+<polygon fill="#999999" stroke="#808080" points="8,-326 8,-626 6569,-626 6569,-326 8,-326"/>
+<text text-anchor="start" x="16" y="-614.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#6d6d6d" fill-opacity="0.701961">COMPONENTS</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node1" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="798,-546 478,-546 478,-366 798,-366 798,-546"/>
+<text text-anchor="start" x="586" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">comparison</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node2" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1228,-546 908,-546 908,-366 1228,-366 1228,-546"/>
+<text text-anchor="start" x="994" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">dogfood_banner</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node3" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1658,-546 1338,-546 1338,-366 1658,-366 1658,-546"/>
+<text text-anchor="start" x="1461.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">features</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node4" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2628,-546 2308,-546 2308,-366 2628,-366 2628,-546"/>
+<text text-anchor="start" x="2442" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">footer</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node5" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3058,-546 2738,-546 2738,-366 3058,-366 3058,-546"/>
+<text text-anchor="start" x="2877.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">hero</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node6" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4699,-546 4379,-546 4379,-366 4699,-366 4699,-546"/>
+<text text-anchor="start" x="4513" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">install</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node7" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6529,-546 6209,-546 6209,-366 6529,-366 6529,-546"/>
+<text text-anchor="start" x="6294.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">version_switcher</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node8" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="5669,-546 5349,-546 5349,-366 5669,-366 5669,-546"/>
+<text text-anchor="start" x="5454.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">walkthrough</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node9" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2198,-546 1878,-546 1878,-366 2198,-366 2198,-546"/>
+<text text-anchor="start" x="1991.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">code_tabs</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node10" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6099,-546 5779,-546 5779,-366 6099,-366 6099,-546"/>
+<text text-anchor="start" x="5882.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">feature_card</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node11" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4269,-546 3949,-546 3949,-366 4269,-366 4269,-546"/>
+<text text-anchor="start" x="4085.5" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">icons</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node12" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3839,-546 3497,-546 3497,-366 3839,-366 3839,-546"/>
+<text text-anchor="start" x="3648" y="-478" font-family="Arial" font-size="20.00" fill="#5b5b5b">links</text>
+<text text-anchor="start" x="3517" y="-456" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">The destinations the hero and the footer both</text>
+<text text-anchor="start" x="3591" y="-439" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">link to, so the two rows</text>
+<text text-anchor="start" x="3612" y="-422" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">cannot disagree.</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node13" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="5239,-546 4919,-546 4919,-366 5239,-366 5239,-546"/>
+<text text-anchor="start" x="5028" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">code_block</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node14" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="368,-546 48,-546 48,-366 368,-366 368,-546"/>
+<text text-anchor="start" x="124" y="-451" font-family="Arial" font-size="20.00" fill="#5b5b5b">unreleased_badge</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node15" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3173,-895 2853,-895 2853,-715 3173,-715 3173,-895"/>
+<text text-anchor="start" x="2996" y="-800" font-family="Arial" font-size="20.00" fill="#5b5b5b">app</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node16" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1961,-180 1625,-180 1625,0 1961,0 1961,-180"/>
+<text text-anchor="start" x="1755.5" y="-129" font-family="Arial" font-size="20.00" fill="#5b5b5b">snippets</text>
+<text text-anchor="start" x="1645" y="-107" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Syntax&#45;highlighted code snippets, generated</text>
+<text text-anchor="start" x="1693" y="-90" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">at build time by `build.rs` from</text>
+<text text-anchor="start" x="1649.5" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">the files in `snippets/`. Each constant holds</text>
+<text text-anchor="start" x="1716" y="-56" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">highlighted inner HTML</text>
+<text text-anchor="start" x="1646.5" y="-39" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">(token spans with inline colors) rendered via</text>
+</g>
+
+<g id="view_playwright_rs_site_components-node17" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="5132,-180 4812,-180 4812,0 5132,0 5132,-180"/>
+<text text-anchor="start" x="4939.5" y="-129" font-family="Arial" font-size="20.00" fill="#5b5b5b">version</text>
+<text text-anchor="start" x="4851.5" y="-107" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">The build&#39;s version identity, from the</text>
+<text text-anchor="start" x="4851.5" y="-90" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`SITE_VERSION` env that `build.rs`</text>
+<text text-anchor="start" x="4848" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">injects. Single source for the `dev` vs</text>
+<text text-anchor="start" x="4866.5" y="-56" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">release&#45;snapshot distinction the</text>
+<text text-anchor="start" x="4893" y="-39" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">components branch on.</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge9" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M730.92,-546.08C766.27,-574.48 808.76,-602.27 853,-617 943.66,-647.18 1619.96,-638.78 1713,-617 1772.09,-603.17 1832.75,-576.93 1885.43,-549.59"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1886.71,-551.88 1892.14,-546.08 1884.28,-547.23 1886.71,-551.88"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1279.5,-634 1279.5,-655 1346.5,-655 1346.5,-634 1279.5,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="1283" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeTabs</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge10" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M730.92,-546.08C766.27,-574.48 808.76,-602.27 853,-617 955.81,-651.23 4648.49,-641.7 4754,-617 4813.09,-603.17 4873.75,-576.93 4926.43,-549.59"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4927.71,-551.88 4933.14,-546.08 4925.28,-547.23 4927.71,-551.88"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1981,-634 1981,-655 2053,-655 2053,-634 1981,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="1984" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeBlock</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge11" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M772.76,-365.97C798.69,-351.21 826.16,-337.12 853,-326 1108.93,-219.99 1424.56,-153.13 1617.18,-118.91"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1617.91,-121.45 1624.83,-117.56 1616.99,-116.28 1617.91,-121.45"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1078,-262.5 1078,-283.5 1135,-283.5 1135,-262.5 1078,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="1081.5" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">snippets</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge12" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1658.19,-456C1724.96,-456 1802.53,-456 1870.09,-456"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1870.36,-458.63 1877.86,-456 1870.36,-453.38 1870.36,-458.63"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1734.5,-459 1734.5,-480 1801.5,-480 1801.5,-459 1734.5,-459" class="c4-label-bg"/>
+<text text-anchor="start" x="1738" y="-465.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeTabs</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge13" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1643.86,-546.08C1698.06,-574.66 1761.38,-602.57 1823,-617 1928.51,-641.7 5621.19,-651.23 5724,-617 5765.65,-603.13 5805.74,-577.69 5839.79,-551.07"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5841.83,-552.8 5846.08,-546.08 5838.57,-548.69 5841.83,-552.8"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3244,-634 3244,-655 3326,-655 3326,-634 3244,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="3247" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">FeatureCard</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge14" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1643.86,-546.08C1698.06,-574.66 1761.38,-602.57 1823,-617 1981.55,-654.12 4595.45,-654.12 4754,-617 4813.09,-603.17 4873.75,-576.93 4926.43,-549.59"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4927.71,-551.88 4933.14,-546.08 4925.28,-547.23 4927.71,-551.88"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2648,-634 2648,-655 2720,-655 2720,-634 2648,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="2651" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeBlock</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge15" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1570.17,-365.96C1614.35,-311.43 1670.87,-241.69 1715.93,-186.09"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1718.13,-187.55 1720.81,-180.07 1714.05,-184.24 1718.13,-187.55"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1672,-262.5 1672,-283.5 1729,-283.5 1729,-262.5 1672,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="1675.5" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">snippets</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge16" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1658.13,-378.04C1709.58,-356.98 1767.62,-336.96 1823,-326 1991.3,-292.69 3195.89,-318.52 3367,-306 3508.27,-295.66 4421.84,-168.35 4804.16,-114.65"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4804.64,-117.23 4811.7,-113.59 4803.91,-112.03 4804.64,-117.23"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3877,-262.5 3877,-283.5 4029,-283.5 4029,-262.5 3877,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="3880" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SITE_VERSION, is_dev</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge17" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2560.92,-546.08C2596.27,-574.48 2638.76,-602.27 2683,-617 2955.96,-707.87 3289.18,-613.15 3489.68,-535.35"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3490.72,-537.76 3496.76,-532.59 3488.81,-532.87 3490.72,-537.76"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2785.5,-634 2785.5,-655 3114.5,-655 3114.5,-634 2785.5,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="2789" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ARCHITECTURE, CRATES_IO, DOCS_RS, GITHUB</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge18" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3058.31,-527.89C3258.33,-607.23 3608.77,-711.96 3894,-617 3935.65,-603.13 3975.74,-577.69 4009.79,-551.07"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4011.83,-552.8 4016.08,-546.08 4008.57,-548.69 4011.83,-552.8"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3167.5,-634 3167.5,-655 3238.5,-655 3238.5,-634 3167.5,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="3171" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Icon, icons</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge19" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3058.01,-456C3183.73,-456 3358.76,-456 3489.1,-456"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3489.33,-458.63 3496.83,-456 3489.33,-453.38 3489.33,-458.63"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3113,-459 3113,-480 3442,-480 3442,-459 3113,-459" class="c4-label-bg"/>
+<text text-anchor="start" x="3116.5" y="-465.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ARCHITECTURE, CRATES_IO, DOCS_RS, GITHUB</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge20" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3058.27,-407.97C3165.78,-378.66 3311.14,-343.34 3442,-326 3729.84,-287.86 3807.3,-345.23 4095,-306 4346.06,-271.77 4629.71,-195.05 4804.7,-143.15"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4805.47,-145.66 4811.91,-141.01 4803.98,-140.63 4805.47,-145.66"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4435,-262.5 4435,-283.5 4481,-283.5 4481,-262.5 4435,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="4438" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge21" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M4699.19,-456C4765.96,-456 4843.53,-456 4911.09,-456"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4911.36,-458.63 4918.86,-456 4911.36,-453.38 4911.36,-458.63"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4773,-459 4773,-480 4845,-480 4845,-459 4773,-459" class="c4-label-bg"/>
+<text text-anchor="start" x="4776" y="-465.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeBlock</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge22" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M4415.36,-365.95C4386.65,-349.6 4355.3,-334.9 4324,-326 4244.53,-303.41 2919.13,-314.93 2837,-306 2527.92,-272.4 2174.87,-190.3 1968.69,-137.83"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1969.33,-135.29 1961.41,-135.98 1968.03,-140.38 1969.33,-135.29"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2837,-262.5 2837,-283.5 2894,-283.5 2894,-262.5 2837,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="2840.5" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">snippets</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge23" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M4644.92,-365.96C4710.18,-311.1 4793.75,-240.84 4860.09,-185.08"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4861.99,-186.91 4866.04,-180.07 4858.61,-182.89 4861.99,-186.91"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4794,-262.5 4794,-283.5 4840,-283.5 4840,-262.5 4794,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="4797" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge24" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6236.06,-365.88C6209.67,-350.91 6181.57,-336.76 6154,-326 5808.15,-191 5373.84,-130.25 5139.88,-105.67"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5140.06,-103.05 5132.33,-104.88 5139.52,-108.27 5140.06,-103.05"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6093,-262.5 6093,-283.5 6245,-283.5 6245,-262.5 6093,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="6096" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SITE_VERSION, is_dev</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge25" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5385.39,-365.84C5356.68,-349.49 5325.32,-334.82 5294,-326 5172.98,-291.9 3152.28,-339.15 3031,-306 2974.53,-290.56 2972.42,-258.88 2917,-240 2594.58,-130.18 2194.5,-100.74 1969.05,-93.2"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1969.02,-90.57 1961.44,-92.95 1968.85,-95.82 1969.02,-90.57"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3031,-240 3031,-306 3340,-306 3340,-240 3031,-240" class="c4-label-bg"/>
+<text text-anchor="start" x="3034.5" y="-291.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SERVE_01_RS, SERVE_02_RS, SERVE_03_RS,</text>
+<text text-anchor="start" x="3034.5" y="-276.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SERVE_04_RS, WALK_01_RS, WALK_02_RS,</text>
+<text text-anchor="start" x="3034.5" y="-261.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">WALK_03_RS, WALK_04_RS, WALK_05_RS,</text>
+<text text-anchor="start" x="3034.5" y="-246.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">WALK_06_RS, snippets</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge26" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5377.64,-365.96C5296.38,-310.88 5192.22,-240.28 5109.8,-184.41"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5111.08,-182.11 5103.4,-180.07 5108.14,-186.45 5111.08,-182.11"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5288,-262.5 5288,-283.5 5334,-283.5 5334,-262.5 5288,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="5291" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge27" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5801.36,-365.9C5776.18,-351.49 5749.72,-337.54 5724,-326 5530.2,-239.07 5294.82,-171.13 5139.61,-131.13"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5140.2,-128.58 5132.28,-129.25 5138.89,-133.66 5140.2,-128.58"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5665,-262.5 5665,-283.5 5711,-283.5 5711,-262.5 5665,-262.5" class="c4-label-bg"/>
+<text text-anchor="start" x="5668" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge1" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.89,-797.14C2514.21,-781.5 1700.67,-737.98 1023,-655 946.92,-645.68 923.06,-657.08 853,-626 811.36,-607.53 770.73,-579.16 736.2,-550.91"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="737.73,-548.77 730.27,-546.01 734.38,-552.81 737.73,-548.77"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1023,-634 1023,-655 1103,-655 1103,-634 1023,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="1026" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Comparison</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge2" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.88,-800.62C2426.62,-790.3 1287.29,-753.71 1151,-655 1117.89,-631.02 1097.91,-591.24 1085.9,-553.6"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1088.31,-552.51 1083.6,-546.11 1083.29,-554.05 1088.31,-552.51"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1151,-634 1151,-655 1252,-655 1252,-634 1151,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="1154.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">DogfoodBanner</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge3" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.99,-795.55C2633.53,-781.07 2228.28,-743.95 1894,-655 1861.06,-646.23 1853.93,-640.32 1823,-626 1770.95,-601.9 1715.23,-573.8 1664.89,-547.51"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1666,-545.13 1658.14,-543.98 1663.57,-549.78 1666,-545.13"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1894,-634 1894,-655 1954,-655 1954,-634 1894,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="1897" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Features</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge4" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.89,-779.27C2763.03,-758.61 2653.53,-721.36 2575,-655 2543.24,-628.16 2519.4,-589.43 2502.38,-553.32"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2504.59,-551.85 2499.07,-546.14 2499.82,-554.05 2504.59,-551.85"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2575,-634 2575,-655 2621,-655 2621,-634 2575,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="2578" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Footer</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge5" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.2,-776.48C3273.81,-751.54 3376,-707.22 3327,-634 3268.87,-547.13 3159.48,-502.85 3065.71,-480.3"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3066.03,-477.68 3058.13,-478.52 3064.83,-482.79 3066.03,-477.68"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3336,-634 3336,-655 3372,-655 3372,-634 3336,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="3339" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Hero</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge6" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.26,-792.8C3475.91,-769.93 4119.5,-712.6 4324,-626 4366.26,-608.11 4407.26,-579.63 4441.92,-551.12"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4443.78,-552.98 4447.87,-546.17 4440.43,-548.95 4443.78,-552.98"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4287,-634 4287,-655 4329,-655 4329,-634 4287,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="4290" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Install</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge7" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.09,-800.55C3773.88,-786.84 5874.24,-731.75 6154,-626 6197.87,-609.42 6239.9,-580.47 6274.97,-551.16"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6276.96,-552.92 6280.99,-546.08 6273.57,-548.92 6276.96,-552.92"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6103,-634 6103,-655 6206,-655 6206,-634 6103,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="6106.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">VersionSwitcher</text>
+</g>
+
+<g id="view_playwright_rs_site_components-edge8" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.07,-803.49C3625.57,-800.15 4906.38,-777.25 5294,-626 5337.48,-609.03 5379.28,-580.17 5414.27,-551.06"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5416.22,-552.84 5420.27,-546 5412.84,-548.83 5416.22,-552.84"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5264,-634 5264,-655 5465,-655 5465,-634 5264,-634" class="c4-label-bg"/>
+<text text-anchor="start" x="5267.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ServeWalkthrough, Walkthrough</text>
+</g>
+</g>
+</svg></figure>
 </section>
 <section id="playwright_rs_site.components.code_block">
 <h2>code_block <small>playwright_rs_site.components.code_block</small></h2>
@@ -206,7 +619,7 @@ cannot disagree.</p>
 <p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/site/src/components/walkthrough.rs"><code>crates/site/src/components/walkthrough.rs</code></a></p>
 <h3>Uses</h3>
 <table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
-<tr><td>uses</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.snippets">playwright_rs_site.snippets</a></td><td>snippets</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.snippets">playwright_rs_site.snippets</a></td><td>SERVE_01_RS, SERVE_02_RS, SERVE_03_RS, SERVE_04_RS, WALK_01_RS, WALK_02_RS, WALK_03_RS, WALK_04_RS, WALK_05_RS, WALK_06_RS, snippets</td><td></td></tr>
 <tr><td>calls</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.version">playwright_rs_site.version</a></td><td>is_dev</td><td></td></tr>
 </tbody></table>
 <h3>Used by</h3>
@@ -225,7 +638,7 @@ the files in <code>snippets/</code>. Each constant holds highlighted inner HTML
 <tr><td>uses</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.components.comparison">playwright_rs_site.components.comparison</a></td><td>snippets</td><td></td></tr>
 <tr><td>uses</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.components.features">playwright_rs_site.components.features</a></td><td>snippets</td><td></td></tr>
 <tr><td>uses</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.components.install">playwright_rs_site.components.install</a></td><td>snippets</td><td></td></tr>
-<tr><td>uses</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.components.walkthrough">playwright_rs_site.components.walkthrough</a></td><td>snippets</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_site.html#playwright_rs_site.components.walkthrough">playwright_rs_site.components.walkthrough</a></td><td>SERVE_01_RS, SERVE_02_RS, SERVE_03_RS, SERVE_04_RS, WALK_01_RS, WALK_02_RS, WALK_03_RS, WALK_04_RS, WALK_05_RS, WALK_06_RS, snippets</td><td></td></tr>
 </tbody></table>
 </section>
 <section id="playwright_rs_site.version">

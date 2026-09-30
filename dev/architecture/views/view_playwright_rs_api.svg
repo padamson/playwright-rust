@@ -10,38 +10,38 @@
 <title>%3</title>
 <g id="clust1" class="cluster">
 <title>cluster_api</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="453.95,-8 453.95,-288 1283.95,-288 1283.95,-8 453.95,-8"/>
-<text text-anchor="start" x="461.95" y="-276.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">API</text>
+<polygon fill="#999999" stroke="#808080" points="453.95,-8 453.95,-288 1283.95,-288 1283.95,-8 453.95,-8"/>
+<text text-anchor="start" x="461.95" y="-276.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#6d6d6d" fill-opacity="0.701961">API</text>
 </g>
 <!-- connect_options -->
 <g id="node1" class="node">
 <title>connect_options</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1243.95,-228 923.95,-228 923.95,-48 1243.95,-48 1243.95,-228"/>
-<text text-anchor="start" x="1010.95" y="-133" font-family="Arial" font-size="20.00" fill="#eff6ff">connect_options</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1243.95,-228 923.95,-228 923.95,-48 1243.95,-48 1243.95,-228"/>
+<text text-anchor="start" x="1010.95" y="-133" font-family="Arial" font-size="20.00" fill="#5b5b5b">connect_options</text>
 </g>
 <!-- launch_options -->
 <g id="node2" class="node">
 <title>launch_options</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="813.95,-228 493.95,-228 493.95,-48 813.95,-48 813.95,-228"/>
-<text text-anchor="start" x="585.95" y="-133" font-family="Arial" font-size="20.00" fill="#eff6ff">launch_options</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="813.95,-228 493.95,-228 493.95,-48 813.95,-48 813.95,-228"/>
+<text text-anchor="start" x="585.95" y="-133" font-family="Arial" font-size="20.00" fill="#5b5b5b">launch_options</text>
 </g>
 <!-- examples -->
 <g id="node3" class="node">
 <title>examples</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1728.95,-557 1408.95,-557 1408.95,-377 1728.95,-377 1728.95,-557"/>
-<text text-anchor="start" x="1525.95" y="-462" font-family="Arial" font-size="20.00" fill="#eff6ff">examples</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1728.95,-557 1408.95,-557 1408.95,-377 1728.95,-377 1728.95,-557"/>
+<text text-anchor="start" x="1525.95" y="-462" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
 </g>
 <!-- protocol -->
 <g id="node4" class="node">
 <title>protocol</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="330.95,-557 10.95,-557 10.95,-377 330.95,-377 330.95,-557"/>
-<text text-anchor="start" x="134.95" y="-462" font-family="Arial" font-size="20.00" fill="#eff6ff">protocol</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="330.95,-557 10.95,-557 10.95,-377 330.95,-377 330.95,-557"/>
+<text text-anchor="start" x="134.95" y="-462" font-family="Arial" font-size="20.00" fill="#5b5b5b">protocol</text>
 </g>
 <!-- tests -->
 <g id="node5" class="node">
 <title>tests</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1078.95,-557 758.95,-557 758.95,-377 1078.95,-377 1078.95,-557"/>
-<text text-anchor="start" x="897.95" y="-462" font-family="Arial" font-size="20.00" fill="#eff6ff">tests</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1078.95,-557 758.95,-557 758.95,-377 1078.95,-377 1078.95,-557"/>
+<text text-anchor="start" x="897.95" y="-462" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
 </g>
 <!-- launch_options&#45;&gt;protocol -->
 <g id="edge7" class="edge">

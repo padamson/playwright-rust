@@ -10,70 +10,70 @@
 <title>%3</title>
 <g id="clust1" class="cluster">
 <title>cluster_playwright_rs_trace</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="8,-8 8,-950 1967,-950 1967,-8 8,-8"/>
-<text text-anchor="start" x="16" y="-938.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;TRACE</text>
+<polygon fill="#722f24" stroke="#57130f" points="8,-8 8,-950 1967,-950 1967,-8 8,-8"/>
+<text text-anchor="start" x="16" y="-938.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#ffffe5" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;TRACE</text>
 </g>
 <!-- tests -->
 <g id="node1" class="node">
 <title>tests</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="957,-870 637,-870 637,-690 957,-690 957,-870"/>
-<text text-anchor="start" x="776" y="-775" font-family="Arial" font-size="20.00" fill="#eff6ff">tests</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="957,-870 637,-870 637,-690 957,-690 957,-870"/>
+<text text-anchor="start" x="776" y="-775" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
 </g>
 <!-- trace -->
 <g id="node2" class="node">
 <title>trace</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1282,-549 932,-549 932,-369 1282,-369 1282,-549"/>
-<text text-anchor="start" x="1084.5" y="-481" font-family="Arial" font-size="20.00" fill="#eff6ff">trace</text>
-<text text-anchor="start" x="952" y="-459" font-family="Arial" font-size="15.00" fill="#bfdbfe">[`TraceReader`] — open a Playwright trace zip</text>
-<text text-anchor="start" x="1059" y="-442" font-family="Arial" font-size="15.00" fill="#bfdbfe">and stream its</text>
-<text text-anchor="start" x="1058" y="-425" font-family="Arial" font-size="15.00" fill="#bfdbfe">contents lazily.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1282,-549 932,-549 932,-369 1282,-369 1282,-549"/>
+<text text-anchor="start" x="1084.5" y="-481" font-family="Arial" font-size="20.00" fill="#5b5b5b">trace</text>
+<text text-anchor="start" x="952" y="-459" font-family="Arial" font-size="15.00" fill="#6d6d6d">[`TraceReader`] — open a Playwright trace zip</text>
+<text text-anchor="start" x="1059" y="-442" font-family="Arial" font-size="15.00" fill="#6d6d6d">and stream its</text>
+<text text-anchor="start" x="1058" y="-425" font-family="Arial" font-size="15.00" fill="#6d6d6d">contents lazily.</text>
 </g>
 <!-- action -->
 <g id="node3" class="node">
 <title>action</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1048,-228 694,-228 694,-48 1048,-48 1048,-228"/>
-<text text-anchor="start" x="844" y="-160" font-family="Arial" font-size="20.00" fill="#eff6ff">action</text>
-<text text-anchor="start" x="714" y="-138" font-family="Arial" font-size="15.00" fill="#bfdbfe">Action — reassembled from `before` + optional</text>
-<text text-anchor="start" x="796.5" y="-121" font-family="Arial" font-size="15.00" fill="#bfdbfe">`input` + zero&#45;or&#45;more</text>
-<text text-anchor="start" x="738.5" y="-104" font-family="Arial" font-size="15.00" fill="#bfdbfe">`log` + `after` events sharing a `call_id`.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1048,-228 694,-228 694,-48 1048,-48 1048,-228"/>
+<text text-anchor="start" x="844" y="-160" font-family="Arial" font-size="20.00" fill="#5b5b5b">action</text>
+<text text-anchor="start" x="714" y="-138" font-family="Arial" font-size="15.00" fill="#6d6d6d">Action — reassembled from `before` + optional</text>
+<text text-anchor="start" x="796.5" y="-121" font-family="Arial" font-size="15.00" fill="#6d6d6d">`input` + zero&#45;or&#45;more</text>
+<text text-anchor="start" x="738.5" y="-104" font-family="Arial" font-size="15.00" fill="#6d6d6d">`log` + `after` events sharing a `call_id`.</text>
 </g>
 <!-- jsonl -->
 <g id="node4" class="node">
 <title>jsonl</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1478,-228 1158,-228 1158,-48 1478,-48 1478,-228"/>
-<text text-anchor="start" x="1297" y="-143" font-family="Arial" font-size="20.00" fill="#eff6ff">jsonl</text>
-<text text-anchor="start" x="1237" y="-121" font-family="Arial" font-size="15.00" fill="#bfdbfe">Tiny JSONL line iterator.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1478,-228 1158,-228 1158,-48 1478,-48 1478,-228"/>
+<text text-anchor="start" x="1297" y="-143" font-family="Arial" font-size="20.00" fill="#5b5b5b">jsonl</text>
+<text text-anchor="start" x="1237" y="-121" font-family="Arial" font-size="15.00" fill="#6d6d6d">Tiny JSONL line iterator.</text>
 </g>
 <!-- network -->
 <g id="node5" class="node">
 <title>network</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1497,-870 1177,-870 1177,-690 1497,-690 1497,-870"/>
-<text text-anchor="start" x="1302.5" y="-794" font-family="Arial" font-size="20.00" fill="#eff6ff">network</text>
-<text text-anchor="start" x="1214" y="-772" font-family="Arial" font-size="15.00" fill="#bfdbfe">`trace.network` — HAR&#45;like resource</text>
-<text text-anchor="start" x="1301" y="-755" font-family="Arial" font-size="15.00" fill="#bfdbfe">snapshots.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1497,-870 1177,-870 1177,-690 1497,-690 1497,-870"/>
+<text text-anchor="start" x="1302.5" y="-794" font-family="Arial" font-size="20.00" fill="#5b5b5b">network</text>
+<text text-anchor="start" x="1214" y="-772" font-family="Arial" font-size="15.00" fill="#6d6d6d">`trace.network` — HAR&#45;like resource</text>
+<text text-anchor="start" x="1301" y="-755" font-family="Arial" font-size="15.00" fill="#6d6d6d">snapshots.</text>
 </g>
 <!-- event -->
 <g id="node6" class="node">
 <title>event</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="368,-870 48,-870 48,-690 368,-690 368,-870"/>
-<text text-anchor="start" x="183.5" y="-785" font-family="Arial" font-size="20.00" fill="#eff6ff">event</text>
-<text text-anchor="start" x="146" y="-763" font-family="Arial" font-size="15.00" fill="#bfdbfe">Trace event types.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="368,-870 48,-870 48,-690 368,-690 368,-870"/>
+<text text-anchor="start" x="183.5" y="-785" font-family="Arial" font-size="20.00" fill="#5b5b5b">event</text>
+<text text-anchor="start" x="146" y="-763" font-family="Arial" font-size="15.00" fill="#6d6d6d">Trace event types.</text>
 </g>
 <!-- error -->
 <g id="node7" class="node">
 <title>error</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1927,-870 1607,-870 1607,-690 1927,-690 1927,-870"/>
-<text text-anchor="start" x="1746" y="-785" font-family="Arial" font-size="20.00" fill="#eff6ff">error</text>
-<text text-anchor="start" x="1671" y="-763" font-family="Arial" font-size="15.00" fill="#bfdbfe">Error types for trace parsing.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1927,-870 1607,-870 1607,-690 1927,-690 1927,-870"/>
+<text text-anchor="start" x="1746" y="-785" font-family="Arial" font-size="20.00" fill="#5b5b5b">error</text>
+<text text-anchor="start" x="1671" y="-763" font-family="Arial" font-size="15.00" fill="#6d6d6d">Error types for trace parsing.</text>
 </g>
 <!-- playwright_rs -->
 <g id="node8" class="node">
 <title>playwright_rs</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1576,-1219 1256,-1219 1256,-1039 1576,-1039 1576,-1219"/>
-<text text-anchor="start" x="1359.5" y="-1152" font-family="Arial" font-size="20.00" fill="#eff6ff">playwright&#45;rs</text>
-<text text-anchor="start" x="1381" y="-1131.6" font-family="Arial" font-size="13.00" fill="#bfdbfe">library crate</text>
-<text text-anchor="start" x="1287" y="-1112" font-family="Arial" font-size="15.00" fill="#bfdbfe">playwright: High&#45;level Rust bindings for</text>
-<text text-anchor="start" x="1349" y="-1095" font-family="Arial" font-size="15.00" fill="#bfdbfe">Microsoft Playwright</text>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="1576,-1219 1256,-1219 1256,-1039 1576,-1039 1576,-1219"/>
+<text text-anchor="start" x="1359.5" y="-1152" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
+<text text-anchor="start" x="1381" y="-1131.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library crate</text>
+<text text-anchor="start" x="1287" y="-1112" font-family="Arial" font-size="15.00" fill="#ffffe5">playwright: High&#45;level Rust bindings for</text>
+<text text-anchor="start" x="1349" y="-1095" font-family="Arial" font-size="15.00" fill="#ffffe5">Microsoft Playwright</text>
 </g>
 <!-- tests&#45;&gt;trace -->
 <g id="edge3" class="edge">

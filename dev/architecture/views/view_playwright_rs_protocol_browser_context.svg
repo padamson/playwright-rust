@@ -10,308 +10,308 @@
 <title>%3</title>
 <g id="clust1" class="cluster">
 <title>cluster_browser_context</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="5758,-296 5758,-596 8848,-596 8848,-296 5758,-296"/>
-<text text-anchor="start" x="5766" y="-584.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">BROWSER_CONTEXT</text>
+<polygon fill="#999999" stroke="#808080" points="5758,-296 5758,-596 8848,-596 8848,-296 5758,-296"/>
+<text text-anchor="start" x="5766" y="-584.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#6d6d6d" fill-opacity="0.701961">BROWSER_CONTEXT</text>
 </g>
 <!-- options -->
 <g id="node1" class="node">
 <title>options</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6118,-516 5798,-516 5798,-336 6118,-336 6118,-516"/>
-<text text-anchor="start" x="5925.5" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">options</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6118,-516 5798,-516 5798,-336 6118,-336 6118,-516"/>
+<text text-anchor="start" x="5925.5" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">options</text>
 </g>
 <!-- dispatch -->
 <g id="node2" class="node">
 <title>dispatch</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6548,-516 6228,-516 6228,-336 6548,-336 6548,-516"/>
-<text text-anchor="start" x="6350.5" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">dispatch</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6548,-516 6228,-516 6228,-336 6548,-336 6548,-516"/>
+<text text-anchor="start" x="6350.5" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">dispatch</text>
 </g>
 <!-- lifecycle -->
 <g id="node3" class="node">
 <title>lifecycle</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6978,-516 6658,-516 6658,-336 6978,-336 6978,-516"/>
-<text text-anchor="start" x="6782.5" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">lifecycle</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6978,-516 6658,-516 6658,-336 6978,-336 6978,-516"/>
+<text text-anchor="start" x="6782.5" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">lifecycle</text>
 </g>
 <!-- bindings -->
 <g id="node4" class="node">
 <title>bindings</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="7948,-516 7628,-516 7628,-336 7948,-336 7948,-516"/>
-<text text-anchor="start" x="7750" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">bindings</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7948,-516 7628,-516 7628,-336 7948,-336 7948,-516"/>
+<text text-anchor="start" x="7750" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">bindings</text>
 </g>
 <!-- network -->
 <g id="node5" class="node">
 <title>network</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="8378,-516 8058,-516 8058,-336 8378,-336 8378,-516"/>
-<text text-anchor="start" x="8183" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">network</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="8378,-516 8058,-516 8058,-336 8378,-336 8378,-516"/>
+<text text-anchor="start" x="8183" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">network</text>
 </g>
 <!-- state -->
 <g id="node6" class="node">
 <title>state</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="8808,-516 8488,-516 8488,-336 8808,-336 8808,-516"/>
-<text text-anchor="start" x="8626.5" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">state</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="8808,-516 8488,-516 8488,-336 8808,-336 8808,-516"/>
+<text text-anchor="start" x="8626.5" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">state</text>
 </g>
 <!-- events -->
 <g id="node7" class="node">
 <title>events</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="7518,-516 7198,-516 7198,-336 7518,-336 7518,-516"/>
-<text text-anchor="start" x="7328.5" y="-421" font-family="Arial" font-size="20.00" fill="#eff6ff">events</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7518,-516 7198,-516 7198,-336 7518,-336 7518,-516"/>
+<text text-anchor="start" x="7328.5" y="-421" font-family="Arial" font-size="20.00" fill="#5b5b5b">events</text>
 </g>
 <!-- playwright_rs_site_e2e -->
 <g id="node8" class="node">
 <title>playwright_rs_site_e2e</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="5959,-925 5639,-925 5639,-745 5959,-745 5959,-925"/>
-<text text-anchor="start" x="5703" y="-839" font-family="Arial" font-size="20.00" fill="#eff6ff">playwright&#45;rs&#45;site&#45;e2e</text>
-<text text-anchor="start" x="5771" y="-818.6" font-family="Arial" font-size="13.00" fill="#bfdbfe">test crate</text>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="5959,-925 5639,-925 5639,-745 5959,-745 5959,-925"/>
+<text text-anchor="start" x="5703" y="-839" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;site&#45;e2e</text>
+<text text-anchor="start" x="5771" y="-818.6" font-family="Arial" font-size="13.00" fill="#ffffe5">test crate</text>
 </g>
 <!-- examples -->
 <g id="node9" class="node">
 <title>examples</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="5529,-925 5209,-925 5209,-745 5529,-745 5529,-925"/>
-<text text-anchor="start" x="5326" y="-830" font-family="Arial" font-size="20.00" fill="#eff6ff">examples</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="5529,-925 5209,-925 5209,-745 5529,-745 5529,-925"/>
+<text text-anchor="start" x="5326" y="-830" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
 </g>
 <!-- tests -->
 <g id="node10" class="node">
 <title>tests</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6389,-925 6069,-925 6069,-745 6389,-745 6389,-925"/>
-<text text-anchor="start" x="6208" y="-830" font-family="Arial" font-size="20.00" fill="#eff6ff">tests</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6389,-925 6069,-925 6069,-745 6389,-745 6389,-925"/>
+<text text-anchor="start" x="6208" y="-830" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
 </g>
 <!-- api_request_context -->
 <g id="node11" class="node">
 <title>api_request_context</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="9090,-180 8770,-180 8770,0 9090,0 9090,-180"/>
-<text text-anchor="start" x="8839.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">api_request_context</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="9090,-180 8770,-180 8770,0 9090,0 9090,-180"/>
+<text text-anchor="start" x="8839.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">api_request_context</text>
 </g>
 <!-- browser -->
 <g id="node12" class="node">
 <title>browser</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="7069,-925 6749,-925 6749,-745 7069,-745 7069,-925"/>
-<text text-anchor="start" x="6873" y="-830" font-family="Arial" font-size="20.00" fill="#eff6ff">browser</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7069,-925 6749,-925 6749,-745 7069,-745 7069,-925"/>
+<text text-anchor="start" x="6873" y="-830" font-family="Arial" font-size="20.00" fill="#5b5b5b">browser</text>
 </g>
 <!-- browser_type -->
 <g id="node13" class="node">
 <title>browser_type</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="7602,-925 7282,-925 7282,-745 7602,-745 7602,-925"/>
-<text text-anchor="start" x="7381.5" y="-830" font-family="Arial" font-size="20.00" fill="#eff6ff">browser_type</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7602,-925 7282,-925 7282,-745 7602,-745 7602,-925"/>
+<text text-anchor="start" x="7381.5" y="-830" font-family="Arial" font-size="20.00" fill="#5b5b5b">browser_type</text>
 </g>
 <!-- page -->
 <g id="node14" class="node">
 <title>page</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="5174,-180 4854,-180 4854,0 5174,0 5174,-180"/>
-<text text-anchor="start" x="4991" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">page</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="5174,-180 4854,-180 4854,0 5174,0 5174,-180"/>
+<text text-anchor="start" x="4991" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">page</text>
 </g>
 <!-- route_service -->
 <g id="node15" class="node">
 <title>route_service</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="13746,-180 13414,-180 13414,0 13746,0 13746,-180"/>
-<text text-anchor="start" x="13519.5" y="-112" font-family="Arial" font-size="20.00" fill="#eff6ff">route_service</text>
-<text text-anchor="start" x="13434" y="-90" font-family="Arial" font-size="15.00" fill="#bfdbfe">Serve a page&#39;s requests from an in&#45;process</text>
-<text text-anchor="start" x="13494" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">[`tower::Service`], with no</text>
-<text text-anchor="start" x="13555.5" y="-56" font-family="Arial" font-size="15.00" fill="#bfdbfe">socket.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="13746,-180 13414,-180 13414,0 13746,0 13746,-180"/>
+<text text-anchor="start" x="13519.5" y="-112" font-family="Arial" font-size="20.00" fill="#5b5b5b">route_service</text>
+<text text-anchor="start" x="13434" y="-90" font-family="Arial" font-size="15.00" fill="#6d6d6d">Serve a page&#39;s requests from an in&#45;process</text>
+<text text-anchor="start" x="13494" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">[`tower::Service`], with no</text>
+<text text-anchor="start" x="13555.5" y="-56" font-family="Arial" font-size="15.00" fill="#6d6d6d">socket.</text>
 </g>
 <!-- api -->
 <g id="node16" class="node">
 <title>api</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="320,-180 0,-180 0,0 320,0 320,-180"/>
-<text text-anchor="start" x="146" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">api</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="320,-180 0,-180 0,0 320,0 320,-180"/>
+<text text-anchor="start" x="146" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">api</text>
 </g>
 <!-- proxy -->
 <g id="node17" class="node">
 <title>proxy</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="750,-180 430,-180 430,0 750,0 750,-180"/>
-<text text-anchor="start" x="566" y="-95" font-family="Arial" font-size="20.00" fill="#eff6ff">proxy</text>
-<text text-anchor="start" x="514" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">Network proxy settings</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="750,-180 430,-180 430,0 750,0 750,-180"/>
+<text text-anchor="start" x="566" y="-95" font-family="Arial" font-size="20.00" fill="#5b5b5b">proxy</text>
+<text text-anchor="start" x="514" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">Network proxy settings</text>
 </g>
 <!-- binding_call -->
 <g id="node18" class="node">
 <title>binding_call</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1180,-180 860,-180 860,0 1180,0 1180,-180"/>
-<text text-anchor="start" x="966.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">binding_call</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1180,-180 860,-180 860,0 1180,0 1180,-180"/>
+<text text-anchor="start" x="966.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">binding_call</text>
 </g>
 <!-- js_handle -->
 <g id="node19" class="node">
 <title>js_handle</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1610,-180 1290,-180 1290,0 1610,0 1610,-180"/>
-<text text-anchor="start" x="1406.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">js_handle</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1610,-180 1290,-180 1290,0 1610,0 1610,-180"/>
+<text text-anchor="start" x="1406.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">js_handle</text>
 </g>
 <!-- resource_timing -->
 <g id="node20" class="node">
 <title>resource_timing</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2104,-180 1720,-180 1720,0 2104,0 2104,-180"/>
-<text text-anchor="start" x="1840.5" y="-129" font-family="Arial" font-size="20.00" fill="#eff6ff">resource_timing</text>
-<text text-anchor="start" x="1756.5" y="-107" font-family="Arial" font-size="15.00" fill="#bfdbfe">Resource timing for HTTP requests, shared by</text>
-<text text-anchor="start" x="1856" y="-90" font-family="Arial" font-size="15.00" fill="#bfdbfe">the browser&#45;side</text>
-<text text-anchor="start" x="1740" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">[`Request::timing`](crate::protocol::Request::timing)</text>
-<text text-anchor="start" x="1857" y="-56" font-family="Arial" font-size="15.00" fill="#bfdbfe">and the API&#45;side</text>
-<text text-anchor="start" x="1834.5" y="-39" font-family="Arial" font-size="15.00" fill="#bfdbfe">`APIResponse::timing`.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2104,-180 1720,-180 1720,0 2104,0 2104,-180"/>
+<text text-anchor="start" x="1840.5" y="-129" font-family="Arial" font-size="20.00" fill="#5b5b5b">resource_timing</text>
+<text text-anchor="start" x="1756.5" y="-107" font-family="Arial" font-size="15.00" fill="#6d6d6d">Resource timing for HTTP requests, shared by</text>
+<text text-anchor="start" x="1856" y="-90" font-family="Arial" font-size="15.00" fill="#6d6d6d">the browser&#45;side</text>
+<text text-anchor="start" x="1740" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">[`Request::timing`](crate::protocol::Request::timing)</text>
+<text text-anchor="start" x="1857" y="-56" font-family="Arial" font-size="15.00" fill="#6d6d6d">and the API&#45;side</text>
+<text text-anchor="start" x="1834.5" y="-39" font-family="Arial" font-size="15.00" fill="#6d6d6d">`APIResponse::timing`.</text>
 </g>
 <!-- evaluate_conversion -->
 <g id="node21" class="node">
 <title>evaluate_conversion</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="7335.5,-180 7004.5,-180 7004.5,0 7335.5,0 7335.5,-180"/>
-<text text-anchor="start" x="7078.5" y="-104" font-family="Arial" font-size="20.00" fill="#eff6ff">evaluate_conversion</text>
-<text text-anchor="start" x="7025" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">Value conversion for Playwright&#39;s evaluate()</text>
-<text text-anchor="start" x="7145" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">method</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7335.5,-180 7004.5,-180 7004.5,0 7335.5,0 7335.5,-180"/>
+<text text-anchor="start" x="7078.5" y="-104" font-family="Arial" font-size="20.00" fill="#5b5b5b">evaluate_conversion</text>
+<text text-anchor="start" x="7025" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">Value conversion for Playwright&#39;s evaluate()</text>
+<text text-anchor="start" x="7145" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">method</text>
 </g>
 <!-- route -->
 <g id="node22" class="node">
 <title>route</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="8196,-180 7876,-180 7876,0 8196,0 8196,-180"/>
-<text text-anchor="start" x="8013" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">route</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="8196,-180 7876,-180 7876,0 8196,0 8196,-180"/>
+<text text-anchor="start" x="8013" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">route</text>
 </g>
 <!-- web_socket_route -->
 <g id="node23" class="node">
 <title>web_socket_route</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="8660,-180 8306,-180 8306,0 8660,0 8660,-180"/>
-<text text-anchor="start" x="8401.5" y="-104" font-family="Arial" font-size="20.00" fill="#eff6ff">web_socket_route</text>
-<text text-anchor="start" x="8326" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">WebSocketRoute protocol object — represents</text>
-<text text-anchor="start" x="8354" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">an intercepted WebSocket connection.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="8660,-180 8306,-180 8306,0 8660,0 8660,-180"/>
+<text text-anchor="start" x="8401.5" y="-104" font-family="Arial" font-size="20.00" fill="#5b5b5b">web_socket_route</text>
+<text text-anchor="start" x="8326" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">WebSocketRoute protocol object — represents</text>
+<text text-anchor="start" x="8354" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">an intercepted WebSocket connection.</text>
 </g>
 <!-- server -->
 <g id="node24" class="node">
 <title>server</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="11678,-180 11358,-180 11358,0 11678,0 11678,-180"/>
-<text text-anchor="start" x="11490" y="-104" font-family="Arial" font-size="20.00" fill="#eff6ff">server</text>
-<text text-anchor="start" x="11378" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">Server management and connection layer</text>
-<text text-anchor="start" x="11488" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">(internal)</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="11678,-180 11358,-180 11358,0 11678,0 11678,-180"/>
+<text text-anchor="start" x="11490" y="-104" font-family="Arial" font-size="20.00" fill="#5b5b5b">server</text>
+<text text-anchor="start" x="11378" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">Server management and connection layer</text>
+<text text-anchor="start" x="11488" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">(internal)</text>
 </g>
 <!-- console_message -->
 <g id="node25" class="node">
 <title>console_message</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2534,-180 2214,-180 2214,0 2534,0 2534,-180"/>
-<text text-anchor="start" x="2293" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">console_message</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2534,-180 2214,-180 2214,0 2534,0 2534,-180"/>
+<text text-anchor="start" x="2293" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">console_message</text>
 </g>
 <!-- dialog -->
 <g id="node26" class="node">
 <title>dialog</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6464,-180 6144,-180 6144,0 6464,0 6464,-180"/>
-<text text-anchor="start" x="6276.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">dialog</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6464,-180 6144,-180 6144,0 6464,0 6464,-180"/>
+<text text-anchor="start" x="6276.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">dialog</text>
 </g>
 <!-- request -->
 <g id="node27" class="node">
 <title>request</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="4314,-180 3994,-180 3994,0 4314,0 4314,-180"/>
-<text text-anchor="start" x="4120.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">request</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4314,-180 3994,-180 3994,0 4314,0 4314,-180"/>
+<text text-anchor="start" x="4120.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">request</text>
 </g>
 <!-- response -->
 <g id="node28" class="node">
 <title>response</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="3394,-180 3074,-180 3074,0 3394,0 3394,-180"/>
-<text text-anchor="start" x="3192.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">response</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3394,-180 3074,-180 3074,0 3394,0 3394,-180"/>
+<text text-anchor="start" x="3192.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">response</text>
 </g>
 <!-- web_error -->
 <g id="node29" class="node">
 <title>web_error</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6894,-180 6574,-180 6574,0 6894,0 6894,-180"/>
-<text text-anchor="start" x="6688.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">web_error</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6894,-180 6574,-180 6574,0 6894,0 6894,-180"/>
+<text text-anchor="start" x="6688.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">web_error</text>
 </g>
 <!-- worker -->
 <g id="node30" class="node">
 <title>worker</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="6034,-180 5714,-180 5714,0 6034,0 6034,-180"/>
-<text text-anchor="start" x="5843.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">worker</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6034,-180 5714,-180 5714,0 6034,0 6034,-180"/>
+<text text-anchor="start" x="5843.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">worker</text>
 </g>
 <!-- cdp_session -->
 <g id="node31" class="node">
 <title>cdp_session</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="3884,-180 3504,-180 3504,0 3884,0 3884,-180"/>
-<text text-anchor="start" x="3638" y="-95" font-family="Arial" font-size="20.00" fill="#eff6ff">cdp_session</text>
-<text text-anchor="start" x="3524" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">CDPSession — Chrome DevTools Protocol session</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3884,-180 3504,-180 3504,0 3884,0 3884,-180"/>
+<text text-anchor="start" x="3638" y="-95" font-family="Arial" font-size="20.00" fill="#5b5b5b">cdp_session</text>
+<text text-anchor="start" x="3524" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">CDPSession — Chrome DevTools Protocol session</text>
 </g>
 <!-- clock -->
 <g id="node32" class="node">
 <title>clock</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2964,-180 2644,-180 2644,0 2964,0 2964,-180"/>
-<text text-anchor="start" x="2781.5" y="-104" font-family="Arial" font-size="20.00" fill="#eff6ff">clock</text>
-<text text-anchor="start" x="2687" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">Clock — manipulate fake timers for</text>
-<text text-anchor="start" x="2689.5" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">deterministic time&#45;dependent tests</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2964,-180 2644,-180 2644,0 2964,0 2964,-180"/>
+<text text-anchor="start" x="2781.5" y="-104" font-family="Arial" font-size="20.00" fill="#5b5b5b">clock</text>
+<text text-anchor="start" x="2687" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">Clock — manipulate fake timers for</text>
+<text text-anchor="start" x="2689.5" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">deterministic time&#45;dependent tests</text>
 </g>
 <!-- debugger -->
 <g id="node33" class="node">
 <title>debugger</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="4744,-180 4424,-180 4424,0 4744,0 4744,-180"/>
-<text text-anchor="start" x="4541" y="-104" font-family="Arial" font-size="20.00" fill="#eff6ff">debugger</text>
-<text text-anchor="start" x="4447" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">Debugger — programmatic control of the</text>
-<text text-anchor="start" x="4451" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">Playwright Inspector &quot;PAUSED&quot; overlay.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4744,-180 4424,-180 4424,0 4744,0 4744,-180"/>
+<text text-anchor="start" x="4541" y="-104" font-family="Arial" font-size="20.00" fill="#5b5b5b">debugger</text>
+<text text-anchor="start" x="4447" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">Debugger — programmatic control of the</text>
+<text text-anchor="start" x="4451" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">Playwright Inspector &quot;PAUSED&quot; overlay.</text>
 </g>
 <!-- tracing -->
 <g id="node34" class="node">
 <title>tracing</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="5604,-180 5284,-180 5284,0 5604,0 5604,-180"/>
-<text text-anchor="start" x="5414" y="-104" font-family="Arial" font-size="20.00" fill="#eff6ff">tracing</text>
-<text text-anchor="start" x="5316" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">Tracing — record Playwright traces for</text>
-<text text-anchor="start" x="5409.5" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">debugging</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="5604,-180 5284,-180 5284,0 5604,0 5604,-180"/>
+<text text-anchor="start" x="5414" y="-104" font-family="Arial" font-size="20.00" fill="#5b5b5b">tracing</text>
+<text text-anchor="start" x="5316" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">Tracing — record Playwright traces for</text>
+<text text-anchor="start" x="5409.5" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">debugging</text>
 </g>
 <!-- credentials -->
 <g id="node35" class="node">
 <title>credentials</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="11248,-180 10920,-180 10920,0 11248,0 11248,-180"/>
-<text text-anchor="start" x="11035.5" y="-95" font-family="Arial" font-size="20.00" fill="#eff6ff">credentials</text>
-<text text-anchor="start" x="10940" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">WebAuthn virtual&#45;authenticator credentials.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="11248,-180 10920,-180 10920,0 11248,0 11248,-180"/>
+<text text-anchor="start" x="11035.5" y="-95" font-family="Arial" font-size="20.00" fill="#5b5b5b">credentials</text>
+<text text-anchor="start" x="10940" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">WebAuthn virtual&#45;authenticator credentials.</text>
 </g>
 <!-- error -->
 <g id="node36" class="node">
 <title>error</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="12108,-180 11788,-180 11788,0 12108,0 12108,-180"/>
-<text text-anchor="start" x="11926.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">error</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="12108,-180 11788,-180 11788,0 12108,0 12108,-180"/>
+<text text-anchor="start" x="11926.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">error</text>
 </g>
 <!-- event_registry -->
 <g id="node37" class="node">
 <title>event_registry</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="7766,-180 7446,-180 7446,0 7766,0 7766,-180"/>
-<text text-anchor="start" x="7543" y="-121" font-family="Arial" font-size="20.00" fill="#eff6ff">event_registry</text>
-<text text-anchor="start" x="7466" y="-99" font-family="Arial" font-size="15.00" fill="#bfdbfe">One home for the &quot;list of handlers plus list</text>
-<text text-anchor="start" x="7513.5" y="-82" font-family="Arial" font-size="15.00" fill="#bfdbfe">of one&#45;shot waiters&quot; pattern</text>
-<text text-anchor="start" x="7471.5" y="-65" font-family="Arial" font-size="15.00" fill="#bfdbfe">that every page&#45; and context&#45;level event</text>
-<text text-anchor="start" x="7578.5" y="-48" font-family="Arial" font-size="15.00" fill="#bfdbfe">repeats.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7766,-180 7446,-180 7446,0 7766,0 7766,-180"/>
+<text text-anchor="start" x="7543" y="-121" font-family="Arial" font-size="20.00" fill="#5b5b5b">event_registry</text>
+<text text-anchor="start" x="7466" y="-99" font-family="Arial" font-size="15.00" fill="#6d6d6d">One home for the &quot;list of handlers plus list</text>
+<text text-anchor="start" x="7513.5" y="-82" font-family="Arial" font-size="15.00" fill="#6d6d6d">of one&#45;shot waiters&quot; pattern</text>
+<text text-anchor="start" x="7471.5" y="-65" font-family="Arial" font-size="15.00" fill="#6d6d6d">that every page&#45; and context&#45;level event</text>
+<text text-anchor="start" x="7578.5" y="-48" font-family="Arial" font-size="15.00" fill="#6d6d6d">repeats.</text>
 </g>
 <!-- in_flight -->
 <g id="node38" class="node">
 <title>in_flight</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="12824,-180 12486,-180 12486,0 12824,0 12824,-180"/>
-<text text-anchor="start" x="12620" y="-129" font-family="Arial" font-size="20.00" fill="#eff6ff">in_flight</text>
-<text text-anchor="start" x="12518" y="-107" font-family="Arial" font-size="15.00" fill="#bfdbfe">In&#45;flight accounting for route handlers, so</text>
-<text text-anchor="start" x="12567.5" y="-90" font-family="Arial" font-size="15.00" fill="#bfdbfe">`unroute_all` can honor its</text>
-<text text-anchor="start" x="12506" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">`behavior` argument: wait for the invocations</text>
-<text text-anchor="start" x="12580.5" y="-56" font-family="Arial" font-size="15.00" fill="#bfdbfe">already running, or tell</text>
-<text text-anchor="start" x="12547" y="-39" font-family="Arial" font-size="15.00" fill="#bfdbfe">them to keep quiet about errors.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="12824,-180 12486,-180 12486,0 12824,0 12824,-180"/>
+<text text-anchor="start" x="12620" y="-129" font-family="Arial" font-size="20.00" fill="#5b5b5b">in_flight</text>
+<text text-anchor="start" x="12518" y="-107" font-family="Arial" font-size="15.00" fill="#6d6d6d">In&#45;flight accounting for route handlers, so</text>
+<text text-anchor="start" x="12567.5" y="-90" font-family="Arial" font-size="15.00" fill="#6d6d6d">`unroute_all` can honor its</text>
+<text text-anchor="start" x="12506" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">`behavior` argument: wait for the invocations</text>
+<text text-anchor="start" x="12580.5" y="-56" font-family="Arial" font-size="15.00" fill="#6d6d6d">already running, or tell</text>
+<text text-anchor="start" x="12547" y="-39" font-family="Arial" font-size="15.00" fill="#6d6d6d">them to keep quiet about errors.</text>
 </g>
 <!-- local_utils -->
 <g id="node39" class="node">
 <title>local_utils</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="13254,-180 12934,-180 12934,0 13254,0 13254,-180"/>
-<text text-anchor="start" x="13050" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">local_utils</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="13254,-180 12934,-180 12934,0 13254,0 13254,-180"/>
+<text text-anchor="start" x="13050" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">local_utils</text>
 </g>
 <!-- route_params -->
 <g id="node40" class="node">
 <title>route_params</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="14217,-180 13881,-180 13881,0 14217,0 14217,-180"/>
-<text text-anchor="start" x="13987" y="-112" font-family="Arial" font-size="20.00" fill="#eff6ff">route_params</text>
-<text text-anchor="start" x="13901" y="-90" font-family="Arial" font-size="15.00" fill="#bfdbfe">Wire&#45;format builders for `Route` commands,</text>
-<text text-anchor="start" x="13951.5" y="-73" font-family="Arial" font-size="15.00" fill="#bfdbfe">kept pure so they can be unit</text>
-<text text-anchor="start" x="13904.5" y="-56" font-family="Arial" font-size="15.00" fill="#bfdbfe">tested and mutation tested without a driver.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="14217,-180 13881,-180 13881,0 14217,0 14217,-180"/>
+<text text-anchor="start" x="13987" y="-112" font-family="Arial" font-size="20.00" fill="#5b5b5b">route_params</text>
+<text text-anchor="start" x="13901" y="-90" font-family="Arial" font-size="15.00" fill="#6d6d6d">Wire&#45;format builders for `Route` commands,</text>
+<text text-anchor="start" x="13951.5" y="-73" font-family="Arial" font-size="15.00" fill="#6d6d6d">kept pure so they can be unit</text>
+<text text-anchor="start" x="13904.5" y="-56" font-family="Arial" font-size="15.00" fill="#6d6d6d">tested and mutation tested without a driver.</text>
 </g>
 <!-- download -->
 <g id="node41" class="node">
 <title>download</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="9520,-180 9200,-180 9200,0 9520,0 9520,-180"/>
-<text text-anchor="start" x="9316.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">download</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="9520,-180 9200,-180 9200,0 9520,0 9520,-180"/>
+<text text-anchor="start" x="9316.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">download</text>
 </g>
 <!-- event_value -->
 <g id="node42" class="node">
 <title>event_value</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="9950,-180 9630,-180 9630,0 9950,0 9950,-180"/>
-<text text-anchor="start" x="9735.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">event_value</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="9950,-180 9630,-180 9630,0 9950,0 9950,-180"/>
+<text text-anchor="start" x="9735.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">event_value</text>
 </g>
 <!-- event_waiter -->
 <g id="node43" class="node">
 <title>event_waiter</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="10380,-180 10060,-180 10060,0 10380,0 10380,-180"/>
-<text text-anchor="start" x="10163" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">event_waiter</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="10380,-180 10060,-180 10060,0 10380,0 10380,-180"/>
+<text text-anchor="start" x="10163" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">event_waiter</text>
 </g>
 <!-- frame -->
 <g id="node44" class="node">
 <title>frame</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="10810,-180 10490,-180 10490,0 10810,0 10810,-180"/>
-<text text-anchor="start" x="10624" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">frame</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="10810,-180 10490,-180 10490,0 10810,0 10810,-180"/>
+<text text-anchor="start" x="10624" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">frame</text>
 </g>
 <!-- options&#45;&gt;state -->
 <g id="edge12" class="edge">

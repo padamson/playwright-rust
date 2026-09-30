@@ -10,38 +10,38 @@
 <title>%3</title>
 <g id="clust1" class="cluster">
 <title>cluster_transport</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="8,-281 8,-561 838,-561 838,-281 8,-281"/>
-<text text-anchor="start" x="16" y="-549.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">TRANSPORT</text>
+<polygon fill="#999999" stroke="#808080" points="8,-281 8,-561 838,-561 838,-281 8,-281"/>
+<text text-anchor="start" x="16" y="-549.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#6d6d6d" fill-opacity="0.701961">TRANSPORT</text>
 </g>
 <!-- pipe -->
 <g id="node1" class="node">
 <title>pipe</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="798,-501 478,-501 478,-321 798,-321 798,-501"/>
-<text text-anchor="start" x="618.5" y="-406" font-family="Arial" font-size="20.00" fill="#eff6ff">pipe</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="798,-501 478,-501 478,-321 798,-321 798,-501"/>
+<text text-anchor="start" x="618.5" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">pipe</text>
 </g>
 <!-- websocket -->
 <g id="node2" class="node">
 <title>websocket</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="368,-501 48,-501 48,-321 368,-321 368,-501"/>
-<text text-anchor="start" x="161" y="-406" font-family="Arial" font-size="20.00" fill="#eff6ff">websocket</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="368,-501 48,-501 48,-321 368,-321 368,-501"/>
+<text text-anchor="start" x="161" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">websocket</text>
 </g>
 <!-- protocol -->
 <g id="node3" class="node">
 <title>protocol</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="380,-830 60,-830 60,-650 380,-650 380,-830"/>
-<text text-anchor="start" x="184" y="-735" font-family="Arial" font-size="20.00" fill="#eff6ff">protocol</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="380,-830 60,-830 60,-650 380,-650 380,-830"/>
+<text text-anchor="start" x="184" y="-735" font-family="Arial" font-size="20.00" fill="#5b5b5b">protocol</text>
 </g>
 <!-- tests -->
 <g id="node4" class="node">
 <title>tests</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="822,-830 502,-830 502,-650 822,-650 822,-830"/>
-<text text-anchor="start" x="641" y="-735" font-family="Arial" font-size="20.00" fill="#eff6ff">tests</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="822,-830 502,-830 502,-650 822,-650 822,-830"/>
+<text text-anchor="start" x="641" y="-735" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
 </g>
 <!-- error -->
 <g id="node5" class="node">
 <title>error</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="611,-180 291,-180 291,0 611,0 611,-180"/>
-<text text-anchor="start" x="429.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">error</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="611,-180 291,-180 291,0 611,0 611,-180"/>
+<text text-anchor="start" x="429.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">error</text>
 </g>
 <!-- pipe&#45;&gt;error -->
 <g id="edge4" class="edge">

@@ -10,20 +10,20 @@
 <title>%3</title>
 <g id="clust1" class="cluster">
 <title>cluster_tty_guard</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="8,-8 8,-272 392,-272 392,-8 8,-8"/>
-<text text-anchor="start" x="16" y="-260.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">TTY_GUARD</text>
+<polygon fill="#999999" stroke="#808080" points="8,-8 8,-272 392,-272 392,-8 8,-8"/>
+<text text-anchor="start" x="16" y="-260.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#6d6d6d" fill-opacity="0.701961">TTY_GUARD</text>
 </g>
 <!-- imp -->
 <g id="node1" class="node">
 <title>imp</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="360,-220 40,-220 40,-40 360,-40 360,-220"/>
-<text text-anchor="start" x="183.5" y="-125" font-family="Arial" font-size="20.00" fill="#eff6ff">imp</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="360,-220 40,-220 40,-40 360,-40 360,-220"/>
+<text text-anchor="start" x="183.5" y="-125" font-family="Arial" font-size="20.00" fill="#5b5b5b">imp</text>
 </g>
 <!-- protocol -->
 <g id="node2" class="node">
 <title>protocol</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="360,-556 40,-556 40,-376 360,-376 360,-556"/>
-<text text-anchor="start" x="164" y="-461" font-family="Arial" font-size="20.00" fill="#eff6ff">protocol</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="360,-556 40,-556 40,-376 360,-376 360,-556"/>
+<text text-anchor="start" x="164" y="-461" font-family="Arial" font-size="20.00" fill="#5b5b5b">protocol</text>
 </g>
 <!-- protocol&#45;&gt;imp -->
 <g id="edge1" class="edge">

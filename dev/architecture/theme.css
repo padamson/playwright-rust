@@ -1,0 +1,74 @@
+/* Diagram colors for the asbuilt docs pages, generated from [theme].
+   Group boxes, edges and labels follow the page tokens; a host
+   stylesheet linked after this one can restate any variable. */
+:root {
+  --c4-edge: color-mix(in srgb, var(--fg) 45%, var(--bg));
+  --c4-edge-text: var(--muted);
+  --c4-label-bg: color-mix(in srgb, var(--bg) 88%, transparent);
+  --c4-group-fill-mix: 7%;
+  --c4-group-stroke-mix: 20%;
+  --c4-component-fill: #ffffff;
+  --c4-component-stroke: #d8d8d8;
+  --c4-component-text: #242424;
+  --c4-component-muted: #505050;
+  --c4-container-fill: #ce422b;
+  --c4-container-stroke: #d6624f;
+  --c4-container-text: #fcf4f2;
+  --c4-container-muted: #f3d0ca;
+  --c4-process-fill: #e9d4c8;
+  --c4-process-stroke: #c5b3a9;
+  --c4-process-text: #211e1c;
+  --c4-process-muted: #49423e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c4-group-fill-mix: 22%;
+    --c4-group-stroke-mix: 40%;
+    --c4-component-fill: #3d2c22;
+    --c4-component-stroke: #5e5047;
+    --c4-component-text: #f3f2f2;
+    --c4-component-muted: #cfcbc8;
+    --c4-container-fill: #8f2d19;
+    --c4-container-stroke: #a25140;
+    --c4-container-text: #f8f2f1;
+    --c4-container-muted: #e3cbc6;
+    --c4-process-fill: #2f2620;
+    --c4-process-stroke: #524b46;
+    --c4-process-text: #f3f2f2;
+    --c4-process-muted: #cbc9c8;
+  }
+}
+:root[data-theme="dark"] {
+  --c4-group-fill-mix: 22%;
+  --c4-group-stroke-mix: 40%;
+  --c4-component-fill: #3d2c22;
+  --c4-component-stroke: #5e5047;
+  --c4-component-text: #f3f2f2;
+  --c4-component-muted: #cfcbc8;
+  --c4-container-fill: #8f2d19;
+  --c4-container-stroke: #a25140;
+  --c4-container-text: #f8f2f1;
+  --c4-container-muted: #e3cbc6;
+  --c4-process-fill: #2f2620;
+  --c4-process-stroke: #524b46;
+  --c4-process-text: #f3f2f2;
+  --c4-process-muted: #cbc9c8;
+}
+svg.c4 { display: block; width: 100%; height: auto; }
+svg.c4 .cluster text { fill: var(--muted); fill-opacity: 1; }
+svg.c4 .edge path { stroke: var(--c4-edge); }
+svg.c4 .edge polygon:not(.c4-label-bg) { fill: var(--c4-edge); stroke: var(--c4-edge); }
+svg.c4 .edge .c4-label-bg { fill: var(--c4-label-bg); fill-opacity: 1; }
+svg.c4 .edge text { fill: var(--c4-edge-text); }
+svg.c4 .node.c4-k-component > :is(polygon, path, ellipse, polyline) { fill: var(--c4-component-fill); stroke: var(--c4-component-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+svg.c4 .node.c4-k-component text { fill: var(--c4-component-text); }
+svg.c4 .node.c4-k-component text.c4-muted { fill: var(--c4-component-muted); }
+svg.c4 .cluster.c4-k-component > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-component-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-component-fill) var(--c4-group-stroke-mix), var(--bg)); }
+svg.c4 .node.c4-k-container > :is(polygon, path, ellipse, polyline) { fill: var(--c4-container-fill); stroke: var(--c4-container-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+svg.c4 .node.c4-k-container text { fill: var(--c4-container-text); }
+svg.c4 .node.c4-k-container text.c4-muted { fill: var(--c4-container-muted); }
+svg.c4 .cluster.c4-k-container > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-container-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-container-fill) var(--c4-group-stroke-mix), var(--bg)); }
+svg.c4 .node.c4-k-process > :is(polygon, path, ellipse, polyline) { fill: var(--c4-process-fill); stroke: var(--c4-process-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+svg.c4 .node.c4-k-process text { fill: var(--c4-process-text); }
+svg.c4 .node.c4-k-process text.c4-muted { fill: var(--c4-process-muted); }
+svg.c4 .cluster.c4-k-process > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-process-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-process-fill) var(--c4-group-stroke-mix), var(--bg)); }

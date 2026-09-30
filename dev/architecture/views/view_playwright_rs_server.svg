@@ -10,109 +10,109 @@
 <title>%3</title>
 <g id="clust1" class="cluster">
 <title>cluster_server</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="1381,-281 1381,-1543 3640,-1543 3640,-281 1381,-281"/>
-<text text-anchor="start" x="1389" y="-1531.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">SERVER</text>
+<polygon fill="#999999" stroke="#808080" points="1381,-281 1381,-1543 3640,-1543 3640,-281 1381,-281"/>
+<text text-anchor="start" x="1389" y="-1531.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#6d6d6d" fill-opacity="0.701961">SERVER</text>
 </g>
 <!-- playwright_server -->
 <g id="node1" class="node">
 <title>playwright_server</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="3031,-1483 2711,-1483 2711,-1303 3031,-1303 3031,-1483"/>
-<text text-anchor="start" x="2792.5" y="-1388" font-family="Arial" font-size="20.00" fill="#eff6ff">playwright_server</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3031,-1483 2711,-1483 2711,-1303 3031,-1303 3031,-1483"/>
+<text text-anchor="start" x="2792.5" y="-1388" font-family="Arial" font-size="20.00" fill="#5b5b5b">playwright_server</text>
 </g>
 <!-- object_factory -->
 <g id="node2" class="node">
 <title>object_factory</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1741,-1483 1421,-1483 1421,-1303 1741,-1303 1741,-1483"/>
-<text text-anchor="start" x="1519" y="-1388" font-family="Arial" font-size="20.00" fill="#eff6ff">object_factory</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1741,-1483 1421,-1483 1421,-1303 1741,-1303 1741,-1483"/>
+<text text-anchor="start" x="1519" y="-1388" font-family="Arial" font-size="20.00" fill="#5b5b5b">object_factory</text>
 </g>
 <!-- driver -->
 <g id="node3" class="node">
 <title>driver</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="3600,-1483 3280,-1483 3280,-1303 3600,-1303 3600,-1483"/>
-<text text-anchor="start" x="3414.5" y="-1388" font-family="Arial" font-size="20.00" fill="#eff6ff">driver</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3600,-1483 3280,-1483 3280,-1303 3600,-1303 3600,-1483"/>
+<text text-anchor="start" x="3414.5" y="-1388" font-family="Arial" font-size="20.00" fill="#5b5b5b">driver</text>
 </g>
 <!-- channel_owner -->
 <g id="node4" class="node">
 <title>channel_owner</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1741,-1143 1421,-1143 1421,-963 1741,-963 1741,-1143"/>
-<text text-anchor="start" x="1512.5" y="-1048" font-family="Arial" font-size="20.00" fill="#eff6ff">channel_owner</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1741,-1143 1421,-1143 1421,-963 1741,-963 1741,-1143"/>
+<text text-anchor="start" x="1512.5" y="-1048" font-family="Arial" font-size="20.00" fill="#5b5b5b">channel_owner</text>
 </g>
 <!-- channel -->
 <g id="node5" class="node">
 <title>channel</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2061,-822 1741,-822 1741,-642 2061,-642 2061,-822"/>
-<text text-anchor="start" x="1865.5" y="-727" font-family="Arial" font-size="20.00" fill="#eff6ff">channel</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2061,-822 1741,-822 1741,-642 2061,-642 2061,-822"/>
+<text text-anchor="start" x="1865.5" y="-727" font-family="Arial" font-size="20.00" fill="#5b5b5b">channel</text>
 </g>
 <!-- connection -->
 <g id="node6" class="node">
 <title>connection</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2759,-501 2431,-501 2431,-321 2759,-321 2759,-501"/>
-<text text-anchor="start" x="2546.5" y="-425" font-family="Arial" font-size="20.00" fill="#eff6ff">connection</text>
-<text text-anchor="start" x="2451" y="-403" font-family="Arial" font-size="15.00" fill="#bfdbfe">JSON&#45;RPC Connection layer for Playwright</text>
-<text text-anchor="start" x="2568" y="-386" font-family="Arial" font-size="15.00" fill="#bfdbfe">protocol</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2759,-501 2431,-501 2431,-321 2759,-321 2759,-501"/>
+<text text-anchor="start" x="2546.5" y="-425" font-family="Arial" font-size="20.00" fill="#5b5b5b">connection</text>
+<text text-anchor="start" x="2451" y="-403" font-family="Arial" font-size="15.00" fill="#6d6d6d">JSON&#45;RPC Connection layer for Playwright</text>
+<text text-anchor="start" x="2568" y="-386" font-family="Arial" font-size="15.00" fill="#6d6d6d">protocol</text>
 </g>
 <!-- error_parsing -->
 <g id="node7" class="node">
 <title>error_parsing</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2171,-1483 1851,-1483 1851,-1303 2171,-1303 2171,-1483"/>
-<text text-anchor="start" x="1950.5" y="-1407" font-family="Arial" font-size="20.00" fill="#eff6ff">error_parsing</text>
-<text text-anchor="start" x="1875" y="-1385" font-family="Arial" font-size="15.00" fill="#bfdbfe">Classification of Playwright protocol error</text>
-<text text-anchor="start" x="1911.5" y="-1368" font-family="Arial" font-size="15.00" fill="#bfdbfe">responses into `Error` values.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2171,-1483 1851,-1483 1851,-1303 2171,-1303 2171,-1483"/>
+<text text-anchor="start" x="1950.5" y="-1407" font-family="Arial" font-size="20.00" fill="#5b5b5b">error_parsing</text>
+<text text-anchor="start" x="1875" y="-1385" font-family="Arial" font-size="15.00" fill="#6d6d6d">Classification of Playwright protocol error</text>
+<text text-anchor="start" x="1911.5" y="-1368" font-family="Arial" font-size="15.00" fill="#6d6d6d">responses into `Error` values.</text>
 </g>
 <!-- transport -->
 <g id="node8" class="node">
 <title>transport</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2601,-1483 2281,-1483 2281,-1303 2601,-1303 2601,-1483"/>
-<text text-anchor="start" x="2401.5" y="-1388" font-family="Arial" font-size="20.00" fill="#eff6ff">transport</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2601,-1483 2281,-1483 2281,-1303 2601,-1303 2601,-1483"/>
+<text text-anchor="start" x="2401.5" y="-1388" font-family="Arial" font-size="20.00" fill="#5b5b5b">transport</text>
 </g>
 <!-- examples -->
 <g id="node9" class="node">
 <title>examples</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="3573,-1827 3253,-1827 3253,-1647 3573,-1647 3573,-1827"/>
-<text text-anchor="start" x="3370" y="-1732" font-family="Arial" font-size="20.00" fill="#eff6ff">examples</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3573,-1827 3253,-1827 3253,-1647 3573,-1647 3573,-1827"/>
+<text text-anchor="start" x="3370" y="-1732" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
 </g>
 <!-- playwright_rs -->
 <g id="node10" class="node">
 <title>playwright_rs</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="4021,-1827 3683,-1827 3683,-1647 4021,-1647 4021,-1827"/>
-<text text-anchor="start" x="3795" y="-1759" font-family="Arial" font-size="20.00" fill="#eff6ff">playwright&#45;rs</text>
-<text text-anchor="start" x="3703" y="-1737" font-family="Arial" font-size="15.00" fill="#bfdbfe">playwright&#45;rs CLI — bootstrap the Playwright</text>
-<text text-anchor="start" x="3790" y="-1720" font-family="Arial" font-size="15.00" fill="#bfdbfe">driver into a stable</text>
-<text text-anchor="start" x="3744.5" y="-1703" font-family="Arial" font-size="15.00" fill="#bfdbfe">user cache and install browsers.</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4021,-1827 3683,-1827 3683,-1647 4021,-1647 4021,-1827"/>
+<text text-anchor="start" x="3795" y="-1759" font-family="Arial" font-size="20.00" fill="#5b5b5b">playwright&#45;rs</text>
+<text text-anchor="start" x="3703" y="-1737" font-family="Arial" font-size="15.00" fill="#6d6d6d">playwright&#45;rs CLI — bootstrap the Playwright</text>
+<text text-anchor="start" x="3790" y="-1720" font-family="Arial" font-size="15.00" fill="#6d6d6d">driver into a stable</text>
+<text text-anchor="start" x="3744.5" y="-1703" font-family="Arial" font-size="15.00" fill="#6d6d6d">user cache and install browsers.</text>
 </g>
 <!-- protocol -->
 <g id="node11" class="node">
 <title>protocol</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="1369,-1827 1049,-1827 1049,-1647 1369,-1647 1369,-1827"/>
-<text text-anchor="start" x="1173" y="-1732" font-family="Arial" font-size="20.00" fill="#eff6ff">protocol</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1369,-1827 1049,-1827 1049,-1647 1369,-1647 1369,-1827"/>
+<text text-anchor="start" x="1173" y="-1732" font-family="Arial" font-size="20.00" fill="#5b5b5b">protocol</text>
 </g>
 <!-- tests -->
 <g id="node12" class="node">
 <title>tests</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="2601,-1827 2281,-1827 2281,-1647 2601,-1647 2601,-1827"/>
-<text text-anchor="start" x="2420" y="-1732" font-family="Arial" font-size="20.00" fill="#eff6ff">tests</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2601,-1827 2281,-1827 2281,-1647 2601,-1647 2601,-1827"/>
+<text text-anchor="start" x="2420" y="-1732" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
 </g>
 <!-- node_driver -->
 <g id="node13" class="node">
 <title>node_driver</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="4281,-1143 3943,-1143 3943,-963 4281,-963 4281,-1143"/>
-<text text-anchor="start" x="4038" y="-1084" font-family="Arial" font-size="20.00" fill="#eff6ff">Playwright driver</text>
-<text text-anchor="start" x="4063.5" y="-1063.6" font-family="Arial" font-size="13.00" fill="#bfdbfe">Node.js process</text>
-<text text-anchor="start" x="3966" y="-1044" font-family="Arial" font-size="15.00" fill="#bfdbfe">The official Playwright server, assembled by</text>
-<text text-anchor="start" x="3963" y="-1027" font-family="Arial" font-size="15.00" fill="#bfdbfe">build.rs from the pinned playwright&#45;core npm</text>
-<text text-anchor="start" x="4081.5" y="-1010" font-family="Arial" font-size="15.00" fill="#bfdbfe">package.</text>
+<polygon fill="#e9d4c8" stroke="#c0aca1" stroke-width="0" points="4281,-1143 3943,-1143 3943,-963 4281,-963 4281,-1143"/>
+<text text-anchor="start" x="4038" y="-1084" font-family="Arial" font-size="20.00" fill="#48382f">Playwright driver</text>
+<text text-anchor="start" x="4063.5" y="-1063.6" font-family="Arial" font-size="13.00" fill="#59493f">Node.js process</text>
+<text text-anchor="start" x="3966" y="-1044" font-family="Arial" font-size="15.00" fill="#59493f">The official Playwright server, assembled by</text>
+<text text-anchor="start" x="3963" y="-1027" font-family="Arial" font-size="15.00" fill="#59493f">build.rs from the pinned playwright&#45;core npm</text>
+<text text-anchor="start" x="4081.5" y="-1010" font-family="Arial" font-size="15.00" fill="#59493f">package.</text>
 </g>
 <!-- error -->
 <g id="node14" class="node">
 <title>error</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="3983,-180 3663,-180 3663,0 3983,0 3983,-180"/>
-<text text-anchor="start" x="3801.5" y="-85" font-family="Arial" font-size="20.00" fill="#eff6ff">error</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3983,-180 3663,-180 3663,0 3983,0 3983,-180"/>
+<text text-anchor="start" x="3801.5" y="-85" font-family="Arial" font-size="20.00" fill="#5b5b5b">error</text>
 </g>
 <!-- driver_urls -->
 <g id="node15" class="node">
 <title>driver_urls</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="4933,-1143 4613,-1143 4613,-963 4933,-963 4933,-1143"/>
-<text text-anchor="start" x="4726" y="-1048" font-family="Arial" font-size="20.00" fill="#eff6ff">driver_urls</text>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4933,-1143 4613,-1143 4613,-963 4933,-963 4933,-1143"/>
+<text text-anchor="start" x="4726" y="-1048" font-family="Arial" font-size="20.00" fill="#5b5b5b">driver_urls</text>
 </g>
 <!-- playwright_server&#45;&gt;driver -->
 <g id="edge14" class="edge">

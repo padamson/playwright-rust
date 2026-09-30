@@ -1,21 +1,208 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-theme-default="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>playwright-rs-trace · playwright-rust</title>
+<meta name="generator" content="asbuilt docs">
+<title>playwright-rs-trace · Architecture</title>
 <link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../theme.css">
+<script src="../theme.js"></script>
+<link rel="stylesheet" href="../../architecture.css">
 </head>
 <body>
-<header><a class="site" href="../index.html">playwright-rust</a><nav><a href="../containers/playwright_rs.html">playwright-rs</a> <a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a> <a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a> <a href="../containers/playwright_rs_site.html">playwright-rs-site</a> <a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a> <a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a> <a href="../containers/xtask.html">xtask</a> </nav></header>
+<header><div class="bar"><nav class="trail" aria-label="Breadcrumb"><a class="home" href="../../">playwright-rust</a><span class="sep" aria-hidden="true">/</span><a class="site" href="../index.html"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.24 3.21L17.61 1.26L21.97 8.81L18.6 10.76zM3.06 11.38L15.28 4.33L18.15 9.3L5.93 16.36zM1 13.77L3.88 12.1L5.71 15.29L2.84 16.96zM20.65 13.45A10.32 10.32 0 0 1 17.16 18.37L15.06 15.65A6.88 6.88 0 0 0 17.39 12.37zM14.78 19.74A10.32 10.32 0 0 1 6.06 19.34L7.65 16.29A6.88 6.88 0 0 0 13.47 16.57zM17.95 12.13L23 14.59L21.8 17.07L16.75 14.6zM9.67 17.46L7.76 22.74L5.16 21.8L7.09 16.52zM10.36 10.49L11.79 12.97L12.78 12.4L11.35 9.91zM13.31 11.7L18.47 20.64L17.77 21.04L12.61 12.1zM11.62 12.68L16.78 21.61L16.08 22.01L10.92 13.08zM18.07 19.94L18.47 20.64L16.08 22.01L15.68 21.31z"/></svg>Architecture</a></nav><label class="scheme" hidden>Theme <select id="scheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div><nav class="containers" aria-label="Containers"><a href="../containers/playwright_rs.html">playwright-rs</a><a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a><a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a><a href="../containers/playwright_rs_site.html">playwright-rs-site</a><a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a><span aria-current="page">playwright-rs-trace</span><a href="../containers/xtask.html">xtask</a></nav></header>
 <main>
-<nav class="crumbs"><a href="../index.html">playwright-rust</a> / playwright-rs-trace</nav>
 <h1>playwright-rs-trace</h1>
 <p class="meta">library crate · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace"><code>crates/playwright-rs-trace</code></a></p>
 <p>Programmatic parser for [Playwright][pw] trace zip files
 (trace formats v8 and v9, v9 from 0.2.0; verified against traces
 recorded by the bundled driver, playwright@1.63.0).</p>
-<figure><img src="../views/view_playwright_rs_trace.svg" alt="playwright-rs-trace" loading="lazy"></figure>
+<figure class="view"><svg viewBox="0.00 0.00 2101.10 1249.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_trace" role="img" aria-label="playwright-rs-trace">
+<g id="view_playwright_rs_trace-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 1234.05)">
+
+<g id="view_playwright_rs_trace-clust1" class="cluster c4-k-container">
+
+<polygon fill="#722f24" stroke="#57130f" points="8,-8 8,-950 1967,-950 1967,-8 8,-8"/>
+<text text-anchor="start" x="16" y="-938.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#ffffe5" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;TRACE</text>
+</g>
+
+<g id="view_playwright_rs_trace-node1" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="957,-870 637,-870 637,-690 957,-690 957,-870"/>
+<text text-anchor="start" x="776" y="-775" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+</g>
+
+<g id="view_playwright_rs_trace-node2" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1282,-549 932,-549 932,-369 1282,-369 1282,-549"/>
+<text text-anchor="start" x="1084.5" y="-481" font-family="Arial" font-size="20.00" fill="#5b5b5b">trace</text>
+<text text-anchor="start" x="952" y="-459" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">[`TraceReader`] — open a Playwright trace zip</text>
+<text text-anchor="start" x="1059" y="-442" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">and stream its</text>
+<text text-anchor="start" x="1058" y="-425" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">contents lazily.</text>
+</g>
+
+<g id="view_playwright_rs_trace-node3" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1048,-228 694,-228 694,-48 1048,-48 1048,-228"/>
+<text text-anchor="start" x="844" y="-160" font-family="Arial" font-size="20.00" fill="#5b5b5b">action</text>
+<text text-anchor="start" x="714" y="-138" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Action — reassembled from `before` + optional</text>
+<text text-anchor="start" x="796.5" y="-121" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`input` + zero&#45;or&#45;more</text>
+<text text-anchor="start" x="738.5" y="-104" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`log` + `after` events sharing a `call_id`.</text>
+</g>
+
+<g id="view_playwright_rs_trace-node4" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1478,-228 1158,-228 1158,-48 1478,-48 1478,-228"/>
+<text text-anchor="start" x="1297" y="-143" font-family="Arial" font-size="20.00" fill="#5b5b5b">jsonl</text>
+<text text-anchor="start" x="1237" y="-121" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Tiny JSONL line iterator.</text>
+</g>
+
+<g id="view_playwright_rs_trace-node5" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1497,-870 1177,-870 1177,-690 1497,-690 1497,-870"/>
+<text text-anchor="start" x="1302.5" y="-794" font-family="Arial" font-size="20.00" fill="#5b5b5b">network</text>
+<text text-anchor="start" x="1214" y="-772" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`trace.network` — HAR&#45;like resource</text>
+<text text-anchor="start" x="1301" y="-755" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">snapshots.</text>
+</g>
+
+<g id="view_playwright_rs_trace-node6" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="368,-870 48,-870 48,-690 368,-690 368,-870"/>
+<text text-anchor="start" x="183.5" y="-785" font-family="Arial" font-size="20.00" fill="#5b5b5b">event</text>
+<text text-anchor="start" x="146" y="-763" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Trace event types.</text>
+</g>
+
+<g id="view_playwright_rs_trace-node7" class="node c4-k-component">
+
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1927,-870 1607,-870 1607,-690 1927,-690 1927,-870"/>
+<text text-anchor="start" x="1746" y="-785" font-family="Arial" font-size="20.00" fill="#5b5b5b">error</text>
+<text text-anchor="start" x="1671" y="-763" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Error types for trace parsing.</text>
+</g>
+
+<g id="view_playwright_rs_trace-node8" class="node c4-k-container">
+
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="1576,-1219 1256,-1219 1256,-1039 1576,-1039 1576,-1219"/>
+<text text-anchor="start" x="1359.5" y="-1152" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
+<text text-anchor="start" x="1381" y="-1131.6" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">library crate</text>
+<text text-anchor="start" x="1287" y="-1112" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">playwright: High&#45;level Rust bindings for</text>
+<text text-anchor="start" x="1349" y="-1095" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">Microsoft Playwright</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge3" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M883.76,-689.72C924.65,-647.65 973.44,-597.44 1014.97,-554.7"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1016.91,-556.47 1020.26,-549.26 1013.15,-552.81 1016.91,-556.47"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="961,-609 961,-630 1046,-630 1046,-609 961,-609" class="c4-label-bg"/>
+<text text-anchor="start" x="964.5" y="-615.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceReader</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge4" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M957.19,-780C1023.96,-780 1101.53,-780 1169.09,-780"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1169.36,-782.63 1176.86,-780 1169.36,-777.38 1169.36,-782.63"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1023,-783 1023,-804 1111,-804 1111,-783 1023,-783" class="c4-label-bg"/>
+<text text-anchor="start" x="1026" y="-789.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">NetworkEntry</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge5" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M636.86,-780C556.02,-780 457.97,-780 376.05,-780"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="375.67,-777.38 368.17,-780 375.67,-782.63 375.67,-777.38"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="423,-783 423,-804 582,-804 582,-783 423,-783" class="c4-label-bg"/>
+<text text-anchor="start" x="426.5" y="-789.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ActionPhase, TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge6" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M949.76,-870.03C1002.5,-896.39 1063.16,-921.69 1122,-935 1308.4,-977.17 1370.13,-993.72 1552,-935 1591.57,-922.22 1630,-899.15 1663.16,-874.64"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1664.86,-876.65 1669.29,-870.05 1661.71,-872.45 1664.86,-876.65"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1246.5,-958 1246.5,-979 1317.5,-979 1317.5,-958 1246.5,-958" class="c4-label-bg"/>
+<text text-anchor="start" x="1250" y="-964.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceError</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge7" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1040.95,-368.72C1010.01,-326.9 973.13,-277.05 941.64,-234.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="943.61,-232.73 937.04,-228.26 939.39,-235.85 943.61,-232.73"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="996,-288 996,-309 1129,-309 1129,-288 996,-288" class="c4-label-bg"/>
+<text text-anchor="start" x="999.5" y="-294.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Action, ActionStream</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge8" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1166.06,-368.72C1193.66,-326.99 1226.55,-277.25 1254.67,-234.75"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1257.01,-235.97 1258.96,-228.26 1252.63,-233.07 1257.01,-235.97"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1218,-288 1218,-309 1285,-309 1285,-288 1218,-288" class="c4-label-bg"/>
+<text text-anchor="start" x="1221.5" y="-294.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">JsonLines</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge9" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1110.07,-549.26C1114.24,-576.73 1122.21,-606.02 1137,-630 1149.25,-649.87 1165.21,-667.97 1182.77,-684.18"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1181.46,-686.53 1188.79,-689.6 1184.98,-682.63 1181.46,-686.53"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1137,-609 1137,-630 1225,-630 1225,-609 1137,-609" class="c4-label-bg"/>
+<text text-anchor="start" x="1140" y="-615.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">NetworkEntry</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge10" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M931.88,-518.44C851.6,-545.52 755.31,-578.41 669,-609 571.34,-643.61 462.58,-683.65 375.23,-716.17"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="374.29,-713.72 368.18,-718.8 376.13,-718.64 374.29,-713.72"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="669,-609 669,-630 915,-630 915,-609 669,-609" class="c4-label-bg"/>
+<text text-anchor="start" x="672" y="-615.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ContextOptions, RawEvent, TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge11" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1222.47,-549.1C1263.37,-577.75 1310.75,-607.78 1357,-630 1438.73,-669.26 1466.68,-659.29 1552,-690 1567.49,-695.58 1583.5,-701.63 1599.47,-707.88"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1598.86,-710.46 1606.8,-710.76 1600.78,-705.57 1598.86,-710.46"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1357,-609 1357,-630 1474,-630 1474,-609 1357,-609" class="c4-label-bg"/>
+<text text-anchor="start" x="1360.5" y="-615.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result, TraceError</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge12" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M775.59,-228.16C730.37,-270.61 675.7,-322.22 627,-369 515.31,-476.27 388.37,-600.87 303.76,-684.3"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="301.75,-682.6 298.25,-689.73 305.43,-686.34 301.75,-682.6"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="627,-441 627,-477 877,-477 877,-441 627,-441" class="c4-label-bg"/>
+<text text-anchor="start" x="630" y="-462.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ActionError, AfterEvent, BeforeEvent,</text>
+<text text-anchor="start" x="630" y="-447.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">InputEvent, LogEvent, Point, TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge13" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1048.08,-208.74C1066.55,-215.47 1085.1,-222.01 1103,-228 1194.65,-258.67 1231.5,-234.52 1312,-288 1436.01,-370.39 1420.81,-439.78 1522,-549 1565.25,-595.68 1616.13,-644.34 1660.28,-684.82"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1658.6,-686.84 1665.91,-689.97 1662.14,-682.97 1658.6,-686.84"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1522,-448.5 1522,-469.5 1567,-469.5 1567,-448.5 1522,-448.5" class="c4-label-bg"/>
+<text text-anchor="start" x="1525.5" y="-454.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge14" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1464,-228.02C1487.66,-246.13 1510.7,-266.34 1530,-288 1634.34,-405.09 1702.9,-576.3 1738.28,-682.52"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1735.82,-683.44 1740.67,-689.74 1740.81,-681.79 1735.82,-683.44"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1686,-448.5 1686,-469.5 1803,-469.5 1803,-448.5 1686,-448.5" class="c4-label-bg"/>
+<text text-anchor="start" x="1689.5" y="-454.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result, TraceError</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge1" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1576.28,-1099.35C1725.97,-1068.95 1933.44,-1016.18 1982,-950 2050.36,-856.84 2054.04,-780.35 1982,-690 1806.65,-470.05 1635.46,-626.31 1365,-549 1340.33,-541.95 1314.55,-533.9 1289.23,-525.58"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1290.05,-523.09 1282.1,-523.23 1288.4,-528.07 1290.05,-523.09"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2034,-769.5 2034,-790.5 2071,-790.5 2071,-769.5 2034,-769.5" class="c4-label-bg"/>
+<text text-anchor="start" x="2037.5" y="-775.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">open</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge2" class="edge">
+
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1255.77,-1104.28C1085.85,-1076.72 810.92,-1025.19 582,-950 512.6,-927.21 438.81,-895.57 375.27,-865.82"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="376.28,-863.39 368.37,-862.58 374.04,-868.15 376.28,-863.39"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="670,-958 670,-979 746,-979 746,-958 670,-958" class="c4-label-bg"/>
+<text text-anchor="start" x="673" y="-964.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceEvent</text>
+</g>
+</g>
+</svg></figure>
 <h2>Modules</h2>
 <div class="modules"><ul>
 <li><a href="#playwright_rs_trace.action">action</a></li>
@@ -64,9 +251,9 @@ recorded by the bundled driver, playwright@1.63.0).</p>
 <p>Trace event types.</p>
 <h3>Used by</h3>
 <table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
-<tr><td>uses</td><td><a href="../containers/playwright_rs.html#playwright_rs.tests">playwright_rs.tests</a></td><td>TraceEvent</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs.html#playwright_rs.tests">playwright_rs.tests</a></td><td>TraceEvent</td><td></td></tr>
 <tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>ActionError, AfterEvent, BeforeEvent, InputEvent, LogEvent, Point, TraceEvent</td><td></td></tr>
-<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
 <tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>ContextOptions, RawEvent, TraceEvent</td><td></td></tr>
 </tbody></table>
 </section>
@@ -99,7 +286,7 @@ recorded by the bundled driver, playwright@1.63.0).</p>
 <h3>Uses</h3>
 <table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
 <tr><td>uses</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>TraceError</td><td></td></tr>
-<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
 <tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.network">playwright_rs_trace.network</a></td><td>NetworkEntry</td><td></td></tr>
 <tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>TraceReader</td><td></td></tr>
 </tbody></table>

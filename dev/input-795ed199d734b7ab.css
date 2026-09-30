@@ -293,6 +293,9 @@
   .flex-1 {
     flex: 1;
   }
+  .transform {
+    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
   .resize {
     resize: both;
   }
@@ -716,33 +719,54 @@
   font-display: swap;
   src: url("fonts/bungee-shade-latin.woff2") format("woff2");
 }
-@layer components {
-  .wordmark {
-    --shade: 0.119em;
-    --desc: 0.3em;
-    --gap: 0.08em;
-    --seam: 0.025em;
-    font-family: "Bungee", system-ui, sans-serif;
-    font-weight: 400;
-    letter-spacing: 0;
-  }
-  .wordmark-as {
-    font-family: "Bungee Shade", "Bungee", system-ui, sans-serif;
-    color: var(--color-rust-300);
-  }
-  .wordmark-built {
-    position: relative;
-  }
-  .wordmark-built::after {
-    content: "";
-    position: absolute;
-    left: calc(-0.26em + var(--gap));
-    right: 0.211em;
-    bottom: calc(var(--desc) - var(--shade));
-    height: calc(var(--shade) - var(--seam));
-    background: var(--color-rust-300);
-    clip-path: polygon(calc(var(--shade) - var(--seam)) 0, 100% 0, 100% 100%, 0 100%);
-  }
+.wordmark {
+  --shade: 0.119em;
+  --desc: 0.3em;
+  --gap: 0.08em;
+  --seam: 0.025em;
+  font-family: "Bungee", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.wordmark-as {
+  font-family: "Bungee Shade", "Bungee", system-ui, sans-serif;
+  color: var(--brand-accent, #f0a884);
+}
+.wordmark-built {
+  position: relative;
+}
+.wordmark-built::after {
+  content: "";
+  position: absolute;
+  left: calc(-0.26em + var(--gap));
+  right: 0.211em;
+  bottom: calc(var(--desc) - var(--shade));
+  height: calc(var(--shade) - var(--seam));
+  background: var(--brand-accent, #f0a884);
+  clip-path: polygon(calc(var(--shade) - var(--seam)) 0, 100% 0, 100% 100%, 0 100%);
+}
+:root {
+  --brand-accent: var(--color-rust-300);
+}
+@property --tw-rotate-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-z {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-y {
+  syntax: "*";
+  inherits: false;
 }
 @property --tw-border-style {
   syntax: "*";
@@ -829,6 +853,11 @@
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
       --tw-border-style: solid;
       --tw-leading: initial;
       --tw-font-weight: initial;
