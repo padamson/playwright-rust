@@ -79,23 +79,23 @@
 <!-- examples -->
 <g id="node10" class="node">
 <title>examples</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="329,-3258 9,-3258 9,-3078 329,-3078 329,-3258"/>
-<text text-anchor="start" x="126" y="-3163" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
+<polygon fill="#fbf1e4" stroke="#d2c8bc" stroke-width="0" points="329,-3258 9,-3258 9,-3078 329,-3078 329,-3258"/>
+<text text-anchor="start" x="126" y="-3163" font-family="Arial" font-size="20.00" fill="#585045">examples</text>
 </g>
 <!-- playwright_rs -->
 <g id="node11" class="node">
 <title>playwright_rs</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="338,-1944 0,-1944 0,-1764 338,-1764 338,-1944"/>
-<text text-anchor="start" x="112" y="-1876" font-family="Arial" font-size="20.00" fill="#5b5b5b">playwright&#45;rs</text>
-<text text-anchor="start" x="20" y="-1854" font-family="Arial" font-size="15.00" fill="#6d6d6d">playwright&#45;rs CLI — bootstrap the Playwright</text>
-<text text-anchor="start" x="107" y="-1837" font-family="Arial" font-size="15.00" fill="#6d6d6d">driver into a stable</text>
-<text text-anchor="start" x="61.5" y="-1820" font-family="Arial" font-size="15.00" fill="#6d6d6d">user cache and install browsers.</text>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="338,-1944 0,-1944 0,-1764 338,-1764 338,-1944"/>
+<text text-anchor="start" x="112" y="-1876" font-family="Arial" font-size="20.00" fill="#533f38">playwright&#45;rs</text>
+<text text-anchor="start" x="20" y="-1854" font-family="Arial" font-size="15.00" fill="#645049">playwright&#45;rs CLI — bootstrap the Playwright</text>
+<text text-anchor="start" x="107" y="-1837" font-family="Arial" font-size="15.00" fill="#645049">driver into a stable</text>
+<text text-anchor="start" x="61.5" y="-1820" font-family="Arial" font-size="15.00" fill="#645049">user cache and install browsers.</text>
 </g>
 <!-- tests -->
 <g id="node12" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="329,-3548 9,-3548 9,-3368 329,-3368 329,-3548"/>
-<text text-anchor="start" x="148" y="-3453" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="329,-3548 9,-3548 9,-3368 329,-3368 329,-3548"/>
+<text text-anchor="start" x="148" y="-3453" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- error -->
 <g id="node13" class="node">

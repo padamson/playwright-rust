@@ -68,17 +68,17 @@
 <!-- examples -->
 <g id="node9" class="node">
 <title>examples</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="3573,-1827 3253,-1827 3253,-1647 3573,-1647 3573,-1827"/>
-<text text-anchor="start" x="3370" y="-1732" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
+<polygon fill="#fbf1e4" stroke="#d2c8bc" stroke-width="0" points="3573,-1827 3253,-1827 3253,-1647 3573,-1647 3573,-1827"/>
+<text text-anchor="start" x="3370" y="-1732" font-family="Arial" font-size="20.00" fill="#585045">examples</text>
 </g>
 <!-- playwright_rs -->
 <g id="node10" class="node">
 <title>playwright_rs</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="4021,-1827 3683,-1827 3683,-1647 4021,-1647 4021,-1827"/>
-<text text-anchor="start" x="3795" y="-1759" font-family="Arial" font-size="20.00" fill="#5b5b5b">playwright&#45;rs</text>
-<text text-anchor="start" x="3703" y="-1737" font-family="Arial" font-size="15.00" fill="#6d6d6d">playwright&#45;rs CLI — bootstrap the Playwright</text>
-<text text-anchor="start" x="3790" y="-1720" font-family="Arial" font-size="15.00" fill="#6d6d6d">driver into a stable</text>
-<text text-anchor="start" x="3744.5" y="-1703" font-family="Arial" font-size="15.00" fill="#6d6d6d">user cache and install browsers.</text>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="4021,-1827 3683,-1827 3683,-1647 4021,-1647 4021,-1827"/>
+<text text-anchor="start" x="3795" y="-1759" font-family="Arial" font-size="20.00" fill="#533f38">playwright&#45;rs</text>
+<text text-anchor="start" x="3703" y="-1737" font-family="Arial" font-size="15.00" fill="#645049">playwright&#45;rs CLI — bootstrap the Playwright</text>
+<text text-anchor="start" x="3790" y="-1720" font-family="Arial" font-size="15.00" fill="#645049">driver into a stable</text>
+<text text-anchor="start" x="3744.5" y="-1703" font-family="Arial" font-size="15.00" fill="#645049">user cache and install browsers.</text>
 </g>
 <!-- protocol -->
 <g id="node11" class="node">
@@ -89,8 +89,8 @@
 <!-- tests -->
 <g id="node12" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2601,-1827 2281,-1827 2281,-1647 2601,-1647 2601,-1827"/>
-<text text-anchor="start" x="2420" y="-1732" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="2601,-1827 2281,-1827 2281,-1647 2601,-1647 2601,-1827"/>
+<text text-anchor="start" x="2420" y="-1732" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- node_driver -->
 <g id="node13" class="node">

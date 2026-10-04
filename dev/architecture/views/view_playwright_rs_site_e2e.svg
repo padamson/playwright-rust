@@ -16,15 +16,15 @@
 <!-- tests -->
 <g id="node1" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="360,-501 40,-501 40,-321 360,-321 360,-501"/>
-<text text-anchor="start" x="179" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="360,-501 40,-501 40,-321 360,-321 360,-501"/>
+<text text-anchor="start" x="179" y="-406" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- playwright_rs -->
 <g id="node2" class="node">
 <title>playwright_rs</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="360,-180 40,-180 40,0 360,0 360,-180"/>
 <text text-anchor="start" x="143.5" y="-113" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
-<text text-anchor="start" x="165" y="-92.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library crate</text>
+<text text-anchor="start" x="131.5" y="-92.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library and binary crate</text>
 <text text-anchor="start" x="71" y="-73" font-family="Arial" font-size="15.00" fill="#ffffe5">playwright: High&#45;level Rust bindings for</text>
 <text text-anchor="start" x="133" y="-56" font-family="Arial" font-size="15.00" fill="#ffffe5">Microsoft Playwright</text>
 </g>

@@ -13,7 +13,7 @@
 <title>playwright_rs_site</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="338.5,-180 18.5,-180 18.5,0 338.5,0 338.5,-180"/>
 <text text-anchor="start" x="103.5" y="-94" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;site</text>
-<text text-anchor="start" x="160.5" y="-73.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="143.5" y="-73.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 </g>
 <!-- playwright_rs_site_e2e -->
 <g id="node2" class="node">
@@ -27,7 +27,7 @@
 <title>playwright_rs</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="921,-1195 601,-1195 601,-1015 921,-1015 921,-1195"/>
 <text text-anchor="start" x="704.5" y="-1128" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
-<text text-anchor="start" x="726" y="-1107.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library crate</text>
+<text text-anchor="start" x="692.5" y="-1107.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library and binary crate</text>
 <text text-anchor="start" x="632" y="-1088" font-family="Arial" font-size="15.00" fill="#ffffe5">playwright: High&#45;level Rust bindings for</text>
 <text text-anchor="start" x="694" y="-1071" font-family="Arial" font-size="15.00" fill="#ffffe5">Microsoft Playwright</text>
 </g>
@@ -36,14 +36,14 @@
 <title>playwright_rs_fuzz</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="338.5,-470 18.5,-470 18.5,-290 338.5,-290 338.5,-470"/>
 <text text-anchor="start" x="100.5" y="-384" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;fuzz</text>
-<text text-anchor="start" x="160.5" y="-363.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="143.5" y="-363.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 </g>
 <!-- xtask -->
 <g id="node5" class="node">
 <title>xtask</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="341.5,-1340 15.5,-1340 15.5,-1160 341.5,-1160 341.5,-1340"/>
 <text text-anchor="start" x="155.5" y="-1273" font-family="Arial" font-size="20.00" fill="#fffffa">xtask</text>
-<text text-anchor="start" x="160" y="-1252.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="143" y="-1252.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 <text text-anchor="start" x="35.5" y="-1233" font-family="Arial" font-size="15.00" fill="#ffffe5">Workspace build&#45;tooling binary. See `cargo</text>
 <text text-anchor="start" x="134.5" y="-1216" font-family="Arial" font-size="15.00" fill="#ffffe5">xtask &#45;&#45;help`.</text>
 </g>

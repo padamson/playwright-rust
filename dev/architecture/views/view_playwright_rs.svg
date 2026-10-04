@@ -16,23 +16,23 @@
 <!-- examples -->
 <g id="node1" class="node">
 <title>examples</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1713,-1509 1393,-1509 1393,-1329 1713,-1329 1713,-1509"/>
-<text text-anchor="start" x="1510" y="-1414" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
+<polygon fill="#fbf1e4" stroke="#d2c8bc" stroke-width="0" points="1713,-1509 1393,-1509 1393,-1329 1713,-1329 1713,-1509"/>
+<text text-anchor="start" x="1510" y="-1414" font-family="Arial" font-size="20.00" fill="#585045">examples</text>
 </g>
 <!-- tests -->
 <g id="node2" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1180,-1509 860,-1509 860,-1329 1180,-1329 1180,-1509"/>
-<text text-anchor="start" x="999" y="-1414" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="1180,-1509 860,-1509 860,-1329 1180,-1329 1180,-1509"/>
+<text text-anchor="start" x="999" y="-1414" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- playwright_rs -->
 <g id="node3" class="node">
 <title>playwright_rs</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="768,-837 430,-837 430,-657 768,-657 768,-837"/>
-<text text-anchor="start" x="542" y="-769" font-family="Arial" font-size="20.00" fill="#5b5b5b">playwright&#45;rs</text>
-<text text-anchor="start" x="450" y="-747" font-family="Arial" font-size="15.00" fill="#6d6d6d">playwright&#45;rs CLI — bootstrap the Playwright</text>
-<text text-anchor="start" x="537" y="-730" font-family="Arial" font-size="15.00" fill="#6d6d6d">driver into a stable</text>
-<text text-anchor="start" x="491.5" y="-713" font-family="Arial" font-size="15.00" fill="#6d6d6d">user cache and install browsers.</text>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="768,-837 430,-837 430,-657 768,-657 768,-837"/>
+<text text-anchor="start" x="542" y="-769" font-family="Arial" font-size="20.00" fill="#533f38">playwright&#45;rs</text>
+<text text-anchor="start" x="450" y="-747" font-family="Arial" font-size="15.00" fill="#645049">playwright&#45;rs CLI — bootstrap the Playwright</text>
+<text text-anchor="start" x="537" y="-730" font-family="Arial" font-size="15.00" fill="#645049">driver into a stable</text>
+<text text-anchor="start" x="491.5" y="-713" font-family="Arial" font-size="15.00" fill="#645049">user cache and install browsers.</text>
 </g>
 <!-- api -->
 <g id="node4" class="node">
@@ -91,7 +91,7 @@
 <title>playwright_rs_fuzz</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="3320,-1173 3000,-1173 3000,-993 3320,-993 3320,-1173"/>
 <text text-anchor="start" x="3082" y="-1087" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;fuzz</text>
-<text text-anchor="start" x="3142" y="-1066.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="3125" y="-1066.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 </g>
 <!-- playwright_rs_site_e2e -->
 <g id="node13" class="node">
@@ -105,7 +105,7 @@
 <title>xtask</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="4003,-1173 3677,-1173 3677,-993 4003,-993 4003,-1173"/>
 <text text-anchor="start" x="3817" y="-1106" font-family="Arial" font-size="20.00" fill="#fffffa">xtask</text>
-<text text-anchor="start" x="3821.5" y="-1085.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="3804.5" y="-1085.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 <text text-anchor="start" x="3697" y="-1066" font-family="Arial" font-size="15.00" fill="#ffffe5">Workspace build&#45;tooling binary. See `cargo</text>
 <text text-anchor="start" x="3796" y="-1049" font-family="Arial" font-size="15.00" fill="#ffffe5">xtask &#45;&#45;help`.</text>
 </g>

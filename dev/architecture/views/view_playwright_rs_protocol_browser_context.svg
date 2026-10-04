@@ -65,14 +65,14 @@
 <!-- examples -->
 <g id="node9" class="node">
 <title>examples</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="6206,-925 5886,-925 5886,-745 6206,-745 6206,-925"/>
-<text text-anchor="start" x="6003" y="-830" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
+<polygon fill="#fbf1e4" stroke="#d2c8bc" stroke-width="0" points="6206,-925 5886,-925 5886,-745 6206,-745 6206,-925"/>
+<text text-anchor="start" x="6003" y="-830" font-family="Arial" font-size="20.00" fill="#585045">examples</text>
 </g>
 <!-- tests -->
 <g id="node10" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="7868,-925 7548,-925 7548,-745 7868,-745 7868,-925"/>
-<text text-anchor="start" x="7687" y="-830" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="7868,-925 7548,-925 7548,-745 7868,-745 7868,-925"/>
+<text text-anchor="start" x="7687" y="-830" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- api_request_context -->
 <g id="node11" class="node">

@@ -20,6 +20,9 @@ header .mark { width: 1.15em; height: 1.15em; vertical-align: -0.2em; margin-rig
 header .containers { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.9em; }
 header .containers a { color: var(--muted); }
 header .containers [aria-current] { font-weight: 600; color: var(--fg); }
+header .views { font-size: 0.9em; }
+header .views a { color: var(--muted); }
+header .views [aria-current] { font-weight: 600; color: var(--fg); }
 header .scheme { margin-left: auto; display: inline-flex; gap: 0.4em; align-items: center; color: var(--muted); font-size: 0.85em; }
 header .scheme[hidden] { display: none; }
 header .scheme select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0.1em 0.3em; }

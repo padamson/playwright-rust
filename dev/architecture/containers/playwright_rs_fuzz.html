@@ -4,18 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="asbuilt docs">
-<title>playwright-rs-fuzz · Architecture</title>
+<title>playwright-rust · Architecture · playwright-rs-fuzz</title>
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="../theme.css">
+<link rel="stylesheet" href="../viewer.css">
 <script src="../theme.js"></script>
+<script src="../viewer.js" defer></script>
 <link rel="stylesheet" href="../../architecture.css">
 </head>
 <body>
-<header><div class="bar"><nav class="trail" aria-label="Breadcrumb"><a class="home" href="../../">playwright-rust</a><span class="sep" aria-hidden="true">/</span><a class="site" href="../index.html"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.24 3.21L17.61 1.26L21.97 8.81L18.6 10.76zM3.06 11.38L15.28 4.33L18.15 9.3L5.93 16.36zM1 13.77L3.88 12.1L5.71 15.29L2.84 16.96zM20.65 13.45A10.32 10.32 0 0 1 17.16 18.37L15.06 15.65A6.88 6.88 0 0 0 17.39 12.37zM14.78 19.74A10.32 10.32 0 0 1 6.06 19.34L7.65 16.29A6.88 6.88 0 0 0 13.47 16.57zM17.95 12.13L23 14.59L21.8 17.07L16.75 14.6zM9.67 17.46L7.76 22.74L5.16 21.8L7.09 16.52zM10.36 10.49L11.79 12.97L12.78 12.4L11.35 9.91zM13.31 11.7L18.47 20.64L17.77 21.04L12.61 12.1zM11.62 12.68L16.78 21.61L16.08 22.01L10.92 13.08zM18.07 19.94L18.47 20.64L16.08 22.01L15.68 21.31z"/></svg>Architecture</a></nav><label class="scheme" hidden>Theme <select id="scheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div><nav class="containers" aria-label="Containers"><a href="../containers/playwright_rs.html">playwright-rs</a><span aria-current="page">playwright-rs-fuzz</span><a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a><a href="../containers/playwright_rs_site.html">playwright-rs-site</a><a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a><a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a><a href="../containers/xtask.html">xtask</a></nav></header>
+<header><div class="bar"><nav class="trail" aria-label="Breadcrumb"><a class="home" href="../../">playwright-rust</a><span class="sep" aria-hidden="true">/</span><a class="site" href="../index.html"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.24 3.21L17.61 1.26L21.97 8.81L18.6 10.76zM3.06 11.38L15.28 4.33L18.15 9.3L5.93 16.36zM1 13.77L3.88 12.1L5.71 15.29L2.84 16.96zM20.65 13.45A10.32 10.32 0 0 1 17.16 18.37L15.06 15.65A6.88 6.88 0 0 0 17.39 12.37zM14.78 19.74A10.32 10.32 0 0 1 6.06 19.34L7.65 16.29A6.88 6.88 0 0 0 13.47 16.57zM17.95 12.13L23 14.59L21.8 17.07L16.75 14.6zM9.67 17.46L7.76 22.74L5.16 21.8L7.09 16.52zM10.36 10.49L11.79 12.97L12.78 12.4L11.35 9.91zM13.31 11.7L18.47 20.64L17.77 21.04L12.61 12.1zM11.62 12.68L16.78 21.61L16.08 22.01L10.92 13.08zM18.07 19.94L18.47 20.64L16.08 22.01L15.68 21.31z"/></svg>Architecture</a></nav><nav class="views" aria-label="Views"><a href="../views.html">Curated views</a></nav><label class="scheme" hidden>Theme <select id="scheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div><nav class="containers" aria-label="Containers"><a href="../containers/playwright_rs.html">playwright-rs</a><span aria-current="page">playwright-rs-fuzz</span><a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a><a href="../containers/playwright_rs_site.html">playwright-rs-site</a><a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a><a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a><a href="../containers/xtask.html">xtask</a></nav></header>
 <main>
 <h1>playwright-rs-fuzz</h1>
-<p class="meta">binary · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright/fuzz"><code>crates/playwright/fuzz</code></a></p>
-<figure class="view"><svg viewBox="0.00 0.00 1736.10 599.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_fuzz" role="img" aria-label="playwright-rs-fuzz">
+<p class="meta">binary crate · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright/fuzz"><code>crates/playwright/fuzz</code></a></p>
+<figure class="view" data-viewer><div class="viewer-bar" hidden><span class="viewer-scale"></span><button type="button" data-viewer-zoom="out" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" data-viewer-zoom="in" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" data-viewer-mode="fit" aria-pressed="false">Fit</button><button type="button" data-viewer-mode="one" aria-pressed="false">1:1</button><button type="button" data-viewer-wide aria-pressed="false">Wide</button><button type="button" data-viewer-full>Fullscreen</button><span class="viewer-hint"></span></div><script type="application/json" class="viewer-edges">{"playwright_rs_fuzz.fuzz_evaluate_round_trip->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_evaluate_round_trip","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_evaluate_round_trip","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_result","serialize_argument"],"technology":null}],"playwright_rs_fuzz.fuzz_parse_result->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_parse_result","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_result","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_result"],"technology":null}],"playwright_rs_fuzz.fuzz_parse_value->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_parse_value","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_value","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_value"],"technology":null}],"playwright_rs_fuzz.fuzz_serialize_argument->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_serialize_argument","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_serialize_argument","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["serialize_argument"],"technology":null}]}</script><div class="viewer-frame" role="group" aria-label="playwright-rs-fuzz: diagram"><svg viewBox="0.00 0.00 1736.10 599.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_fuzz" role="img" aria-label="playwright-rs-fuzz">
 <g id="view_playwright_rs_fuzz-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 584.05)">
 
 <g id="view_playwright_rs_fuzz-clust1" class="cluster c4-k-container">
@@ -24,72 +26,72 @@
 <text text-anchor="start" x="16" y="-549.2" font-family="Arial" font-weight="bold" font-size="11.00" fill="#ffffe5" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;FUZZ</text>
 </g>
 
-<g id="view_playwright_rs_fuzz-node1" class="node c4-k-component">
+<a href="../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_evaluate_round_trip"><g id="view_playwright_rs_fuzz-node1" class="node c4-k-bin">
+<title>playwright_rs_fuzz.fuzz_evaluate_round_trip</title>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="368,-501 48,-501 48,-321 368,-321 368,-501"/>
+<text text-anchor="start" x="95" y="-406" font-family="Arial" font-size="20.00" fill="#533f38">fuzz_evaluate_round_trip</text>
+</g></a>
 
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="368,-501 48,-501 48,-321 368,-321 368,-501"/>
-<text text-anchor="start" x="95" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">fuzz_evaluate_round_trip</text>
-</g>
+<a href="../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_result"><g id="view_playwright_rs_fuzz-node2" class="node c4-k-bin">
+<title>playwright_rs_fuzz.fuzz_parse_result</title>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="798,-501 478,-501 478,-321 798,-321 798,-501"/>
+<text text-anchor="start" x="559" y="-406" font-family="Arial" font-size="20.00" fill="#533f38">fuzz_parse_result</text>
+</g></a>
 
-<g id="view_playwright_rs_fuzz-node2" class="node c4-k-component">
+<a href="../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_value"><g id="view_playwright_rs_fuzz-node3" class="node c4-k-bin">
+<title>playwright_rs_fuzz.fuzz_parse_value</title>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="1228,-501 908,-501 908,-321 1228,-321 1228,-501"/>
+<text text-anchor="start" x="989.5" y="-406" font-family="Arial" font-size="20.00" fill="#533f38">fuzz_parse_value</text>
+</g></a>
 
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="798,-501 478,-501 478,-321 798,-321 798,-501"/>
-<text text-anchor="start" x="559" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">fuzz_parse_result</text>
-</g>
+<a href="../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_serialize_argument"><g id="view_playwright_rs_fuzz-node4" class="node c4-k-bin">
+<title>playwright_rs_fuzz.fuzz_serialize_argument</title>
+<polygon fill="#f6ddd4" stroke="#cdb5ac" stroke-width="0" points="1658,-501 1338,-501 1338,-321 1658,-321 1658,-501"/>
+<text text-anchor="start" x="1389.5" y="-406" font-family="Arial" font-size="20.00" fill="#533f38">fuzz_serialize_argument</text>
+</g></a>
 
-<g id="view_playwright_rs_fuzz-node3" class="node c4-k-component">
-
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1228,-501 908,-501 908,-321 1228,-321 1228,-501"/>
-<text text-anchor="start" x="989.5" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">fuzz_parse_value</text>
-</g>
-
-<g id="view_playwright_rs_fuzz-node4" class="node c4-k-component">
-
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1658,-501 1338,-501 1338,-321 1658,-321 1658,-501"/>
-<text text-anchor="start" x="1389.5" y="-406" font-family="Arial" font-size="20.00" fill="#5b5b5b">fuzz_serialize_argument</text>
-</g>
-
-<g id="view_playwright_rs_fuzz-node5" class="node c4-k-container">
-
+<a href="../containers/playwright_rs.html"><g id="view_playwright_rs_fuzz-node5" class="node c4-k-container">
+<title>playwright_rs</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="1012,-180 692,-180 692,0 1012,0 1012,-180"/>
 <text text-anchor="start" x="795.5" y="-113" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
-<text text-anchor="start" x="817" y="-92.6" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">library crate</text>
+<text text-anchor="start" x="783.5" y="-92.6" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">library and binary crate</text>
 <text text-anchor="start" x="723" y="-73" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">playwright: High&#45;level Rust bindings for</text>
 <text text-anchor="start" x="785" y="-56" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">Microsoft Playwright</text>
-</g>
+</g></a>
 
-<g id="view_playwright_rs_fuzz-edge1" class="edge">
-
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/>
+<g id="view_playwright_rs_fuzz-edge1" class="edge" data-from="playwright_rs_fuzz.fuzz_evaluate_round_trip" data-to="playwright_rs">
+<title>playwright_rs_fuzz.fuzz_evaluate_round_trip → playwright_rs</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/><path class="c4-hit" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="685.88,-160.27 691.77,-154.94 683.84,-155.44 685.88,-160.27"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="502,-240 502,-261 705,-261 705,-240 502,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="505.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_result, serialize_argument</text>
 </g>
 
-<g id="view_playwright_rs_fuzz-edge2" class="edge">
-
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/>
+<g id="view_playwright_rs_fuzz-edge2" class="edge" data-from="playwright_rs_fuzz.fuzz_parse_result" data-to="playwright_rs">
+<title>playwright_rs_fuzz.fuzz_parse_result → playwright_rs</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/><path class="c4-hit" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="790.12,-187.95 792.12,-180.26 785.76,-185.03 790.12,-187.95"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="751,-240 751,-261 832,-261 832,-240 751,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="754.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_result</text>
 </g>
 
-<g id="view_playwright_rs_fuzz-edge3" class="edge">
-
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/>
+<g id="view_playwright_rs_fuzz-edge3" class="edge" data-from="playwright_rs_fuzz.fuzz_parse_value" data-to="playwright_rs">
+<title>playwright_rs_fuzz.fuzz_parse_value → playwright_rs</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/><path class="c4-hit" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="918.82,-185 912.44,-180.26 914.47,-187.94 918.82,-185"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="966,-240 966,-261 1046,-261 1046,-240 966,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="969" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_value</text>
 </g>
 
-<g id="view_playwright_rs_fuzz-edge4" class="edge">
-
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/>
+<g id="view_playwright_rs_fuzz-edge4" class="edge" data-from="playwright_rs_fuzz.fuzz_serialize_argument" data-to="playwright_rs">
+<title>playwright_rs_fuzz.fuzz_serialize_argument → playwright_rs</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/><path class="c4-hit" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1020.04,-156.44 1012.11,-155.93 1017.99,-161.28 1020.04,-156.44"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1237,-240 1237,-261 1358,-261 1358,-240 1237,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="1240.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">serialize_argument</text>
 </g>
 </g>
-</svg></figure>
+</svg></div></figure>
 <h2>Modules</h2>
 <div class="modules"><ul>
 <li><a href="#playwright_rs_fuzz.fuzz_evaluate_round_trip">fuzz_evaluate_round_trip</a></li>

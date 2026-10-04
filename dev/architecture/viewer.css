@@ -1,0 +1,37 @@
+/* The viewer (viewer.js) around an inlined view: its controls, the frame
+   that scrolls, the pan and edge cursors, and the popover. Its own file so
+   a host page can embed one of the tree's figures with theme.css, this and
+   viewer.js, without the tree's page styles. Colors come from the page
+   tokens (--bg, --fg, --muted, --accent, --rule) the host defines. */
+/* The bar ships hidden and the frame only scrolls once the script sizes
+   the view. Wide is measured by the script. */
+.viewer-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.3rem; font-size: 0.8em; color: var(--muted); }
+.viewer-bar[hidden] { display: none; }
+.viewer-bar button { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0.1em 0.5em; cursor: pointer; }
+.viewer-bar button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.viewer-scale { min-width: 3em; font-variant-numeric: tabular-nums; }
+.viewer-hint { margin-left: auto; }
+.viewer-hint[hidden] { display: none; }
+@media (max-width: 40rem) { .viewer-hint { display: none; } }
+figure[data-viewer-active] .viewer-frame { overflow: auto; max-height: 75vh; border: 1px solid var(--rule); scrollbar-gutter: stable; user-select: none; }
+figure[data-viewer-active] .viewer-frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+figure[data-viewer-active] .viewer-frame.pannable { cursor: grab; }
+figure[data-viewer-active] .viewer-frame.pannable.dragging,
+figure[data-viewer-active] .viewer-frame.pannable.dragging a { cursor: grabbing; }
+figure[data-viewer-active] svg.c4 a { -webkit-user-drag: none; }
+figure[data-viewer-active] { position: relative; }
+/* An edge's line is thin; its invisible twin takes the clicks, and an edge
+   the page can explain shows a pointer and thickens on hover. */
+svg.c4 .edge path.c4-hit { stroke: transparent; stroke-width: 14px; fill: none; pointer-events: stroke; }
+figure[data-viewer-active] svg.c4 .edge.c4-explained { cursor: pointer; }
+figure[data-viewer-active] svg.c4 .edge.c4-explained:hover path:not(.c4-hit) { stroke-width: 3px; }
+.viewer-popover { position: absolute; z-index: 2; max-width: 28rem; max-height: 50vh; overflow: auto; padding: 0.6rem 0.8rem; background: var(--bg); color: var(--fg); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); font-size: 0.85em; }
+.viewer-popover[hidden] { display: none; }
+.viewer-popover h3 { margin: 0 1.5rem 0.4rem 0; font-size: 1em; }
+.viewer-popover ul { margin: 0; padding-left: 1.1em; }
+.viewer-popover li { margin: 0.2em 0; }
+.viewer-popover .rel-detail { color: var(--muted); }
+.viewer-popover-close { position: absolute; top: 0.25rem; right: 0.4rem; font: inherit; font-size: 1.1em; line-height: 1; border: 0; background: none; color: var(--muted); cursor: pointer; }
+figure[data-viewer-active] svg.c4 { width: auto; max-width: none; }
+figure:fullscreen { margin: 0; padding: 1rem; overflow: auto; background: var(--bg); }
+figure:fullscreen .viewer-frame { max-height: none; border: 0; }

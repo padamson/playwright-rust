@@ -28,8 +28,8 @@
 <!-- examples -->
 <g id="node3" class="node">
 <title>examples</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1728.95,-557 1408.95,-557 1408.95,-377 1728.95,-377 1728.95,-557"/>
-<text text-anchor="start" x="1525.95" y="-462" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
+<polygon fill="#fbf1e4" stroke="#d2c8bc" stroke-width="0" points="1728.95,-557 1408.95,-557 1408.95,-377 1728.95,-377 1728.95,-557"/>
+<text text-anchor="start" x="1525.95" y="-462" font-family="Arial" font-size="20.00" fill="#585045">examples</text>
 </g>
 <!-- protocol -->
 <g id="node4" class="node">
@@ -40,8 +40,8 @@
 <!-- tests -->
 <g id="node5" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1078.95,-557 758.95,-557 758.95,-377 1078.95,-377 1078.95,-557"/>
-<text text-anchor="start" x="897.95" y="-462" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="1078.95,-557 758.95,-557 758.95,-377 1078.95,-377 1078.95,-557"/>
+<text text-anchor="start" x="897.95" y="-462" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- launch_options&#45;&gt;protocol -->
 <g id="edge7" class="edge">

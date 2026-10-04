@@ -7,6 +7,10 @@
   --c4-label-bg: color-mix(in srgb, var(--bg) 88%, transparent);
   --c4-group-fill-mix: 7%;
   --c4-group-stroke-mix: 20%;
+  --c4-bin-fill: #f6ddd4;
+  --c4-bin-stroke: #d0bbb3;
+  --c4-bin-text: #221f1e;
+  --c4-bin-muted: #4d4542;
   --c4-component-fill: #ffffff;
   --c4-component-stroke: #d8d8d8;
   --c4-component-text: #242424;
@@ -15,15 +19,27 @@
   --c4-container-stroke: #d6624f;
   --c4-container-text: #fcf4f2;
   --c4-container-muted: #f3d0ca;
+  --c4-examples-fill: #fbf1e4;
+  --c4-examples-stroke: #d4ccc1;
+  --c4-examples-text: #232220;
+  --c4-examples-muted: #4e4b47;
   --c4-process-fill: #e9d4c8;
   --c4-process-stroke: #c5b3a9;
   --c4-process-text: #211e1c;
   --c4-process-muted: #49423e;
+  --c4-tests-fill: #efe8e2;
+  --c4-tests-stroke: #cac4bf;
+  --c4-tests-text: #212020;
+  --c4-tests-muted: #4b4847;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --c4-group-fill-mix: 22%;
     --c4-group-stroke-mix: 40%;
+    --c4-bin-fill: #5a2e20;
+    --c4-bin-stroke: #765146;
+    --c4-bin-text: #f5f2f2;
+    --c4-bin-muted: #d6cbc8;
     --c4-component-fill: #3d2c22;
     --c4-component-stroke: #5e5047;
     --c4-component-text: #f3f2f2;
@@ -32,15 +48,27 @@
     --c4-container-stroke: #a25140;
     --c4-container-text: #f8f2f1;
     --c4-container-muted: #e3cbc6;
+    --c4-examples-fill: #3a3022;
+    --c4-examples-stroke: #5b5347;
+    --c4-examples-text: #f3f3f2;
+    --c4-examples-muted: #ceccc8;
     --c4-process-fill: #2f2620;
     --c4-process-stroke: #524b46;
     --c4-process-text: #f3f2f2;
     --c4-process-muted: #cbc9c8;
+    --c4-tests-fill: #2a211b;
+    --c4-tests-stroke: #4e4742;
+    --c4-tests-text: #f2f2f1;
+    --c4-tests-muted: #cac8c6;
   }
 }
 :root[data-theme="dark"] {
   --c4-group-fill-mix: 22%;
   --c4-group-stroke-mix: 40%;
+  --c4-bin-fill: #5a2e20;
+  --c4-bin-stroke: #765146;
+  --c4-bin-text: #f5f2f2;
+  --c4-bin-muted: #d6cbc8;
   --c4-component-fill: #3d2c22;
   --c4-component-stroke: #5e5047;
   --c4-component-text: #f3f2f2;
@@ -49,10 +77,18 @@
   --c4-container-stroke: #a25140;
   --c4-container-text: #f8f2f1;
   --c4-container-muted: #e3cbc6;
+  --c4-examples-fill: #3a3022;
+  --c4-examples-stroke: #5b5347;
+  --c4-examples-text: #f3f3f2;
+  --c4-examples-muted: #ceccc8;
   --c4-process-fill: #2f2620;
   --c4-process-stroke: #524b46;
   --c4-process-text: #f3f2f2;
   --c4-process-muted: #cbc9c8;
+  --c4-tests-fill: #2a211b;
+  --c4-tests-stroke: #4e4742;
+  --c4-tests-text: #f2f2f1;
+  --c4-tests-muted: #cac8c6;
 }
 svg.c4 { display: block; width: 100%; height: auto; }
 svg.c4 .cluster text { fill: var(--muted); fill-opacity: 1; }
@@ -60,6 +96,10 @@ svg.c4 .edge path { stroke: var(--c4-edge); }
 svg.c4 .edge polygon:not(.c4-label-bg) { fill: var(--c4-edge); stroke: var(--c4-edge); }
 svg.c4 .edge .c4-label-bg { fill: var(--c4-label-bg); fill-opacity: 1; }
 svg.c4 .edge text { fill: var(--c4-edge-text); }
+svg.c4 .node.c4-k-bin > :is(polygon, path, ellipse, polyline) { fill: var(--c4-bin-fill); stroke: var(--c4-bin-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+svg.c4 .node.c4-k-bin text { fill: var(--c4-bin-text); }
+svg.c4 .node.c4-k-bin text.c4-muted { fill: var(--c4-bin-muted); }
+svg.c4 .cluster.c4-k-bin > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-bin-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-bin-fill) var(--c4-group-stroke-mix), var(--bg)); }
 svg.c4 .node.c4-k-component > :is(polygon, path, ellipse, polyline) { fill: var(--c4-component-fill); stroke: var(--c4-component-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-component text { fill: var(--c4-component-text); }
 svg.c4 .node.c4-k-component text.c4-muted { fill: var(--c4-component-muted); }
@@ -68,7 +108,15 @@ svg.c4 .node.c4-k-container > :is(polygon, path, ellipse, polyline) { fill: var(
 svg.c4 .node.c4-k-container text { fill: var(--c4-container-text); }
 svg.c4 .node.c4-k-container text.c4-muted { fill: var(--c4-container-muted); }
 svg.c4 .cluster.c4-k-container > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-container-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-container-fill) var(--c4-group-stroke-mix), var(--bg)); }
+svg.c4 .node.c4-k-examples > :is(polygon, path, ellipse, polyline) { fill: var(--c4-examples-fill); stroke: var(--c4-examples-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+svg.c4 .node.c4-k-examples text { fill: var(--c4-examples-text); }
+svg.c4 .node.c4-k-examples text.c4-muted { fill: var(--c4-examples-muted); }
+svg.c4 .cluster.c4-k-examples > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-examples-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-examples-fill) var(--c4-group-stroke-mix), var(--bg)); }
 svg.c4 .node.c4-k-process > :is(polygon, path, ellipse, polyline) { fill: var(--c4-process-fill); stroke: var(--c4-process-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-process text { fill: var(--c4-process-text); }
 svg.c4 .node.c4-k-process text.c4-muted { fill: var(--c4-process-muted); }
 svg.c4 .cluster.c4-k-process > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-process-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-process-fill) var(--c4-group-stroke-mix), var(--bg)); }
+svg.c4 .node.c4-k-tests > :is(polygon, path, ellipse, polyline) { fill: var(--c4-tests-fill); stroke: var(--c4-tests-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+svg.c4 .node.c4-k-tests text { fill: var(--c4-tests-text); }
+svg.c4 .node.c4-k-tests text.c4-muted { fill: var(--c4-tests-muted); }
+svg.c4 .cluster.c4-k-tests > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-tests-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-tests-fill) var(--c4-group-stroke-mix), var(--bg)); }

@@ -469,7 +469,7 @@
 <title>playwright_rs_fuzz</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="3116,-5913 2796,-5913 2796,-5733 3116,-5733 3116,-5913"/>
 <text text-anchor="start" x="2878" y="-5827" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;fuzz</text>
-<text text-anchor="start" x="2938" y="-5806.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="2921" y="-5806.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 </g>
 <!-- playwright_rs_site_e2e -->
 <g id="node68" class="node">
@@ -489,15 +489,15 @@
 <title>xtask</title>
 <polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="30679,-5913 30353,-5913 30353,-5733 30679,-5733 30679,-5913"/>
 <text text-anchor="start" x="30493" y="-5846" font-family="Arial" font-size="20.00" fill="#fffffa">xtask</text>
-<text text-anchor="start" x="30497.5" y="-5825.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary</text>
+<text text-anchor="start" x="30480.5" y="-5825.6" font-family="Arial" font-size="13.00" fill="#ffffe5">binary crate</text>
 <text text-anchor="start" x="30373" y="-5806" font-family="Arial" font-size="15.00" fill="#ffffe5">Workspace build&#45;tooling binary. See `cargo</text>
 <text text-anchor="start" x="30472" y="-5789" font-family="Arial" font-size="15.00" fill="#ffffe5">xtask &#45;&#45;help`.</text>
 </g>
 <!-- examples -->
 <g id="node71" class="node">
 <title>examples</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="25809,-5913 25489,-5913 25489,-5733 25809,-5733 25809,-5913"/>
-<text text-anchor="start" x="25606" y="-5818" font-family="Arial" font-size="20.00" fill="#5b5b5b">examples</text>
+<polygon fill="#fbf1e4" stroke="#d2c8bc" stroke-width="0" points="25809,-5913 25489,-5913 25489,-5733 25809,-5733 25809,-5913"/>
+<text text-anchor="start" x="25606" y="-5818" font-family="Arial" font-size="20.00" fill="#585045">examples</text>
 </g>
 <!-- api -->
 <g id="node72" class="node">
@@ -516,8 +516,8 @@
 <!-- tests -->
 <g id="node74" class="node">
 <title>tests</title>
-<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="26523,-5913 26203,-5913 26203,-5733 26523,-5733 26523,-5913"/>
-<text text-anchor="start" x="26342" y="-5818" font-family="Arial" font-size="20.00" fill="#5b5b5b">tests</text>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="26523,-5913 26203,-5913 26203,-5733 26523,-5733 26523,-5913"/>
+<text text-anchor="start" x="26342" y="-5818" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
 </g>
 <!-- error -->
 <g id="node75" class="node">
