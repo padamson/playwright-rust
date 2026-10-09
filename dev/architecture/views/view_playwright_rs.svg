@@ -134,16 +134,16 @@
 <!-- examples&#45;&gt;api -->
 <g id="edge5" class="edge">
 <title>examples&#45;&gt;api</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1481,-1328.81C1453.43,-1297.02 1420.72,-1261.94 1388,-1233 1366.36,-1213.86 1342.21,-1195.03 1318.11,-1177.54"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1319.61,-1175.39 1311.99,-1173.13 1316.54,-1179.64 1319.61,-1175.39"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1481,-1328.81C1453.43,-1297.02 1420.72,-1261.94 1388,-1233 1366.73,-1214.18 1343.02,-1195.67 1319.34,-1178.43"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1319.29,-1178.4 1313.88,-1178.19 1311.99,-1173.13 1317.4,-1173.33 1319.29,-1178.4"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1422,-1240.5 1422,-1261.5 1449,-1261.5 1449,-1240.5 1422,-1240.5"/>
 <text text-anchor="start" x="1425.5" y="-1247.8" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- examples&#45;&gt;assertions -->
 <g id="edge6" class="edge">
 <title>examples&#45;&gt;assertions</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1632.2,-1328.93C1673.4,-1282.6 1723.77,-1225.95 1765.69,-1178.81"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1767.74,-1180.46 1770.76,-1173.11 1763.82,-1176.97 1767.74,-1180.46"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1632.2,-1328.93C1673.06,-1282.98 1722.95,-1226.87 1764.67,-1179.96"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1764.78,-1179.83 1765.53,-1174.48 1770.76,-1173.11 1770.01,-1178.46 1764.78,-1179.83"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1710,-1233 1710,-1269 1939,-1269 1939,-1233 1710,-1233"/>
 <text text-anchor="start" x="1713.5" y="-1254.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ScreenshotAssertionOptions, expect,</text>
 <text text-anchor="start" x="1713.5" y="-1239.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">expect_page</text>
@@ -159,8 +159,8 @@
 <!-- examples&#45;&gt;server -->
 <g id="edge8" class="edge">
 <title>examples&#45;&gt;server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1425.67,-1328.96C1406.26,-1310.91 1388.05,-1290.73 1374,-1269 1364.99,-1255.05 1376.59,-1243.82 1364,-1233 1194.92,-1087.7 1013.91,-1339.8 866,-1173 812.92,-1113.14 841.33,-1069.1 866,-993 892.4,-911.56 941.8,-914.11 979,-837 1027.13,-737.26 1030.68,-706.68 1046,-597 1049.98,-568.53 1051.3,-537.35 1051.33,-508.84"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1053.95,-508.76 1051.31,-501.27 1048.7,-508.78 1053.95,-508.76"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1425.67,-1328.96C1406.26,-1310.91 1388.05,-1290.73 1374,-1269 1364.99,-1255.05 1376.59,-1243.82 1364,-1233 1194.92,-1087.7 1013.91,-1339.8 866,-1173 812.92,-1113.14 841.33,-1069.1 866,-993 892.4,-911.56 941.8,-914.11 979,-837 1027.13,-737.26 1030.68,-706.68 1046,-597 1049.98,-568.53 1051.3,-537.35 1051.33,-508.84"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1051.31,-501.27 1054.7,-508.76 1051.82,-505.02 1051.83,-508.77 1051.33,-508.77 1050.83,-508.77 1050.82,-505.02 1047.95,-508.78 1051.31,-501.27 1051.31,-501.27"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="935,-897 935,-933 1107,-933 1107,-897 935,-897"/>
 <text text-anchor="start" x="938" y="-918.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers,</text>
 <text text-anchor="start" x="938" y="-903.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers_with_deps</text>
@@ -168,16 +168,16 @@
 <!-- tests&#45;&gt;api -->
 <g id="edge9" class="edge">
 <title>tests&#45;&gt;api</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M973.79,-1328.58C963.88,-1297.28 960.24,-1262.58 975,-1233 985.1,-1212.77 999.39,-1194.56 1015.74,-1178.41"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1017.77,-1180.09 1021.36,-1173 1014.13,-1176.31 1017.77,-1180.09"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M973.79,-1328.58C963.88,-1297.28 960.24,-1262.58 975,-1233 984.83,-1213.3 998.65,-1195.51 1014.46,-1179.67"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1014.89,-1179.26 1016.04,-1173.98 1021.36,-1173 1020.21,-1178.29 1014.89,-1179.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="975,-1240.5 975,-1261.5 1002,-1261.5 1002,-1240.5 975,-1240.5"/>
 <text text-anchor="start" x="978.5" y="-1247.8" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- tests&#45;&gt;assertions -->
 <g id="edge10" class="edge">
 <title>tests&#45;&gt;assertions</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.7,-1328.55C1071.58,-1293.16 1097.21,-1255.6 1132,-1233 1310.45,-1117.09 1400.23,-1223.24 1607,-1173 1631.74,-1166.99 1657.42,-1159.28 1682.43,-1150.92"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1683.55,-1153.31 1689.82,-1148.42 1681.87,-1148.34 1683.55,-1153.31"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1053.7,-1328.55C1071.58,-1293.16 1097.21,-1255.6 1132,-1233 1310.45,-1117.09 1400.23,-1223.24 1607,-1173 1631.31,-1167.09 1656.54,-1159.54 1681.14,-1151.35"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1681.29,-1151.3 1684.6,-1147.02 1689.82,-1148.42 1686.51,-1152.7 1681.29,-1151.3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1132,-1233 1132,-1269 1361,-1269 1361,-1233 1132,-1233"/>
 <text text-anchor="start" x="1135.5" y="-1254.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ScreenshotAssertionOptions, expect,</text>
 <text text-anchor="start" x="1135.5" y="-1239.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">expect_page</text>
@@ -201,24 +201,24 @@
 <!-- tests&#45;&gt;error -->
 <g id="edge14" class="edge">
 <title>tests&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1169.25,-1509.01C1220.85,-1535.37 1280.25,-1560.67 1338,-1574 1455.58,-1601.13 2309.17,-1611.08 2424,-1574 2463.57,-1561.22 2502,-1538.15 2535.16,-1513.64"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2536.86,-1515.65 2541.29,-1509.05 2533.71,-1511.45 2536.86,-1515.65"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1169.25,-1509.01C1220.85,-1535.37 1280.25,-1560.67 1338,-1574 1455.58,-1601.13 2309.17,-1611.08 2424,-1574 2463.08,-1561.38 2501.05,-1538.72 2533.92,-1514.56"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2534.08,-1514.44 2535.89,-1509.34 2541.29,-1509.05 2539.48,-1514.15 2534.08,-1514.44"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1788,-1597 1788,-1618 1870,-1618 1870,-1597 1788,-1597"/>
 <text text-anchor="start" x="1791" y="-1603.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- tests&#45;&gt;playwright_rs_trace -->
 <g id="edge11" class="edge">
 <title>tests&#45;&gt;playwright_rs_trace</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M859.87,-1347.53C841.56,-1340.72 823,-1334.37 805,-1329 667.59,-1288.03 622.68,-1318.21 488,-1269 423.85,-1245.56 357.43,-1210.44 301.28,-1177.08"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="302.62,-1174.82 294.83,-1173.23 299.93,-1179.33 302.62,-1174.82"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M859.87,-1347.53C841.56,-1340.72 823,-1334.37 805,-1329 667.59,-1288.03 622.68,-1318.21 488,-1269 423.85,-1245.56 357.43,-1210.44 301.28,-1177.08"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="294.83,-1173.23 303,-1174.18 298.31,-1174.72 301.53,-1176.65 301.27,-1177.07 301.01,-1177.5 297.79,-1175.58 299.54,-1179.97 294.83,-1173.23 294.83,-1173.23"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="488,-1240.5 488,-1261.5 515,-1261.5 515,-1240.5 488,-1240.5"/>
 <text text-anchor="start" x="491.5" y="-1247.8" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- playwright_rs&#45;&gt;server -->
 <g id="edge15" class="edge">
 <title>playwright_rs&#45;&gt;server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M621.88,-656.58C634.19,-623.09 652.47,-586.92 679,-561 733.71,-507.56 810.13,-472.45 879.15,-449.83"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="880.34,-452.2 886.67,-447.4 878.73,-447.21 880.34,-452.2"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M621.88,-656.58C634.19,-623.09 652.47,-586.92 679,-561 733.71,-507.56 810.13,-472.45 879.15,-449.83"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="886.67,-447.4 880.57,-452.92 883.25,-449.03 879.68,-450.18 879.53,-449.7 879.38,-449.23 882.95,-448.08 878.49,-446.49 886.67,-447.4 886.67,-447.4"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="679,-561 679,-597 851,-597 851,-561 679,-561"/>
 <text text-anchor="start" x="682" y="-582.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers,</text>
 <text text-anchor="start" x="682" y="-567.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers_with_deps</text>
@@ -226,7 +226,7 @@
 <!-- api&#45;&gt;protocol -->
 <g id="edge16" class="edge">
 <title>api&#45;&gt;protocol</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1214.12,-992.85C1234.08,-958.38 1261.15,-921.43 1295,-897 1408.6,-815.03 1564.56,-778.15 1682.23,-761.56"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1214.12,-992.85C1234.08,-958.38 1261.15,-921.43 1295,-897 1408.6,-815.03 1564.56,-778.15 1682.23,-761.56"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1682.85,-764.13 1689.92,-760.5 1682.13,-758.93 1682.85,-764.13"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1295,-904.5 1295,-925.5 1385,-925.5 1385,-904.5 1295,-904.5"/>
 <text text-anchor="start" x="1298" y="-910.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ProxySettings</text>
@@ -242,8 +242,8 @@
 <!-- assertions&#45;&gt;error -->
 <g id="edge18" class="edge">
 <title>assertions&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2010.25,-1151.84C2144.47,-1208.66 2335.41,-1289.49 2471.6,-1347.14"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2470.93,-1349.7 2478.86,-1350.21 2472.98,-1344.87 2470.93,-1349.7"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2010.25,-1151.84C2144.47,-1208.66 2335.41,-1289.49 2471.6,-1347.14"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2478.86,-1350.21 2470.64,-1350.39 2475.21,-1349.21 2471.76,-1347.75 2471.95,-1347.29 2472.15,-1346.82 2475.6,-1348.29 2473.27,-1344.18 2478.86,-1350.21 2478.86,-1350.21"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2268,-1240.5 2268,-1261.5 2350,-1261.5 2350,-1240.5 2268,-1240.5"/>
 <text text-anchor="start" x="2271" y="-1246.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
@@ -266,16 +266,16 @@
 <!-- protocol&#45;&gt;testing -->
 <g id="edge21" class="edge">
 <title>protocol&#45;&gt;testing</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2010.08,-684.54C2161.05,-626.59 2386.87,-539.89 2543.11,-479.91"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2544.44,-482.21 2550.5,-477.07 2542.55,-477.31 2544.44,-482.21"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2010.08,-684.54C2161.05,-626.59 2386.87,-539.89 2543.11,-479.91"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2550.5,-477.07 2544.7,-482.91 2547.17,-478.88 2543.67,-480.23 2543.49,-479.76 2543.32,-479.3 2546.82,-477.95 2542.29,-476.61 2550.5,-477.07 2550.5,-477.07"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2311,-568.5 2311,-589.5 2415,-589.5 2415,-568.5 2311,-568.5"/>
 <text text-anchor="start" x="2314" y="-574.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">FakeFileSystem</text>
 </g>
 <!-- protocol&#45;&gt;tty_guard -->
 <g id="edge22" class="edge">
 <title>protocol&#45;&gt;tty_guard</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1943.67,-837.23C1985.37,-880.99 2032.33,-936.39 2065,-993 2125.51,-1097.84 2165.62,-1231.98 2187.79,-1321.23"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2185.28,-1322 2189.62,-1328.65 2190.38,-1320.74 2185.28,-1322"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1943.67,-837.23C1985.37,-880.99 2032.33,-936.39 2065,-993 2125.51,-1097.84 2165.62,-1231.98 2187.79,-1321.23"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2189.62,-1328.65 2184.55,-1322.18 2188.24,-1325.13 2187.34,-1321.49 2187.83,-1321.37 2188.31,-1321.25 2189.21,-1324.89 2191.11,-1320.56 2189.62,-1328.65 2189.62,-1328.65"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2142,-1065 2142,-1101 2331,-1101 2331,-1065 2142,-1065"/>
 <text text-anchor="start" x="2145.5" y="-1086.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_signal_handler, restore,</text>
 <text text-anchor="start" x="2145.5" y="-1071.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">save_if_tty</text>
@@ -299,8 +299,8 @@
 <!-- server&#45;&gt;driver_urls -->
 <g id="edge25" class="edge">
 <title>server&#45;&gt;driver_urls</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M979.56,-501.09C947.62,-546.14 910.71,-602.67 884,-657 846.73,-732.8 886.62,-781.43 823,-837 717.63,-929.03 603,-789.06 514,-897 415.08,-1016.98 481.18,-1207.56 536.67,-1321.93"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="534.32,-1323.09 539.97,-1328.67 539.03,-1320.78 534.32,-1323.09"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M979.56,-501.09C947.62,-546.14 910.71,-602.67 884,-657 846.73,-732.8 886.62,-781.43 823,-837 717.63,-929.03 603,-789.06 514,-897 415.08,-1016.98 481.18,-1207.56 536.67,-1321.93"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="539.97,-1328.67 533.64,-1323.42 537.88,-1325.53 536.23,-1322.16 536.68,-1321.94 537.12,-1321.72 538.77,-1325.09 539.71,-1320.45 539.97,-1328.67 539.97,-1328.67"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="514,-897 514,-933 740,-933 740,-897 514,-897"/>
 <text text-anchor="start" x="517" y="-918.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">cached_driver_dir, node_exe_name,</text>
 <text text-anchor="start" x="517" y="-903.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">playwright_platform</text>
@@ -316,40 +316,40 @@
 <!-- server&#45;&gt;node_driver -->
 <g id="edge26" class="edge">
 <title>server&#45;&gt;node_driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1047,-320.72C1047,-279.33 1047,-230.07 1047,-187.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1049.63,-187.76 1047,-180.26 1044.38,-187.76 1049.63,-187.76"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1047,-320.72C1047,-278.9 1047,-229.05 1047,-186.49"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1047" cy="-183.26" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1047,-240 1047,-261 1074,-261 1074,-240 1047,-240"/>
 <text text-anchor="start" x="1050.5" y="-247.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- testing&#45;&gt;protocol -->
 <g id="edge28" class="edge">
 <title>testing&#45;&gt;protocol</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2605.42,-501.06C2557.13,-535.1 2498.98,-571.77 2442,-597 2305.08,-657.63 2138.96,-696.72 2017.59,-719.58"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2016.91,-717.04 2010.02,-721 2017.88,-722.2 2016.91,-717.04"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2605.42,-501.06C2557.13,-535.1 2498.98,-571.77 2442,-597 2304.53,-657.87 2137.64,-697.04 2016.14,-719.86"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2012.97" cy="-720.45" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2507,-568.5 2507,-589.5 2545,-589.5 2545,-568.5 2507,-568.5"/>
 <text text-anchor="start" x="2510" y="-574.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Page</text>
 </g>
 <!-- testing&#45;&gt;error -->
 <g id="edge29" class="edge">
 <title>testing&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2737.16,-501.14C2758.08,-614.79 2792.24,-817.61 2805,-993 2813.9,-1115.34 2854.98,-1156.98 2805,-1269 2796.29,-1288.53 2783.61,-1306.56 2769.08,-1322.84"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2766.79,-1321.46 2763.65,-1328.76 2770.66,-1325.01 2766.79,-1321.46"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2737.16,-501.14C2758.08,-614.79 2792.24,-817.61 2805,-993 2813.9,-1115.34 2854.98,-1156.98 2805,-1269 2796.29,-1288.53 2783.61,-1306.56 2769.08,-1322.84"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2763.65,-1328.76 2766.24,-1320.95 2765.82,-1325.66 2768.35,-1322.9 2768.72,-1323.24 2769.09,-1323.57 2766.56,-1326.34 2771.21,-1325.52 2763.65,-1328.76 2763.65,-1328.76"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2799,-904.5 2799,-925.5 2881,-925.5 2881,-904.5 2799,-904.5"/>
 <text text-anchor="start" x="2802" y="-910.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- playwright_rs_fuzz&#45;&gt;protocol -->
 <g id="edge1" class="edge">
 <title>playwright_rs_fuzz&#45;&gt;protocol</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3066.73,-992.96C3024.23,-957.42 2971.33,-919.63 2917,-897 2758.1,-830.81 2276.12,-782.77 2017.78,-761"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2017.9,-758.38 2010.2,-760.37 2017.46,-763.61 2017.9,-758.38"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M3066.73,-992.96C3024.23,-957.42 2971.33,-919.63 2917,-897 2758.1,-830.81 2276.12,-782.77 2017.78,-761"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2010.2,-760.37 2017.96,-757.63 2013.98,-760.18 2017.72,-760.5 2017.68,-761 2017.64,-761.49 2013.9,-761.18 2017.4,-764.36 2010.2,-760.37 2010.2,-760.37"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2983,-904.5 2983,-925.5 3010,-925.5 3010,-904.5 2983,-904.5"/>
 <text text-anchor="start" x="2986.5" y="-911.8" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- playwright_rs_site_e2e&#45;&gt;assertions -->
 <g id="edge2" class="edge">
 <title>playwright_rs_site_e2e&#45;&gt;assertions</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3109.95,-1369.21C3061.11,-1355.21 3007.08,-1340.61 2957,-1329 2766.94,-1284.93 2281.3,-1224.07 2093,-1173 2068.33,-1166.31 2042.63,-1158.2 2017.57,-1149.63"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2018.12,-1147.04 2010.17,-1147.08 2016.41,-1152 2018.12,-1147.04"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M3109.95,-1369.21C3061.11,-1355.21 3007.08,-1340.61 2957,-1329 2766.94,-1284.93 2281.3,-1224.07 2093,-1173 2068.33,-1166.31 2042.63,-1158.2 2017.57,-1149.63"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2010.17,-1147.08 2018.36,-1146.33 2013.88,-1147.83 2017.42,-1149.05 2017.26,-1149.52 2017.1,-1149.99 2013.55,-1148.77 2016.16,-1152.71 2010.17,-1147.08 2010.17,-1147.08"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2605,-1240.5 2605,-1261.5 2736,-1261.5 2736,-1240.5 2605,-1240.5"/>
 <text text-anchor="start" x="2608.5" y="-1246.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">expect, expect_page</text>
 </g>
@@ -364,7 +364,7 @@
 <!-- xtask&#45;&gt;protocol -->
 <g id="edge4" class="edge">
 <title>xtask&#45;&gt;protocol</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3760.35,-992.98C3722.54,-956.75 3674.41,-918.43 3623,-897 3335.68,-777.25 2401.89,-753.7 2017.58,-749.1"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M3760.35,-992.98C3722.54,-956.75 3674.41,-918.43 3623,-897 3335.68,-777.25 2401.89,-753.7 2017.58,-749.1"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2017.53,-746.48 2010,-749.01 2017.47,-751.73 2017.53,-746.48"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3684,-904.5 3684,-925.5 3711,-925.5 3711,-904.5 3684,-904.5"/>
 <text text-anchor="start" x="3687.5" y="-911.8" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>

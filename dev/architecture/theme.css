@@ -1,6 +1,8 @@
 /* Diagram colors for the asbuilt docs pages, generated from [theme].
-   Group boxes, edges and labels follow the page tokens; a host
-   stylesheet linked after this one can restate any variable. */
+   Group boxes, edges and labels follow the page tokens, and so does
+   each diagram's legend, styled here so a figure embedded with this
+   file alone has it; a host stylesheet linked after this one can
+   restate any variable. */
 :root {
   --c4-edge: color-mix(in srgb, var(--fg) 45%, var(--bg));
   --c4-edge-text: var(--muted);
@@ -93,30 +95,44 @@
 svg.c4 { display: block; width: 100%; height: auto; }
 svg.c4 .cluster text { fill: var(--muted); fill-opacity: 1; }
 svg.c4 .edge path { stroke: var(--c4-edge); }
-svg.c4 .edge polygon:not(.c4-label-bg) { fill: var(--c4-edge); stroke: var(--c4-edge); }
+svg.c4 .edge :is(polygon, ellipse):not(.c4-label-bg):not([fill="none"]) { fill: var(--c4-edge); stroke: var(--c4-edge); }
+svg.c4 .edge :is(polygon, ellipse)[fill="none"] { stroke: var(--c4-edge); }
 svg.c4 .edge .c4-label-bg { fill: var(--c4-label-bg); fill-opacity: 1; }
 svg.c4 .edge text { fill: var(--c4-edge-text); }
+.legend ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; margin: 0.4rem 0 0; padding: 0; font-size: 0.8em; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 0.35em; }
+.legend-swatch { display: inline-block; width: 0.9em; height: 0.9em; border: 1px solid var(--rule); border-radius: 2px; }
+.legend-line { width: 2.25em; height: 0.75em; overflow: visible; }
+.legend-line line { stroke: var(--c4-edge); stroke-width: 1.5; stroke-linecap: round; }
+.legend-line :is(polygon, circle):not([fill="none"]) { fill: var(--c4-edge); stroke: var(--c4-edge); }
+.legend-line :is(polygon, circle)[fill="none"] { stroke: var(--c4-edge); stroke-width: 1.2; }
 svg.c4 .node.c4-k-bin > :is(polygon, path, ellipse, polyline) { fill: var(--c4-bin-fill); stroke: var(--c4-bin-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-bin text { fill: var(--c4-bin-text); }
 svg.c4 .node.c4-k-bin text.c4-muted { fill: var(--c4-bin-muted); }
 svg.c4 .cluster.c4-k-bin > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-bin-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-bin-fill) var(--c4-group-stroke-mix), var(--bg)); }
+.legend-swatch.c4-k-bin { background: var(--c4-bin-fill); border-color: var(--c4-bin-stroke); }
 svg.c4 .node.c4-k-component > :is(polygon, path, ellipse, polyline) { fill: var(--c4-component-fill); stroke: var(--c4-component-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-component text { fill: var(--c4-component-text); }
 svg.c4 .node.c4-k-component text.c4-muted { fill: var(--c4-component-muted); }
 svg.c4 .cluster.c4-k-component > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-component-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-component-fill) var(--c4-group-stroke-mix), var(--bg)); }
+.legend-swatch.c4-k-component { background: var(--c4-component-fill); border-color: var(--c4-component-stroke); }
 svg.c4 .node.c4-k-container > :is(polygon, path, ellipse, polyline) { fill: var(--c4-container-fill); stroke: var(--c4-container-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-container text { fill: var(--c4-container-text); }
 svg.c4 .node.c4-k-container text.c4-muted { fill: var(--c4-container-muted); }
 svg.c4 .cluster.c4-k-container > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-container-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-container-fill) var(--c4-group-stroke-mix), var(--bg)); }
+.legend-swatch.c4-k-container { background: var(--c4-container-fill); border-color: var(--c4-container-stroke); }
 svg.c4 .node.c4-k-examples > :is(polygon, path, ellipse, polyline) { fill: var(--c4-examples-fill); stroke: var(--c4-examples-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-examples text { fill: var(--c4-examples-text); }
 svg.c4 .node.c4-k-examples text.c4-muted { fill: var(--c4-examples-muted); }
 svg.c4 .cluster.c4-k-examples > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-examples-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-examples-fill) var(--c4-group-stroke-mix), var(--bg)); }
+.legend-swatch.c4-k-examples { background: var(--c4-examples-fill); border-color: var(--c4-examples-stroke); }
 svg.c4 .node.c4-k-process > :is(polygon, path, ellipse, polyline) { fill: var(--c4-process-fill); stroke: var(--c4-process-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-process text { fill: var(--c4-process-text); }
 svg.c4 .node.c4-k-process text.c4-muted { fill: var(--c4-process-muted); }
 svg.c4 .cluster.c4-k-process > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-process-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-process-fill) var(--c4-group-stroke-mix), var(--bg)); }
+.legend-swatch.c4-k-process { background: var(--c4-process-fill); border-color: var(--c4-process-stroke); }
 svg.c4 .node.c4-k-tests > :is(polygon, path, ellipse, polyline) { fill: var(--c4-tests-fill); stroke: var(--c4-tests-stroke); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 svg.c4 .node.c4-k-tests text { fill: var(--c4-tests-text); }
 svg.c4 .node.c4-k-tests text.c4-muted { fill: var(--c4-tests-muted); }
 svg.c4 .cluster.c4-k-tests > :is(polygon, path) { fill: color-mix(in srgb, var(--c4-tests-fill) var(--c4-group-fill-mix), var(--bg)); stroke: color-mix(in srgb, var(--c4-tests-fill) var(--c4-group-stroke-mix), var(--bg)); }
+.legend-swatch.c4-k-tests { background: var(--c4-tests-fill); border-color: var(--c4-tests-stroke); }

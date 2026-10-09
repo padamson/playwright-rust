@@ -49,32 +49,32 @@
 <!-- fuzz_evaluate_round_trip&#45;&gt;playwright_rs -->
 <g id="edge1" class="edge">
 <title>fuzz_evaluate_round_trip&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="685.88,-160.27 691.77,-154.94 683.84,-155.44 685.88,-160.27"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="691.77,-154.94 686.17,-160.97 688.51,-156.86 685.06,-158.32 684.86,-157.86 684.67,-157.4 688.13,-155.94 683.55,-154.75 691.77,-154.94 691.77,-154.94"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="502,-240 502,-261 705,-261 705,-240 502,-240"/>
 <text text-anchor="start" x="505.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_result, serialize_argument</text>
 </g>
 <!-- fuzz_parse_result&#45;&gt;playwright_rs -->
 <g id="edge2" class="edge">
 <title>fuzz_parse_result&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="790.12,-187.95 792.12,-180.26 785.76,-185.03 790.12,-187.95"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="792.12,-180.26 790.74,-188.37 790.45,-183.65 788.36,-186.77 787.94,-186.49 787.53,-186.21 789.61,-183.1 785.14,-184.61 792.12,-180.26 792.12,-180.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="751,-240 751,-261 832,-261 832,-240 751,-240"/>
 <text text-anchor="start" x="754.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_result</text>
 </g>
 <!-- fuzz_parse_value&#45;&gt;playwright_rs -->
 <g id="edge3" class="edge">
 <title>fuzz_parse_value&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="918.82,-185 912.44,-180.26 914.47,-187.94 918.82,-185"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="912.44,-180.26 919.44,-184.58 914.96,-183.09 917.06,-186.19 916.65,-186.47 916.23,-186.75 914.13,-183.65 913.85,-188.36 912.44,-180.26 912.44,-180.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="966,-240 966,-261 1046,-261 1046,-240 966,-240"/>
 <text text-anchor="start" x="969" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_value</text>
 </g>
 <!-- fuzz_serialize_argument&#45;&gt;playwright_rs -->
 <g id="edge4" class="edge">
 <title>fuzz_serialize_argument&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1020.04,-156.44 1012.11,-155.93 1017.99,-161.28 1020.04,-156.44"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1012.11,-155.93 1020.33,-155.75 1015.76,-156.94 1019.21,-158.4 1019.02,-158.86 1018.82,-159.32 1015.37,-157.86 1017.7,-161.97 1012.11,-155.93 1012.11,-155.93"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1237,-240 1237,-261 1358,-261 1358,-240 1237,-240"/>
 <text text-anchor="start" x="1240.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">serialize_argument</text>
 </g>

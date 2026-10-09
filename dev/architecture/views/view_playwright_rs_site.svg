@@ -50,15 +50,15 @@
 <!-- app&#45;&gt;components -->
 <g id="edge1" class="edge">
 <title>app&#45;&gt;components</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M961.7,-368.93C903.46,-326.51 833.8,-275.78 774.75,-232.77"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="775.94,-230.39 768.34,-228.1 772.85,-234.64 775.94,-230.39"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M961.7,-368.93C902.99,-326.17 832.67,-274.95 773.32,-231.73"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="770.76" cy="-229.87" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="878,-288 878,-309 905,-309 905,-288 878,-288"/>
 <text text-anchor="start" x="881.5" y="-295.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- components&#45;&gt;snippets -->
 <g id="edge2" class="edge">
 <title>components&#45;&gt;snippets</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M646,-228.26C646,-269.64 646,-318.9 646,-361.18"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M646,-228.26C646,-269.64 646,-318.9 646,-361.18"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="643.38,-361.22 646,-368.72 648.63,-361.22 643.38,-361.22"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="646,-288 646,-309 673,-309 673,-288 646,-288"/>
 <text text-anchor="start" x="649.5" y="-295.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
@@ -66,8 +66,8 @@
 <!-- components&#45;&gt;version -->
 <g id="edge3" class="edge">
 <title>components&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M523.66,-228.1C465.42,-270.52 395.76,-321.26 336.71,-364.26"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="334.82,-362.39 330.3,-368.93 337.91,-366.64 334.82,-362.39"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M523.66,-228.1C465.42,-270.52 395.76,-321.26 336.71,-364.26"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="330.3,-368.93 334.37,-361.79 333.04,-366.32 336.07,-364.11 336.36,-364.51 336.66,-364.92 333.62,-367.13 338.35,-367.24 330.3,-368.93 330.3,-368.93"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="440,-288 440,-309 467,-309 467,-288 440,-288"/>
 <text text-anchor="start" x="443.5" y="-295.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>

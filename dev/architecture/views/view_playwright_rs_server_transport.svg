@@ -46,40 +46,40 @@
 <!-- pipe&#45;&gt;error -->
 <g id="edge4" class="edge">
 <title>pipe&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M585.66,-320.72C561.2,-278.99 532.05,-229.25 507.13,-186.75"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="509.38,-185.4 503.33,-180.26 504.85,-188.06 509.38,-185.4"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M585.66,-320.72C561.2,-278.99 532.05,-229.25 507.13,-186.75"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="503.33,-180.26 510.03,-185.03 505.65,-183.24 507.55,-186.48 507.12,-186.73 506.69,-186.99 504.79,-183.75 504.21,-188.44 503.33,-180.26 503.33,-180.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="551,-240 551,-261 633,-261 633,-240 551,-240"/>
 <text text-anchor="start" x="554" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- websocket&#45;&gt;error -->
 <g id="edge5" class="edge">
 <title>websocket&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M276.01,-320.72C307.86,-278.9 345.84,-229.05 378.26,-186.49"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="380.55,-187.82 383,-180.26 376.37,-184.64 380.55,-187.82"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M276.01,-320.72C307.86,-278.9 345.84,-229.05 378.26,-186.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="383,-180.26 381.14,-188.27 381.13,-183.55 378.86,-186.53 378.46,-186.23 378.06,-185.93 380.33,-182.94 375.77,-184.18 383,-180.26 383,-180.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="337,-240 337,-261 419,-261 419,-240 337,-240"/>
 <text text-anchor="start" x="340" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- protocol&#45;&gt;pipe -->
 <g id="edge1" class="edge">
 <title>protocol&#45;&gt;pipe</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M333.94,-649.86C391.09,-605.16 460.28,-551.03 518.21,-505.71"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="519.85,-507.76 524.14,-501.08 516.61,-503.63 519.85,-507.76"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M333.94,-649.86C390.63,-605.52 459.16,-551.91 516.8,-506.81"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="517.05,-506.62 518.74,-501.49 524.14,-501.08 522.44,-506.21 517.05,-506.62"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="429,-569 429,-590 520,-590 520,-569 429,-569"/>
 <text text-anchor="start" x="432.5" y="-575.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">PipeTransport</text>
 </g>
 <!-- protocol&#45;&gt;websocket -->
 <g id="edge2" class="edge">
 <title>protocol&#45;&gt;websocket</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M196.21,-649.74C191.97,-630.19 188.2,-609.51 186,-590 183.03,-563.67 184.47,-535.17 187.71,-508.86"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="190.35,-508.92 188.72,-501.14 185.15,-508.24 190.35,-508.92"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M196.21,-649.74C191.97,-630.19 188.2,-609.51 186,-590 183.03,-563.67 184.47,-535.17 187.71,-508.86"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="188.72,-501.14 191.1,-509.01 188.73,-504.92 188.24,-508.64 187.75,-508.58 187.25,-508.51 187.74,-504.79 184.4,-508.14 188.72,-501.14 188.72,-501.14"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="186,-569 186,-590 319,-590 319,-569 186,-569"/>
 <text text-anchor="start" x="189.5" y="-575.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">WebSocketTransport</text>
 </g>
 <!-- tests&#45;&gt;pipe -->
 <g id="edge3" class="edge">
 <title>tests&#45;&gt;pipe</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M655.44,-649.65C652.24,-606.03 648.38,-553.48 645.11,-508.9"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="647.72,-508.53 644.55,-501.25 642.48,-508.92 647.72,-508.53"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M655.44,-649.65C652.27,-606.48 648.46,-554.57 645.21,-510.28"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="645.21,-510.22 641.89,-505.95 644.55,-501.25 647.87,-505.51 645.21,-510.22"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="650,-569 650,-590 741,-590 741,-569 650,-569"/>
 <text text-anchor="start" x="653.5" y="-575.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">PipeTransport</text>
 </g>

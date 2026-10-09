@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="generator" content="asbuilt docs">
+<meta name="generator" content="asbuilt docs 0.3.0">
 <title>playwright-rust · Architecture · playwright-rs-fuzz</title>
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="../theme.css">
@@ -17,7 +17,7 @@
 <main>
 <h1>playwright-rs-fuzz</h1>
 <p class="meta">binary crate · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright/fuzz"><code>crates/playwright/fuzz</code></a></p>
-<figure class="view" data-viewer><div class="viewer-bar" hidden><span class="viewer-scale"></span><button type="button" data-viewer-zoom="out" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" data-viewer-zoom="in" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" data-viewer-mode="fit" aria-pressed="false">Fit</button><button type="button" data-viewer-mode="one" aria-pressed="false">1:1</button><button type="button" data-viewer-wide aria-pressed="false">Wide</button><button type="button" data-viewer-full>Fullscreen</button><span class="viewer-hint"></span></div><script type="application/json" class="viewer-edges">{"playwright_rs_fuzz.fuzz_evaluate_round_trip->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_evaluate_round_trip","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_evaluate_round_trip","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_result","serialize_argument"],"technology":null}],"playwright_rs_fuzz.fuzz_parse_result->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_parse_result","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_result","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_result"],"technology":null}],"playwright_rs_fuzz.fuzz_parse_value->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_parse_value","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_value","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_value"],"technology":null}],"playwright_rs_fuzz.fuzz_serialize_argument->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_serialize_argument","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_serialize_argument","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["serialize_argument"],"technology":null}]}</script><div class="viewer-frame" role="group" aria-label="playwright-rs-fuzz: diagram"><svg viewBox="0.00 0.00 1736.10 599.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_fuzz" role="img" aria-label="playwright-rs-fuzz">
+<figure class="view" data-viewer><div class="viewer-bar" hidden><span class="viewer-scale"></span><button type="button" data-viewer-zoom="out" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" data-viewer-zoom="in" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" data-viewer-mode="fit" aria-pressed="false">Fit</button><button type="button" data-viewer-mode="one" aria-pressed="false">1:1</button><button type="button" data-viewer-wide aria-pressed="false">Wide</button><button type="button" data-viewer-legend aria-pressed="true">Legend</button><button type="button" data-viewer-full>Fullscreen</button><span class="viewer-hint"></span></div><script type="application/json" class="viewer-edges">{"playwright_rs_fuzz.fuzz_evaluate_round_trip->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_evaluate_round_trip","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_evaluate_round_trip","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_result","serialize_argument"],"technology":null}],"playwright_rs_fuzz.fuzz_parse_result->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_parse_result","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_result","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_result"],"technology":null}],"playwright_rs_fuzz.fuzz_parse_value->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_parse_value","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_parse_value","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["parse_value"],"technology":null}],"playwright_rs_fuzz.fuzz_serialize_argument->playwright_rs":[{"source":"playwright_rs_fuzz.fuzz_serialize_argument","source_href":"../containers/playwright_rs_fuzz.html#playwright_rs_fuzz.fuzz_serialize_argument","target":"playwright_rs.protocol.evaluate_conversion","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.evaluate_conversion","kind":"calls","items":["serialize_argument"],"technology":null}]}</script><div class="viewer-frame" role="group" aria-label="playwright-rs-fuzz: diagram"><svg viewBox="0.00 0.00 1736.10 599.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_fuzz" role="img" aria-label="playwright-rs-fuzz">
 <g id="view_playwright_rs_fuzz-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 584.05)">
 
 <g id="view_playwright_rs_fuzz-clust1" class="cluster c4-k-container">
@@ -61,37 +61,37 @@
 
 <g id="view_playwright_rs_fuzz-edge1" class="edge" data-from="playwright_rs_fuzz.fuzz_evaluate_round_trip" data-to="playwright_rs">
 <title>playwright_rs_fuzz.fuzz_evaluate_round_trip → playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/><path class="c4-hit" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="685.88,-160.27 691.77,-154.94 683.84,-155.44 685.88,-160.27"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/><path class="c4-hit" d="M352.4,-320.92C375.8,-307.2 399.92,-293.46 423,-281 507.02,-235.65 604.04,-192 684.53,-158"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="691.77,-154.94 686.17,-160.97 688.51,-156.86 685.06,-158.32 684.86,-157.86 684.67,-157.4 688.13,-155.94 683.55,-154.75 691.77,-154.94 691.77,-154.94"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="502,-240 502,-261 705,-261 705,-240 502,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="505.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_result, serialize_argument</text>
 </g>
 
 <g id="view_playwright_rs_fuzz-edge2" class="edge" data-from="playwright_rs_fuzz.fuzz_parse_result" data-to="playwright_rs">
 <title>playwright_rs_fuzz.fuzz_parse_result → playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/><path class="c4-hit" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="790.12,-187.95 792.12,-180.26 785.76,-185.03 790.12,-187.95"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/><path class="c4-hit" d="M697.9,-320.72C725.89,-278.99 759.25,-229.25 787.77,-186.75"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="792.12,-180.26 790.74,-188.37 790.45,-183.65 788.36,-186.77 787.94,-186.49 787.53,-186.21 789.61,-183.1 785.14,-184.61 792.12,-180.26 792.12,-180.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="751,-240 751,-261 832,-261 832,-240 751,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="754.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_result</text>
 </g>
 
 <g id="view_playwright_rs_fuzz-edge3" class="edge" data-from="playwright_rs_fuzz.fuzz_parse_value" data-to="playwright_rs">
 <title>playwright_rs_fuzz.fuzz_parse_value → playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/><path class="c4-hit" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="918.82,-185 912.44,-180.26 914.47,-187.94 918.82,-185"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/><path class="c4-hit" d="M1007.54,-320.72C979.23,-278.9 945.48,-229.05 916.66,-186.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="912.44,-180.26 919.44,-184.58 914.96,-183.09 917.06,-186.19 916.65,-186.47 916.23,-186.75 914.13,-183.65 913.85,-188.36 912.44,-180.26 912.44,-180.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="966,-240 966,-261 1046,-261 1046,-240 966,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="969" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_value</text>
 </g>
 
 <g id="view_playwright_rs_fuzz-edge4" class="edge" data-from="playwright_rs_fuzz.fuzz_serialize_argument" data-to="playwright_rs">
 <title>playwright_rs_fuzz.fuzz_serialize_argument → playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/><path class="c4-hit" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1020.04,-156.44 1012.11,-155.93 1017.99,-161.28 1020.04,-156.44"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/><path class="c4-hit" d="M1355.14,-320.91C1331.33,-307.04 1306.68,-293.26 1283,-281 1197.8,-236.88 1100.16,-193.29 1019.38,-159.01"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1012.11,-155.93 1020.33,-155.75 1015.76,-156.94 1019.21,-158.4 1019.02,-158.86 1018.82,-159.32 1015.37,-157.86 1017.7,-161.97 1012.11,-155.93 1012.11,-155.93"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1237,-240 1237,-261 1358,-261 1358,-240 1237,-240" class="c4-label-bg"/>
 <text text-anchor="start" x="1240.5" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">serialize_argument</text>
 </g>
 </g>
-</svg></div></figure>
+</svg></div><div class="legend" role="group" aria-label="Legend"><ul><li><span class="legend-swatch c4-k-container"></span>crate</li><li><span class="legend-swatch c4-k-bin"></span>bin</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6"/><polygon points="26,2 35,6 26,10 29,6"/></svg>calls</li></ul></div></figure>
 <h2>Modules</h2>
 <div class="modules"><ul>
 <li><a href="#playwright_rs_fuzz.fuzz_evaluate_round_trip">fuzz_evaluate_round_trip</a></li>
@@ -133,5 +133,6 @@
 </tbody></table>
 </section>
 </main>
+<footer>Built with <a href="https://padamson.github.io/asbuilt/">asbuilt</a> v0.3.0</footer>
 </body>
 </html>

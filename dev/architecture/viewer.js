@@ -16,10 +16,12 @@
 // is the view's CSS width, and panning is the frame's own scroll, by
 // its scrollbars or by dragging, so text stays crisp and the browser
 // keeps the position. Wide lets every figure on the site take the
-// window's width, remembered like the color scheme; Fullscreen takes one
+// window's width, remembered like the color scheme; Legend shows or hides
+// every figure's legend, remembered the same way; Fullscreen takes one
 // figure to the screen.
 (function () {
   var WIDE_KEY = "asbuilt-docs-wide";
+  var LEGEND_KEY = "asbuilt-docs-legend";
   var MIN = 0.7;
   var MIN_ZOOM = 0.1;
   var MAX_ZOOM = 4;
@@ -33,8 +35,12 @@
   // elsewhere. The script accepts either key everywhere.
   var MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || "");
   var wide = false;
+  // Each diagram's legend shows until a visitor hides it; the choice is
+  // site-wide, like Wide.
+  var legendShown = true;
   try {
     wide = window.localStorage.getItem(WIDE_KEY) === "1";
+    legendShown = window.localStorage.getItem(LEGEND_KEY) !== "0";
   } catch (e) {}
   var figures = [];
 
@@ -58,6 +64,12 @@
     if (!svg || !frame || !bar) return;
     var natural = viewBoxSize(svg);
     if (!natural) return;
+    var legend = figure.querySelector(".legend");
+    var legendButton = bar.querySelector("[data-viewer-legend]");
+    if (legendButton && !legend) {
+      legendButton.hidden = true;
+      legendButton = null;
+    }
     var mode = "auto"; // auto | fit | one | zoom
     var zoom = 1; // the scale in zoom mode
     var current = 1; // the scale last applied
@@ -118,6 +130,8 @@
       });
       var wideButton = bar.querySelector("[data-viewer-wide]");
       if (wideButton) wideButton.setAttribute("aria-pressed", String(wide));
+      if (legend) legend.hidden = !legendShown;
+      if (legendButton) legendButton.setAttribute("aria-pressed", String(legendShown));
     }
     // Scale to `next`, keeping the view point under the frame point
     // (`fx`, `fy`, from the frame's top left; its center when absent)
@@ -152,6 +166,15 @@
         zoomTo(out ? current / STEP : current * STEP);
       });
     });
+    if (legendButton) {
+      legendButton.addEventListener("click", function () {
+        legendShown = !legendShown;
+        try {
+          window.localStorage.setItem(LEGEND_KEY, legendShown ? "1" : "0");
+        } catch (e) {}
+        layoutAll();
+      });
+    }
     var wideButton = bar.querySelector("[data-viewer-wide]");
     if (wideButton) {
       wideButton.addEventListener("click", function () {
@@ -293,9 +316,25 @@
       popover.hidden = true;
       if (refocus) frame.focus();
     }
+    // A link only for a web or file URL. asbuilt docs writes relative
+    // paths in the edge data, but a host that copies this script may feed
+    // it others; the browser's URL parser reads the scheme however it is
+    // spelled, so a `javascript:` or `data:` link shows as text. The link
+    // gets the resolved URL: the value checked is the value written.
+    var LINKABLE = ["http:", "https:", "file:"];
+    function linkable(href) {
+      if (!href) return null;
+      try {
+        var url = new URL(href, document.baseURI);
+        return LINKABLE.indexOf(url.protocol) >= 0 ? url.href : null;
+      } catch (e) {
+        return null;
+      }
+    }
     function endpoint(text, href) {
-      var el = document.createElement(href ? "a" : "span");
-      if (href) el.href = href;
+      var url = linkable(href);
+      var el = document.createElement(url ? "a" : "span");
+      if (url) el.href = url;
       el.textContent = text;
       return el;
     }

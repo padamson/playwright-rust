@@ -131,136 +131,136 @@
 <!-- comparison&#45;&gt;code_tabs -->
 <g id="edge9" class="edge">
 <title>comparison&#45;&gt;code_tabs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M730.92,-546.08C766.27,-574.48 808.76,-602.27 853,-617 943.66,-647.18 1619.96,-638.78 1713,-617 1772.09,-603.17 1832.75,-576.93 1885.43,-549.59"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1886.71,-551.88 1892.14,-546.08 1884.28,-547.23 1886.71,-551.88"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M730.92,-546.08C766.27,-574.48 808.76,-602.27 853,-617 943.66,-647.18 1619.96,-638.78 1713,-617 1772.57,-603.05 1833.74,-576.5 1886.71,-548.92"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1889.48" cy="-547.47" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1279.5,-634 1279.5,-655 1346.5,-655 1346.5,-634 1279.5,-634"/>
 <text text-anchor="start" x="1283" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeTabs</text>
 </g>
 <!-- comparison&#45;&gt;code_block -->
 <g id="edge10" class="edge">
 <title>comparison&#45;&gt;code_block</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M730.92,-546.08C766.27,-574.48 808.76,-602.27 853,-617 955.81,-651.23 4648.49,-641.7 4754,-617 4813.09,-603.17 4873.75,-576.93 4926.43,-549.59"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4927.71,-551.88 4933.14,-546.08 4925.28,-547.23 4927.71,-551.88"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M730.92,-546.08C766.27,-574.48 808.76,-602.27 853,-617 955.81,-651.23 4648.49,-641.7 4754,-617 4813.57,-603.05 4874.74,-576.5 4927.71,-548.92"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="4930.48" cy="-547.47" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1981,-634 1981,-655 2053,-655 2053,-634 1981,-634"/>
 <text text-anchor="start" x="1984" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeBlock</text>
 </g>
 <!-- comparison&#45;&gt;snippets -->
 <g id="edge11" class="edge">
 <title>comparison&#45;&gt;snippets</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M772.76,-365.97C798.69,-351.21 826.16,-337.12 853,-326 1108.93,-219.99 1424.56,-153.13 1617.18,-118.91"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1617.91,-121.45 1624.83,-117.56 1616.99,-116.28 1617.91,-121.45"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M772.76,-365.97C798.69,-351.21 826.16,-337.12 853,-326 1109.68,-219.68 1426.43,-152.73 1618.89,-118.61"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1621.88" cy="-118.08" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1078,-262.5 1078,-283.5 1135,-283.5 1135,-262.5 1078,-262.5"/>
 <text text-anchor="start" x="1081.5" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">snippets</text>
 </g>
 <!-- features&#45;&gt;code_tabs -->
 <g id="edge12" class="edge">
 <title>features&#45;&gt;code_tabs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1658.19,-456C1724.96,-456 1802.53,-456 1870.09,-456"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1870.36,-458.63 1877.86,-456 1870.36,-453.38 1870.36,-458.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1658.19,-456C1725.5,-456 1803.79,-456 1871.73,-456"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1874.86" cy="-456" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1734.5,-459 1734.5,-480 1801.5,-480 1801.5,-459 1734.5,-459"/>
 <text text-anchor="start" x="1738" y="-465.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeTabs</text>
 </g>
 <!-- features&#45;&gt;feature_card -->
 <g id="edge13" class="edge">
 <title>features&#45;&gt;feature_card</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1643.86,-546.08C1698.06,-574.66 1761.38,-602.57 1823,-617 1928.51,-641.7 5621.19,-651.23 5724,-617 5765.65,-603.13 5805.74,-577.69 5839.79,-551.07"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5841.83,-552.8 5846.08,-546.08 5838.57,-548.69 5841.83,-552.8"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1643.86,-546.08C1698.06,-574.66 1761.38,-602.57 1823,-617 1928.51,-641.7 5621.19,-651.23 5724,-617 5766.17,-602.96 5806.74,-577.06 5841.06,-550.07"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="5843.73" cy="-547.95" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3244,-634 3244,-655 3326,-655 3326,-634 3244,-634"/>
 <text text-anchor="start" x="3247" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">FeatureCard</text>
 </g>
 <!-- features&#45;&gt;code_block -->
 <g id="edge14" class="edge">
 <title>features&#45;&gt;code_block</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1643.86,-546.08C1698.06,-574.66 1761.38,-602.57 1823,-617 1981.55,-654.12 4595.45,-654.12 4754,-617 4813.09,-603.17 4873.75,-576.93 4926.43,-549.59"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4927.71,-551.88 4933.14,-546.08 4925.28,-547.23 4927.71,-551.88"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1643.86,-546.08C1698.06,-574.66 1761.38,-602.57 1823,-617 1981.55,-654.12 4595.45,-654.12 4754,-617 4813.57,-603.05 4874.74,-576.5 4927.71,-548.92"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="4930.48" cy="-547.47" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2648,-634 2648,-655 2720,-655 2720,-634 2648,-634"/>
 <text text-anchor="start" x="2651" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeBlock</text>
 </g>
 <!-- features&#45;&gt;snippets -->
 <g id="edge15" class="edge">
 <title>features&#45;&gt;snippets</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1570.17,-365.96C1614.35,-311.43 1670.87,-241.69 1715.93,-186.09"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1718.13,-187.55 1720.81,-180.07 1714.05,-184.24 1718.13,-187.55"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1570.17,-365.96C1614.71,-310.99 1671.79,-240.56 1717.03,-184.74"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1718.92" cy="-182.4" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1672,-262.5 1672,-283.5 1729,-283.5 1729,-262.5 1672,-262.5"/>
 <text text-anchor="start" x="1675.5" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">snippets</text>
 </g>
 <!-- features&#45;&gt;version -->
 <g id="edge16" class="edge">
 <title>features&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1658.13,-378.04C1709.58,-356.98 1767.62,-336.96 1823,-326 1991.3,-292.69 3195.89,-318.52 3367,-306 3508.27,-295.66 4421.84,-168.35 4804.16,-114.65"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4804.64,-117.23 4811.7,-113.59 4803.91,-112.03 4804.64,-117.23"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1658.13,-378.04C1709.58,-356.98 1767.62,-336.96 1823,-326 1991.3,-292.69 3195.89,-318.52 3367,-306 3508.27,-295.66 4421.84,-168.35 4804.16,-114.65"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4811.7,-113.59 4804.75,-117.97 4808.06,-114.61 4804.35,-115.13 4804.28,-114.63 4804.21,-114.14 4807.92,-113.62 4803.81,-111.29 4811.7,-113.59 4811.7,-113.59"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3877,-262.5 3877,-283.5 4029,-283.5 4029,-262.5 3877,-262.5"/>
 <text text-anchor="start" x="3880" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SITE_VERSION, is_dev</text>
 </g>
 <!-- footer&#45;&gt;links -->
 <g id="edge17" class="edge">
 <title>footer&#45;&gt;links</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2560.92,-546.08C2596.27,-574.48 2638.76,-602.27 2683,-617 2955.96,-707.87 3289.18,-613.15 3489.68,-535.35"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3490.72,-537.76 3496.76,-532.59 3488.81,-532.87 3490.72,-537.76"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2560.92,-546.08C2596.27,-574.48 2638.76,-602.27 2683,-617 2956.64,-708.1 3290.83,-612.68 3491.16,-534.77"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="3493.96" cy="-533.68" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2785.5,-634 2785.5,-655 3114.5,-655 3114.5,-634 2785.5,-634"/>
 <text text-anchor="start" x="2789" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ARCHITECTURE, CRATES_IO, DOCS_RS, GITHUB</text>
 </g>
 <!-- hero&#45;&gt;icons_ -->
 <g id="edge18" class="edge">
 <title>hero&#45;&gt;icons_</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3058.31,-527.89C3258.33,-607.23 3608.77,-711.96 3894,-617 3935.65,-603.13 3975.74,-577.69 4009.79,-551.07"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4011.83,-552.8 4016.08,-546.08 4008.57,-548.69 4011.83,-552.8"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M3058.31,-527.89C3258.33,-607.23 3608.77,-711.96 3894,-617 3936.17,-602.96 3976.74,-577.06 4011.06,-550.07"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="4013.73" cy="-547.95" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3167.5,-634 3167.5,-655 3238.5,-655 3238.5,-634 3167.5,-634"/>
 <text text-anchor="start" x="3171" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Icon, icons</text>
 </g>
 <!-- hero&#45;&gt;links -->
 <g id="edge19" class="edge">
 <title>hero&#45;&gt;links</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3058.01,-456C3183.73,-456 3358.76,-456 3489.1,-456"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3489.33,-458.63 3496.83,-456 3489.33,-453.38 3489.33,-458.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M3058.01,-456C3184.23,-456 3360.15,-456 3490.65,-456"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="3493.83" cy="-456" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3113,-459 3113,-480 3442,-480 3442,-459 3113,-459"/>
 <text text-anchor="start" x="3116.5" y="-465.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ARCHITECTURE, CRATES_IO, DOCS_RS, GITHUB</text>
 </g>
 <!-- hero&#45;&gt;version -->
 <g id="edge20" class="edge">
 <title>hero&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3058.27,-407.97C3165.78,-378.66 3311.14,-343.34 3442,-326 3729.84,-287.86 3807.3,-345.23 4095,-306 4346.06,-271.77 4629.71,-195.05 4804.7,-143.15"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4805.47,-145.66 4811.91,-141.01 4803.98,-140.63 4805.47,-145.66"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M3058.27,-407.97C3165.78,-378.66 3311.14,-343.34 3442,-326 3729.84,-287.86 3807.3,-345.23 4095,-306 4346.06,-271.77 4629.71,-195.05 4804.7,-143.15"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4811.91,-141.01 4805.69,-146.38 4808.46,-142.55 4804.87,-143.62 4804.73,-143.14 4804.58,-142.66 4808.18,-141.59 4803.76,-139.91 4811.91,-141.01 4811.91,-141.01"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4435,-262.5 4435,-283.5 4481,-283.5 4481,-262.5 4435,-262.5"/>
 <text text-anchor="start" x="4438" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
 </g>
 <!-- install&#45;&gt;code_block -->
 <g id="edge21" class="edge">
 <title>install&#45;&gt;code_block</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M4699.19,-456C4765.96,-456 4843.53,-456 4911.09,-456"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4911.36,-458.63 4918.86,-456 4911.36,-453.38 4911.36,-458.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M4699.19,-456C4766.5,-456 4844.79,-456 4912.73,-456"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="4915.86" cy="-456" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4773,-459 4773,-480 4845,-480 4845,-459 4773,-459"/>
 <text text-anchor="start" x="4776" y="-465.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">CodeBlock</text>
 </g>
 <!-- install&#45;&gt;snippets -->
 <g id="edge22" class="edge">
 <title>install&#45;&gt;snippets</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M4415.36,-365.95C4386.65,-349.6 4355.3,-334.9 4324,-326 4244.53,-303.41 2919.13,-314.93 2837,-306 2527.92,-272.4 2174.87,-190.3 1968.69,-137.83"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1969.33,-135.29 1961.41,-135.98 1968.03,-140.38 1969.33,-135.29"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M4415.36,-365.95C4386.65,-349.6 4355.3,-334.9 4324,-326 4244.53,-303.41 2919.13,-314.93 2837,-306 2527.31,-272.34 2173.47,-189.98 1967.47,-137.52"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1964.32" cy="-136.72" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2837,-262.5 2837,-283.5 2894,-283.5 2894,-262.5 2837,-262.5"/>
 <text text-anchor="start" x="2840.5" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">snippets</text>
 </g>
 <!-- install&#45;&gt;version -->
 <g id="edge23" class="edge">
 <title>install&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M4644.92,-365.96C4710.18,-311.1 4793.75,-240.84 4860.09,-185.08"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4861.99,-186.91 4866.04,-180.07 4858.61,-182.89 4861.99,-186.91"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M4644.92,-365.96C4710.18,-311.1 4793.75,-240.84 4860.09,-185.08"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4866.04,-180.07 4862.48,-187.48 4863.5,-182.87 4860.63,-185.28 4860.3,-184.9 4859.98,-184.51 4862.85,-182.1 4858.13,-182.31 4866.04,-180.07 4866.04,-180.07"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4794,-262.5 4794,-283.5 4840,-283.5 4840,-262.5 4794,-262.5"/>
 <text text-anchor="start" x="4797" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
 </g>
 <!-- version_switcher&#45;&gt;version -->
 <g id="edge24" class="edge">
 <title>version_switcher&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6236.06,-365.88C6209.67,-350.91 6181.57,-336.76 6154,-326 5808.15,-191 5373.84,-130.25 5139.88,-105.67"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5140.06,-103.05 5132.33,-104.88 5139.52,-108.27 5140.06,-103.05"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6236.06,-365.88C6209.67,-350.91 6181.57,-336.76 6154,-326 5808.15,-191 5373.84,-130.25 5139.88,-105.67"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5132.33,-104.88 5140.14,-102.3 5136.11,-104.77 5139.84,-105.16 5139.79,-105.66 5139.74,-106.16 5136.01,-105.77 5139.44,-109.02 5132.33,-104.88 5132.33,-104.88"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6093,-262.5 6093,-283.5 6245,-283.5 6245,-262.5 6093,-262.5"/>
 <text text-anchor="start" x="6096" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SITE_VERSION, is_dev</text>
 </g>
 <!-- walkthrough&#45;&gt;snippets -->
 <g id="edge25" class="edge">
 <title>walkthrough&#45;&gt;snippets</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5385.39,-365.84C5356.68,-349.49 5325.32,-334.82 5294,-326 5172.98,-291.9 3152.28,-339.15 3031,-306 2974.53,-290.56 2972.42,-258.88 2917,-240 2594.58,-130.18 2194.5,-100.74 1969.05,-93.2"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1969.02,-90.57 1961.44,-92.95 1968.85,-95.82 1969.02,-90.57"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M5385.39,-365.84C5356.68,-349.49 5325.32,-334.82 5294,-326 5172.98,-291.9 3152.28,-339.15 3031,-306 2974.53,-290.56 2972.42,-258.88 2917,-240 2593.94,-129.96 2192.92,-100.63 1967.72,-93.16"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1964.44" cy="-93.05" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3031,-240 3031,-306 3340,-306 3340,-240 3031,-240"/>
 <text text-anchor="start" x="3034.5" y="-291.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SERVE_01_RS, SERVE_02_RS, SERVE_03_RS,</text>
 <text text-anchor="start" x="3034.5" y="-276.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">SERVE_04_RS, WALK_01_RS, WALK_02_RS,</text>
@@ -270,80 +270,80 @@
 <!-- walkthrough&#45;&gt;version -->
 <g id="edge26" class="edge">
 <title>walkthrough&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5377.64,-365.96C5296.38,-310.88 5192.22,-240.28 5109.8,-184.41"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5111.08,-182.11 5103.4,-180.07 5108.14,-186.45 5111.08,-182.11"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M5377.64,-365.96C5296.38,-310.88 5192.22,-240.28 5109.8,-184.41"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5103.4,-180.07 5111.51,-181.49 5106.79,-181.76 5109.89,-183.87 5109.61,-184.28 5109.33,-184.69 5106.23,-182.59 5107.72,-187.07 5103.4,-180.07 5103.4,-180.07"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5288,-262.5 5288,-283.5 5334,-283.5 5334,-262.5 5288,-262.5"/>
 <text text-anchor="start" x="5291" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
 </g>
 <!-- feature_card&#45;&gt;version -->
 <g id="edge27" class="edge">
 <title>feature_card&#45;&gt;version</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5801.36,-365.9C5776.18,-351.49 5749.72,-337.54 5724,-326 5530.2,-239.07 5294.82,-171.13 5139.61,-131.13"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5140.2,-128.58 5132.28,-129.25 5138.89,-133.66 5140.2,-128.58"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M5801.36,-365.9C5776.18,-351.49 5749.72,-337.54 5724,-326 5530.2,-239.07 5294.82,-171.13 5139.61,-131.13"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5132.28,-129.25 5140.38,-127.85 5136.04,-129.7 5139.67,-130.63 5139.54,-131.12 5139.42,-131.6 5135.79,-130.67 5138.7,-134.39 5132.28,-129.25 5132.28,-129.25"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5665,-262.5 5665,-283.5 5711,-283.5 5711,-262.5 5665,-262.5"/>
 <text text-anchor="start" x="5668" y="-268.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">is_dev</text>
 </g>
 <!-- app&#45;&gt;comparison -->
 <g id="edge1" class="edge">
 <title>app&#45;&gt;comparison</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.89,-797.14C2514.21,-781.5 1700.67,-737.98 1023,-655 946.92,-645.68 923.06,-657.08 853,-626 811.36,-607.53 770.73,-579.16 736.2,-550.91"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="737.73,-548.77 730.27,-546.01 734.38,-552.81 737.73,-548.77"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2852.89,-797.14C2514.21,-781.5 1700.67,-737.98 1023,-655 946.92,-645.68 923.06,-657.08 853,-626 810.84,-607.3 769.72,-578.45 734.92,-549.86"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="732.59" cy="-547.93" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1023,-634 1023,-655 1103,-655 1103,-634 1023,-634"/>
 <text text-anchor="start" x="1026" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Comparison</text>
 </g>
 <!-- app&#45;&gt;dogfood_banner -->
 <g id="edge2" class="edge">
 <title>app&#45;&gt;dogfood_banner</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.88,-800.62C2426.62,-790.3 1287.29,-753.71 1151,-655 1117.89,-631.02 1097.91,-591.24 1085.9,-553.6"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1088.31,-552.51 1083.6,-546.11 1083.29,-554.05 1088.31,-552.51"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2852.88,-800.62C2426.62,-790.3 1287.29,-753.71 1151,-655 1117.48,-630.72 1097.42,-590.24 1085.45,-552.19"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1084.47" cy="-548.98" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1151,-634 1151,-655 1252,-655 1252,-634 1151,-634"/>
 <text text-anchor="start" x="1154.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">DogfoodBanner</text>
 </g>
 <!-- app&#45;&gt;features -->
 <g id="edge3" class="edge">
 <title>app&#45;&gt;features</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.99,-795.55C2633.53,-781.07 2228.28,-743.95 1894,-655 1861.06,-646.23 1853.93,-640.32 1823,-626 1770.95,-601.9 1715.23,-573.8 1664.89,-547.51"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1666,-545.13 1658.14,-543.98 1663.57,-549.78 1666,-545.13"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2852.99,-795.55C2633.53,-781.07 2228.28,-743.95 1894,-655 1861.06,-646.23 1853.93,-640.32 1823,-626 1770.52,-601.7 1714.32,-573.34 1663.65,-546.87"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1660.8" cy="-545.37" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1894,-634 1894,-655 1954,-655 1954,-634 1894,-634"/>
 <text text-anchor="start" x="1897" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Features</text>
 </g>
 <!-- app&#45;&gt;footer -->
 <g id="edge4" class="edge">
 <title>app&#45;&gt;footer</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2852.89,-779.27C2763.03,-758.61 2653.53,-721.36 2575,-655 2543.24,-628.16 2519.4,-589.43 2502.38,-553.32"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2504.59,-551.85 2499.07,-546.14 2499.82,-554.05 2504.59,-551.85"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2852.89,-779.27C2763.03,-758.61 2653.53,-721.36 2575,-655 2542.85,-627.83 2518.81,-588.46 2501.74,-551.97"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="2500.32" cy="-548.87" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2575,-634 2575,-655 2621,-655 2621,-634 2575,-634"/>
 <text text-anchor="start" x="2578" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Footer</text>
 </g>
 <!-- app&#45;&gt;hero -->
 <g id="edge5" class="edge">
 <title>app&#45;&gt;hero</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.2,-776.48C3273.81,-751.54 3376,-707.22 3327,-634 3268.87,-547.13 3159.48,-502.85 3065.71,-480.3"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3066.03,-477.68 3058.13,-478.52 3064.83,-482.79 3066.03,-477.68"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M3173.2,-776.48C3273.81,-751.54 3376,-707.22 3327,-634 3268.52,-546.61 3158.16,-502.32 3064.02,-479.9"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="3061.05" cy="-479.2" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3336,-634 3336,-655 3372,-655 3372,-634 3336,-634"/>
 <text text-anchor="start" x="3339" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Hero</text>
 </g>
 <!-- app&#45;&gt;install -->
 <g id="edge6" class="edge">
 <title>app&#45;&gt;install</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.26,-792.8C3475.91,-769.93 4119.5,-712.6 4324,-626 4366.26,-608.11 4407.26,-579.63 4441.92,-551.12"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4443.78,-552.98 4447.87,-546.17 4440.43,-548.95 4443.78,-552.98"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M3173.26,-792.8C3475.91,-769.93 4119.5,-712.6 4324,-626 4366.78,-607.88 4408.27,-578.92 4443.21,-550.06"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="4445.57" cy="-548.09" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4287,-634 4287,-655 4329,-655 4329,-634 4287,-634"/>
 <text text-anchor="start" x="4290" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Install</text>
 </g>
 <!-- app&#45;&gt;version_switcher -->
 <g id="edge7" class="edge">
 <title>app&#45;&gt;version_switcher</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.09,-800.55C3773.88,-786.84 5874.24,-731.75 6154,-626 6197.87,-609.42 6239.9,-580.47 6274.97,-551.16"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6276.96,-552.92 6280.99,-546.08 6273.57,-548.92 6276.96,-552.92"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M3173.09,-800.55C3773.88,-786.84 5874.24,-731.75 6154,-626 6198.42,-609.21 6240.94,-579.75 6276.27,-550.07"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="6278.7" cy="-548.02" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6103,-634 6103,-655 6206,-655 6206,-634 6103,-634"/>
 <text text-anchor="start" x="6106.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">VersionSwitcher</text>
 </g>
 <!-- app&#45;&gt;walkthrough -->
 <g id="edge8" class="edge">
 <title>app&#45;&gt;walkthrough</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3173.07,-803.49C3625.57,-800.15 4906.38,-777.25 5294,-626 5337.48,-609.03 5379.28,-580.17 5414.27,-551.06"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5416.22,-552.84 5420.27,-546 5412.84,-548.83 5416.22,-552.84"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M3173.07,-803.49C3625.57,-800.15 4906.38,-777.25 5294,-626 5338.02,-608.82 5380.31,-579.46 5415.56,-549.97"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="5417.98" cy="-547.94" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5264,-634 5264,-655 5465,-655 5465,-634 5264,-634"/>
 <text text-anchor="start" x="5267.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ServeWalkthrough, Walkthrough</text>
 </g>

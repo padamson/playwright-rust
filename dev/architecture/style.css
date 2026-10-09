@@ -3,14 +3,14 @@
    the root). A host site restates them in its own palette through
    `[docs] stylesheet`, which is linked after this file. Diagram colors
    are theme.css's job, and follow these tokens. */
-:root { color-scheme: light; --bg: #fff; --fg: #1a1a1a; --muted: #6b6b6b; --accent: #2563eb; --rule: #8884; --code: #8882; --figure-bg: transparent; }
+:root { color-scheme: light; --bg: #fff; --fg: #1a1a1a; --muted: #6b6b6b; --accent: #2563eb; --rule: #8884; --frame: color-mix(in srgb, var(--accent) 30%, transparent); --code: #8882; --figure-bg: transparent; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) { color-scheme: dark; --bg: #16171a; --fg: #e6e6e6; --muted: #9a9a9a; --accent: #7aa2f7; }
 }
 :root[data-theme="dark"] { color-scheme: dark; --bg: #16171a; --fg: #e6e6e6; --muted: #9a9a9a; --accent: #7aa2f7; }
 body { font: 16px/1.5 system-ui, sans-serif; margin: 0; max-width: 64rem; padding: 0 1rem 3rem; margin-inline: auto; background: var(--bg); color: var(--fg); }
 a { color: var(--accent); }
-header { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 0; border-bottom: 1px solid var(--rule); }
+header { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 0; border-bottom: 2px solid var(--frame); }
 header .bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; }
 header .trail { display: flex; flex-wrap: wrap; gap: 0.5em; align-items: baseline; }
 header .home { color: var(--muted); }
@@ -26,6 +26,8 @@ header .views [aria-current] { font-weight: 600; color: var(--fg); }
 header .scheme { margin-left: auto; display: inline-flex; gap: 0.4em; align-items: center; color: var(--muted); font-size: 0.85em; }
 header .scheme[hidden] { display: none; }
 header .scheme select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0.1em 0.3em; }
+footer { margin-top: 3rem; padding-top: 0.75rem; border-top: 2px solid var(--frame); color: var(--muted); font-size: 0.85em; }
+footer a { color: inherit; }
 h1 { margin: 0.5rem 0 0.25rem; }
 h2 { border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 2rem; }
 h2 small { font-weight: 400; color: var(--muted); }

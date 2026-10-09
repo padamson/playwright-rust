@@ -35,3 +35,11 @@ figure[data-viewer-active] svg.c4 .edge.c4-explained:hover path:not(.c4-hit) { s
 figure[data-viewer-active] svg.c4 { width: auto; max-width: none; }
 figure:fullscreen { margin: 0; padding: 1rem; overflow: auto; background: var(--bg); }
 figure:fullscreen .viewer-frame { max-height: none; border: 0; }
+/* The legend as the frame's last strip, inside its border: the frame
+   gives up its bottom border while the legend shows, and the legend takes
+   the frame's sides and bottom. Legend hides it and the border closes. */
+figure[data-viewer-active] .viewer-frame:has(+ .legend:not([hidden])) { border-bottom: 0; }
+figure[data-viewer-active] .legend { padding: 0.3rem 0.55rem; border: 1px solid var(--rule); border-top: 1px solid color-mix(in srgb, var(--rule) 45%, transparent); }
+figure[data-viewer-active] .legend ul { margin: 0; }
+figure:fullscreen .legend { border: 0; }
+.legend[hidden] { display: none; }

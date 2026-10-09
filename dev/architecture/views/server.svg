@@ -131,80 +131,80 @@
 <!-- object_factory&#45;&gt;channel_owner -->
 <g id="edge10" class="edge">
 <title>object_factory&#45;&gt;channel_owner</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1022.05,-3109.93C1131,-3100.29 1275.23,-3087.53 1385.79,-3077.75"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1386.12,-3080.36 1393.35,-3077.08 1385.65,-3075.13 1386.12,-3080.36"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1022.05,-3109.93C1131.44,-3100.25 1276.38,-3087.43 1387.11,-3077.63"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1390.37" cy="-3077.34" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1084.5,-3104 1084.5,-3125 1312.5,-3125 1312.5,-3104 1084.5,-3104"/>
 <text text-anchor="start" x="1087.5" y="-3110.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner, ParentOrConnection</text>
 </g>
 <!-- object_factory&#45;&gt;connection -->
 <g id="edge11" class="edge">
 <title>object_factory&#45;&gt;connection</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1011.43,-3033.58C1028.28,-3017.43 1043.23,-2999.21 1054,-2979 1079.38,-2931.36 1045.96,-2534.18 1082,-2494 1301.49,-2249.33 2245.09,-2297.38 2558,-2398 2578.46,-2404.58 2613.42,-2425.6 2649.68,-2449.72"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2648.29,-2451.95 2655.98,-2453.94 2651.2,-2447.58 2648.29,-2451.95"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1011.43,-3033.58C1028.28,-3017.43 1043.23,-2999.21 1054,-2979 1079.38,-2931.36 1045.96,-2534.18 1082,-2494 1301.49,-2249.33 2245.09,-2297.38 2558,-2398 2578.63,-2404.63 2614,-2425.95 2650.58,-2450.32"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="2653.49" cy="-2452.27" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1858,-2319 1858,-2340 1952,-2340 1952,-2319 1858,-2319"/>
 <text text-anchor="start" x="1861" y="-2325.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ConnectionExt</text>
 </g>
 <!-- object_factory&#45;&gt;playwright -->
 <g id="edge12" class="edge">
 <title>object_factory&#45;&gt;playwright</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M701.98,-3165.69C610.9,-3199.47 519.3,-3256.21 543.5,-3344.5 589.88,-3513.74 704.83,-3683.73 783.17,-3785.94"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="781.15,-3787.62 787.81,-3791.96 785.31,-3784.42 781.15,-3787.62"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M701.98,-3165.69C610.9,-3199.47 519.3,-3256.21 543.5,-3344.5 589.69,-3513.06 703.92,-3682.38 782.23,-3784.71"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="782.32,-3784.83 787.44,-3786.57 787.81,-3791.96 782.69,-3790.23 782.32,-3784.83"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="485.5,-3323.5 485.5,-3344.5 554.5,-3344.5 554.5,-3323.5 485.5,-3323.5"/>
 <text text-anchor="start" x="489" y="-3329.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Playwright</text>
 </g>
 <!-- object_factory&#45;&gt;error -->
 <g id="edge13" class="edge">
 <title>object_factory&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1011.68,-3033.71C1028.49,-3017.54 1043.37,-2999.28 1054,-2979 1119.28,-2854.49 1010.98,-2468.32 1082,-2347 1269.67,-2026.42 1439.01,-2021.71 1792,-1906 2261.95,-1751.95 2856.02,-1760.24 3140.43,-1775.72"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3140.29,-1778.34 3147.92,-1776.13 3140.58,-1773.1 3140.29,-1778.34"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1011.68,-3033.71C1028.49,-3017.54 1043.37,-2999.28 1054,-2979 1119.28,-2854.49 1010.98,-2468.32 1082,-2347 1269.67,-2026.42 1439.01,-2021.71 1792,-1906 2261.95,-1751.95 2856.02,-1760.24 3140.43,-1775.72"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3147.92,-1776.13 3140.25,-1779.09 3144.15,-1776.42 3140.41,-1776.22 3140.43,-1775.72 3140.46,-1775.22 3144.21,-1775.43 3140.62,-1772.35 3147.92,-1776.13 3147.92,-1776.13"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2197,-1831 2197,-1852 2279,-1852 2279,-1831 2197,-1831"/>
 <text text-anchor="start" x="2200" y="-1837.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- channel_owner&#45;&gt;channel -->
 <g id="edge14" class="edge">
 <title>channel_owner&#45;&gt;channel</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1713.65,-3021.03C1820.79,-2992.77 1961.8,-2955.58 2070.45,-2926.92"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2071.31,-2929.41 2077.89,-2924.96 2069.97,-2924.34 2071.31,-2929.41"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1713.65,-3021.03C1820.37,-2992.88 1960.67,-2955.88 2069.15,-2927.27"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2069.19,-2927.26 2072.77,-2923.21 2077.89,-2924.96 2074.3,-2929.01 2069.19,-2927.26"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1876.5,-2999 1876.5,-3020 1933.5,-3020 1933.5,-2999 1876.5,-2999"/>
 <text text-anchor="start" x="1880" y="-3005.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Channel</text>
 </g>
 <!-- channel_owner&#45;&gt;connection -->
 <g id="edge15" class="edge">
 <title>channel_owner&#45;&gt;connection</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1713.76,-3094.38C1891.25,-3121.05 2181.71,-3139.41 2398,-3028 2560.75,-2944.17 2676.85,-2756.66 2736.08,-2641.2"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2738.49,-2642.26 2739.55,-2634.39 2733.81,-2639.88 2738.49,-2642.26"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1713.76,-3094.38C1891.25,-3121.05 2181.71,-3139.41 2398,-3028 2561.39,-2943.83 2677.77,-2755.17 2736.79,-2639.82"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2738.19" cy="-2637.06" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2188,-3110 2188,-3131 2288,-3131 2288,-3110 2188,-3110"/>
 <text text-anchor="start" x="2191" y="-3116.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ConnectionLike</text>
 </g>
 <!-- channel&#45;&gt;connection -->
 <g id="edge16" class="edge">
 <title>channel&#45;&gt;connection</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2383.18,-2792.82C2459.44,-2745.13 2552.99,-2686.61 2630.21,-2638.31"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2631.72,-2640.46 2636.69,-2634.26 2628.94,-2636.01 2631.72,-2640.46"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2383.18,-2792.82C2459.74,-2744.93 2553.74,-2686.14 2631.14,-2637.73"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2634.14" cy="-2635.85" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2458,-2743 2458,-2764 2558,-2764 2558,-2743 2458,-2743"/>
 <text text-anchor="start" x="2461" y="-2749.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ConnectionLike</text>
 </g>
 <!-- channel&#45;&gt;error -->
 <g id="edge17" class="edge">
 <title>channel&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2370.09,-2792.95C2380,-2784.01 2389.46,-2774.65 2398,-2765 2430.79,-2727.97 2586.52,-2416.15 2618,-2378 2783.44,-2177.45 3022.03,-1990.2 3170.63,-1882.5"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3172.22,-1884.59 3176.76,-1878.07 3169.14,-1880.34 3172.22,-1884.59"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2370.09,-2792.95C2380,-2784.01 2389.46,-2774.65 2398,-2765 2430.79,-2727.97 2586.52,-2416.15 2618,-2378 2783.77,-2177.06 3022.98,-1989.46 3171.51,-1881.86"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="3174.33" cy="-1879.83" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2759.5,-2378 2759.5,-2399 2804.5,-2399 2804.5,-2378 2759.5,-2378"/>
 <text text-anchor="start" x="2763" y="-2384.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result</text>
 </g>
 <!-- connection&#45;&gt;object_factory -->
 <g id="edge18" class="edge">
 <title>connection&#45;&gt;object_factory</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2617.65,-2535.55C2473.81,-2531.86 2259.55,-2535.5 2078,-2576 1673.2,-2666.3 1239.66,-2898.77 1016.04,-3030.08"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1014.62,-3027.87 1009.49,-3033.93 1017.28,-3032.39 1014.62,-3027.87"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2617.65,-2535.55C2473.81,-2531.86 2259.55,-2535.5 2078,-2576 1673.2,-2666.3 1239.66,-2898.77 1016.04,-3030.08"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1009.49,-3033.93 1014.24,-3027.22 1012.47,-3031.6 1015.7,-3029.7 1015.95,-3030.13 1016.21,-3030.56 1012.98,-3032.46 1017.67,-3033.04 1009.49,-3033.93 1009.49,-3033.93"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1861,-2658 1861,-2679 1949,-2679 1949,-2658 1861,-2658"/>
 <text text-anchor="start" x="1864" y="-2664.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">create_object</text>
 </g>
 <!-- connection&#45;&gt;channel_owner -->
 <g id="edge19" class="edge">
 <title>connection&#45;&gt;channel_owner</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2617.76,-2562.69C2471.62,-2583.57 2253.92,-2625.04 2078,-2702 1923.05,-2769.79 1766.08,-2885.72 1664.99,-2967.91"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1663.17,-2966 1659.02,-2972.78 1666.49,-2970.07 1663.17,-2966"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2617.76,-2562.69C2471.62,-2583.57 2253.92,-2625.04 2078,-2702 1923.05,-2769.79 1766.08,-2885.72 1664.99,-2967.91"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1659.02,-2972.78 1662.7,-2965.42 1661.61,-2970.02 1664.52,-2967.65 1664.83,-2968.04 1665.15,-2968.42 1662.24,-2970.79 1666.97,-2970.65 1659.02,-2972.78 1659.02,-2972.78"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2136.5,-2702 2136.5,-2738 2339.5,-2738 2339.5,-2702 2136.5,-2702"/>
 <text text-anchor="start" x="2140" y="-2723.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner, DisposeReason,</text>
 <text text-anchor="start" x="2140" y="-2708.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ParentOrConnection</text>
@@ -212,72 +212,72 @@
 <!-- connection&#45;&gt;error_parsing -->
 <g id="edge20" class="edge">
 <title>connection&#45;&gt;error_parsing</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2640.75,-2453.97C2632.32,-2445.21 2624.6,-2435.88 2618,-2426 2554.04,-2330.27 2643.49,-2251.11 2558,-2174 2304.11,-1945 2132.73,-2074.64 1792,-2103 1473.15,-2129.54 1295.92,-1984.07 1082,-2222 1012.49,-2299.31 1102.99,-2597.3 1054,-2689 1044.3,-2707.15 1031.23,-2723.7 1016.45,-2738.58"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1014.44,-2736.87 1010.92,-2743.99 1018.12,-2740.62 1014.44,-2736.87"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2640.75,-2453.97C2632.32,-2445.21 2624.6,-2435.88 2618,-2426 2554.04,-2330.27 2643.49,-2251.11 2558,-2174 2304.11,-1945 2132.73,-2074.64 1792,-2103 1473.15,-2129.54 1295.92,-1984.07 1082,-2222 1012.49,-2299.31 1102.99,-2597.3 1054,-2689 1044.3,-2707.15 1031.23,-2723.7 1016.45,-2738.58"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1010.92,-2743.99 1013.92,-2736.33 1013.25,-2741.01 1015.93,-2738.39 1016.28,-2738.75 1016.63,-2739.1 1013.95,-2741.73 1018.64,-2741.16 1010.92,-2743.99 1010.92,-2743.99"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1839,-2103 1839,-2124 1971,-2124 1971,-2103 1839,-2103"/>
 <text text-anchor="start" x="1842" y="-2109.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_protocol_error</text>
 </g>
 <!-- connection&#45;&gt;transport -->
 <g id="edge22" class="edge">
 <title>connection&#45;&gt;transport</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2639.37,-2453.61C2631.38,-2444.98 2624.12,-2435.77 2618,-2426 2536.96,-2296.73 2663.44,-2198.27 2558,-2088 2388.02,-1910.24 2262.46,-1994.05 2018,-1967 1601.2,-1920.87 1366.92,-1778.3 1082,-2086 1034.55,-2137.24 1087.81,-2337.9 1054,-2399 1044.04,-2417.01 1030.8,-2433.47 1015.93,-2448.3"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1013.93,-2446.59 1010.38,-2453.7 1017.59,-2450.35 1013.93,-2446.59"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2639.37,-2453.61C2631.38,-2444.98 2624.12,-2435.77 2618,-2426 2536.96,-2296.73 2663.44,-2198.27 2558,-2088 2388.02,-1910.24 2262.46,-1994.05 2018,-1967 1601.2,-1920.87 1366.92,-1778.3 1082,-2086 1034.55,-2137.24 1087.81,-2337.9 1054,-2399 1043.78,-2417.48 1030.1,-2434.33 1014.75,-2449.47"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1012.53" cy="-2451.61" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1792,-1967 1792,-1988 2018,-1988 2018,-1967 1792,-1967"/>
 <text text-anchor="start" x="1795" y="-1973.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">TransportReceiver, TransportSender</text>
 </g>
 <!-- connection&#45;&gt;playwright -->
 <g id="edge21" class="edge">
 <title>connection&#45;&gt;playwright</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2781.02,-2634.14C2779.02,-2919.62 2756.55,-3795.73 2558,-3977 2207.09,-4297.38 1283.78,-4126.4 1082,-4056 1035.11,-4039.64 990.73,-4008.58 954.34,-3977.17"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="955.94,-3975.09 948.56,-3972.13 952.49,-3979.04 955.94,-3975.09"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M2781.02,-2634.14C2779.02,-2919.62 2756.55,-3795.73 2558,-3977 2207.09,-4297.38 1283.78,-4126.4 1082,-4056 1034.72,-4039.5 989.99,-4008.06 953.44,-3976.4"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="950.82" cy="-3974.11" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1870.5,-4164 1870.5,-4185 1939.5,-4185 1939.5,-4164 1870.5,-4164"/>
 <text text-anchor="start" x="1874" y="-4170.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Playwright</text>
 </g>
 <!-- connection&#45;&gt;error -->
 <g id="edge23" class="edge">
 <title>connection&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2856.73,-2453.82C2920.36,-2374.68 3013.49,-2255.57 3088,-2147 3147.35,-2060.52 3209.05,-1958.04 3251.78,-1884.76"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3254.09,-1886 3255.6,-1878.2 3249.56,-1883.36 3254.09,-1886"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2856.73,-2453.82C2920.36,-2374.68 3013.49,-2255.57 3088,-2147 3146.99,-2061.04 3208.31,-1959.28 3251.01,-1886.09"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3251.07,-1885.98 3250.74,-1880.58 3255.6,-1878.2 3255.93,-1883.6 3251.07,-1885.98"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3006,-2258 3006,-2279 3088,-2279 3088,-2258 3006,-2258"/>
 <text text-anchor="start" x="3009" y="-2264.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- error_parsing&#45;&gt;connection -->
 <g id="edge24" class="edge">
 <title>error_parsing&#45;&gt;connection</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1010.47,-2743.75C1027.58,-2727.53 1042.86,-2709.25 1054,-2689 1089.58,-2624.32 1031.98,-2412.28 1082,-2358 1298.82,-2122.71 1473.15,-2265.54 1792,-2239 2131.91,-2210.71 2281.66,-2086.06 2558,-2286 2612.84,-2325.68 2575.72,-2373.13 2618,-2426 2624.17,-2433.72 2630.97,-2441.17 2638.18,-2448.33"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2636.56,-2450.41 2643.77,-2453.74 2640.21,-2446.63 2636.56,-2450.41"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1010.47,-2743.75C1027.58,-2727.53 1042.86,-2709.25 1054,-2689 1089.58,-2624.32 1031.98,-2412.28 1082,-2358 1298.82,-2122.71 1473.15,-2265.54 1792,-2239 2131.91,-2210.71 2281.66,-2086.06 2558,-2286 2612.84,-2325.68 2575.72,-2373.13 2618,-2426 2624.41,-2434.02 2631.51,-2441.76 2639.03,-2449.17"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2641.61" cy="-2451.65" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1802.5,-2239 1802.5,-2260 2007.5,-2260 2007.5,-2239 1802.5,-2239"/>
 <text text-anchor="start" x="1806" y="-2245.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ErrorPayload, ExpectErrorDetails</text>
 </g>
 <!-- error_parsing&#45;&gt;error -->
 <g id="edge25" class="edge">
 <title>error_parsing&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1011.96,-2743.86C1028.73,-2727.67 1043.52,-2709.36 1054,-2689 1078.54,-2641.31 1044.96,-1762.79 1082,-1724 1628.35,-1151.83 2723.76,-1535.7 3140.69,-1712.45"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3139.76,-1714.9 3147.69,-1715.42 3141.82,-1710.07 3139.76,-1714.9"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1011.96,-2743.86C1028.73,-2727.67 1043.52,-2709.36 1054,-2689 1078.54,-2641.31 1044.96,-1762.79 1082,-1724 1627.68,-1152.53 2721.07,-1534.76 3139.15,-1711.79"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3139.41,-1711.9 3144.72,-1710.9 3147.69,-1715.42 3142.38,-1716.42 3139.41,-1711.9"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2219.5,-1474 2219.5,-1495 2256.5,-1495 2256.5,-1474 2219.5,-1474"/>
 <text text-anchor="start" x="2223" y="-1480.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error</text>
 </g>
 <!-- playwright_server&#45;&gt;driver -->
 <g id="edge32" class="edge">
 <title>playwright_server&#45;&gt;driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M862,-2163.72C862,-2100.72 862,-2016.69 862,-1952.05"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="864.63,-1951.77 862,-1944.27 859.38,-1951.77 864.63,-1951.77"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M862,-2163.72C862,-2100.72 862,-2016.69 862,-1952.05"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="862,-1944.27 865.38,-1951.77 862.5,-1948.02 862.5,-1951.77 862,-1951.77 861.5,-1951.77 861.5,-1948.02 858.63,-1951.77 862,-1944.27 862,-1944.27"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="779,-2043.5 779,-2064.5 918,-2064.5 918,-2043.5 779,-2043.5"/>
 <text text-anchor="start" x="782.5" y="-2049.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">get_driver_executable</text>
 </g>
 <!-- playwright_server&#45;&gt;error -->
 <g id="edge34" class="edge">
 <title>playwright_server&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M952.2,-2163.86C991.16,-2118.38 1032.75,-2059.98 1054,-1999 1127.81,-1787.18 1004.93,-1200.65 1082,-990 1184.42,-710.05 1254.41,-512 1552.5,-512 1552.5,-512 1552.5,-512 2783,-512 3037.56,-512 3230.7,-1391.99 3288.87,-1690.4"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3286.3,-1690.9 3290.3,-1697.77 3291.45,-1689.9 3286.3,-1690.9"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M952.2,-2163.86C991.16,-2118.38 1032.75,-2059.98 1054,-1999 1127.81,-1787.18 1004.93,-1200.65 1082,-990 1184.42,-710.05 1254.41,-512 1552.5,-512 1552.5,-512 1552.5,-512 2783,-512 3037.56,-512 3230.7,-1391.99 3288.87,-1690.4"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3290.3,-1697.77 3285.56,-1691.05 3289.1,-1694.18 3288.38,-1690.5 3288.87,-1690.4 3289.36,-1690.31 3290.08,-1693.99 3292.19,-1689.76 3290.3,-1697.77 3290.3,-1697.77"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2197,-512 2197,-533 2279,-533 2279,-512 2197,-512"/>
 <text text-anchor="start" x="2200" y="-518.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- playwright_server&#45;&gt;node_driver -->
 <g id="edge33" class="edge">
 <title>playwright_server&#45;&gt;node_driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M952.13,-2163.84C991.07,-2118.35 1032.67,-2059.95 1054,-1999 1070.94,-1950.58 1045.18,-1111.72 1082,-1076 1157.94,-1002.33 1277.31,-1008.75 1376.8,-1033.12"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1376.32,-1035.7 1384.23,-1034.98 1377.6,-1030.61 1376.32,-1035.7"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M952.13,-2163.84C991.07,-2118.35 1032.67,-2059.95 1054,-1999 1070.94,-1950.58 1045.18,-1111.72 1082,-1076 1158.32,-1001.96 1278.5,-1008.81 1378.29,-1033.48"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1381.32" cy="-1034.25" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1172.5,-1076 1172.5,-1116 1224.5,-1116 1224.5,-1076 1172.5,-1076"/>
 <text text-anchor="start" x="1175.5" y="-1101.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">spawns</text>
 <text text-anchor="start" x="1175.5" y="-1082.4" font-family="Arial" font-size="12.00" fill="#c9c9c9">[ stdio ]</text>
@@ -285,16 +285,16 @@
 <!-- transport&#45;&gt;error -->
 <g id="edge36" class="edge">
 <title>transport&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1011.93,-2453.84C1028.7,-2437.65 1043.5,-2419.35 1054,-2399 1100.17,-2309.49 1012.74,-1566.12 1082,-1493 1388.55,-1169.35 2702.96,-1258.35 3088,-1483 3169.14,-1530.34 3228.32,-1621.02 3264.56,-1691.26"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3262.25,-1692.5 3267.99,-1697.99 3266.92,-1690.11 3262.25,-1692.5"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1011.93,-2453.84C1028.7,-2437.65 1043.5,-2419.35 1054,-2399 1100.17,-2309.49 1012.74,-1566.12 1082,-1493 1388.55,-1169.35 2702.96,-1258.35 3088,-1483 3169.63,-1530.63 3229.04,-1622.12 3265.21,-1692.53"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="3266.63" cy="-1695.31" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2215.5,-1305 2215.5,-1326 2260.5,-1326 2260.5,-1305 2215.5,-1305"/>
 <text text-anchor="start" x="2219" y="-1311.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result</text>
 </g>
 <!-- transport&#45;&gt;node_driver -->
 <g id="edge35" class="edge">
 <title>transport&#45;&gt;node_driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1012.06,-2453.91C1028.81,-2437.71 1043.57,-2419.39 1054,-2399 1083.55,-2341.21 1042.22,-1282.29 1082,-1231 1100.98,-1206.52 1251.28,-1166.72 1376.98,-1137.02"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1377.76,-1139.54 1384.46,-1135.26 1376.56,-1134.43 1377.76,-1139.54"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1012.06,-2453.91C1028.81,-2437.71 1043.57,-2419.39 1054,-2399 1083.55,-2341.21 1042.22,-1282.29 1082,-1231 1101.06,-1206.42 1252.48,-1166.4 1378.48,-1136.67"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1381.54" cy="-1135.95" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1089,-1231 1089,-1271 1308,-1271 1308,-1231 1089,-1231"/>
 <text text-anchor="start" x="1092.5" y="-1256.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">exchanges JSON&#45;RPC frames with</text>
 <text text-anchor="start" x="1092.5" y="-1237.4" font-family="Arial" font-size="12.00" fill="#c9c9c9">[ stdio pipe or WebSocket ]</text>
@@ -302,16 +302,16 @@
 <!-- driver&#45;&gt;error -->
 <g id="edge38" class="edge">
 <title>driver&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M864.65,-1763.93C871.77,-1462.68 908,-495.22 1082,-247 1217.57,-53.61 1316.33,0 1552.5,0 1552.5,0 1552.5,0 2783,0 3138.29,0 3269.67,-1316.59 3299.8,-1690.22"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3297.2,-1690.53 3300.41,-1697.8 3302.43,-1690.11 3297.2,-1690.53"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M864.65,-1763.93C871.77,-1462.68 908,-495.22 1082,-247 1217.57,-53.61 1316.33,0 1552.5,0 1552.5,0 1552.5,0 2783,0 3138.29,0 3269.67,-1316.59 3299.8,-1690.22"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3300.41,-1697.8 3296.45,-1690.59 3299.61,-1694.1 3299.31,-1690.36 3299.81,-1690.32 3300.31,-1690.28 3300.61,-1694.02 3303.18,-1690.05 3300.41,-1697.8 3300.41,-1697.8"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2197,0 2197,-21 2279,-21 2279,0 2197,0"/>
 <text text-anchor="start" x="2200" y="-6.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- driver&#45;&gt;driver_urls -->
 <g id="edge37" class="edge">
 <title>driver&#45;&gt;driver_urls</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M864.2,-1763.87C869.85,-1478.14 901.8,-599.24 1082,-393 1157.23,-306.9 1283.13,-273.45 1385.77,-261.09"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1386.29,-263.67 1393.43,-260.2 1385.68,-258.46 1386.29,-263.67"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M864.2,-1763.87C869.85,-1478.14 901.8,-599.24 1082,-393 1157.23,-306.9 1283.13,-273.45 1385.77,-261.09"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1393.43,-260.2 1386.37,-264.42 1389.77,-261.13 1386.04,-261.56 1385.98,-261.06 1385.93,-260.57 1389.65,-260.13 1385.6,-257.71 1393.43,-260.2 1393.43,-260.2"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1085.5,-393 1085.5,-429 1311.5,-429 1311.5,-393 1085.5,-393"/>
 <text text-anchor="start" x="1088.5" y="-414.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">cached_driver_dir, node_exe_name,</text>
 <text text-anchor="start" x="1088.5" y="-399.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">playwright_platform</text>
@@ -319,8 +319,8 @@
 <!-- playwright&#45;&gt;channel_owner -->
 <g id="edge26" class="edge">
 <title>playwright&#45;&gt;channel_owner</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1022.02,-3794.54C1121.43,-3731.61 1243.72,-3637.6 1315,-3522 1383.16,-3411.45 1312.45,-3349.82 1375,-3236 1390.35,-3208.07 1411.67,-3181.82 1434.23,-3158.62"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1436.28,-3160.28 1439.68,-3153.1 1432.54,-3156.59 1436.28,-3160.28"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1022.02,-3794.54C1121.43,-3731.61 1243.72,-3637.6 1315,-3522 1383.16,-3411.45 1312.45,-3349.82 1375,-3236 1390.35,-3208.07 1411.67,-3181.82 1434.23,-3158.62"/>
+<polygon fill="none" stroke="#8d8d8d" stroke-width="2" points="1436.28,-3160.28 1439.68,-3153.1 1432.54,-3156.59 1436.28,-3160.28"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1082,-3751 1082,-3787 1315,-3787 1315,-3751 1082,-3751"/>
 <text text-anchor="start" x="1085.5" y="-3772.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner, ChannelOwnerImpl,</text>
 <text text-anchor="start" x="1085.5" y="-3757.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">DisposeReason, ParentOrConnection</text>
@@ -328,16 +328,16 @@
 <!-- playwright&#45;&gt;channel -->
 <g id="edge27" class="edge">
 <title>playwright&#45;&gt;channel</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1022.01,-3901.2C1119.34,-3903.64 1239.32,-3888.42 1315,-3814 1430.03,-3700.88 1285.89,-3590.49 1375,-3456 1421.77,-3385.41 1948.61,-3095.53 2018,-3047 2045.54,-3027.74 2051.17,-3021.24 2078,-3001 2088.09,-2993.39 2098.57,-2985.52 2109.11,-2977.64"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2110.88,-2979.59 2115.32,-2973 2107.74,-2975.39 2110.88,-2979.59"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1022.01,-3901.2C1119.34,-3903.64 1239.32,-3888.42 1315,-3814 1430.03,-3700.88 1285.89,-3590.49 1375,-3456 1421.77,-3385.41 1948.61,-3095.53 2018,-3047 2045.54,-3027.74 2051.17,-3021.24 2078,-3001 2088.47,-2993.1 2099.35,-2984.94 2110.29,-2976.76"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2112.92" cy="-2974.8" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1525,-3456 1525,-3477 1582,-3477 1582,-3456 1525,-3456"/>
 <text text-anchor="start" x="1528.5" y="-3462.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Channel</text>
 </g>
 <!-- playwright&#45;&gt;connection -->
 <g id="edge28" class="edge">
 <title>playwright&#45;&gt;connection</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1022.05,-3928.42C1042.09,-3932.77 1062.42,-3936.49 1082,-3939 1184.72,-3952.15 1211.92,-3948.94 1315,-3939 1875.22,-3884.97 2160.27,-4095.22 2558,-3697 2706.39,-3548.42 2760.36,-2892.42 2775.78,-2641.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2778.41,-2641.79 2776.25,-2634.14 2773.17,-2641.47 2778.41,-2641.79"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1022.05,-3928.42C1042.09,-3932.77 1062.42,-3936.49 1082,-3939 1184.72,-3952.15 1211.92,-3948.94 1315,-3939 1875.22,-3884.97 2160.27,-4095.22 2558,-3697 2706.1,-3548.72 2760.15,-2895.01 2775.69,-2643.29"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2775.7,-2643.12 2772.98,-2638.45 2776.25,-2634.14 2778.97,-2638.82 2775.7,-2643.12"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1818,-3947 1818,-3983 1992,-3983 1992,-3947 1818,-3947"/>
 <text text-anchor="start" x="1821" y="-3968.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Connection, ConnectionExt,</text>
 <text text-anchor="start" x="1821" y="-3953.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ConnectionLike</text>
@@ -345,32 +345,32 @@
 <!-- playwright&#45;&gt;playwright_server -->
 <g id="edge29" class="edge">
 <title>playwright&#45;&gt;playwright_server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M803.74,-3791.77C720.29,-3656.15 571.52,-3388.72 523.5,-3136.5 461.12,-2808.88 482.81,-2680.28 662,-2399 673.49,-2380.96 688.1,-2364.44 704.17,-2349.55"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="706.35,-2351.11 710.15,-2344.13 702.83,-2347.22 706.35,-2351.11"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M803.74,-3791.77C720.29,-3656.15 571.52,-3388.72 523.5,-3136.5 461.12,-2808.88 482.81,-2680.28 662,-2399 673.49,-2380.96 688.1,-2364.44 704.17,-2349.55"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="710.15,-2344.13 706.86,-2351.67 707.71,-2347.02 704.93,-2349.53 704.59,-2349.16 704.26,-2348.79 707.04,-2346.28 702.33,-2346.66 710.15,-2344.13 710.15,-2344.13"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="465.5,-3115.5 465.5,-3136.5 574.5,-3136.5 574.5,-3115.5 465.5,-3115.5"/>
 <text text-anchor="start" x="469" y="-3121.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">PlaywrightServer</text>
 </g>
 <!-- playwright&#45;&gt;transport -->
 <g id="edge30" class="edge">
 <title>playwright&#45;&gt;transport</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M776.04,-3791.97C695.3,-3700.64 580,-3551.08 532.5,-3396.5 438.6,-3090.93 490.85,-2958.99 662,-2689 673.45,-2670.93 688.03,-2654.4 704.09,-2639.5"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="706.27,-2641.06 710.07,-2634.08 702.75,-2637.17 706.27,-2641.06"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M776.04,-3791.97C695.3,-3700.64 580,-3551.08 532.5,-3396.5 438.6,-3090.93 490.85,-2958.99 662,-2689 673.25,-2671.25 687.52,-2654.98 703.25,-2640.28"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="703.41,-2640.13 704.72,-2634.89 710.07,-2634.08 708.76,-2639.32 703.41,-2640.13"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="474.5,-3375.5 474.5,-3396.5 565.5,-3396.5 565.5,-3375.5 474.5,-3375.5"/>
 <text text-anchor="start" x="478" y="-3381.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">PipeTransport</text>
 </g>
 <!-- playwright&#45;&gt;error -->
 <g id="edge31" class="edge">
 <title>playwright&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M916.71,-3972.26C956.39,-4033.05 1014.99,-4111.72 1082,-4166 1262.26,-4312.02 1320.52,-4392 1552.5,-4392 1552.5,-4392 1552.5,-4392 2783,-4392 3043.8,-4392 3252.85,-2358.67 3297.96,-1885.54"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3300.58,-1885.73 3298.68,-1878.01 3295.35,-1885.23 3300.58,-1885.73"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M916.71,-3972.26C956.39,-4033.05 1014.99,-4111.72 1082,-4166 1262.26,-4312.02 1320.52,-4392 1552.5,-4392 1552.5,-4392 1552.5,-4392 2783,-4392 3043.8,-4392 3252.85,-2358.67 3297.96,-1885.54"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3298.68,-1878.01 3301.33,-1885.8 3298.82,-1881.79 3298.47,-1885.53 3297.97,-1885.48 3297.47,-1885.43 3297.83,-1881.7 3294.61,-1885.16 3298.68,-1878.01 3298.68,-1878.01"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2197,-4392 2197,-4413 2279,-4413 2279,-4392 2197,-4392"/>
 <text text-anchor="start" x="2200" y="-4398.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- examples&#45;&gt;driver -->
 <g id="edge2" class="edge">
 <title>examples&#45;&gt;driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M173.59,-3077.86C184.33,-2902.96 227.18,-2510.82 398,-2238 473.52,-2117.38 599.83,-2016.37 701.47,-1948.27"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="703.03,-1950.38 707.82,-1944.03 700.12,-1946.01 703.03,-1950.38"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M173.59,-3077.86C184.33,-2902.96 227.18,-2510.82 398,-2238 473.52,-2117.38 599.83,-2016.37 701.47,-1948.27"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="707.82,-1944.03 703.45,-1951 704.97,-1946.53 701.85,-1948.61 701.58,-1948.19 701.3,-1947.78 704.42,-1945.7 699.7,-1945.38 707.82,-1944.03 707.82,-1944.03"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="434,-2238 434,-2274 606,-2274 606,-2238 434,-2238"/>
 <text text-anchor="start" x="437" y="-2259.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers,</text>
 <text text-anchor="start" x="437" y="-2244.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers_with_deps</text>
@@ -378,16 +378,16 @@
 <!-- examples&#45;&gt;playwright -->
 <g id="edge1" class="edge">
 <title>examples&#45;&gt;playwright</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M286.12,-3258.32C304.61,-3275.4 322.67,-3293.93 338,-3313 373.14,-3356.71 364.37,-3379.13 398,-3424 501.89,-3562.6 647.24,-3699.34 747.23,-3786.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="745.78,-3789.01 753.15,-3791.97 749.23,-3785.06 745.78,-3789.01"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M286.12,-3258.32C304.61,-3275.4 322.67,-3293.93 338,-3313 373.14,-3356.71 364.37,-3379.13 398,-3424 501.89,-3562.6 647.24,-3699.34 747.23,-3786.8"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="753.15,-3791.97 745.28,-3789.58 750,-3789.88 747.18,-3787.41 747.5,-3787.04 747.83,-3786.66 750.66,-3789.13 749.72,-3784.49 753.15,-3791.97 753.15,-3791.97"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="485.5,-3685 485.5,-3706 554.5,-3706 554.5,-3685 485.5,-3685"/>
 <text text-anchor="start" x="489" y="-3691.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Playwright</text>
 </g>
 <!-- playwright_rs&#45;&gt;driver -->
 <g id="edge3" class="edge">
 <title>playwright_rs&#45;&gt;driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M338.15,-1854C446.32,-1854 586.29,-1854 694.19,-1854"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="694.4,-1856.63 701.9,-1854 694.4,-1851.38 694.4,-1856.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M338.15,-1854C446.32,-1854 586.29,-1854 694.19,-1854"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="701.9,-1854 694.4,-1857.38 698.15,-1854.5 694.4,-1854.5 694.4,-1854 694.4,-1853.5 698.15,-1853.5 694.4,-1850.63 701.9,-1854 701.9,-1854"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="434,-1854 434,-1890 606,-1890 606,-1854 434,-1854"/>
 <text text-anchor="start" x="437" y="-1875.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers,</text>
 <text text-anchor="start" x="437" y="-1860.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_browsers_with_deps</text>
@@ -395,56 +395,56 @@
 <!-- tests&#45;&gt;channel_owner -->
 <g id="edge4" class="edge">
 <title>tests&#45;&gt;channel_owner</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M329.07,-3444.86C421.16,-3435.49 538.9,-3420.51 642,-3398 910.68,-3339.34 1207.01,-3219.24 1386.43,-3139.93"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1387.49,-3142.32 1393.29,-3136.89 1385.37,-3137.52 1387.49,-3142.32"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M329.07,-3444.86C421.16,-3435.49 538.9,-3420.51 642,-3398 911.35,-3339.2 1208.48,-3218.64 1387.75,-3139.34"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1390.55" cy="-3138.1" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="813.5,-3391 813.5,-3412 910.5,-3412 910.5,-3391 813.5,-3391"/>
 <text text-anchor="start" x="817" y="-3397.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner</text>
 </g>
 <!-- tests&#45;&gt;connection -->
 <g id="edge5" class="edge">
 <title>tests&#45;&gt;connection</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M248.01,-3548.19C288.28,-3587.84 340.91,-3630.08 398,-3651 541.55,-3703.6 1323.35,-3629.11 1732,-3500 2147.01,-3368.88 2313.3,-3333.92 2558,-2974 2631.38,-2866.06 2697.75,-2730.95 2738.64,-2641.29"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2741.07,-2642.29 2741.78,-2634.37 2736.29,-2640.11 2741.07,-2642.29"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M248.01,-3548.19C288.28,-3587.84 340.91,-3630.08 398,-3651 541.55,-3703.6 1323.35,-3629.11 1732,-3500 2147.01,-3368.88 2313.3,-3333.92 2558,-2974 2631.02,-2866.6 2697.09,-2732.3 2738.02,-2642.64"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2738.06,-2642.57 2737.19,-2637.23 2741.78,-2634.37 2742.65,-2639.71 2738.06,-2642.57"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1516,-3584 1516,-3605 1591,-3605 1591,-3584 1516,-3584"/>
 <text text-anchor="start" x="1519.5" y="-3590.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Connection</text>
 </g>
 <!-- tests&#45;&gt;playwright_server -->
 <g id="edge7" class="edge">
 <title>tests&#45;&gt;playwright_server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M297.67,-3367.61C313.55,-3351.17 327.77,-3332.87 338,-3313 470.23,-3056.26 264.68,-2922.17 398,-2666 463.65,-2539.85 562.35,-2576.81 642,-2459 657.74,-2435.71 645.41,-2421.69 662,-2399 675.15,-2381.02 691.19,-2364.35 708.4,-2349.21"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="710.32,-2351.02 714.28,-2344.13 706.89,-2347.04 710.32,-2351.02"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M297.67,-3367.61C313.55,-3351.17 327.77,-3332.87 338,-3313 470.23,-3056.26 264.68,-2922.17 398,-2666 463.65,-2539.85 562.35,-2576.81 642,-2459 657.74,-2435.71 645.41,-2421.69 662,-2399 675.15,-2381.02 691.19,-2364.35 708.4,-2349.21"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="714.28,-2344.13 710.81,-2351.58 711.77,-2346.96 708.93,-2349.41 708.6,-2349.03 708.28,-2348.65 711.12,-2346.2 706.4,-2346.48 714.28,-2344.13 714.28,-2344.13"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="465.5,-2666 465.5,-2687 574.5,-2687 574.5,-2666 465.5,-2666"/>
 <text text-anchor="start" x="469" y="-2672.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">PlaywrightServer</text>
 </g>
 <!-- tests&#45;&gt;transport -->
 <g id="edge8" class="edge">
 <title>tests&#45;&gt;transport</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M293.41,-3367.83C310.29,-3351.15 325.93,-3332.71 338,-3313 396.55,-3217.39 351.85,-3170.17 398,-3068 482.51,-2880.92 518.4,-2835.69 662,-2689 679.07,-2671.56 698.43,-2654.69 718.2,-2638.99"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="720.07,-2640.86 724.35,-2634.16 716.83,-2636.73 720.07,-2640.86"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M293.41,-3367.83C310.29,-3351.15 325.93,-3332.71 338,-3313 396.55,-3217.39 351.85,-3170.17 398,-3068 482.51,-2880.92 518.4,-2835.69 662,-2689 678.78,-2671.86 697.76,-2655.27 717.18,-2639.81"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="717.28,-2639.73 718.96,-2634.59 724.35,-2634.16 722.67,-2639.3 717.28,-2639.73"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="474.5,-3068 474.5,-3089 565.5,-3089 565.5,-3068 474.5,-3068"/>
 <text text-anchor="start" x="478" y="-3074.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">PipeTransport</text>
 </g>
 <!-- tests&#45;&gt;driver -->
 <g id="edge9" class="edge">
 <title>tests&#45;&gt;driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M298.14,-3367.84C313.95,-3351.38 328.03,-3333 338,-3313 427.65,-3133.23 284.56,-2576.79 398,-2411 465.59,-2312.21 572.47,-2394.43 642,-2297 690.81,-2228.61 630.5,-2186.9 662,-2109 685.62,-2050.59 726.77,-1994.39 765.53,-1949.7"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="767.53,-1951.4 770.49,-1944.02 763.58,-1947.94 767.53,-1951.4"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M298.14,-3367.84C313.95,-3351.38 328.03,-3333 338,-3313 427.65,-3133.23 284.56,-2576.79 398,-2411 465.59,-2312.21 572.47,-2394.43 642,-2297 690.81,-2228.61 630.5,-2186.9 662,-2109 685.62,-2050.59 726.77,-1994.39 765.53,-1949.7"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="770.49,-1944.02 768.1,-1951.89 768.4,-1947.18 765.93,-1950 765.56,-1949.67 765.18,-1949.34 767.65,-1946.52 763.02,-1947.45 770.49,-1944.02 770.49,-1944.02"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="398,-2411 398,-2432 642,-2432 642,-2411 398,-2411"/>
 <text text-anchor="start" x="401" y="-2417.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">get_driver_executable, install_browsers</text>
 </g>
 <!-- tests&#45;&gt;playwright -->
 <g id="edge6" class="edge">
 <title>tests&#45;&gt;playwright</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M214,-3548.35C252.86,-3618.68 316.06,-3713.25 398,-3768 485.71,-3826.6 600.81,-3855.11 694.31,-3868.96"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="694.06,-3871.58 701.86,-3870.06 694.81,-3866.38 694.06,-3871.58"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M214,-3548.35C252.86,-3618.68 316.06,-3713.25 398,-3768 485.71,-3826.6 600.81,-3855.11 694.31,-3868.96"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="701.86,-3870.06 693.95,-3872.32 698.08,-3870.01 694.37,-3869.48 694.44,-3868.98 694.51,-3868.49 698.22,-3869.03 694.92,-3865.64 701.86,-3870.06 701.86,-3870.06"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="485.5,-3858 485.5,-3879 554.5,-3879 554.5,-3858 485.5,-3858"/>
 <text text-anchor="start" x="489" y="-3864.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Playwright</text>
 </g>
 <!-- node_driver&#45;&gt;browsers -->
 <g id="edge39" class="edge">
 <title>node_driver&#45;&gt;browsers</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1553.5,-1007.94C1553.5,-963.93 1553.5,-910.9 1553.5,-865.9"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1556.13,-865.67 1553.5,-858.17 1550.88,-865.67 1556.13,-865.67"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1553.5,-1007.94C1553.5,-963.39 1553.5,-909.59 1553.5,-864.23"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1553.5" cy="-861.17" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1441,-913 1441,-953 1620,-953 1620,-913 1441,-913"/>
 <text text-anchor="start" x="1444.5" y="-938.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">drives</text>
 <text text-anchor="start" x="1444.5" y="-919.4" font-family="Arial" font-size="12.00" fill="#c9c9c9">[ CDP, Juggler, WebKit protocol ]</text>

@@ -28,8 +28,8 @@
 <!-- protocol&#45;&gt;imp -->
 <g id="edge1" class="edge">
 <title>protocol&#45;&gt;imp</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M200,-375.93C200,-330.26 200,-274.56 200,-227.83"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="202.63,-227.61 200,-220.11 197.38,-227.61 202.63,-227.61"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M200,-375.93C200,-330.26 200,-274.56 200,-227.83"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="200,-220.11 203.38,-227.61 200.5,-223.86 200.5,-227.61 200,-227.61 199.5,-227.61 199.5,-223.86 196.63,-227.61 200,-220.11 200,-220.11"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="200,-280 200,-316 389,-316 389,-280 200,-280"/>
 <text text-anchor="start" x="203.5" y="-301.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">install_signal_handler, restore,</text>
 <text text-anchor="start" x="203.5" y="-286.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">save_if_tty</text>

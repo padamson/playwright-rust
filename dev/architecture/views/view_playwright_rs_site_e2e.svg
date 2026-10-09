@@ -31,8 +31,8 @@
 <!-- tests&#45;&gt;playwright_rs -->
 <g id="edge1" class="edge">
 <title>tests&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M200,-320.72C200,-279.33 200,-230.07 200,-187.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="202.63,-187.76 200,-180.26 197.38,-187.76 202.63,-187.76"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M200,-320.72C200,-278.9 200,-229.05 200,-186.49"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="200" cy="-183.26" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="200,-240 200,-261 366,-261 366,-240 200,-240"/>
 <text text-anchor="start" x="203" y="-246.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">PLAYWRIGHT_VERSION</text>
 </g>

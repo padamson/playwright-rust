@@ -322,8 +322,8 @@
 <!-- options&#45;&gt;state -->
 <g id="edge13" class="edge">
 <title>options&#45;&gt;state</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6460.15,-516.04C6496.2,-546.87 6540.12,-578.09 6586,-596 6715.12,-646.41 6758.48,-614.27 6897,-619.5 7252.04,-632.89 8529.75,-708.29 8846,-596 8890.51,-580.2 8932.83,-551.09 8967.96,-521.38"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8969.99,-523.09 8973.98,-516.21 8966.58,-519.1 8969.99,-523.09"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6460.15,-516.04C6496.2,-546.87 6540.12,-578.09 6586,-596 6715.12,-646.41 6758.48,-614.27 6897,-619.5 7252.04,-632.89 8529.75,-708.29 8846,-596 8891.06,-580 8933.87,-550.37 8969.26,-520.27"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="8971.71" cy="-518.17" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6897,-626.5 6897,-662.5 7081,-662.5 7081,-626.5 6897,-626.5"/>
 <text text-anchor="start" x="6900" y="-648.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Geolocation, HttpCredentials,</text>
 <text text-anchor="start" x="6900" y="-633.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">StorageState</text>
@@ -331,88 +331,88 @@
 <!-- options&#45;&gt;api -->
 <g id="edge14" class="edge">
 <title>options&#45;&gt;api</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6210.83,-424.46C5336.01,-421.06 1154.36,-398.46 593,-276 501.71,-256.09 405.62,-217.07 327.22,-179.99"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="328.07,-177.49 320.17,-176.64 325.81,-182.23 328.07,-177.49"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6210.83,-424.46C5336.01,-421.06 1154.36,-398.46 593,-276 501.16,-255.97 404.46,-216.6 325.8,-179.32"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="322.88" cy="-177.93" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="593,-247.5 593,-268.5 708,-268.5 708,-247.5 593,-247.5"/>
 <text text-anchor="start" x="596.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">IgnoreDefaultArgs</text>
 </g>
 <!-- options&#45;&gt;proxy -->
 <g id="edge15" class="edge">
 <title>options&#45;&gt;proxy</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6210.9,-423.87C5324.66,-417.2 1050.65,-379.77 793,-276 745.35,-256.81 701.85,-221 667.45,-185.97"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="669.11,-183.91 662.01,-180.36 665.34,-187.57 669.11,-183.91"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6210.9,-423.87C5324.66,-417.2 1050.65,-379.77 793,-276 744.76,-256.57 700.78,-220.12 666.18,-184.67"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="664.09" cy="-182.51" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="793,-247.5 793,-268.5 883,-268.5 883,-247.5 793,-247.5"/>
 <text text-anchor="start" x="796" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ProxySettings</text>
 </g>
 <!-- dispatch&#45;&gt;events -->
 <g id="edge21" class="edge">
 <title>dispatch&#45;&gt;events</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6896.21,-516.2C6931.53,-545.45 6973.41,-575.59 7016,-596 7044.78,-609.79 7054.29,-608.42 7086,-612 7245.15,-629.96 7291.93,-639.74 7446,-596 7506.65,-578.78 7569.01,-549.45 7622.67,-519.95"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7624.22,-522.1 7629.51,-516.17 7621.68,-517.5 7624.22,-522.1"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6896.21,-516.2C6931.53,-545.45 6973.41,-575.59 7016,-596 7044.78,-609.79 7054.29,-608.42 7086,-612 7245.15,-629.96 7291.93,-639.74 7446,-596 7506.65,-578.78 7569.01,-549.45 7622.67,-519.95"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7629.51,-516.17 7624.58,-522.75 7626.47,-518.42 7623.19,-520.24 7622.95,-519.8 7622.7,-519.36 7625.99,-517.55 7621.31,-516.85 7629.51,-516.17 7629.51,-516.17"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7086,-634 7086,-655 7222,-655 7222,-634 7086,-634"/>
 <text text-anchor="start" x="7089" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">deliver_to_oldest_live</text>
 </g>
 <!-- dispatch&#45;&gt;api_request_context -->
 <g id="edge16" class="edge">
 <title>dispatch&#45;&gt;api_request_context</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6753.87,-335.79C6743.38,-303.09 6740.6,-267.42 6761,-240 6816.4,-165.55 6873.57,-211.12 6961,-180 6976.51,-174.48 6992.53,-168.46 7008.51,-162.24"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7009.82,-164.55 7015.85,-159.37 7007.91,-159.66 7009.82,-164.55"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6753.87,-335.79C6743.38,-303.09 6740.6,-267.42 6761,-240 6816.4,-165.55 6873.57,-211.12 6961,-180 6977.07,-174.28 6993.69,-168.02 7010.24,-161.57"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="7013.05" cy="-160.46" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6761,-247.5 6761,-268.5 6886,-268.5 6886,-247.5 6761,-247.5"/>
 <text text-anchor="start" x="6764.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">APIRequestContext</text>
 </g>
 <!-- dispatch&#45;&gt;page -->
 <g id="edge17" class="edge">
 <title>dispatch&#45;&gt;page</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.36,-335.93C6648.66,-319.57 6617.3,-304.88 6586,-296 6542.73,-283.73 4998.61,-308 4967,-276 4857.9,-165.55 5508.18,-216.83 5659,-180 5674.66,-176.18 5690.65,-171.39 5706.5,-166.02"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5707.54,-168.44 5713.77,-163.51 5705.83,-163.47 5707.54,-168.44"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6677.36,-335.93C6648.66,-319.57 6617.3,-304.88 6586,-296 6542.73,-283.73 4998.61,-308 4967,-276 4857.9,-165.55 5508.18,-216.83 5659,-180 5675.08,-176.07 5691.52,-171.13 5707.79,-165.58"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="5710.94" cy="-164.49" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4967,-247.5 4967,-268.5 5005,-268.5 5005,-247.5 4967,-247.5"/>
 <text text-anchor="start" x="4970" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Page</text>
 </g>
 <!-- dispatch&#45;&gt;binding_call -->
 <g id="edge18" class="edge">
 <title>dispatch&#45;&gt;binding_call</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.7,-335.9C6648.92,-319.49 6617.44,-304.78 6586,-296 6458.84,-260.49 1964.59,-286.77 1833,-276 1564.72,-254.03 1494.01,-253.31 1235,-180 1219.41,-175.59 1203.43,-170.37 1187.56,-164.72"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1188.22,-162.16 1180.28,-162.09 1186.44,-167.1 1188.22,-162.16"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6677.7,-335.9C6648.92,-319.49 6617.44,-304.78 6586,-296 6458.84,-260.49 1964.59,-286.77 1833,-276 1564.72,-254.03 1494.01,-253.31 1235,-180 1218.99,-175.47 1202.56,-170.09 1186.27,-164.26"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1183.1" cy="-163.11" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="1833,-247.5 1833,-268.5 1908,-268.5 1908,-247.5 1833,-247.5"/>
 <text text-anchor="start" x="1836.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">BindingCall</text>
 </g>
 <!-- dispatch&#45;&gt;js_handle -->
 <g id="edge19" class="edge">
 <title>dispatch&#45;&gt;js_handle</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.7,-335.91C6648.91,-319.5 6617.44,-304.79 6586,-296 6471.93,-264.12 2440.11,-284.86 2322,-276 2027.73,-253.92 1949.5,-258.37 1665,-180 1649.38,-175.7 1633.38,-170.56 1617.49,-164.95"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1618.15,-162.4 1610.21,-162.34 1616.38,-167.34 1618.15,-162.4"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6677.7,-335.91C6648.91,-319.5 6617.44,-304.79 6586,-296 6471.93,-264.12 2440.11,-284.86 2322,-276 2027.73,-253.92 1949.5,-258.37 1665,-180 1648.96,-175.58 1632.51,-170.28 1616.21,-164.49"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1613.03" cy="-163.36" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2322,-247.5 2322,-268.5 2387,-268.5 2387,-247.5 2322,-247.5"/>
 <text text-anchor="start" x="2325.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">JSHandle</text>
 </g>
 <!-- dispatch&#45;&gt;resource_timing -->
 <g id="edge20" class="edge">
 <title>dispatch&#45;&gt;resource_timing</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.7,-335.92C6648.91,-319.51 6617.44,-304.8 6586,-296 6481.8,-266.85 2798.74,-285.92 2691,-276 2451.75,-253.97 2391.05,-242.27 2159,-180 2143.44,-175.83 2127.47,-171.11 2111.5,-166.08"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2112.11,-163.51 2104.17,-163.74 2110.52,-168.52 2112.11,-163.51"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6677.7,-335.92C6648.91,-319.51 6617.44,-304.8 6586,-296 6481.8,-266.85 2798.74,-285.92 2691,-276 2451.75,-253.97 2391.05,-242.27 2159,-180 2143.44,-175.83 2127.47,-171.11 2111.5,-166.08"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2104.17,-163.74 2112.34,-162.8 2107.89,-164.4 2111.47,-165.54 2111.32,-166.02 2111.16,-166.49 2107.59,-165.35 2110.29,-169.23 2104.17,-163.74 2104.17,-163.74"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2691,-247.5 2691,-268.5 2797,-268.5 2797,-247.5 2691,-247.5"/>
 <text text-anchor="start" x="2694" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ResourceTiming</text>
 </g>
 <!-- dispatch&#45;&gt;evaluate_conversion -->
 <g id="edge22" class="edge">
 <title>dispatch&#45;&gt;evaluate_conversion</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6675.34,-335.92C6647.13,-319.9 6616.49,-305.34 6586,-296 6546.74,-283.97 6245.24,-305.81 6217,-276 6206,-264.38 6206.85,-252.37 6217,-240 6303.83,-134.23 6387.85,-219.06 6519,-180 6534.73,-175.32 6550.89,-169.95 6566.97,-164.22"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6568.18,-166.57 6574.35,-161.56 6566.41,-161.63 6568.18,-166.57"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6675.34,-335.92C6647.13,-319.9 6616.49,-305.34 6586,-296 6546.74,-283.97 6245.24,-305.81 6217,-276 6206,-264.38 6206.85,-252.37 6217,-240 6303.83,-134.23 6387.85,-219.06 6519,-180 6534.73,-175.32 6550.89,-169.95 6566.97,-164.22"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6574.35,-161.56 6568.44,-167.27 6570.99,-163.3 6567.46,-164.57 6567.29,-164.1 6567.12,-163.63 6570.65,-162.36 6566.15,-160.92 6574.35,-161.56 6574.35,-161.56"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6217,-247.5 6217,-268.5 6338,-268.5 6338,-247.5 6217,-247.5"/>
 <text text-anchor="start" x="6220.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">serialize_argument</text>
 </g>
 <!-- dispatch&#45;&gt;route -->
 <g id="edge23" class="edge">
 <title>dispatch&#45;&gt;route</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6924.64,-335.93C6953.34,-319.57 6984.7,-304.88 7016,-296 7101.9,-271.63 8534.67,-289.03 8623,-276 8680.19,-267.56 8691.61,-252.74 8748,-240 8907.51,-203.98 8952.5,-220.23 9111,-180 9140.22,-172.58 9170.84,-163.33 9200.36,-153.62"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9201.55,-155.99 9207.84,-151.14 9199.9,-151.01 9201.55,-155.99"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6924.64,-335.93C6953.34,-319.57 6984.7,-304.88 7016,-296 7101.9,-271.63 8534.67,-289.03 8623,-276 8680.19,-267.56 8691.61,-252.74 8748,-240 8907.51,-203.98 8952.5,-220.23 9111,-180 9140.22,-172.58 9170.84,-163.33 9200.36,-153.62"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9207.84,-151.14 9201.78,-156.7 9204.44,-152.8 9200.88,-153.98 9200.72,-153.5 9200.56,-153.03 9204.12,-151.85 9199.66,-150.3 9207.84,-151.14 9207.84,-151.14"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8748,-247.5 8748,-268.5 8899,-268.5 8899,-247.5 8748,-247.5"/>
 <text text-anchor="start" x="8751.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Route, matches_pattern</text>
 </g>
 <!-- dispatch&#45;&gt;web_socket_route -->
 <g id="edge24" class="edge">
 <title>dispatch&#45;&gt;web_socket_route</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6924.62,-335.87C6953.33,-319.52 6984.69,-304.84 7016,-296 7124.27,-265.43 8929.18,-288.4 9041,-276 9116.9,-267.58 9133.4,-250.73 9209,-240 9582.21,-187.05 9687.02,-261.73 10055,-180 10070.61,-176.53 10086.57,-172.2 10102.44,-167.33"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="10103.35,-169.8 10109.73,-165.06 10101.78,-164.79 10103.35,-169.8"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6924.62,-335.87C6953.33,-319.52 6984.69,-304.84 7016,-296 7124.27,-265.43 8929.18,-288.4 9041,-276 9116.9,-267.58 9133.4,-250.73 9209,-240 9582.21,-187.05 9687.02,-261.73 10055,-180 10071.03,-176.44 10087.43,-171.97 10103.73,-166.94"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="10106.86" cy="-165.96" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="9209,-247.5 9209,-268.5 9321,-268.5 9321,-247.5 9209,-247.5"/>
 <text text-anchor="start" x="9212" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">WebSocketRoute</text>
 </g>
@@ -427,88 +427,88 @@
 <!-- dispatch&#45;&gt;console_message -->
 <g id="edge26" class="edge">
 <title>dispatch&#45;&gt;console_message</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.01,-335.99C6648.39,-319.68 6617.16,-305 6586,-296 6537.31,-281.94 5709.44,-312.23 5674,-276 5662.81,-264.56 5663.53,-252.1 5674,-240 5734.99,-169.55 5999.15,-204.68 6089,-180 6104.62,-175.71 6120.63,-170.58 6136.51,-164.98"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6137.62,-167.37 6143.8,-162.37 6135.86,-162.42 6137.62,-167.37"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6677.01,-335.99C6648.39,-319.68 6617.16,-305 6586,-296 6537.31,-281.94 5709.44,-312.23 5674,-276 5662.81,-264.56 5663.53,-252.1 5674,-240 5734.99,-169.55 5999.15,-204.68 6089,-180 6104.2,-175.82 6119.76,-170.85 6135.23,-165.43"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6135.33,-165.39 6138.56,-161.06 6143.8,-162.37 6140.57,-166.71 6135.33,-165.39"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5674,-247.5 5674,-268.5 5949,-268.5 5949,-247.5 5674,-247.5"/>
 <text text-anchor="start" x="5677.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ConsoleMessage, ConsoleMessageLocation</text>
 </g>
 <!-- dispatch&#45;&gt;dialog -->
 <g id="edge27" class="edge">
 <title>dispatch&#45;&gt;dialog</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.7,-335.92C6648.91,-319.51 6617.44,-304.8 6586,-296 6535.92,-281.99 2878.67,-312.87 2842,-276 2819.19,-253.07 2817.56,-219.83 2824.03,-187.84"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2826.67,-188.06 2825.74,-180.17 2821.55,-186.92 2826.67,-188.06"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6677.7,-335.92C6648.91,-319.51 6617.44,-304.8 6586,-296 6535.92,-281.99 2878.67,-312.87 2842,-276 2818.81,-252.68 2817.51,-218.71 2824.37,-186.22"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2825.08" cy="-183.1" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="2842,-247.5 2842,-268.5 2887,-268.5 2887,-247.5 2842,-247.5"/>
 <text text-anchor="start" x="2845.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Dialog</text>
 </g>
 <!-- dispatch&#45;&gt;request -->
 <g id="edge28" class="edge">
 <title>dispatch&#45;&gt;request</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.69,-335.94C6648.91,-319.53 6617.44,-304.81 6586,-296 6541.64,-283.57 3301.48,-308.67 3269,-276 3246.16,-253.02 3244.97,-219.77 3252.01,-187.78"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3254.65,-188.02 3253.85,-180.11 3249.54,-186.79 3254.65,-188.02"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6677.69,-335.94C6648.91,-319.53 6617.44,-304.81 6586,-296 6541.64,-283.57 3301.48,-308.67 3269,-276 3245.77,-252.63 3244.94,-218.64 3252.37,-186.16"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="3253.14" cy="-183.03" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3269,-247.5 3269,-268.5 3326,-268.5 3326,-247.5 3269,-247.5"/>
 <text text-anchor="start" x="3272.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Request</text>
 </g>
 <!-- dispatch&#45;&gt;response -->
 <g id="edge29" class="edge">
 <title>dispatch&#45;&gt;response</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.69,-335.96C6648.9,-319.54 6617.43,-304.82 6586,-296 6546.08,-284.8 3630.22,-305.41 3601,-276 3479.79,-153.97 4201.74,-220.08 4369,-180 4384.67,-176.24 4400.68,-171.5 4416.54,-166.16"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4417.57,-168.58 4423.81,-163.67 4415.87,-163.62 4417.57,-168.58"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6677.69,-335.96C6648.9,-319.54 6617.43,-304.82 6586,-296 6546.08,-284.8 3630.22,-305.41 3601,-276 3479.79,-153.97 4201.74,-220.08 4369,-180 4385.09,-176.14 4401.54,-171.24 4417.82,-165.73"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="4420.98" cy="-164.64" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3601,-247.5 3601,-268.5 3708,-268.5 3708,-247.5 3601,-247.5"/>
 <text text-anchor="start" x="3604.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ResponseObject</text>
 </g>
 <!-- dispatch&#45;&gt;web_error -->
 <g id="edge30" class="edge">
 <title>dispatch&#45;&gt;web_error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6677.39,-335.84C6648.68,-319.49 6617.32,-304.82 6586,-296 6555.79,-287.49 4348.1,-298.29 4326,-276 4183.94,-132.68 5032.49,-225.89 5229,-180 5244.69,-176.34 5260.72,-171.65 5276.58,-166.36"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5277.61,-168.78 5283.86,-163.88 5275.92,-163.81 5277.61,-168.78"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6677.39,-335.84C6648.68,-319.49 6617.32,-304.82 6586,-296 6555.79,-287.49 4348.1,-298.29 4326,-276 4183.94,-132.68 5032.49,-225.89 5229,-180 5244.27,-176.43 5259.85,-171.9 5275.3,-166.78"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5275.34,-166.77 5278.64,-162.48 5283.86,-163.88 5280.56,-168.17 5275.34,-166.77"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4326,-247.5 4326,-268.5 4506,-268.5 4506,-247.5 4326,-247.5"/>
 <text text-anchor="start" x="4329" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">WebError, WebErrorLocation</text>
 </g>
 <!-- dispatch&#45;&gt;worker -->
 <g id="edge31" class="edge">
 <title>dispatch&#45;&gt;worker</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6927.02,-335.99C6955.15,-320.02 6985.66,-305.46 7016,-296 7148.23,-254.76 7195.74,-320.21 7327,-276 7386.69,-255.9 7445.83,-219.66 7494.2,-184.56"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7495.85,-186.61 7500.35,-180.06 7492.75,-182.37 7495.85,-186.61"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6927.02,-335.99C6955.15,-320.02 6985.66,-305.46 7016,-296 7148.23,-254.76 7195.74,-320.21 7327,-276 7387.17,-255.73 7446.8,-219.07 7495.38,-183.7"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="7497.93" cy="-181.84" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7402,-247.5 7402,-268.5 7452,-268.5 7452,-247.5 7402,-247.5"/>
 <text text-anchor="start" x="7405" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Worker</text>
 </g>
 <!-- lifecycle&#45;&gt;events -->
 <g id="edge36" class="edge">
 <title>lifecycle&#45;&gt;events</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7391.19,-426C7457.96,-426 7535.53,-426 7603.09,-426"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7603.36,-428.63 7610.86,-426 7603.36,-423.38 7603.36,-428.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7391.19,-426C7457.55,-426 7534.58,-426 7601.86,-426"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7601.86,-426 7606.36,-423 7610.86,-426 7606.36,-429 7601.86,-426"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7463.5,-429 7463.5,-450 7538.5,-450 7538.5,-429 7463.5,-429"/>
 <text text-anchor="start" x="7467" y="-435.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Forwarders</text>
 </g>
 <!-- lifecycle&#45;&gt;api_request_context -->
 <g id="edge32" class="edge">
 <title>lifecycle&#45;&gt;api_request_context</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7098.05,-335.92C7071.66,-320.94 7043.57,-306.78 7016,-296 6975.41,-280.12 6947.5,-309.81 6920,-276 6909.91,-263.59 6912.02,-253.87 6920,-240 6940.63,-204.12 6973.6,-176.07 7009.1,-154.48"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7010.65,-156.61 7015.76,-150.52 7007.97,-152.1 7010.65,-156.61"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7098.05,-335.92C7071.66,-320.94 7043.57,-306.78 7016,-296 6975.41,-280.12 6947.5,-309.81 6920,-276 6909.91,-263.59 6912.02,-253.87 6920,-240 6940.89,-203.67 6974.42,-175.37 7010.43,-153.67"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="7013.18" cy="-152.05" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6920,-247.5 6920,-268.5 7045,-268.5 7045,-247.5 6920,-247.5"/>
 <text text-anchor="start" x="6923.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">APIRequestContext</text>
 </g>
 <!-- lifecycle&#45;&gt;browser -->
 <g id="edge33" class="edge">
 <title>lifecycle&#45;&gt;browser</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7241.3,-516.22C7248.85,-581.58 7259.09,-670.22 7266.83,-737.28"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7264.25,-737.78 7267.71,-744.93 7269.46,-737.18 7264.25,-737.78"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7241.3,-516.22C7248.91,-582.11 7259.25,-671.66 7267.02,-738.91"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="7267.37" cy="-741.95" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7260,-634 7260,-655 7316,-655 7316,-634 7260,-634"/>
 <text text-anchor="start" x="7263" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Browser</text>
 </g>
 <!-- lifecycle&#45;&gt;har_options -->
 <g id="edge34" class="edge">
 <title>lifecycle&#45;&gt;har_options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7143.68,-516.11C7107.38,-547.31 7062.8,-578.83 7016,-596 6971.12,-612.47 6845.41,-586.29 6801,-604 6750.4,-624.18 6752.52,-652.23 6709,-685 6683.88,-703.92 6656.36,-722.91 6629.31,-740.7"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6627.65,-738.65 6622.82,-744.95 6630.53,-743.04 6627.65,-738.65"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7143.68,-516.11C7107.38,-547.31 7062.8,-578.83 7016,-596 6971.12,-612.47 6845.41,-586.29 6801,-604 6750.4,-624.18 6752.52,-652.23 6709,-685 6683.45,-704.24 6655.43,-723.55 6627.94,-741.6"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="6625.33" cy="-743.31" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6801,-634 6801,-655 6870,-655 6870,-634 6801,-634"/>
 <text text-anchor="start" x="6804.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">OptionHar</text>
 </g>
 <!-- lifecycle&#45;&gt;page -->
 <g id="edge35" class="edge">
 <title>lifecycle&#45;&gt;page</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7107.37,-335.88C7078.67,-319.53 7047.31,-304.85 7016,-296 6965.32,-281.67 5157.05,-313.44 5120,-276 5108.75,-264.63 5109.33,-251.92 5120,-240 5200.37,-150.19 5542.28,-210.01 5659,-180 5674.69,-175.97 5690.74,-171.01 5706.66,-165.52"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5707.75,-167.92 5713.96,-162.96 5706.01,-162.97 5707.75,-167.92"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7107.37,-335.88C7078.67,-319.53 7047.31,-304.85 7016,-296 6965.32,-281.67 5157.05,-313.44 5120,-276 5108.75,-264.63 5109.33,-251.92 5120,-240 5200.37,-150.19 5542.28,-210.01 5659,-180 5675.12,-175.86 5691.61,-170.74 5707.95,-165.08"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="5711.13" cy="-163.96" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5120,-247.5 5120,-268.5 5158,-268.5 5158,-247.5 5120,-247.5"/>
 <text text-anchor="start" x="5123" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Page</text>
 </g>
@@ -523,112 +523,112 @@
 <!-- lifecycle&#45;&gt;worker -->
 <g id="edge45" class="edge">
 <title>lifecycle&#45;&gt;worker</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7391.3,-350.3C7426.86,-329.33 7462.65,-304.38 7492,-276 7518.33,-250.54 7541.09,-217.78 7559.19,-186.92"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7561.5,-188.17 7562.99,-180.36 7556.96,-185.54 7561.5,-188.17"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7391.3,-350.3C7426.86,-329.33 7462.65,-304.38 7492,-276 7518.66,-250.22 7541.66,-216.95 7559.87,-185.76"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="7561.49" cy="-182.96" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7523,-247.5 7523,-268.5 7573,-268.5 7573,-247.5 7523,-247.5"/>
 <text text-anchor="start" x="7526" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Worker</text>
 </g>
 <!-- lifecycle&#45;&gt;cdp_session -->
 <g id="edge37" class="edge">
 <title>lifecycle&#45;&gt;cdp_session</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7107.7,-335.92C7078.91,-319.51 7047.44,-304.8 7016,-296 6912.34,-267 3248.11,-286.63 3141,-276 3030.15,-265 2756.34,-209.77 2649,-180 2633.5,-175.7 2617.57,-170.88 2601.64,-165.76"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2602.27,-163.2 2594.33,-163.39 2600.65,-168.2 2602.27,-163.2"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7107.7,-335.92C7078.91,-319.51 7047.44,-304.8 7016,-296 6912.34,-267 3248.11,-286.63 3141,-276 3030.15,-265 2756.34,-209.77 2649,-180 2633.08,-175.58 2616.71,-170.62 2600.35,-165.34"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="2597.18" cy="-164.31" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3141,-247.5 3141,-268.5 3224,-268.5 3224,-247.5 3141,-247.5"/>
 <text text-anchor="start" x="3144.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">CDPSession</text>
 </g>
 <!-- lifecycle&#45;&gt;clock -->
 <g id="edge38" class="edge">
 <title>lifecycle&#45;&gt;clock</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7107.69,-335.96C7078.9,-319.54 7047.43,-304.82 7016,-296 6857.13,-251.42 4205.28,-319.07 4046,-276 3977.23,-257.4 3907.84,-220.4 3851.18,-184.34"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3852.41,-182.01 3844.68,-180.17 3849.58,-186.43 3852.41,-182.01"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7107.69,-335.96C7078.9,-319.54 7047.43,-304.82 7016,-296 6857.13,-251.42 4205.28,-319.07 4046,-276 3977.79,-257.55 3908.97,-221 3852.56,-185.21"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3852.26,-185.03 3846.86,-185.13 3844.68,-180.17 3850.09,-180.07 3852.26,-185.03"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4046,-247.5 4046,-268.5 4086,-268.5 4086,-247.5 4046,-247.5"/>
 <text text-anchor="start" x="4049" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Clock</text>
 </g>
 <!-- lifecycle&#45;&gt;debugger -->
 <g id="edge39" class="edge">
 <title>lifecycle&#45;&gt;debugger</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7107.69,-335.96C7078.9,-319.55 7047.43,-304.82 7016,-296 6977.42,-285.17 4159.24,-304.43 4131,-276 4108.2,-253.04 4106.71,-219.79 4113.38,-187.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4116.02,-188.03 4115.13,-180.13 4110.9,-186.86 4116.02,-188.03"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7107.69,-335.96C7078.9,-319.55 7047.43,-304.82 7016,-296 6977.42,-285.17 4159.24,-304.43 4131,-276 4107.81,-252.65 4106.67,-218.67 4113.72,-186.18"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="4114.45" cy="-183.06" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4131,-247.5 4131,-268.5 4197,-268.5 4197,-247.5 4131,-247.5"/>
 <text text-anchor="start" x="4134" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Debugger</text>
 </g>
 <!-- lifecycle&#45;&gt;tracing -->
 <g id="edge40" class="edge">
 <title>lifecycle&#45;&gt;tracing</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7107.68,-335.97C7078.9,-319.55 7047.43,-304.83 7016,-296 6978.77,-285.54 4259.24,-303.44 4232,-276 4220.73,-264.65 4221.3,-251.89 4232,-240 4316.75,-145.81 4676.2,-211.22 4799,-180 4814.7,-176.01 4830.76,-171.08 4846.68,-165.61"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4847.77,-168.01 4853.99,-163.06 4846.04,-163.06 4847.77,-168.01"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7107.68,-335.97C7078.9,-319.55 7047.43,-304.83 7016,-296 6978.77,-285.54 4259.24,-303.44 4232,-276 4220.73,-264.65 4221.3,-251.89 4232,-240 4316.75,-145.81 4676.2,-211.22 4799,-180 4815.13,-175.9 4831.63,-170.82 4847.97,-165.17"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="4851.15" cy="-164.05" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4232,-247.5 4232,-268.5 4284,-268.5 4284,-247.5 4232,-247.5"/>
 <text text-anchor="start" x="4235" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Tracing</text>
 </g>
 <!-- lifecycle&#45;&gt;credentials -->
 <g id="edge41" class="edge">
 <title>lifecycle&#45;&gt;credentials</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7391.08,-347.79C7442.53,-326.73 7500.58,-306.76 7556,-296 7747.37,-258.84 10872.03,-303.67 11065,-276 11212.87,-254.8 11374.36,-203.16 11492.37,-159.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11493.59,-162.15 11499.72,-157.09 11491.77,-157.22 11493.59,-162.15"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7391.08,-347.79C7442.53,-326.73 7500.58,-306.76 7556,-296 7747.37,-258.84 10872.03,-303.67 11065,-276 11212.28,-254.88 11373.08,-203.57 11490.95,-160.32"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11491.27,-160.2 11494.46,-155.83 11499.72,-157.09 11496.53,-161.46 11491.27,-160.2"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="11233,-247.5 11233,-268.5 11308,-268.5 11308,-247.5 11233,-247.5"/>
 <text text-anchor="start" x="11236.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Credentials</text>
 </g>
 <!-- lifecycle&#45;&gt;error -->
 <g id="edge42" class="edge">
 <title>lifecycle&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7391.08,-347.77C7442.53,-326.7 7500.57,-306.74 7556,-296 7774.06,-253.74 11334.2,-307.97 11554,-276 11635.43,-264.15 11831.2,-199.79 11974.56,-150.27"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11975.55,-152.71 11981.78,-147.77 11973.83,-147.74 11975.55,-152.71"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7391.08,-347.77C7442.53,-326.7 7500.57,-306.74 7556,-296 7774.06,-253.74 11334.2,-307.97 11554,-276 11635.43,-264.15 11831.2,-199.79 11974.56,-150.27"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11981.78,-147.77 11975.79,-153.41 11978.4,-149.47 11974.85,-150.7 11974.69,-150.22 11974.53,-149.75 11978.07,-148.53 11973.59,-147.03 11981.78,-147.77 11981.78,-147.77"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="11695,-247.5 11695,-268.5 11777,-268.5 11777,-247.5 11695,-247.5"/>
 <text text-anchor="start" x="11698" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- lifecycle&#45;&gt;event_registry -->
 <g id="edge44" class="edge">
 <title>lifecycle&#45;&gt;event_registry</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7391.31,-350.9C7442.89,-329.91 7500.95,-309.21 7556,-296 7648.89,-273.71 7680.28,-308.79 7770,-276 7826.63,-255.3 7882.47,-219.5 7928.25,-184.88"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7929.99,-186.86 7934.36,-180.22 7926.8,-182.68 7929.99,-186.86"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7391.31,-350.9C7442.89,-329.91 7500.95,-309.21 7556,-296 7648.89,-273.71 7680.28,-308.79 7770,-276 7826.17,-255.47 7881.56,-220.09 7927.13,-185.73"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7927.2,-185.67 7928.96,-180.56 7934.36,-180.22 7932.6,-185.34 7927.2,-185.67"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7841,-247.5 7841,-268.5 7932,-268.5 7932,-247.5 7841,-247.5"/>
 <text text-anchor="start" x="7844.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">EventRegistry</text>
 </g>
 <!-- bindings&#45;&gt;evaluate_conversion -->
 <g id="edge46" class="edge">
 <title>bindings&#45;&gt;evaluate_conversion</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8325.97,-335.9C8354.35,-319.77 8385.24,-305.17 8416,-296 8443.17,-287.9 8906.35,-296.44 8926,-276 8937.09,-264.47 8937.14,-251.49 8926,-240 8849.96,-161.6 7067.89,-202.41 6961,-180 6945.2,-176.69 6929.09,-172.32 6913.11,-167.29"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6913.73,-164.73 6905.79,-164.93 6912.12,-169.73 6913.73,-164.73"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8325.97,-335.9C8354.35,-319.77 8385.24,-305.17 8416,-296 8443.17,-287.9 8906.35,-296.44 8926,-276 8937.09,-264.47 8937.14,-251.49 8926,-240 8849.96,-161.6 7067.89,-202.41 6961,-180 6945.2,-176.69 6929.09,-172.32 6913.11,-167.29"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6905.79,-164.93 6913.96,-164.01 6909.51,-165.6 6913.08,-166.75 6912.93,-167.23 6912.78,-167.7 6909.21,-166.56 6911.9,-170.44 6905.79,-164.93 6905.79,-164.93"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8934,-247.5 8934,-268.5 9014,-268.5 9014,-247.5 8934,-247.5"/>
 <text text-anchor="start" x="8937" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">parse_value</text>
 </g>
 <!-- bindings&#45;&gt;server -->
 <g id="edge48" class="edge">
 <title>bindings&#45;&gt;server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8324.62,-335.87C8353.33,-319.52 8384.69,-304.84 8416,-296 8522.99,-265.79 10309.83,-305.56 10417,-276 10453.6,-265.91 10524.8,-225.13 10590.47,-184.42"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="10592.23,-186.41 10597.22,-180.22 10589.46,-181.95 10592.23,-186.41"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8324.62,-335.87C8353.33,-319.52 8384.69,-304.84 8416,-296 8522.99,-265.79 10309.83,-305.56 10417,-276 10453.89,-265.82 10525.96,-224.47 10592.06,-183.43"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="10594.67" cy="-181.81" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="10495,-247.5 10495,-268.5 10592,-268.5 10592,-247.5 10495,-247.5"/>
 <text text-anchor="start" x="10498.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner</text>
 </g>
 <!-- bindings&#45;&gt;error -->
 <g id="edge47" class="edge">
 <title>bindings&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8324.3,-335.93C8353.09,-319.52 8384.56,-304.8 8416,-296 8464.31,-282.47 11984.27,-300.58 12028,-276 12062.84,-256.42 12088.37,-221.36 12106.32,-186.99"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12108.75,-188.01 12109.81,-180.13 12104.07,-185.63 12108.75,-188.01"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8324.3,-335.93C8353.09,-319.52 8384.56,-304.8 8416,-296 8464.31,-282.47 11984.27,-300.58 12028,-276 12063.28,-256.17 12089,-220.48 12106.99,-185.7"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="12108.46" cy="-182.81" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="12068,-247.5 12068,-268.5 12113,-268.5 12113,-247.5 12068,-247.5"/>
 <text text-anchor="start" x="12071.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result</text>
 </g>
 <!-- network&#45;&gt;page -->
 <g id="edge49" class="edge">
 <title>network&#45;&gt;page</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8507.05,-335.84C8478.43,-319.55 8447.18,-304.9 8416,-296 8281.36,-257.55 7293.17,-304.1 7156,-276 7114.6,-267.52 7109.19,-249.42 7068,-240 6643.04,-142.84 6513.76,-278.04 6089,-180 6073.3,-176.38 6057.27,-171.72 6041.4,-166.44"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6042.06,-163.9 6034.12,-163.97 6040.38,-168.87 6042.06,-163.9"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8507.05,-335.84C8478.43,-319.55 8447.18,-304.9 8416,-296 8281.36,-257.55 7293.17,-304.1 7156,-276 7114.6,-267.52 7109.19,-249.42 7068,-240 6643.04,-142.84 6513.76,-278.04 6089,-180 6072.87,-176.28 6056.4,-171.47 6040.11,-166.01"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="6036.96" cy="-164.94" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7156,-247.5 7156,-268.5 7300,-268.5 7300,-247.5 7156,-247.5"/>
 <text text-anchor="start" x="7159" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">RouteFromHarOptions</text>
 </g>
 <!-- network&#45;&gt;route_service -->
 <g id="edge50" class="edge">
 <title>network&#45;&gt;route_service</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.3,-335.91C8783.09,-319.51 8814.56,-304.79 8846,-296 8954.26,-265.72 12781.37,-289.27 12893,-276 13000.37,-263.24 13272.8,-190.62 13454.11,-140.25"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="13455.08,-142.71 13461.6,-138.17 13453.67,-137.65 13455.08,-142.71"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8754.3,-335.91C8783.09,-319.51 8814.56,-304.79 8846,-296 8954.26,-265.72 12781.37,-289.27 12893,-276 13000.37,-263.24 13272.8,-190.62 13454.11,-140.25"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="13461.6,-138.17 13455.28,-143.43 13458.12,-139.66 13454.51,-140.66 13454.37,-140.18 13454.24,-139.7 13457.85,-138.69 13453.47,-136.93 13461.6,-138.17 13461.6,-138.17"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="13069,-247.5 13069,-268.5 13277,-268.5 13277,-247.5 13069,-247.5"/>
 <text text-anchor="start" x="13072" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">RouteService, fulfill_from_service</text>
 </g>
 <!-- network&#45;&gt;route -->
 <g id="edge53" class="edge">
 <title>network&#45;&gt;route</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8755.98,-335.91C8784.36,-319.78 8815.24,-305.18 8846,-296 8899.49,-280.03 9307.21,-314.11 9348,-276 9371.82,-253.74 9379.97,-220.29 9381.1,-187.92"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9383.73,-187.71 9381.24,-180.16 9378.48,-187.62 9383.73,-187.71"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8755.98,-335.91C8784.36,-319.78 8815.24,-305.18 8846,-296 8899.49,-280.03 9307.21,-314.11 9348,-276 9371.42,-254.12 9379.69,-221.42 9381.04,-189.56"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9381.05,-189.16 9378.14,-184.6 9381.24,-180.16 9384.14,-184.73 9381.05,-189.16"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="9369,-240 9369,-276 9632,-276 9632,-240 9369,-240"/>
 <text text-anchor="start" x="9372.5" y="-261.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ContinueOptions, Route, UnrouteBehavior,</text>
 <text text-anchor="start" x="9372.5" y="-246.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">matches_pattern</text>
@@ -636,216 +636,216 @@
 <!-- network&#45;&gt;web_socket_route -->
 <g id="edge54" class="edge">
 <title>network&#45;&gt;web_socket_route</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.63,-335.9C8783.34,-319.55 8814.69,-304.86 8846,-296 8893.66,-282.51 10594.17,-311.22 10629,-276 10640.25,-264.62 10637.77,-253.38 10629,-240 10618.64,-224.19 10546.62,-191.82 10471.32,-161.27"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="10471.96,-158.7 10464.03,-158.32 10470,-163.57 10471.96,-158.7"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8754.63,-335.9C8783.34,-319.55 8814.69,-304.86 8846,-296 8893.66,-282.51 10594.17,-311.22 10629,-276 10640.25,-264.62 10637.77,-253.38 10629,-240 10618.58,-224.09 10545.75,-191.42 10469.95,-160.72"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="10466.81" cy="-159.45" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="10636,-247.5 10636,-268.5 10748,-268.5 10748,-247.5 10636,-247.5"/>
 <text text-anchor="start" x="10639" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">WebSocketRoute</text>
 </g>
 <!-- network&#45;&gt;server -->
 <g id="edge57" class="edge">
 <title>network&#45;&gt;server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.32,-335.98C8783.1,-319.57 8814.57,-304.84 8846,-296 8880.44,-286.32 11396.8,-301.4 11422,-276 11433.27,-264.64 11432.54,-252.04 11422,-240 11355.23,-163.78 11068.27,-204.7 10970,-180 10947.58,-174.36 10924.38,-167.27 10901.66,-159.55"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="10902.25,-156.98 10894.3,-157.03 10900.54,-161.95 10902.25,-156.98"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8754.32,-335.98C8783.1,-319.57 8814.57,-304.84 8846,-296 8880.44,-286.32 11396.8,-301.4 11422,-276 11433.27,-264.64 11432.54,-252.04 11422,-240 11355.23,-163.78 11068.27,-204.7 10970,-180 10947.1,-174.24 10923.37,-166.96 10900.18,-159.05"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="10897.14" cy="-158.01" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="11430,-247.5 11430,-268.5 11527,-268.5 11527,-247.5 11430,-247.5"/>
 <text text-anchor="start" x="11433.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner</text>
 </g>
 <!-- network&#45;&gt;error -->
 <g id="edge56" class="edge">
 <title>network&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.31,-335.94C8783.09,-319.53 8814.56,-304.81 8846,-296 8890.7,-283.48 12155.28,-308.92 12188,-276 12211.32,-252.54 12209.42,-219.2 12198.44,-187.28"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12200.84,-186.2 12195.8,-180.06 12195.91,-188.01 12200.84,-186.2"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8754.31,-335.94C8783.09,-319.53 8814.56,-304.81 8846,-296 8890.7,-283.48 12155.28,-308.92 12188,-276 12211.32,-252.54 12209.42,-219.2 12198.44,-187.28"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12195.8,-180.06 12201.54,-185.94 12197.56,-183.41 12198.85,-186.93 12198.38,-187.1 12197.91,-187.27 12196.62,-183.75 12195.21,-188.26 12195.8,-180.06 12195.8,-180.06"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="12205,-247.5 12205,-268.5 12287,-268.5 12287,-247.5 12205,-247.5"/>
 <text text-anchor="start" x="12208" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- network&#45;&gt;in_flight -->
 <g id="edge51" class="edge">
 <title>network&#45;&gt;in_flight</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.3,-335.93C8783.09,-319.52 8814.56,-304.8 8846,-296 8895.1,-282.26 12471.86,-299.71 12517,-276 12553.72,-256.71 12582.14,-221.71 12602.84,-187.29"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12605.34,-188.22 12606.88,-180.43 12600.82,-185.56 12605.34,-188.22"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8754.3,-335.93C8783.09,-319.52 8814.56,-304.8 8846,-296 8895.1,-282.26 12471.86,-299.71 12517,-276 12553.72,-256.71 12582.14,-221.71 12602.84,-187.29"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12606.88,-180.43 12605.99,-188.6 12605.41,-183.91 12603.51,-187.14 12603.08,-186.89 12602.65,-186.64 12604.55,-183.4 12600.17,-185.18 12606.88,-180.43 12606.88,-180.43"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="12560,-247.5 12560,-268.5 12660,-268.5 12660,-247.5 12560,-247.5"/>
 <text text-anchor="start" x="12563" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">settle_removed</text>
 </g>
 <!-- network&#45;&gt;local_utils -->
 <g id="edge52" class="edge">
 <title>network&#45;&gt;local_utils</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.3,-335.92C8783.09,-319.51 8814.56,-304.8 8846,-296 8948.75,-267.25 12582.88,-299.3 12687,-276 12769.84,-257.46 12855.95,-220.02 12926.8,-183.64"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12928.15,-185.9 12933.61,-180.13 12925.74,-181.24 12928.15,-185.9"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8754.3,-335.92C8783.09,-319.51 8814.56,-304.8 8846,-296 8948.75,-267.25 12582.88,-299.3 12687,-276 12770.34,-257.35 12856.99,-219.57 12928.09,-182.98"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="12930.95" cy="-181.51" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="12801,-247.5 12801,-268.5 12866,-268.5 12866,-247.5 12801,-247.5"/>
 <text text-anchor="start" x="12804.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">LocalUtils</text>
 </g>
 <!-- network&#45;&gt;route_params -->
 <g id="edge55" class="edge">
 <title>network&#45;&gt;route_params</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8754.3,-335.9C8783.08,-319.49 8814.56,-304.78 8846,-296 8969.34,-261.55 13328.88,-291.47 13456,-276 13514,-268.94 13836.6,-188.34 14043.33,-135.88"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="14044.01,-138.42 14050.63,-134.03 14042.72,-133.33 14044.01,-138.42"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8754.3,-335.9C8783.08,-319.49 8814.56,-304.78 8846,-296 8969.34,-261.55 13328.88,-291.47 13456,-276 13514,-268.94 13836.6,-188.34 14043.33,-135.88"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="14050.63,-134.03 14044.2,-139.15 14047.12,-135.44 14043.49,-136.36 14043.37,-135.88 14043.24,-135.39 14046.88,-134.47 14042.53,-132.6 14050.63,-134.03 14050.63,-134.03"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="13620,-247.5 13620,-268.5 13819,-268.5 13819,-247.5 13620,-247.5"/>
 <text text-anchor="start" x="13623.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">har_fulfill_options, header_array</text>
 </g>
 <!-- state&#45;&gt;server -->
 <g id="edge61" class="edge">
 <title>state&#45;&gt;server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M9221.19,-423.9C9870.16,-418.67 12274.54,-391.52 12385,-276 12396.06,-264.44 12396.07,-251.55 12385,-240 12330.55,-183.2 11047.09,-195.75 10970,-180 10947.45,-175.39 10924.21,-168.93 10901.52,-161.56"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="10902.11,-158.99 10894.17,-159.13 10900.47,-163.98 10902.11,-158.99"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M9221.19,-423.9C9870.16,-418.67 12274.54,-391.52 12385,-276 12396.06,-264.44 12396.07,-251.55 12385,-240 12330.55,-183.2 11047.09,-195.75 10970,-180 10946.96,-175.29 10923.2,-168.65 10900.04,-161.08"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="10897.02" cy="-160.08" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="12393,-247.5 12393,-268.5 12490,-268.5 12490,-247.5 12393,-247.5"/>
 <text text-anchor="start" x="12396.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner</text>
 </g>
 <!-- state&#45;&gt;credentials -->
 <g id="edge58" class="edge">
 <title>state&#45;&gt;credentials</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M9221.29,-425.54C9978.9,-427.32 13170.29,-425.87 13315,-276 13326.11,-264.49 13326.07,-251.56 13315,-240 13261.61,-184.26 12002.87,-194.18 11927,-180 11896.95,-174.38 11865.65,-166.09 11835.56,-156.79"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11836.29,-154.27 11828.35,-154.53 11834.73,-159.28 11836.29,-154.27"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M9221.29,-425.54C9978.9,-427.32 13170.29,-425.87 13315,-276 13326.11,-264.49 13326.07,-251.56 13315,-240 13261.61,-184.26 12002.87,-194.18 11927,-180 11896.57,-174.31 11864.86,-165.88 11834.42,-156.43"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="11831.21" cy="-155.43" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="13323,-247.5 13323,-268.5 13429,-268.5 13429,-247.5 13323,-247.5"/>
 <text text-anchor="start" x="13326" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">VirtualCredential</text>
 </g>
 <!-- state&#45;&gt;error -->
 <g id="edge60" class="edge">
 <title>state&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M9221.09,-423.05C10044.51,-412.65 13767.62,-360.98 13850,-276 13861.14,-264.51 13861.07,-251.55 13850,-240 13795.04,-182.69 12500.19,-193.81 12422,-180 12385.03,-173.47 12346.18,-163.34 12309.58,-152.22"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12310.23,-149.67 12302.29,-149.98 12308.69,-154.69 12310.23,-149.67"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M9221.09,-423.05C10044.51,-412.65 13767.62,-360.98 13850,-276 13861.14,-264.51 13861.07,-251.55 13850,-240 13795.04,-182.69 12500.19,-193.81 12422,-180 12385.03,-173.47 12346.18,-163.34 12309.58,-152.22"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12302.29,-149.98 12310.45,-148.95 12306.03,-150.6 12309.61,-151.7 12309.46,-152.18 12309.32,-152.66 12305.73,-151.56 12308.47,-155.41 12302.29,-149.98 12302.29,-149.98"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="13858,-247.5 13858,-268.5 13940,-268.5 13940,-247.5 13858,-247.5"/>
 <text text-anchor="start" x="13861" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- state&#45;&gt;route_params -->
 <g id="edge59" class="edge">
 <title>state&#45;&gt;route_params</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M9221.09,-423.88C10051.54,-417.62 13839.07,-383.26 14062,-276 14102.38,-256.57 14136.31,-221.34 14162.18,-186.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="14164.59,-187.96 14166.92,-180.37 14160.36,-184.85 14164.59,-187.96"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M9221.09,-423.88C10051.54,-417.62 13839.07,-383.26 14062,-276 14102.38,-256.57 14136.31,-221.34 14162.18,-186.8"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="14166.92,-180.37 14165.19,-188.41 14165.1,-183.68 14162.88,-186.7 14162.47,-186.41 14162.07,-186.11 14164.29,-183.09 14159.75,-184.41 14166.92,-180.37 14166.92,-180.37"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="14110,-247.5 14110,-268.5 14197,-268.5 14197,-247.5 14110,-247.5"/>
 <text text-anchor="start" x="14113.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">header_array</text>
 </g>
 <!-- events&#45;&gt;page -->
 <g id="edge62" class="edge">
 <title>events&#45;&gt;page</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7610.85,-348.12C7559.4,-327.07 7501.37,-307.03 7446,-296 7304.1,-267.74 6281.87,-319.87 6144,-276 6084.67,-257.12 6026.67,-220.52 5979.73,-184.82"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5981.32,-182.73 5973.77,-180.24 5978.12,-186.89 5981.32,-182.73"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7610.85,-348.12C7559.4,-327.07 7501.37,-307.03 7446,-296 7304.1,-267.74 6281.87,-319.87 6144,-276 6084.19,-256.97 6025.73,-219.92 5978.58,-183.95"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="5976.15" cy="-182.07" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6144,-247.5 6144,-268.5 6182,-268.5 6182,-247.5 6144,-247.5"/>
 <text text-anchor="start" x="6147" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Page</text>
 </g>
 <!-- events&#45;&gt;server -->
 <g id="edge64" class="edge">
 <title>events&#45;&gt;server</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7894.62,-335.85C7923.32,-319.5 7954.68,-304.83 7986,-296 8104.66,-262.56 10084.14,-300.33 10205,-276 10246.43,-267.66 10252.94,-253.45 10293,-240 10391.52,-206.92 10420.55,-213.28 10519,-180 10534.52,-174.76 10550.51,-168.94 10566.44,-162.87"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="10567.69,-165.2 10573.75,-160.06 10565.81,-160.3 10567.69,-165.2"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7894.62,-335.85C7923.32,-319.5 7954.68,-304.83 7986,-296 8104.66,-262.56 10084.14,-300.33 10205,-276 10246.43,-267.66 10252.94,-253.45 10293,-240 10391.52,-206.92 10420.55,-213.28 10519,-180 10534.93,-174.61 10551.37,-168.62 10567.73,-162.37"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="10570.95" cy="-161.13" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="10293,-247.5 10293,-268.5 10390,-268.5 10390,-247.5 10293,-247.5"/>
 <text text-anchor="start" x="10296.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ChannelOwner</text>
 </g>
 <!-- events&#45;&gt;console_message -->
 <g id="edge65" class="edge">
 <title>events&#45;&gt;console_message</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7610.79,-348.4C7559.34,-327.37 7501.32,-307.26 7446,-296 7354.63,-277.4 6696.46,-302.31 6607,-276 6542.08,-256.91 6477.12,-220.17 6424.09,-184.43"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6425.36,-182.12 6417.68,-180.08 6422.41,-186.46 6425.36,-182.12"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7610.79,-348.4C7559.34,-327.37 7501.32,-307.26 7446,-296 7354.63,-277.4 6696.46,-302.31 6607,-276 6541.55,-256.76 6476.06,-219.57 6422.8,-183.56"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="6420.16" cy="-181.76" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6607,-247.5 6607,-268.5 6719,-268.5 6719,-247.5 6607,-247.5"/>
 <text text-anchor="start" x="6610" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ConsoleMessage</text>
 </g>
 <!-- events&#45;&gt;dialog -->
 <g id="edge66" class="edge">
 <title>events&#45;&gt;dialog</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7610.92,-347.77C7559.47,-326.71 7501.42,-306.74 7446,-296 7231.65,-254.45 3733,-300.11 3516,-276 3509.82,-275.31 3084.93,-181.86 3079,-180 3063.46,-175.12 3047.48,-169.57 3031.58,-163.68"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3032.23,-161.12 3024.29,-160.95 3030.39,-166.03 3032.23,-161.12"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7610.92,-347.77C7559.47,-326.71 7501.42,-306.74 7446,-296 7231.65,-254.45 3733,-300.11 3516,-276 3509.82,-275.31 3084.93,-181.86 3079,-180 3063.04,-174.99 3046.61,-169.27 3030.3,-163.2"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="3027.1" cy="-162" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="3516,-247.5 3516,-268.5 3561,-268.5 3561,-247.5 3516,-247.5"/>
 <text text-anchor="start" x="3519.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Dialog</text>
 </g>
 <!-- events&#45;&gt;request -->
 <g id="edge72" class="edge">
 <title>events&#45;&gt;request</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7610.91,-347.84C7559.46,-326.78 7501.41,-306.8 7446,-296 7295.99,-266.75 4846.91,-292.84 4695,-276 4619.97,-267.68 4603.79,-250.25 4529,-240 4079.09,-178.36 3951.61,-281.59 3509,-180 3493.29,-176.39 3477.26,-171.75 3461.39,-166.48"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3462.05,-163.94 3454.11,-164.02 3460.37,-168.91 3462.05,-163.94"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7610.91,-347.84C7559.46,-326.78 7501.41,-306.8 7446,-296 7295.99,-266.75 4846.91,-292.84 4695,-276 4619.97,-267.68 4603.79,-250.25 4529,-240 4079.09,-178.36 3951.61,-281.59 3509,-180 3492.87,-176.3 3476.39,-171.5 3460.1,-166.05"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="3456.95" cy="-164.98" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4695,-247.5 4695,-268.5 4752,-268.5 4752,-247.5 4695,-247.5"/>
 <text text-anchor="start" x="4698.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Request</text>
 </g>
 <!-- events&#45;&gt;response -->
 <g id="edge73" class="edge">
 <title>events&#45;&gt;response</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7610.89,-347.93C7559.44,-326.87 7501.4,-306.87 7446,-296 7334.35,-274.09 5511.35,-285.9 5398,-276 5300.61,-267.5 5277.51,-255.58 5181,-240 5011.34,-212.6 4964.44,-226.52 4799,-180 4783.4,-175.61 4767.41,-170.42 4751.54,-164.77"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4752.21,-162.22 4744.26,-162.15 4750.43,-167.16 4752.21,-162.22"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7610.89,-347.93C7559.44,-326.87 7501.4,-306.87 7446,-296 7334.35,-274.09 5511.35,-285.9 5398,-276 5300.61,-267.5 5277.51,-255.58 5181,-240 5011.34,-212.6 4964.44,-226.52 4799,-180 4782.98,-175.5 4766.55,-170.14 4750.26,-164.31"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="4747.08" cy="-163.17" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5398,-247.5 5398,-268.5 5505,-268.5 5505,-247.5 5398,-247.5"/>
 <text text-anchor="start" x="5401.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ResponseObject</text>
 </g>
 <!-- events&#45;&gt;web_error -->
 <g id="edge74" class="edge">
 <title>events&#45;&gt;web_error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7610.88,-347.96C7559.43,-326.9 7501.39,-306.9 7446,-296 7395,-285.97 5621.04,-300.12 5575,-276 5537.92,-256.57 5509.03,-221.34 5487.94,-186.8"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="5490.19,-185.45 5484.09,-180.36 5485.68,-188.15 5490.19,-185.45"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7610.88,-347.96C7559.43,-326.9 7501.39,-306.9 7446,-296 7395,-285.97 5621.04,-300.12 5575,-276 5537.61,-256.41 5508.55,-220.76 5487.41,-185.94"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="5485.62" cy="-182.94" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5575,-247.5 5575,-268.5 5639,-268.5 5639,-247.5 5575,-247.5"/>
 <text text-anchor="start" x="5578" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">WebError</text>
 </g>
 <!-- events&#45;&gt;worker -->
 <g id="edge75" class="edge">
 <title>events&#45;&gt;worker</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7727,-335.93C7704.3,-289.98 7676.58,-233.87 7653.41,-186.96"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="7655.7,-185.67 7650.02,-180.11 7650.99,-188 7655.7,-185.67"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7727,-335.93C7704.06,-289.51 7676.01,-232.72 7652.7,-185.52"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="7651.35" cy="-182.8" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7693,-247.5 7693,-268.5 7743,-268.5 7743,-247.5 7693,-247.5"/>
 <text text-anchor="start" x="7696" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Worker</text>
 </g>
 <!-- events&#45;&gt;error -->
 <g id="edge63" class="edge">
 <title>events&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7894.3,-335.92C7923.09,-319.51 7954.56,-304.8 7986,-296 8191.71,-238.44 11625.18,-333.17 11831,-276 11867.14,-265.96 11937.22,-225.05 12001.72,-184.24"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12003.42,-186.27 12008.34,-180.03 12000.6,-181.83 12003.42,-186.27"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7894.3,-335.92C7923.09,-319.51 7954.56,-304.8 7986,-296 8191.71,-238.44 11625.18,-333.17 11831,-276 11867.14,-265.96 11937.22,-225.05 12001.72,-184.24"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12008.34,-180.03 12003.82,-186.9 12005.44,-182.46 12002.28,-184.47 12002.01,-184.05 12001.74,-183.63 12004.91,-181.62 12000.2,-181.2 12008.34,-180.03 12008.34,-180.03"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="11908,-247.5 11908,-268.5 11990,-268.5 11990,-247.5 11908,-247.5"/>
 <text text-anchor="start" x="11911" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Error, Result</text>
 </g>
 <!-- events&#45;&gt;event_registry -->
 <g id="edge68" class="edge">
 <title>events&#45;&gt;event_registry</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7915.05,-335.99C7938.55,-322.22 7962.79,-308.45 7986,-296 8004.22,-286.23 8016.59,-293.24 8028,-276 8044.93,-250.42 8050.35,-218.21 8050.49,-187.87"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8053.12,-187.67 8050.42,-180.2 8047.87,-187.72 8053.12,-187.67"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7915.05,-335.99C7938.55,-322.22 7962.79,-308.45 7986,-296 8004.22,-286.23 8016.59,-293.24 8028,-276 8045.22,-249.99 8050.54,-217.12 8050.5,-186.33"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="8050.46" cy="-183.2" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8043,-247.5 8043,-268.5 8188,-268.5 8188,-247.5 8043,-247.5"/>
 <text text-anchor="start" x="8046.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">EventRegistry, Handler</text>
 </g>
 <!-- events&#45;&gt;download -->
 <g id="edge67" class="edge">
 <title>events&#45;&gt;download</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7898.34,-335.86C7926.14,-320.11 7956.19,-305.67 7986,-296 8083.18,-264.47 8119.42,-312.1 8215,-276 8269.29,-255.49 8322.13,-219.72 8365.21,-185.06"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8367.06,-186.94 8371.23,-180.18 8363.75,-182.87 8367.06,-186.94"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7898.34,-335.86C7926.14,-320.11 7956.19,-305.67 7986,-296 8083.18,-264.47 8119.42,-312.1 8215,-276 8269.85,-255.28 8323.21,-218.98 8366.53,-184"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="8368.9" cy="-182.07" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8283,-247.5 8283,-268.5 8350,-268.5 8350,-247.5 8283,-247.5"/>
 <text text-anchor="start" x="8286.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Download</text>
 </g>
 <!-- events&#45;&gt;event_value -->
 <g id="edge69" class="edge">
 <title>events&#45;&gt;event_value</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7896.64,-335.85C7924.85,-319.83 7955.5,-305.29 7986,-296 8069.22,-270.64 8291.38,-291.45 8377,-276 8516.44,-250.84 8547.86,-228.48 8681,-180 8696.47,-174.37 8712.47,-168.27 8728.43,-162"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8729.74,-164.31 8735.75,-159.11 8727.81,-159.42 8729.74,-164.31"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7896.64,-335.85C7924.85,-319.83 7955.5,-305.29 7986,-296 8069.22,-270.64 8291.38,-291.45 8377,-276 8516.44,-250.84 8547.86,-228.48 8681,-180 8697.03,-174.16 8713.62,-167.83 8730.15,-161.33"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="8732.96" cy="-160.21" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8521,-247.5 8521,-268.5 8596,-268.5 8596,-247.5 8521,-247.5"/>
 <text text-anchor="start" x="8524.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">EventValue</text>
 </g>
 <!-- events&#45;&gt;event_waiter -->
 <g id="edge70" class="edge">
 <title>events&#45;&gt;event_waiter</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7894.63,-335.92C7923.34,-319.56 7954.69,-304.87 7986,-296 8075.43,-270.65 9573.54,-312.55 9659,-276 9703.52,-256.96 9742.63,-221.17 9773,-186.1"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9775.31,-187.43 9778.18,-180.02 9771.32,-184.03 9775.31,-187.43"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7894.63,-335.92C7923.34,-319.56 7954.69,-304.87 7986,-296 8075.43,-270.65 9573.54,-312.55 9659,-276 9703.15,-257.12 9741.99,-221.76 9772.25,-186.97"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9772.34,-186.86 9772.98,-181.49 9778.18,-180.02 9777.54,-185.39 9772.34,-186.86"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="9712,-247.5 9712,-268.5 9792,-268.5 9792,-247.5 9712,-247.5"/>
 <text text-anchor="start" x="9715" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">EventWaiter</text>
 </g>
 <!-- events&#45;&gt;frame -->
 <g id="edge71" class="edge">
 <title>events&#45;&gt;frame</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7894.31,-335.96C7923.1,-319.55 7954.57,-304.82 7986,-296 8142.4,-252.1 10754.78,-323.93 10910,-276 10970.5,-257.32 11029.8,-220.51 11077.76,-184.62"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11079.44,-186.63 11083.85,-180.02 11076.28,-182.44 11079.44,-186.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7894.31,-335.96C7923.1,-319.55 7954.57,-304.82 7986,-296 8142.4,-252.1 10754.78,-323.93 10910,-276 10970.99,-257.16 11030.77,-219.91 11078.93,-183.74"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="11081.45" cy="-181.83" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="10992,-247.5 10992,-268.5 11038,-268.5 11038,-247.5 10992,-247.5"/>
 <text text-anchor="start" x="10995" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Frame</text>
 </g>
 <!-- playwright_rs_site_e2e&#45;&gt;options -->
 <g id="edge1" class="edge">
 <title>playwright_rs_site_e2e&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5746.1,-744.98C5813.84,-700.27 5898.86,-646.68 5978,-604 6050.27,-565.02 6132.79,-526.94 6203.5,-496.15"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6204.91,-498.4 6210.74,-493 6202.82,-493.58 6204.91,-498.4"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M5746.1,-744.98C5813.84,-700.27 5898.86,-646.68 5978,-604 6049.83,-565.26 6131.79,-527.4 6202.21,-496.71"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6202.49,-496.59 6205.42,-492.04 6210.74,-493 6207.81,-497.54 6202.49,-496.59"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="5978,-634 5978,-655 6037,-655 6037,-634 5978,-634"/>
 <text text-anchor="start" x="5981.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Viewport</text>
 </g>
 <!-- examples&#45;&gt;options -->
 <g id="edge2" class="edge">
 <title>examples&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6050.31,-744.87C6056.23,-699.34 6069.37,-645.05 6098,-604 6125.3,-564.86 6164.31,-532.28 6204.33,-506.18"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6205.87,-508.31 6210.76,-502.05 6203.03,-503.9 6205.87,-508.31"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M6050.31,-744.87C6056.23,-699.34 6069.37,-645.05 6098,-604 6124.96,-565.34 6163.35,-533.08 6202.85,-507.15"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6203.19,-506.93 6205.35,-501.97 6210.76,-502.05 6208.6,-507.01 6203.19,-506.93"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6098,-634 6098,-655 6308,-655 6308,-634 6098,-634"/>
 <text text-anchor="start" x="6101" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">BrowserContextOptions, Viewport</text>
 </g>
 <!-- tests&#45;&gt;options -->
 <g id="edge3" class="edge">
 <title>tests&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7688.31,-744.91C7672.07,-694.25 7643.39,-634.92 7594,-604 7570.27,-589.14 6612.43,-605.26 6586,-596 6541.21,-580.3 6498.61,-551.1 6463.33,-521.32"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6464.69,-519.03 6457.28,-516.15 6461.28,-523.02 6464.69,-519.03"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7688.31,-744.91C7672.07,-694.25 7643.39,-634.92 7594,-604 7570.27,-589.14 6612.43,-605.26 6586,-596 6541.58,-580.43 6499.32,-551.58 6464.21,-522.06"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6464.13,-521.99 6458.76,-521.36 6457.28,-516.15 6462.65,-516.79 6464.13,-521.99"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7661,-626.5 7661,-662.5 7887,-662.5 7887,-626.5 7661,-626.5"/>
 <text text-anchor="start" x="7664" y="-648.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">BrowserContextOptions, RecordHar,</text>
 <text text-anchor="start" x="7664" y="-633.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">RecordVideo, Viewport</text>
@@ -853,8 +853,8 @@
 <!-- tests&#45;&gt;state -->
 <g id="edge4" class="edge">
 <title>tests&#45;&gt;state</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7868.04,-763.24C7886.37,-756.49 7904.96,-750.22 7923,-745 8073.34,-701.47 8117.89,-721.86 8270,-685 8386.81,-656.7 8409.44,-623.7 8528,-604 8562.87,-598.21 8812.75,-607.98 8846,-596 8890.44,-580 8932.82,-550.9 8968.01,-521.32"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8970.04,-523.04 8974.05,-516.18 8966.64,-519.04 8970.04,-523.04"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M7868.04,-763.24C7886.37,-756.49 7904.96,-750.22 7923,-745 8073.34,-701.47 8117.89,-721.86 8270,-685 8386.81,-656.7 8409.44,-623.7 8528,-604 8562.87,-598.21 8812.75,-607.98 8846,-596 8890.08,-580.13 8932.12,-551.38 8967.14,-522.05"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8967.19,-522.01 8968.68,-516.81 8974.05,-516.18 8972.56,-521.38 8967.19,-522.01"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8528,-604 8528,-685 8775,-685 8775,-604 8528,-604"/>
 <text text-anchor="start" x="8531.5" y="-670.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">ClearCookiesOptions, Cookie,</text>
 <text text-anchor="start" x="8531.5" y="-655.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Geolocation, GrantPermissionsOptions,</text>
@@ -865,64 +865,64 @@
 <!-- api_request_context&#45;&gt;state -->
 <g id="edge5" class="edge">
 <title>api_request_context&#45;&gt;state</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7336.24,-164.87C7354.41,-170.97 7372.91,-176.24 7391,-180 7483.04,-199.15 10709.11,-172.93 10775,-240 10786.21,-251.41 10785.81,-264.21 10775,-276 10671.81,-388.56 9639.79,-416.37 9228.69,-423"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9228.65,-420.38 9221.19,-423.12 9228.73,-425.63 9228.65,-420.38"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7336.24,-164.87C7354.41,-170.97 7372.91,-176.24 7391,-180 7483.04,-199.15 10709.11,-172.93 10775,-240 10786.21,-251.41 10785.81,-264.21 10775,-276 10671.7,-388.67 9637.76,-416.42 9227.48,-423.02"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="9224.19" cy="-423.07" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="10783,-247.5 10783,-268.5 10883,-268.5 10883,-247.5 10783,-247.5"/>
 <text text-anchor="start" x="10786" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">HttpCredentials</text>
 </g>
 <!-- browser&#45;&gt;options -->
 <g id="edge6" class="edge">
 <title>browser&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7117.85,-817.02C6927.85,-794.33 6625.08,-749.37 6532,-685 6475.05,-645.62 6434.2,-578.88 6407.9,-523.15"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6410.14,-521.75 6404.6,-516.06 6405.38,-523.97 6410.14,-521.75"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7117.85,-817.02C6927.85,-794.33 6625.08,-749.37 6532,-685 6474.59,-645.3 6433.53,-577.79 6407.26,-521.79"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="6405.86" cy="-518.78" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6532,-634 6532,-655 6682,-655 6682,-634 6532,-634"/>
 <text text-anchor="start" x="6535" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">BrowserContextOptions</text>
 </g>
 <!-- browser&#45;&gt;state -->
 <g id="edge7" class="edge">
 <title>browser&#45;&gt;state</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M7330.05,-744.86C7365.6,-693.33 7417.83,-633.08 7482,-604 7516.51,-588.36 8810.23,-608.49 8846,-596 8890.81,-580.35 8933.41,-551.15 8968.69,-521.37"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8970.74,-523.07 8974.74,-516.2 8967.33,-519.08 8970.74,-523.07"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M7330.05,-744.86C7365.6,-693.33 7417.83,-633.08 7482,-604 7516.51,-588.36 8810.23,-608.49 8846,-596 8891.36,-580.16 8934.46,-550.43 8970,-520.27"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="8972.46" cy="-518.16" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="7482,-634 7482,-655 7567,-655 7567,-634 7482,-634"/>
 <text text-anchor="start" x="7485.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">StorageState</text>
 </g>
 <!-- browser_type&#45;&gt;options -->
 <g id="edge8" class="edge">
 <title>browser_type&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8079.13,-744.96C8039.36,-693.29 7981.83,-632.86 7914,-604 7880.06,-589.56 6620.83,-608.17 6586,-596 6541.19,-580.35 6498.6,-551.15 6463.31,-521.37"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6464.67,-519.08 6457.27,-516.2 6461.26,-523.07 6464.67,-519.08"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M8079.13,-744.96C8039.36,-693.29 7981.83,-632.86 7914,-604 7880.06,-589.56 6620.83,-608.17 6586,-596 6541.56,-580.48 6499.3,-551.63 6464.19,-522.11"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6464.11,-522.04 6458.74,-521.4 6457.27,-516.2 6462.64,-516.84 6464.11,-522.04"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8026,-634 8026,-655 8176,-655 8176,-634 8026,-634"/>
 <text text-anchor="start" x="8029" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">BrowserContextOptions</text>
 </g>
 <!-- browser_type&#45;&gt;state -->
 <g id="edge9" class="edge">
 <title>browser_type&#45;&gt;state</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M8298.05,-823.19C8438.33,-808.05 8643.94,-771.78 8802,-685 8875.14,-644.85 8941.46,-577.9 8988.68,-522.26"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="8990.94,-523.65 8993.76,-516.23 8986.92,-520.27 8990.94,-523.65"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M8298.05,-823.19C8438.33,-808.05 8643.94,-771.78 8802,-685 8875.73,-644.52 8942.53,-576.81 8989.82,-520.91"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="8991.83" cy="-518.52" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="8906,-634 8906,-655 8991,-655 8991,-634 8906,-634"/>
 <text text-anchor="start" x="8909.5" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">StorageState</text>
 </g>
 <!-- har_options&#45;&gt;options -->
 <g id="edge10" class="edge">
 <title>har_options&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M6383.1,-744.81C6369.14,-726.45 6356.81,-706.21 6349,-685 6330.16,-633.84 6334.1,-573.25 6343.48,-523.65"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6346.09,-523.97 6344.96,-516.1 6340.94,-522.95 6346.09,-523.97"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M6383.1,-744.81C6369.14,-726.45 6356.81,-706.21 6349,-685 6329.96,-633.32 6334.19,-572.01 6343.77,-522.13"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="6344.38" cy="-519.04" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="6349,-634 6349,-655 6421,-655 6421,-634 6349,-634"/>
 <text text-anchor="start" x="6352" y="-640.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">RecordHar</text>
 </g>
 <!-- page&#45;&gt;options -->
 <g id="edge11" class="edge">
 <title>page&#45;&gt;options</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M5713.85,-163.83C5695.62,-170.15 5677.09,-175.75 5659,-180 5470.51,-224.3 4662.68,-132.8 4793,-276 4886.57,-378.83 5815.84,-412.16 6203.02,-421.64"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="6203.1,-424.27 6210.66,-421.83 6203.22,-419.02 6203.1,-424.27"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M5713.85,-163.83C5695.62,-170.15 5677.09,-175.75 5659,-180 5470.51,-224.3 4662.68,-132.8 4793,-276 4886.69,-378.95 5818.12,-412.24 6204.45,-421.68"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="6207.66" cy="-421.75" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="4793,-247.5 4793,-268.5 4852,-268.5 4852,-247.5 4793,-247.5"/>
 <text text-anchor="start" x="4796.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Viewport</text>
 </g>
 <!-- route_service&#45;&gt;state -->
 <g id="edge12" class="edge">
 <title>route_service&#45;&gt;state</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M13794.1,-123.74C13911.36,-153.82 14036.27,-204.6 13967,-276 13882.71,-362.89 10080.32,-412.95 9228.93,-423.08"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="9228.67,-420.46 9221.2,-423.17 9228.73,-425.71 9228.67,-420.46"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M13794.1,-123.74C13911.36,-153.82 14036.27,-204.6 13967,-276 13882.66,-362.94 10075.66,-413.01 9227.37,-423.1"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="9224.2" cy="-423.13" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="13986,-247.5 13986,-268.5 14035,-268.5 14035,-247.5 13986,-247.5"/>
 <text text-anchor="start" x="13989.5" y="-253.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Cookie</text>
 </g>

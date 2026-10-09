@@ -98,48 +98,48 @@
 <!-- playwright_rs&#45;&gt;playwright_rs_macros -->
 <g id="edge4" class="edge">
 <title>playwright_rs&#45;&gt;playwright_rs_macros</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M600.87,-1065.25C522.79,-1045.75 428.69,-1022.24 349.23,-1002.4"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="349.5,-999.76 341.59,-1000.49 348.23,-1004.85 349.5,-999.76"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M600.87,-1065.25C522.32,-1045.63 427.55,-1021.96 347.79,-1002.04"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="344.5" cy="-1001.21" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="455.5,-1049 455.5,-1070 502.5,-1070 502.5,-1049 455.5,-1049"/>
 <text text-anchor="start" x="459" y="-1055.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">locator</text>
 </g>
 <!-- playwright_rs&#45;&gt;playwright_rs_trace -->
 <g id="edge5" class="edge">
 <title>playwright_rs&#45;&gt;playwright_rs_trace</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M639.87,-1014.98C542.33,-941.89 405.17,-839.11 305.96,-764.76"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="307.36,-762.53 299.78,-760.13 304.21,-766.73 307.36,-762.53"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M639.87,-1014.98C541.94,-941.6 404.07,-838.29 304.78,-763.88"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="302.18" cy="-761.93" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="417,-939 417,-960 541,-960 541,-939 417,-939"/>
 <text text-anchor="start" x="420" y="-945.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">playwright_rs_trace</text>
 </g>
 <!-- playwright_rs&#45;&gt;node_driver -->
 <g id="edge6" class="edge">
 <title>playwright_rs&#45;&gt;node_driver</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M860.21,-1195.13C939.66,-1268.04 1051.22,-1370.43 1132.14,-1444.69"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1130.61,-1446.85 1137.91,-1449.98 1134.16,-1442.98 1130.61,-1446.85"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M860.21,-1195.13C939.97,-1268.33 1052.12,-1371.25 1133.11,-1445.58"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="1135.7" cy="-1447.95" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="981,-1322 981,-1343 1008,-1343 1008,-1322 981,-1322"/>
 <text text-anchor="start" x="984.5" y="-1329.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- playwright_rs_fuzz&#45;&gt;playwright_rs -->
 <g id="edge2" class="edge">
 <title>playwright_rs_fuzz&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M299.62,-470.4C319.66,-487.61 339.57,-506.16 357,-525 500.02,-679.59 632.53,-887.82 704.26,-1008.13"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="702.17,-1009.75 708.26,-1014.85 706.68,-1007.07 702.17,-1009.75"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M299.62,-470.4C319.66,-487.61 339.57,-506.16 357,-525 500.02,-679.59 632.53,-887.82 704.26,-1008.13"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="708.26,-1014.85 701.52,-1010.13 705.91,-1011.89 704,-1008.66 704.43,-1008.41 704.86,-1008.15 706.77,-1011.38 707.33,-1006.68 708.26,-1014.85 708.26,-1014.85"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="465.5,-751 465.5,-772 492.5,-772 492.5,-751 465.5,-751"/>
 <text text-anchor="start" x="469" y="-758.3" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">[...]</text>
 </g>
 <!-- xtask&#45;&gt;playwright_rs -->
 <g id="edge3" class="edge">
 <title>xtask&#45;&gt;playwright_rs</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M341.59,-1209.51C420.07,-1189.91 514.19,-1166.4 593.27,-1146.65"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="594.23,-1149.11 600.87,-1144.75 592.96,-1144.02 594.23,-1149.11"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M341.59,-1209.51C420.54,-1189.79 515.33,-1166.12 594.7,-1146.29"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="597.96" cy="-1145.47" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="436,-1190 436,-1211 522,-1211 522,-1190 436,-1190"/>
 <text text-anchor="start" x="439" y="-1196.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">playwright_rs</text>
 </g>
 <!-- node_driver&#45;&gt;browsers -->
 <g id="edge7" class="edge">
 <title>node_driver&#45;&gt;browsers</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1067.63,-1586.22C875.75,-1638.89 563.1,-1724.71 364.54,-1779.21"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="363.77,-1776.7 357.23,-1781.22 365.16,-1781.76 363.77,-1776.7"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1067.63,-1586.22C875.27,-1639.02 561.55,-1725.13 363.07,-1779.61"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="360.12" cy="-1780.42" rx="3" ry="3"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="671.5,-1713 671.5,-1753 850.5,-1753 850.5,-1713 671.5,-1713"/>
 <text text-anchor="start" x="675" y="-1738.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">drives</text>
 <text text-anchor="start" x="675" y="-1719.4" font-family="Arial" font-size="12.00" fill="#c9c9c9">[ CDP, Juggler, WebKit protocol ]</text>
