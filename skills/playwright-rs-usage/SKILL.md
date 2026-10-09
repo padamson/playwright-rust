@@ -3,7 +3,7 @@ name: playwright-rs-usage
 description: Procedural reference for using playwright-rs in Rust browser-automation code — object model (Browser/Context/Page/Locator), the `locator!()` macro, builder pattern for options, auto-wait semantics, adding the crate and installing its browsers, and how to capture / inspect traces for failure diagnosis. Use when writing tests or scripts with playwright-rs as a dependency. Loaded automatically when the current repo has playwright-rs in its Cargo.toml.
 license: Apache-2.0
 metadata:
-  version: "0.15.2"
+  version: "0.15.3"
 ---
 
 # Using playwright-rs
@@ -96,6 +96,15 @@ surfaces later as a browser that will not launch. Two traps worth naming:
 `cargo run --example` only resolves examples in the current package, so a
 consumer copies the file into their own `examples/` first; and Linux is not
 special-cased, so a call that omits the flag there installs no libraries.
+
+If CI caches the browsers (`~/.cache/ms-playwright`) and launches WebKit,
+put the runner image in the cache key and its `restore-keys` prefix.
+WebKit is built per OS release, and the installer skips a revision that is
+already on disk, so a key on `runner.os` alone hands one Ubuntu's WebKit to
+another, where it fails to start on a missing `libicudata`. The image is
+`$ImageOS` (`ubuntu24`, `ubuntu26`, `macos15`), a runner variable rather
+than part of the `env` context, so read it in a step first:
+`echo "os=$ImageOS" >> "$GITHUB_OUTPUT"`.
 
 **The driver, which the build script downloads.** The Playwright server and
 its Node runtime, about 130 MB, are assembled when the crate first compiles,
