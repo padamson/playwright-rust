@@ -115,6 +115,13 @@ jobs:
     - name: Cache Cargo
       uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
 
+    # Browser builds are per OS release (WebKit links its ICU), so the cache
+    # key names the runner image.
+    - name: Name the runner image
+      id: image
+      shell: bash
+      run: echo "os=$ImageOS" >> "$GITHUB_OUTPUT"
+
     # The driver is assembled by build.rs into the user cache beside the
     # browsers, so one cache entry holds both and they stay on one key.
     - name: Cache Playwright driver and browsers (Linux/macOS)
@@ -126,9 +133,9 @@ jobs:
           ~/.cache/playwright-rust
           ~/Library/Caches/ms-playwright
           ~/Library/Caches/playwright-rust
-        key: ${{ runner.os }}-playwright-browsers-1.63.0-v3
+        key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.63.0-v3
         restore-keys: |
-          ${{ runner.os }}-playwright-browsers-1.63.0-
+          ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.63.0-
 
     - name: Cache Playwright driver and browsers (Windows)
       if: runner.os == 'Windows'
@@ -137,9 +144,9 @@ jobs:
         path: |
           ~\AppData\Local\ms-playwright
           ~\AppData\Local\playwright-rust
-        key: ${{ runner.os }}-playwright-browsers-1.63.0-v3
+        key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.63.0-v3
         restore-keys: |
-          ${{ runner.os }}-playwright-browsers-1.63.0-
+          ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.63.0-
 
     - name: Install cargo-nextest
       uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21

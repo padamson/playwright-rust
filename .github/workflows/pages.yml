@@ -100,6 +100,13 @@ jobs:
         with:
           tool: trunk
 
+      # Browser builds are per OS release (WebKit links its ICU), so the cache
+      # key names the runner image.
+      - name: Name the runner image
+        id: image
+        shell: bash
+        run: echo "os=$ImageOS" >> "$GITHUB_OUTPUT"
+
       # The driver is assembled by build.rs into the user cache beside the
       # browsers, so one cache entry holds both.
       - name: Cache Playwright driver and browsers
@@ -108,8 +115,8 @@ jobs:
           path: |
             ~/.cache/ms-playwright
             ~/.cache/playwright-rust
-          key: ${{ runner.os }}-playwright-browsers-1.63.0-v3
-          restore-keys: ${{ runner.os }}-playwright-browsers-1.63.0-
+          key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.63.0-v3
+          restore-keys: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.63.0-
 
       - name: Format + lint site crates
         run: |
