@@ -331,6 +331,13 @@ user-id = 55123 # rust-lang-owner
 start = "2024-08-15"
 end = "2027-07-25"
 
+[[trusted.libc]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:rust-lang/libc"
+start = "2026-10-02"
+end = "2027-10-10"
+notes = "libc moved to crates.io trusted publishing with 0.2.190; the user-id trust entry for rust-lang-owner no longer matches its releases"
+
 [[trusted.memchr]]
 criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
