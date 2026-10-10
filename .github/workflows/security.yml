@@ -70,9 +70,12 @@ jobs:
     # binaries, and cargo-vet's newest release with binaries is 0.10.0, which
     # cannot parse the audits file that 0.10.2 (crates.io) writes. No cache
     # step here, so the restored-binary failure `cargo install` has elsewhere
-    # does not apply.
+    # does not apply. `--locked` builds against cargo-vet's own Cargo.lock.
+    # No version pin on purpose: Dependabot cannot bump a `run:` line, and
+    # cargo-vet refuses a store written by a newer version, so a pinned CI
+    # copy older than a contributor's local one goes red.
     - name: Install cargo-vet
-      run: cargo install cargo-vet
+      run: cargo install cargo-vet --locked
 
     - name: Run cargo vet
       run: cargo vet
