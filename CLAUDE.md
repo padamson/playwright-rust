@@ -310,8 +310,9 @@ Install once: `cargo install cargo-mutants`.
   the authoritative thing to diff when bumping the driver. It is **not
   in the driver we assemble** (the `playwright-core` npm package ships no
   schema), so it is vendored in [`protocol-spec/`](protocol-spec/) at the
-  pinned tag, ~19 files (`frame.yml`, `page.yml`, `browserContext.yml`,
-  ...). A bump refreshes it with `cargo xtask sync-protocol-spec` and
+  pinned tag: 19 `.yml` files (`frame.yml`, `page.yml`, `browserContext.yml`,
+  ...) plus a `MANIFEST` of their hashes and the `DRIVER_VERSION` they came
+  from. A bump refreshes it with `cargo xtask sync-protocol-spec` and
   **the resulting `git diff protocol-spec` is the review**; `--check`
   runs offline in CI and pre-commit so the vendored copy cannot lag the
   pinned driver. This matters because the driver's validator drops

@@ -87,6 +87,30 @@ The rendered tree is published with every version of the landing site at
 building, and a `site-e2e` gate checks the deployed tree against the committed
 model.
 
+## Splitting a large module
+
+`page.rs` and `browser_context.rs` were each cut into a directory: `mod.rs`
+keeps the struct, its field types and the re-exports; every `impl Page` or
+`impl BrowserContext` block lives in a child file with the option types it
+owns. What those cuts, and the handler-registry
+unification before them, taught:
+
+- Unifying duplicated code surfaces semantic drift, not only boilerplate:
+  the registry pass found waiters drained LIFO against docs promising FIFO
+  and dispatchers waking waiters and handlers in opposite orders. Budget
+  review for behavior differences, not just for the move.
+- Children import what they use explicitly; a `use super::*` glob hides each
+  file's dependencies.
+- rustdoc renders the parent module's own `impl` after every child's, so the
+  block that should read first must also be a child, declared first.
+- rustfmt sorts adjacent `mod` lines; a comment between two of them holds the
+  rustdoc order.
+- A sorted line-multiset diff of the old file against the new ones proves the
+  cut moved every line and invented none.
+
+The next candidates are `protocol/frame.rs` (about 2700 lines) and
+`protocol/locator.rs` (about 2400), the two largest files left in the crate.
+
 ## Running tests
 
 ```bash
@@ -95,6 +119,26 @@ cargo nextest run -p playwright-rs --lib              # unit tests only (~2s, no
 cargo nextest run -p playwright-rs -E 'test(locator)' # pattern match
 cargo test --doc --workspace                          # doc-tests (compile-checked)
 ```
+
+## Mutation testing
+
+`scripts/mutants.sh` runs `cargo mutants --in-diff` over the lines a commit
+touched. `.cargo/mutants.toml` limits the mutated files to those with
+unit-test coverage and the kill set to the browser-free test binaries;
+[CLAUDE.md](../CLAUDE.md#mutation-testing) has the scope and the CI cadence.
+
+The wrapper files (`protocol/frame.rs`, `protocol/page/navigation.rs`, ...)
+are outside that scope because only the browser suite can kill their mutants. To
+mutate one locally, bypass the config and have the browsers installed:
+
+```bash
+cargo mutants --no-config --list -f crates/playwright/src/protocol/frame.rs
+```
+
+`--list` prints the mutants and runs nothing (184 for `frame.rs`). Without
+it, every mutant rebuilds the crate and runs the whole suite, browsers
+included: minutes per mutant, hours per file. Narrow with `--re <fn>` and
+set `--timeout`, and never put such a run in CI.
 
 ## Running examples
 

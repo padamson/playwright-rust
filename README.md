@@ -21,11 +21,8 @@ Rust is emerging as a serious web development language, AI coding
 assistants are making it accessible to more developers, and test-driven
 development works well with AI agents. Those trends need production-quality
 E2E testing, and `playwright-rust` fills that gap ([WHY.md](WHY.md) has the
-fuller case). The goal is official-quality Rust bindings following the same
-architecture as
-[playwright-python](https://github.com/microsoft/playwright-python),
-playwright-java, and playwright-dotnet; see the
-[roadmap](docs/roadmap.md) for what 1.0 means and what gates it.
+fuller case). The goal is official-quality Rust bindings; the
+[roadmap](docs/roadmap.md) says what 1.0 means and what gates it.
 
 ## Quick comparison: Python vs Rust
 
@@ -121,9 +118,9 @@ Non-persistent WebKit works on Windows; use WSL or macOS/Linux otherwise.
     Chromium      Firefox       WebKit
 ```
 
-The crate is a thin JSON-RPC client to the same server the official
-bindings use, so feature parity and protocol maintenance come from upstream
-rather than being reimplemented here. The API diverges only where Rust
+The crate is a thin JSON-RPC client to the same server playwright-python,
+playwright-java and playwright-dotnet use, so feature parity and protocol
+maintenance come from upstream rather than being reimplemented here. The API diverges only where Rust
 idiom allows a better shape (`Result<T>`, builders for option-heavy
 methods, compile-time-validated selectors).
 

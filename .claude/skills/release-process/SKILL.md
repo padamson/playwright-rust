@@ -279,7 +279,11 @@ pipeline rather than bolting onto this workflow.
    can install. Keep it in the "cut, awaiting tag" phrasing until the
    publish is verified in steps 1-2, then flip it in one commit.
 6. **Update tracking issues** if this release closes any
-7. **Announce** if applicable (depends on release significance)
+7. **Reconcile the parked backlog.** Anything this release shipped that
+   was parked as a refactor, a deferred follow-up or a measured item gets
+   its body deleted and a ledger row added where it was parked, in this
+   session. Left to a later audit, shipped work keeps reading as open.
+8. **Announce** if applicable (depends on release significance)
 
 ## Common pitfalls
 
