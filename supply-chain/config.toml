@@ -29,13 +29,13 @@ url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/audits.toml"
 
 [policy.playwright-rs]
-audit-as-crates-io = true
+audit-as-crates-io = false
 
 [policy.playwright-rs-macros]
-audit-as-crates-io = true
+audit-as-crates-io = false
 
 [policy.playwright-rs-trace]
-audit-as-crates-io = true
+audit-as-crates-io = false
 
 [[exemptions.axum]]
 version = "0.8.9"
@@ -247,18 +247,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.pin-project-lite]]
 version = "0.2.17"
-criteria = "safe-to-deploy"
-
-[[exemptions.playwright-rs]]
-version = "0.18.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.playwright-rs-macros]]
-version = "0.1.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.playwright-rs-trace]]
-version = "0.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.plotters]]

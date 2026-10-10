@@ -86,9 +86,9 @@ table above; the workflow is otherwise identical.
    - `playwright-rs-macros = { version = "...", path = "..." }` for the macros bump
    - `playwright-rs-trace = { version = "...", path = "..." }` for the trace bump — **two lines carry it**, the optional dependency behind the `trace` feature and the dev-dependency the tracing integration test uses, and both need the new version. Cargo does not fall back to crates.io for a path dependency whose version requirement fails, so a stale line breaks every workspace command until it is updated
    - `xtask`'s `playwright-rs = { path = "...", version = "..." }` if the main crate version changes (cargo-deny's no-wildcard rule)
-5. **Refresh `cargo vet`** — see the **supply-chain** skill for the
-   `cargo vet regenerate unpublished` / `cargo vet regenerate exemptions`
-   flow
+5. **Run `cargo vet`.** A version bump needs no change in `supply-chain/`,
+   since our own crates are `audit-as-crates-io = false` (see the
+   **supply-chain** skill)
 6. **Update the relevant CHANGELOG** (`crates/<crate>/CHANGELOG.md`):
    - Rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
    - Add a fresh empty `## [Unreleased]` heading above
@@ -261,12 +261,12 @@ pipeline rather than bolting onto this workflow.
    in the workflow header.
 
    Verify after: `curl -s https://playwright-rust.dev/versions.json`
-4. **First-time publish bookkeeping** — if this is the first crates.io
-   release of a workspace crate, add
-   `[policy.<crate>] audit-as-crates-io = true` to
-   `supply-chain/config.toml` in a follow-up commit. Cannot be done
-   pre-release because `cargo vet` rejects the policy until the crate
-   exists on crates.io.
+4. **First-time publish bookkeeping** — if this was the first crates.io
+   release of a workspace crate, confirm `supply-chain/config.toml` has
+   `[policy.<crate>] audit-as-crates-io = false`. Without it `cargo vet`
+   fails every push once the crate is on crates.io. It belongs in the
+   commit that adds the crate: vet accepts a `false` policy before the
+   first publish (it was `true` that it rejected).
 5. **Flip the release-state doc** — one follow-up commit, `[skip ci]`,
    for a minor release that closed driver surface:
    `docs/implementation-plans/v1.0-gap-analysis.md`, the version's section
@@ -287,8 +287,8 @@ pipeline rather than bolting onto this workflow.
 
 ## Common pitfalls
 
-- **Hand-editing `supply-chain/imports.lock`** — never; use
-  `cargo vet regenerate unpublished` (see supply-chain skill)
+- **Hand-editing `supply-chain/imports.lock`** — never; it is generated
+  by `cargo vet` (see supply-chain skill)
 - **Tagging before CI** — a single failing platform is enough to make a
   release un-rerunnable
 - **Forgetting the `[Unreleased]` reset** in the per-crate CHANGELOG —

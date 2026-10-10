@@ -20,27 +20,21 @@ means an audit chain needs re-stitching after a version change.
 
 ## When bumping our own version
 
-`supply-chain/imports.lock` is **generated, never hand-edited**. The
-header comment says `# cargo-vet imports lock`. The
-`[[unpublished.playwright-rs]]` entries handle the chicken-and-egg
-window between bumping `Cargo.toml` and publishing to crates.io: an
-entry like `version = "0.12.1" audited_as = "0.12.0"` tells vet "treat
-the in-tree version as audited at the prior released version's level."
+Nothing to do in `supply-chain/`. Each published workspace crate has
+`[policy.<crate>] audit-as-crates-io = false` in `supply-chain/config.toml`,
+so vet treats it as our own code and never asks for an audit of it, at
+any version. Bump `Cargo.toml`, let `Cargo.lock` follow, and run
+`cargo vet` as usual.
 
-Proper sequence when bumping `Cargo.toml`:
+The policy used to be `true`, which made vet treat the path crates as
+third-party crates.io code. Every bump then needed a
+`[[unpublished]]` entry in `imports.lock` chained to an exemption for the
+last published version, and the exemption had to be bumped by hand when
+the chain broke. If either of those reappears, the policy has been
+flipped back.
 
-1. Bump `version = "X.Y.Z"` in workspace `Cargo.toml`
-2. Run `cargo vet regenerate unpublished` — automatically removes
-   entries for now-published versions and adds a new `[[unpublished]]`
-   entry chained to the prior version
-3. If `cargo vet` still fails (the chain may break when prior versions
-   get published and lose their `[[unpublished]]` placeholder), bump
-   the `[[exemptions.playwright-rs]] version = "..."` line in
-   `supply-chain/config.toml` to the latest published version. The
-   exemption is the anchor that the unpublished entries chain to.
-4. Verify `cargo vet`, `cargo audit`, `cargo deny check` all pass
-5. Commit `Cargo.toml`, `Cargo.lock`, `supply-chain/imports.lock`, and
-   any `supply-chain/config.toml` exemption bump together
+`supply-chain/imports.lock` is **generated, never hand-edited**. Its
+header comment says `# cargo-vet imports lock`.
 
 ## When external dependencies update (dependabot PRs)
 
