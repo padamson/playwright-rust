@@ -127,7 +127,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [test]
+    needs: [test, semver-checks]
     runs-on: ubuntu-latest
     permissions:
       contents: write # create the release and upload its assets
@@ -180,15 +180,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Lives here rather than in security.yml because it has to *gate* the
-  # publish. security.yml only triggers on branch pushes and PRs, so the
+  # release. security.yml only triggers on branch pushes and PRs, so the
   # tag-ref condition this job used to carry could never fire — it had
   # never run once. Even with tags added there it would run concurrently
   # with publishing, reporting breakage after the crate was already on
-  # crates.io. As a `needs:` of publish-crates it blocks instead.
+  # crates.io. As a `needs:` of create-release and publish-crates it
+  # blocks both, so a bad bump leaves no GitHub Release behind either.
   # No `needs:` — the API comparison is independent of the test matrix, so
   # running them in parallel surfaces a bad bump in a couple of minutes
-  # instead of after the full cross-platform run. publish-crates gates on
-  # both.
+  # instead of after the full cross-platform run.
   semver-checks:
     name: Semver Compatibility
     runs-on: ubuntu-latest
