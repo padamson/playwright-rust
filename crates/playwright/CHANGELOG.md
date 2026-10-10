@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`AccessibilitySnapshotOptions::interesting_only` and `::root` setters.** 0.19.0 left this struct without them because the emulated snapshot ignores both fields; it still does, and the struct docs say so, but an option struct with public `Option` fields and no setters was the odd one out.
+
+### Changed
+
+- **Every declared span field is recorded now.** `ElementHandle::screenshot` records `bytes_len` and `BrowserContext::cookies` records `count`, both declared since the tracing work landed and never filled; `Locator::aria_snapshot` drops its never-filled `mode` field, and `ResponseObject::body` and `::http_version` drop duplicates of fields the public `Response` already records. The crate docs now say which span an event handler inherits: the connection read loop's, never the caller's.
+
 ### Deprecated
 
 - **`devtools` on `LaunchOptions` and `BrowserContextOptions`.** Playwright removed the option in 1.58 and the driver drops it without an error, so `.devtools(true)` has opened no DevTools panel since 0.8.7, which bundled driver 1.58.2. The field and its builder now carry `#[deprecated]` and are no longer sent. It does not make the browser headed either. For Chromium, pass `--auto-open-devtools-for-tabs` in `args` and set `headless(false)`, as the other language bindings do; on `BrowserContextOptions` that works only for `launch_persistent_context`, so for `new_context` set them on the `LaunchOptions` the browser was launched with. Both will be removed in a later breaking release.

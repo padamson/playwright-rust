@@ -144,7 +144,7 @@ impl ResponseObject {
     /// as a base64-encoded binary string.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-body>
-    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), bytes_len = tracing::field::Empty))]
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn body(&self) -> Result<Vec<u8>> {
         use serde::Deserialize;
 
@@ -256,7 +256,7 @@ impl ResponseObject {
     /// Sends a `"httpVersion"` RPC call to the Playwright server.
     ///
     /// See: <https://playwright.dev/docs/api/class-response#response-http-version>
-    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid(), version = tracing::field::Empty))]
+    #[tracing::instrument(level = "debug", skip_all, fields(guid = %self.guid()))]
     pub async fn http_version(&self) -> Result<String> {
         use serde::Deserialize;
 

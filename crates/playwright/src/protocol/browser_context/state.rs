@@ -136,6 +136,7 @@ impl BrowserContext {
             .channel()
             .send("cookies", serde_json::json!({ "urls": url_list }))
             .await?;
+        tracing::Span::current().record("count", response.cookies.len());
         Ok(response.cookies)
     }
 

@@ -98,6 +98,7 @@ impl ElementHandle {
                     e
                 ))
             })?;
+        tracing::Span::current().record("bytes_len", bytes.len());
 
         Ok(bytes)
     }

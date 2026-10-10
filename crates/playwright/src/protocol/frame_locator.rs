@@ -149,6 +149,9 @@ impl FrameLocator {
 
     /// Returns a new FrameLocator matching the nth iframe (0-indexed).
     ///
+    /// The index is `i32` on purpose: a negative value counts from the end,
+    /// as in Playwright, and [`FrameLocator::last`] is `nth(-1)`.
+    ///
     /// # Panics
     ///
     /// Panics when this locator came from `frame_locator(None)`, which

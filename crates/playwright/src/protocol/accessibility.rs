@@ -31,6 +31,22 @@ pub struct AccessibilitySnapshotOptions {
     pub root: Option<crate::protocol::ElementHandle>,
 }
 
+impl AccessibilitySnapshotOptions {
+    /// Whether to prune uninteresting nodes from the tree. Defaults to `true`.
+    /// Currently ignored; see the struct docs.
+    pub fn interesting_only(mut self, interesting_only: bool) -> Self {
+        self.interesting_only = Some(interesting_only);
+        self
+    }
+
+    /// The root element for the snapshot. Defaults to the entire page.
+    /// Currently ignored; see the struct docs.
+    pub fn root(mut self, root: crate::protocol::ElementHandle) -> Self {
+        self.root = Some(root);
+        self
+    }
+}
+
 /// Provides accessibility-tree inspection methods on a page.
 ///
 /// Access via [`Page::accessibility`].
@@ -63,5 +79,17 @@ impl Accessibility {
     ) -> Result<Value> {
         let options = options.into();
         self.page.accessibility_snapshot(options).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn snapshot_setter_writes_the_field() {
+        let opts = AccessibilitySnapshotOptions::default().interesting_only(false);
+        assert_eq!(opts.interesting_only, Some(false));
+        assert!(opts.root.is_none());
     }
 }

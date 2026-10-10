@@ -876,6 +876,9 @@ impl Locator {
 
     /// Creates a locator for the nth matching element (0-indexed).
     ///
+    /// The index is `i32` on purpose: a negative value counts from the end,
+    /// as in Playwright, so `nth(-1)` is [`Locator::last`].
+    ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-nth>
     pub fn nth(&self, index: i32) -> Locator {
         Locator::new(
@@ -2007,7 +2010,7 @@ impl Locator {
     /// - The protocol call fails
     ///
     /// See: <https://playwright.dev/docs/api/class-locator#locator-aria-snapshot>
-    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector, mode = tracing::field::Empty))]
+    #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
     pub async fn aria_snapshot(
         &self,
         options: impl Into<Option<crate::protocol::AriaSnapshotOptions>>,

@@ -227,15 +227,25 @@
 //! `tracing_subscriber` and you get spans for free, with cardinality-bounded
 //! identifiers (`guid`, `selector`, `url`, `name`) and selected
 //! completion-time fields (`status`, `bytes_len`, `count`, `version`).
-//! Internal `tokio::spawn` sites propagate the caller's span via
-//! `Instrument::in_current_span()` so user-registered handlers and event
-//! fan-out tasks inherit the surrounding context.
+//! Event handlers never run inside the span of the call that registered
+//! them or of the operation that caused the event. Events arrive on the
+//! connection's read loop, which dispatches each message inside a
+//! `trace`-level `dispatch` span. Page-level handler tasks are spawned with
+//! `Instrument::in_current_span()` and inherit whatever span the read loop
+//! runs in: for a launched browser that is only the `dispatch` span (so
+//! nothing, under an `info` or `debug` filter); for one from
+//! `BrowserType::connect` it is the `connect` span, for the life of the
+//! connection. Context-level handlers and a few other spawn sites inherit
+//! no span at all. Correlate a handler with the
+//! operation that triggered it by `guid` or `url`, not by span parentage.
 //!
 //! Levels: top-level user operations (`goto`, `click`, `fill`, `screenshot`,
 //! `pdf`, `evaluate`, `tracing.start/stop`, `browser_type.launch`) are at
-//! `info`; everything else is at `debug`. Sensitive payloads — input
-//! values, eval expressions, request/response bodies — are deliberately
-//! excluded from span fields.
+//! `info`; everything else is at `debug`. Span fields never carry input
+//! values, eval expressions or request/response bodies. `trace`-level
+//! events do: the connection logs every outbound request's full JSON and
+//! every inbound message, so a `trace` filter writes fill text, evaluated
+//! expressions and base64 bodies to the log.
 //!
 //! ```no_run
 //! use tracing_subscriber::EnvFilter;
