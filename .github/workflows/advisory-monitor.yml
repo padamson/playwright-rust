@@ -1,0 +1,146 @@
+name: Security Advisory Monitor
+
+# Daily check for newly published RustSec advisories, decoupled from push
+# cadence. Advisories are published by the world, not by a commit: the
+# Security & Quality gates would go red on the next push or on Saturday's
+# schedule, and this turns the same finding into an issue with triage
+# instructions first (scripts/check-advisories.sh says which checks it
+# mirrors). On a hit a single tracking issue is opened and kept current;
+# when the tree is clean again it is closed.
+
+on:
+  schedule:
+    # Daily at 07:00 UTC.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+# One run at a time: two overlapping runs would each see no open issue
+# and each open one.
+concurrency:
+  group: advisory-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  advisories:
+    name: Check for new advisories
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write # open, update and close the tracking issue
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_TITLE: "Security: new dependency advisory detected"
+      ISSUE_LABEL: security-advisory
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master
+        with:
+          toolchain: stable
+
+      - name: Install cargo-deny and cargo-audit
+        uses: taiki-e/install-action@861a07ce7084f55488e375df125cdc99bba60eb7 # v2.87.23
+        with:
+          tool: cargo-deny,cargo-audit
+
+      # Exit codes are documented in the script. A broken check fails the
+      # job, at the end when a hit beside it still needs filing.
+      - name: Check advisories
+        id: check
+        shell: bash
+        run: |
+          code=0
+          scripts/check-advisories.sh > "$RUNNER_TEMP/report.txt" || code=$?
+          cat "$RUNNER_TEMP/report.txt"
+          case "$code" in
+            0) echo "has_new=false" >> "$GITHUB_OUTPUT" ;;
+            1) echo "has_new=true" >> "$GITHUB_OUTPUT" ;;
+            3) echo "has_new=true" >> "$GITHUB_OUTPUT"
+               echo "broken=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::the advisory check broke without reporting an advisory; the monitor itself needs fixing"
+               exit "$code" ;;
+          esac
+
+      # The plain list endpoint, filtered by label and title. `--search`
+      # would go through the search index, which lags creation by minutes
+      # and can miss the issue the previous run just opened.
+      - name: Find the tracking issue
+        id: find
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh issue list \
+            --state open \
+            --label "$ISSUE_LABEL" \
+            --json number,title,body \
+            --jq '[.[] | select(.title == env.ISSUE_TITLE)][0] // {}' \
+            > "$RUNNER_TEMP/issue.json"
+          jq -j '.body // ""' "$RUNNER_TEMP/issue.json" > "$RUNNER_TEMP/old.txt"
+          echo "number=$(jq -r '.number // ""' "$RUNNER_TEMP/issue.json")" >> "$GITHUB_OUTPUT"
+
+      # scripts/advisory-issue-body.py rewrites only the report section of
+      # the body and says whether the findings changed. The report reaches
+      # it as a file, never through `${{ }}` interpolation: advisory text is
+      # community-authored and could otherwise be evaluated by the shell.
+      - name: Open or update the tracking issue
+        if: steps.check.outputs.has_new == 'true'
+        env:
+          EXISTING: ${{ steps.find.outputs.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(scripts/advisory-issue-body.py "$RUNNER_TEMP/old.txt" "$RUNNER_TEMP/report.txt" "$RUNNER_TEMP/body.txt")"
+          if [ -z "$EXISTING" ]; then
+            echo "Opening tracking issue"
+            gh label create "$ISSUE_LABEL" \
+              --description "Tracks newly published dependency advisories awaiting triage" \
+              --color B60205 2>/dev/null || true
+            gh issue create \
+              --title "$ISSUE_TITLE" \
+              --label "$ISSUE_LABEL" \
+              --body-file "$RUNNER_TEMP/body.txt"
+            exit 0
+          fi
+          case "$status" in
+            changed)
+              echo "Findings changed; updating tracking issue #$EXISTING"
+              gh issue edit "$EXISTING" --body-file "$RUNNER_TEMP/body.txt"
+              {
+                echo "The advisory report changed:"
+                echo
+                echo '```'
+                cat "$RUNNER_TEMP/report.txt"
+                echo '```'
+              } > "$RUNNER_TEMP/comment.txt"
+              gh issue comment "$EXISTING" --body-file "$RUNNER_TEMP/comment.txt"
+              ;;
+            refreshed)
+              echo "Same findings, new report text; refreshing tracking issue #$EXISTING"
+              gh issue edit "$EXISTING" --body-file "$RUNNER_TEMP/body.txt"
+              ;;
+            unchanged)
+              echo "Tracking issue #$EXISTING already carries this report"
+              ;;
+          esac
+
+      - name: Close the tracking issue
+        if: steps.check.outputs.has_new == 'false' && steps.find.outputs.number != ''
+        env:
+          EXISTING: ${{ steps.find.outputs.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Advisories clean; closing tracking issue #$EXISTING"
+          gh issue close "$EXISTING" \
+            --comment "The advisory checks are clean again. Closing automatically."
+
+      - name: Fail on a broken check
+        if: steps.check.outputs.broken == 'true'
+        run: |
+          echo "::error::one advisory check broke while the other found something; see the Check advisories log"
+          exit 1

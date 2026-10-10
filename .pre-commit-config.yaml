@@ -200,6 +200,14 @@ repos:
         pass_filenames: false
         files: ^scripts/(report|test-report)-flaky-tests\.sh$
 
+      - id: advisory-checker-classifies-output
+        name: advisory checker still tells a hit from a broken tool
+        description: the advisory monitor runs on a schedule nobody watches, so a misclassification is silent
+        entry: scripts/test-check-advisories.sh
+        language: system
+        pass_filenames: false
+        files: ^scripts/(check-advisories\.sh|test-check-advisories\.sh|audit-lockfiles\.sh|advisory-issue-body\.py)$
+
       - id: external-lockfiles-current
         name: out-of-workspace lockfiles current
         description: site, site-e2e and fuzz sit outside the workspace, so their lockfiles go stale when workspace deps move

@@ -56,3 +56,10 @@ warrants a patch release even if functional behavior is unchanged. The
 typical fix is `cargo update -p <vulnerable-crate>` to a patched
 version, plus a CHANGELOG `### Security` entry referencing the
 advisory.
+
+Advisories usually arrive as a `security-advisory` issue before they turn
+a gate red. `advisory-monitor.yml` runs `scripts/check-advisories.sh`
+daily, which runs the advisory half of the `cargo deny` and `cargo audit`
+gates against the same trees, and keeps one issue open while either finds
+something. The issue body has the triage steps, including which ignore
+list each gate reads.

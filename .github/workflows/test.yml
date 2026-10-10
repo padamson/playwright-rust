@@ -275,6 +275,11 @@ jobs:
       shell: bash
       run: scripts/test-report-flaky-tests.sh
 
+    - name: Verify the advisory checker classifies cargo-deny and cargo-audit output
+      if: runner.os == 'Linux'
+      shell: bash
+      run: scripts/test-check-advisories.sh
+
     - name: Verify agent-integration doc snippets
       run: cargo xtask verify-agent-docs
 
