@@ -1,0 +1,44 @@
+/* Page tokens: light on :root; dark under the system's dark scheme unless
+   a visitor chose light, and whenever a visitor chose dark (data-theme on
+   the root). A host site restates them in its own palette through
+   `[docs] stylesheet`, which is linked after this file. Diagram colors
+   are theme.css's job, and follow these tokens. */
+:root { color-scheme: light; --bg: #fff; --fg: #1a1a1a; --muted: #6b6b6b; --accent: #2563eb; --rule: #8884; --frame: color-mix(in srgb, var(--accent) 30%, transparent); --code: #8882; --figure-bg: transparent; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; --bg: #16171a; --fg: #e6e6e6; --muted: #9a9a9a; --accent: #7aa2f7; }
+}
+:root[data-theme="dark"] { color-scheme: dark; --bg: #16171a; --fg: #e6e6e6; --muted: #9a9a9a; --accent: #7aa2f7; }
+body { font: 16px/1.5 system-ui, sans-serif; margin: 0; max-width: 64rem; padding: 0 1rem 3rem; margin-inline: auto; background: var(--bg); color: var(--fg); }
+a { color: var(--accent); }
+header { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 0; border-bottom: 2px solid var(--frame); }
+header .bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; }
+header .trail { display: flex; flex-wrap: wrap; gap: 0.5em; align-items: baseline; }
+header .home { color: var(--muted); }
+header .sep { color: var(--muted); }
+header .site { font-weight: 700; color: inherit; }
+header .mark { width: 1.15em; height: 1.15em; vertical-align: -0.2em; margin-right: 0.35em; fill: var(--accent); }
+header .containers { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.9em; }
+header .containers a { color: var(--muted); }
+header .containers [aria-current] { font-weight: 600; color: var(--fg); }
+header .views { font-size: 0.9em; }
+header .views a { color: var(--muted); }
+header .views [aria-current] { font-weight: 600; color: var(--fg); }
+header .scheme { margin-left: auto; display: inline-flex; gap: 0.4em; align-items: center; color: var(--muted); font-size: 0.85em; }
+header .scheme[hidden] { display: none; }
+header .scheme select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0.1em 0.3em; }
+footer { margin-top: 3rem; padding-top: 0.75rem; border-top: 2px solid var(--frame); color: var(--muted); font-size: 0.85em; }
+footer a { color: inherit; }
+h1 { margin: 0.5rem 0 0.25rem; }
+h2 { border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 2rem; }
+h2 small { font-weight: 400; color: var(--muted); }
+code { background: var(--code); padding: 0 0.25em; border-radius: 3px; }
+.meta { color: var(--muted); margin: 0 0 0.75rem; }
+.tag { display: inline-block; font-size: 0.8em; border: 1px solid var(--rule); border-radius: 1em; padding: 0 0.6em; margin-right: 0.25em; }
+figure { margin: 1rem 0; background: var(--figure-bg); }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--rule); }
+figcaption { color: var(--muted); font-size: 0.9em; }
+.missing { color: var(--muted); font-style: italic; }
+table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule); }
+th { color: var(--muted); font-weight: 600; font-size: 0.85em; }
+.modules ul { margin: 0; }

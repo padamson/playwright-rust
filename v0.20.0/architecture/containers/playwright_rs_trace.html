@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-theme-default="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="asbuilt docs 0.3.0">
+<title>playwright-rust · Architecture · playwright-rs-trace</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../theme.css">
+<link rel="stylesheet" href="../viewer.css">
+<script src="../theme.js"></script>
+<script src="../viewer.js" defer></script>
+<link rel="stylesheet" href="../../architecture.css">
+</head>
+<body>
+<header><div class="bar"><nav class="trail" aria-label="Breadcrumb"><a class="home" href="../../">playwright-rust</a><span class="sep" aria-hidden="true">/</span><a class="site" href="../index.html"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.24 3.21L17.61 1.26L21.97 8.81L18.6 10.76zM3.06 11.38L15.28 4.33L18.15 9.3L5.93 16.36zM1 13.77L3.88 12.1L5.71 15.29L2.84 16.96zM20.65 13.45A10.32 10.32 0 0 1 17.16 18.37L15.06 15.65A6.88 6.88 0 0 0 17.39 12.37zM14.78 19.74A10.32 10.32 0 0 1 6.06 19.34L7.65 16.29A6.88 6.88 0 0 0 13.47 16.57zM17.95 12.13L23 14.59L21.8 17.07L16.75 14.6zM9.67 17.46L7.76 22.74L5.16 21.8L7.09 16.52zM10.36 10.49L11.79 12.97L12.78 12.4L11.35 9.91zM13.31 11.7L18.47 20.64L17.77 21.04L12.61 12.1zM11.62 12.68L16.78 21.61L16.08 22.01L10.92 13.08zM18.07 19.94L18.47 20.64L16.08 22.01L15.68 21.31z"/></svg>Architecture</a></nav><nav class="views" aria-label="Views"><a href="../views.html">Curated views</a></nav><label class="scheme" hidden>Theme <select id="scheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div><nav class="containers" aria-label="Containers"><a href="../containers/playwright_rs.html">playwright-rs</a><a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a><a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a><a href="../containers/playwright_rs_site.html">playwright-rs-site</a><a href="../containers/playwright_rs_site_e2e.html">playwright-rs-site-e2e</a><span aria-current="page">playwright-rs-trace</span><a href="../containers/xtask.html">xtask</a></nav></header>
+<main>
+<h1>playwright-rs-trace</h1>
+<p class="meta">library crate · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace"><code>crates/playwright-rs-trace</code></a></p>
+<p>Programmatic parser for [Playwright][pw] trace zip files
+(trace formats v8 to v10, v9 from 0.2.0 and v10 from 0.2.1; verified
+against traces recorded by the bundled driver, playwright@1.64.0).</p>
+<figure class="view" data-viewer><div class="viewer-bar" hidden><span class="viewer-scale"></span><button type="button" data-viewer-zoom="out" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" data-viewer-zoom="in" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" data-viewer-mode="fit" aria-pressed="false">Fit</button><button type="button" data-viewer-mode="one" aria-pressed="false">1:1</button><button type="button" data-viewer-wide aria-pressed="false">Wide</button><button type="button" data-viewer-legend aria-pressed="true">Legend</button><button type="button" data-viewer-full>Fullscreen</button><span class="viewer-hint"></span></div><script type="application/json" class="viewer-edges">{"playwright_rs_trace.tests->playwright_rs_trace.trace":[{"source":"playwright_rs_trace.tests","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.tests","target":"playwright_rs_trace.trace","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","kind":"calls","items":["TraceReader"],"technology":null}],"playwright_rs_trace.tests->playwright_rs_trace.network":[{"source":"playwright_rs_trace.tests","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.tests","target":"playwright_rs_trace.network","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.network","kind":"names","items":["NetworkEntry"],"technology":null}],"playwright_rs_trace.tests->playwright_rs_trace.event":[{"source":"playwright_rs_trace.tests","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.tests","target":"playwright_rs_trace.event","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.event","kind":"calls","items":["ActionPhase","TraceEvent"],"technology":null}],"playwright_rs_trace.tests->playwright_rs_trace.error":[{"source":"playwright_rs_trace.tests","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.tests","target":"playwright_rs_trace.error","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.error","kind":"uses","items":["TraceError"],"technology":null}],"playwright_rs_trace.trace->playwright_rs_trace.action":[{"source":"playwright_rs_trace.trace","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","target":"playwright_rs_trace.action","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.action","kind":"constructs","items":["Action","ActionStream"],"technology":null}],"playwright_rs_trace.trace->playwright_rs_trace.jsonl":[{"source":"playwright_rs_trace.trace","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","target":"playwright_rs_trace.jsonl","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl","kind":"constructs","items":["JsonLines"],"technology":null}],"playwright_rs_trace.trace->playwright_rs_trace.network":[{"source":"playwright_rs_trace.trace","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","target":"playwright_rs_trace.network","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.network","kind":"constructs","items":["NetworkEntry"],"technology":null}],"playwright_rs_trace.trace->playwright_rs_trace.event":[{"source":"playwright_rs_trace.trace","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","target":"playwright_rs_trace.event","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.event","kind":"names","items":["ContextOptions","RawEvent","TraceEvent"],"technology":null}],"playwright_rs_trace.trace->playwright_rs_trace.error":[{"source":"playwright_rs_trace.trace","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","target":"playwright_rs_trace.error","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.error","kind":"constructs","items":["Result","TraceError"],"technology":null}],"playwright_rs_trace.action->playwright_rs_trace.event":[{"source":"playwright_rs_trace.action","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.action","target":"playwright_rs_trace.event","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.event","kind":"names","items":["ActionError","AfterEvent","BeforeEvent","InputEvent","LogEvent","Point","TraceEvent"],"technology":null}],"playwright_rs_trace.action->playwright_rs_trace.error":[{"source":"playwright_rs_trace.action","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.action","target":"playwright_rs_trace.error","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.error","kind":"names","items":["Result"],"technology":null}],"playwright_rs_trace.jsonl->playwright_rs_trace.error":[{"source":"playwright_rs_trace.jsonl","source_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl","target":"playwright_rs_trace.error","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.error","kind":"constructs","items":["Result","TraceError"],"technology":null}],"playwright_rs->playwright_rs_trace.trace":[{"source":"playwright_rs.tests","source_href":"../containers/playwright_rs.html#playwright_rs.tests","target":"playwright_rs_trace.trace","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","kind":"calls","items":["open"],"technology":null}],"playwright_rs->playwright_rs_trace.event":[{"source":"playwright_rs.tests","source_href":"../containers/playwright_rs.html#playwright_rs.tests","target":"playwright_rs_trace.event","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.event","kind":"calls","items":["TraceEvent"],"technology":null}],"playwright_rs_site_e2e->playwright_rs_trace.trace":[{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs_trace.trace","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","kind":"calls","items":["open"],"technology":null}]}</script><div class="viewer-frame" role="group" aria-label="playwright-rs-trace: diagram"><svg viewBox="0.00 0.00 3147.00 1309.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_trace" role="img" aria-label="playwright-rs-trace">
+<g id="view_playwright_rs_trace-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 1293.55)">
+<g id="view_playwright_rs_trace-clust1" class="cluster c4-k-container">
+
+<polygon fill="#722f24" stroke="#57130f" points="8,-8 8,-1270.5 2327,-1270.5 2327,-8 8,-8"/>
+<text xml:space="preserve" text-anchor="start" x="16" y="-1257.05" font-family="Arial" font-weight="bold" font-size="11.00" fill="#ffffe5" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;TRACE</text>
+</g>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests"><g id="view_playwright_rs_trace-node1" class="node c4-k-tests">
+<title>playwright_rs_trace.tests</title>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="615.02,-1209 294.98,-1209 294.98,-1029 615.02,-1029 615.02,-1209"/>
+<text xml:space="preserve" text-anchor="start" x="434.38" y="-1111.88" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace"><g id="view_playwright_rs_trace-node2" class="node c4-k-component">
+<title>playwright_rs_trace.trace</title>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1372.93,-887.25 1023.07,-887.25 1023.07,-707.25 1372.93,-707.25 1372.93,-887.25"/>
+<text xml:space="preserve" text-anchor="start" x="1175.88" y="-819.12" font-family="Arial" font-size="20.00" fill="#5b5b5b">trace</text>
+<text xml:space="preserve" text-anchor="start" x="1043.12" y="-796.38" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">[`TraceReader`] — open a Playwright trace zip</text>
+<text xml:space="preserve" text-anchor="start" x="1150.38" y="-778.38" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">and stream its</text>
+<text xml:space="preserve" text-anchor="start" x="1149.25" y="-760.38" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">contents lazily.</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action"><g id="view_playwright_rs_trace-node3" class="node c4-k-component">
+<title>playwright_rs_trace.action</title>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="2286.81,-565.5 1933.19,-565.5 1933.19,-385.5 2286.81,-385.5 2286.81,-565.5"/>
+<text xml:space="preserve" text-anchor="start" x="2083.38" y="-497.38" font-family="Arial" font-size="20.00" fill="#5b5b5b">action</text>
+<text xml:space="preserve" text-anchor="start" x="1953.25" y="-474.62" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Action — reassembled from `before` + optional</text>
+<text xml:space="preserve" text-anchor="start" x="2035.75" y="-456.62" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`input` + zero&#45;or&#45;more</text>
+<text xml:space="preserve" text-anchor="start" x="1977.62" y="-438.62" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`log` + `after` events sharing a `call_id`.</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl"><g id="view_playwright_rs_trace-node4" class="node c4-k-component">
+<title>playwright_rs_trace.jsonl</title>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1358.02,-565.5 1037.98,-565.5 1037.98,-385.5 1358.02,-385.5 1358.02,-565.5"/>
+<text xml:space="preserve" text-anchor="start" x="1177.38" y="-479.38" font-family="Arial" font-size="20.00" fill="#5b5b5b">jsonl</text>
+<text xml:space="preserve" text-anchor="start" x="1117.38" y="-456.62" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Tiny JSONL line iterator.</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.network"><g id="view_playwright_rs_trace-node5" class="node c4-k-component">
+<title>playwright_rs_trace.network</title>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="592.02,-565.5 271.98,-565.5 271.98,-385.5 592.02,-385.5 592.02,-565.5"/>
+<text xml:space="preserve" text-anchor="start" x="397.12" y="-488.38" font-family="Arial" font-size="20.00" fill="#5b5b5b">network</text>
+<text xml:space="preserve" text-anchor="start" x="309" y="-465.62" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">`trace.network` — HAR&#45;like resource</text>
+<text xml:space="preserve" text-anchor="start" x="395.62" y="-447.62" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">snapshots.</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event"><g id="view_playwright_rs_trace-node6" class="node c4-k-component">
+<title>playwright_rs_trace.event</title>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="1738.02,-228 1417.98,-228 1417.98,-48 1738.02,-48 1738.02,-228"/>
+<text xml:space="preserve" text-anchor="start" x="1553.62" y="-141.88" font-family="Arial" font-size="20.00" fill="#5b5b5b">event</text>
+<text xml:space="preserve" text-anchor="start" x="1516.12" y="-119.12" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Trace event types.</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error"><g id="view_playwright_rs_trace-node7" class="node c4-k-component">
+<title>playwright_rs_trace.error</title>
+<polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="972.02,-228 651.98,-228 651.98,-48 972.02,-48 972.02,-228"/>
+<text xml:space="preserve" text-anchor="start" x="790.62" y="-141.88" font-family="Arial" font-size="20.00" fill="#5b5b5b">error</text>
+<text xml:space="preserve" text-anchor="start" x="715.62" y="-119.12" font-family="Arial" font-size="15.00" fill="#6d6d6d" class="c4-muted">Error types for trace parsing.</text>
+</g></a>
+
+<a href="../containers/playwright_rs.html"><g id="view_playwright_rs_trace-node8" class="node c4-k-container">
+<title>playwright_rs</title>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="3117.02,-1209 2796.98,-1209 2796.98,-1029 3117.02,-1029 3117.02,-1209"/>
+<text xml:space="preserve" text-anchor="start" x="2900.38" y="-1141.38" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
+<text xml:space="preserve" text-anchor="start" x="2888.38" y="-1120.88" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">library and binary crate</text>
+<text xml:space="preserve" text-anchor="start" x="2828" y="-1099.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">playwright: High&#45;level Rust bindings for</text>
+<text xml:space="preserve" text-anchor="start" x="2889.88" y="-1081.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">Microsoft Playwright</text>
+</g></a>
+
+<a href="../containers/playwright_rs_site_e2e.html"><g id="view_playwright_rs_trace-node9" class="node c4-k-container">
+<title>playwright_rs_site_e2e</title>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="2687.02,-1209 2366.98,-1209 2366.98,-1029 2687.02,-1029 2687.02,-1209"/>
+<text xml:space="preserve" text-anchor="start" x="2431.38" y="-1121.38" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;site&#45;e2e</text>
+<text xml:space="preserve" text-anchor="start" x="2499.25" y="-1100.88" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">test crate</text>
+</g></a>
+
+<g id="view_playwright_rs_trace-edge4" class="edge" data-from="playwright_rs_trace.tests" data-to="playwright_rs_trace.trace">
+<title>playwright_rs_trace.tests → playwright_rs_trace.trace</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M614.85,-1049.21C732.2,-998.71 891.83,-930.01 1014.41,-877.26"/><path class="c4-hit" d="M614.85,-1049.21C732.2,-998.71 891.83,-930.01 1014.41,-877.26"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1020.94,-874.45 1015.38,-880.51 1019.93,-875.43 1014.25,-877.87 1014.05,-877.41 1013.85,-876.95 1019.53,-874.51 1012.71,-874.31 1020.94,-874.45"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="848.78,-947.25 848.78,-969 933.53,-969 933.53,-947.25 848.78,-947.25" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="851.78" y="-953.25" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceReader</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge5" class="edge" data-from="playwright_rs_trace.tests" data-to="playwright_rs_trace.network">
+<title>playwright_rs_trace.tests → playwright_rs_trace.network</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M491.15,-1029.21C526.6,-929.33 569.84,-763.1 529,-625.5 523.57,-607.21 515.11,-589.07 505.4,-572.07"/><path class="c4-hit" d="M491.15,-1029.21C526.6,-929.33 569.84,-763.1 529,-625.5 523.57,-607.21 515.11,-589.07 505.4,-572.07"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="503.49" cy="-568.82" rx="3" ry="3"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="545.56,-786.38 545.56,-808.12 632.56,-808.12 632.56,-786.38 545.56,-786.38" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="548.56" y="-792.38" font-family="Arial" font-size="14.00" fill="#c9c9c9">NetworkEntry</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge6" class="edge" data-from="playwright_rs_trace.tests" data-to="playwright_rs_trace.event">
+<title>playwright_rs_trace.tests → playwright_rs_trace.event</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M406.14,-1029.1C314.57,-856.76 133.59,-485.37 217,-385.5 236.14,-362.58 1047.92,-226.34 1408.47,-166.81"/><path class="c4-hit" d="M406.14,-1029.1C314.57,-856.76 133.59,-485.37 217,-385.5 236.14,-362.58 1047.92,-226.34 1408.47,-166.81"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1415.81,-165.6 1408.96,-170.15 1414.6,-166.31 1408.49,-167.31 1408.41,-166.82 1408.33,-166.33 1414.43,-165.32 1407.86,-163.49 1415.81,-165.6"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="234.1,-625.5 234.1,-647.25 392.35,-647.25 392.35,-625.5 234.1,-625.5" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="237.1" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">ActionPhase, TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge7" class="edge" data-from="playwright_rs_trace.tests" data-to="playwright_rs_trace.error">
+<title>playwright_rs_trace.tests → playwright_rs_trace.error</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M367.48,-1029.14C218.28,-866.84 -52.03,-518.03 133,-288 196.01,-209.66 464.6,-170.18 644.49,-152.16"/><path class="c4-hit" d="M367.48,-1029.14C218.28,-866.84 -52.03,-518.03 133,-288 196.01,-209.66 464.6,-170.18 644.49,-152.16"/>
+<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="648.21" cy="-151.79" rx="3" ry="3"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="108.49,-625.5 108.49,-647.25 178.99,-647.25 178.99,-625.5 108.49,-625.5" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="111.49" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceError</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge8" class="edge" data-from="playwright_rs_trace.trace" data-to="playwright_rs_trace.action">
+<title>playwright_rs_trace.trace → playwright_rs_trace.action</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1372.76,-734.98C1530.57,-679.65 1762.11,-598.47 1923.46,-541.9"/><path class="c4-hit" d="M1372.76,-734.98C1530.57,-679.65 1762.11,-598.47 1923.46,-541.9"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1923.3,-541.96 1926.56,-537.64 1931.8,-538.98 1928.54,-543.3 1923.3,-541.96"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1681.35,-625.5 1681.35,-647.25 1813.35,-647.25 1813.35,-625.5 1681.35,-625.5" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="1684.35" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">Action, ActionStream</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge9" class="edge" data-from="playwright_rs_trace.trace" data-to="playwright_rs_trace.jsonl">
+<title>playwright_rs_trace.trace → playwright_rs_trace.jsonl</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1198,-707.61C1198,-666.89 1198,-618.42 1198,-576.41"/><path class="c4-hit" d="M1198,-707.61C1198,-666.89 1198,-618.42 1198,-576.41"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1198,-576.12 1195,-571.62 1198,-567.12 1201,-571.62 1198,-576.12"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1198,-625.5 1198,-647.25 1264.75,-647.25 1264.75,-625.5 1198,-625.5" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="1201" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">JsonLines</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge10" class="edge" data-from="playwright_rs_trace.trace" data-to="playwright_rs_trace.network">
+<title>playwright_rs_trace.trace → playwright_rs_trace.network</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1023.17,-757.24C924.86,-732.12 801.31,-695.18 697,-647.25 651.36,-626.28 604.39,-598.4 562.91,-571.27"/><path class="c4-hit" d="M1023.17,-757.24C924.86,-732.12 801.31,-695.18 697,-647.25 651.36,-626.28 604.39,-598.4 562.91,-571.27"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="562.89,-571.25 557.48,-571.28 555.38,-566.3 560.78,-566.27 562.89,-571.25"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="697,-625.5 697,-647.25 784,-647.25 784,-625.5 697,-625.5" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="700" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">NetworkEntry</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge11" class="edge" data-from="playwright_rs_trace.trace" data-to="playwright_rs_trace.event">
+<title>playwright_rs_trace.trace → playwright_rs_trace.event</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1296.01,-707.33C1336.23,-667 1380.81,-616.89 1413,-565.5 1478.79,-460.46 1525.7,-324.93 1552.29,-235.15"/><path class="c4-hit" d="M1296.01,-707.33C1336.23,-667 1380.81,-616.89 1413,-565.5 1478.79,-460.46 1525.7,-324.93 1552.29,-235.15"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1553.36" cy="-231.53" rx="3" ry="3"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1498.76,-464.62 1498.76,-486.38 1744.01,-486.38 1744.01,-464.62 1498.76,-464.62" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="1501.76" y="-470.62" font-family="Arial" font-size="14.00" fill="#c9c9c9">ContextOptions, RawEvent, TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge12" class="edge" data-from="playwright_rs_trace.trace" data-to="playwright_rs_trace.error">
+<title>playwright_rs_trace.trace → playwright_rs_trace.error</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1023.27,-712.84C964.22,-675.92 903.9,-626.78 866.75,-565.5 806.59,-466.28 799.3,-330.32 802.86,-238.81"/><path class="c4-hit" d="M1023.27,-712.84C964.22,-675.92 903.9,-626.78 866.75,-565.5 806.59,-466.28 799.3,-330.32 802.86,-238.81"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="802.86,-238.67 800.07,-234.04 803.26,-229.68 806.06,-234.3 802.86,-238.67"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="866.75,-464.62 866.75,-486.38 983,-486.38 983,-464.62 866.75,-464.62" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="869.75" y="-470.62" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result, TraceError</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge13" class="edge" data-from="playwright_rs_trace.action" data-to="playwright_rs_trace.event">
+<title>playwright_rs_trace.action → playwright_rs_trace.event</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1969.18,-385.69C1894.02,-338.3 1801.6,-280.01 1725.46,-232"/><path class="c4-hit" d="M1969.18,-385.69C1894.02,-338.3 1801.6,-280.01 1725.46,-232"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="1722.47" cy="-230.11" rx="3" ry="3"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1859.95,-288 1859.95,-325.5 2109.7,-325.5 2109.7,-288 1859.95,-288" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="1862.95" y="-309.75" font-family="Arial" font-size="14.00" fill="#c9c9c9">ActionError, AfterEvent, BeforeEvent,</text>
+<text xml:space="preserve" text-anchor="start" x="1862.95" y="-294" font-family="Arial" font-size="14.00" fill="#c9c9c9">InputEvent, LogEvent, Point, TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge14" class="edge" data-from="playwright_rs_trace.action" data-to="playwright_rs_trace.error">
+<title>playwright_rs_trace.action → playwright_rs_trace.error</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M1933.46,-411.51C1905.67,-402.34 1877.16,-393.35 1850,-385.5 1546.16,-297.64 1185.81,-217.31 979.53,-173.56"/><path class="c4-hit" d="M1933.46,-411.51C1905.67,-402.34 1877.16,-393.35 1850,-385.5 1546.16,-297.64 1185.81,-217.31 979.53,-173.56"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="975.87" cy="-172.79" rx="3" ry="3"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1624.51,-295.88 1624.51,-317.62 1668.76,-317.62 1668.76,-295.88 1624.51,-295.88" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="1627.51" y="-301.88" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge15" class="edge" data-from="playwright_rs_trace.jsonl" data-to="playwright_rs_trace.error">
+<title>playwright_rs_trace.jsonl → playwright_rs_trace.error</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M1095.83,-385.69C1042.5,-339.34 977.19,-282.58 922.67,-235.19"/><path class="c4-hit" d="M1095.83,-385.69C1042.5,-339.34 977.19,-282.58 922.67,-235.19"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="922.52,-235.06 917.15,-234.37 915.73,-229.16 921.09,-229.84 922.52,-235.06"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1016.57,-295.88 1016.57,-317.62 1132.82,-317.62 1132.82,-295.88 1016.57,-295.88" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="1019.57" y="-301.88" font-family="Arial" font-size="14.00" fill="#c9c9c9">Result, TraceError</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge1" class="edge" data-from="playwright_rs" data-to="playwright_rs_trace.trace">
+<title>playwright_rs → playwright_rs_trace.trace</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2797.06,-1046.86C2778.71,-1040.18 2760.1,-1034.04 2742,-1029 2262.1,-895.48 1675.47,-834.74 1382.7,-811.1"/><path class="c4-hit" d="M2797.06,-1046.86C2778.71,-1040.18 2760.1,-1034.04 2742,-1029 2262.1,-895.48 1675.47,-834.74 1382.7,-811.1"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1375.27,-810.51 1383.01,-807.74 1376.62,-810.11 1382.78,-810.61 1382.74,-811.1 1382.7,-811.6 1376.54,-811.11 1382.47,-814.47 1375.27,-810.51"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2494.28,-947.25 2494.28,-969 2530.28,-969 2530.28,-947.25 2494.28,-947.25" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="2497.28" y="-953.25" font-family="Arial" font-size="14.00" fill="#c9c9c9">open</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge2" class="edge" data-from="playwright_rs" data-to="playwright_rs_trace.event">
+<title>playwright_rs → playwright_rs_trace.event</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2900.98,-1029.04C2803.15,-879.55 2587.98,-575.68 2342,-385.5 2166.29,-249.65 1913.28,-187.41 1747.3,-159.78"/><path class="c4-hit" d="M2900.98,-1029.04C2803.15,-879.55 2587.98,-575.68 2342,-385.5 2166.29,-249.65 1913.28,-187.41 1747.3,-159.78"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1740.38,-158.65 1748.33,-156.53 1741.76,-158.37 1747.87,-159.37 1747.78,-159.86 1747.7,-160.35 1741.6,-159.35 1747.24,-163.19 1740.38,-158.65"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2610.05,-625.5 2610.05,-647.25 2685.05,-647.25 2685.05,-625.5 2610.05,-625.5" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="2613.05" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceEvent</text>
+</g>
+
+<g id="view_playwright_rs_trace-edge3" class="edge" data-from="playwright_rs_site_e2e" data-to="playwright_rs_trace.trace">
+<title>playwright_rs_site_e2e → playwright_rs_trace.trace</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M2366.98,-1033.76C2362.64,-1032.1 2358.3,-1030.5 2354,-1029 2021.71,-912.92 1614.13,-848.66 1382.41,-818.99"/><path class="c4-hit" d="M2366.98,-1033.76C2362.64,-1032.1 2358.3,-1030.5 2354,-1029 2021.71,-912.92 1614.13,-848.66 1382.41,-818.99"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1375.29,-818.08 1383.16,-815.68 1376.66,-817.75 1382.79,-818.53 1382.73,-819.03 1382.67,-819.52 1376.53,-818.74 1382.31,-822.38 1375.29,-818.08"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2138.73,-947.25 2138.73,-969 2174.73,-969 2174.73,-947.25 2138.73,-947.25" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="2141.73" y="-953.25" font-family="Arial" font-size="14.00" fill="#c9c9c9">open</text>
+</g>
+</g>
+</svg></div><div class="legend" role="group" aria-label="Legend"><ul><li><span class="legend-swatch c4-k-container"></span>crate</li><li><span class="legend-swatch c4-k-component"></span>module</li><li><span class="legend-swatch c4-k-tests"></span>tests</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6"/><polygon points="25,6 30,2 35,6 30,10"/></svg>constructs</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6"/><polygon points="26,2 35,6 26,10 29,6"/></svg>calls</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6" stroke-dasharray="1,3"/><circle cx="31" cy="6" r="3.5"/></svg>names</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6" stroke-dasharray="1,3"/><circle cx="31" cy="6" r="3.5" fill="none"/></svg>uses</li></ul></div></figure>
+<h2>Modules</h2>
+<div class="modules"><ul>
+<li><a href="#playwright_rs_trace.action">action</a></li>
+<li><a href="#playwright_rs_trace.error">error</a></li>
+<li><a href="#playwright_rs_trace.event">event</a></li>
+<li><a href="#playwright_rs_trace.jsonl">jsonl</a></li>
+<li><a href="#playwright_rs_trace.network">network</a></li>
+<li><a href="#playwright_rs_trace.tests">tests</a></li>
+<li><a href="#playwright_rs_trace.trace">trace</a></li>
+</ul>
+</div>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>uses</td><td><a href="../containers/playwright_rs.html">playwright_rs</a></td><td>playwright_rs_trace</td><td></td></tr>
+</tbody></table>
+<section id="playwright_rs_trace.action">
+<h2>action <small>playwright_rs_trace.action</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/action.rs"><code>crates/playwright-rs-trace/src/action.rs</code></a></p>
+<p>Action — reassembled from <code>before</code> + optional <code>input</code> + zero-or-more
+<code>log</code> + <code>after</code> events sharing a <code>call_id</code>.</p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>Result</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ActionError, AfterEvent, BeforeEvent, InputEvent, LogEvent, Point, TraceEvent</td><td></td></tr>
+</tbody></table>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>Action, ActionStream</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.error">
+<h2>error <small>playwright_rs_trace.error</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/error.rs"><code>crates/playwright-rs-trace/src/error.rs</code></a></p>
+<p>Error types for trace parsing.</p>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>Result</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl">playwright_rs_trace.jsonl</a></td><td>Result, TraceError</td><td></td></tr>
+<tr><td>uses</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>TraceError</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>Result, TraceError</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.event">
+<h2>event <small>playwright_rs_trace.event</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/event.rs"><code>crates/playwright-rs-trace/src/event.rs</code></a></p>
+<p>Trace event types.</p>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>calls</td><td><a href="../containers/playwright_rs.html#playwright_rs.tests">playwright_rs.tests</a></td><td>TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>ActionError, AfterEvent, BeforeEvent, InputEvent, LogEvent, Point, TraceEvent</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>ContextOptions, RawEvent, TraceEvent</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.jsonl">
+<h2>jsonl <small>playwright_rs_trace.jsonl</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/jsonl.rs"><code>crates/playwright-rs-trace/src/jsonl.rs</code></a></p>
+<p>Tiny JSONL line iterator.</p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>Result, TraceError</td><td></td></tr>
+</tbody></table>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>JsonLines</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.network">
+<h2>network <small>playwright_rs_trace.network</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/network.rs"><code>crates/playwright-rs-trace/src/network.rs</code></a></p>
+<p><code>trace.network</code> — HAR-like resource snapshots.</p>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>NetworkEntry</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>NetworkEntry</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.tests">
+<h2>tests <small>playwright_rs_trace.tests</small></h2>
+<p class="meta"><span class="tag">tests</span> · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/tests"><code>crates/playwright-rs-trace/tests</code></a></p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>uses</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>TraceError</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ActionPhase, TraceEvent</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.network">playwright_rs_trace.network</a></td><td>NetworkEntry</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>TraceReader</td><td></td></tr>
+</tbody></table>
+</section>
+<section id="playwright_rs_trace.trace">
+<h2>trace <small>playwright_rs_trace.trace</small></h2>
+<p class="meta"><a href="https://github.com/padamson/playwright-rust/blob/main/crates/playwright-rs-trace/src/trace.rs"><code>crates/playwright-rs-trace/src/trace.rs</code></a></p>
+<p>[<code>TraceReader</code>] — open a Playwright trace zip and stream its
+contents lazily.</p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.action">playwright_rs_trace.action</a></td><td>Action, ActionStream</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.error">playwright_rs_trace.error</a></td><td>Result, TraceError</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.event">playwright_rs_trace.event</a></td><td>ContextOptions, RawEvent, TraceEvent</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.jsonl">playwright_rs_trace.jsonl</a></td><td>JsonLines</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.network">playwright_rs_trace.network</a></td><td>NetworkEntry</td><td></td></tr>
+</tbody></table>
+<h3>Used by</h3>
+<table><thead><tr><th>Kind</th><th>Source</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>calls</td><td><a href="../containers/playwright_rs.html#playwright_rs.tests">playwright_rs.tests</a></td><td>open</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests">playwright_rs_site_e2e.tests</a></td><td>open</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.tests">playwright_rs_trace.tests</a></td><td>TraceReader</td><td></td></tr>
+</tbody></table>
+</section>
+</main>
+<footer>Built with <a href="https://padamson.github.io/asbuilt/">asbuilt</a> v0.3.0</footer>
+</body>
+</html>

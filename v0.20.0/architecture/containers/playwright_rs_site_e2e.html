@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-theme-default="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="asbuilt docs 0.3.0">
+<title>playwright-rust · Architecture · playwright-rs-site-e2e</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../theme.css">
+<link rel="stylesheet" href="../viewer.css">
+<script src="../theme.js"></script>
+<script src="../viewer.js" defer></script>
+<link rel="stylesheet" href="../../architecture.css">
+</head>
+<body>
+<header><div class="bar"><nav class="trail" aria-label="Breadcrumb"><a class="home" href="../../">playwright-rust</a><span class="sep" aria-hidden="true">/</span><a class="site" href="../index.html"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.24 3.21L17.61 1.26L21.97 8.81L18.6 10.76zM3.06 11.38L15.28 4.33L18.15 9.3L5.93 16.36zM1 13.77L3.88 12.1L5.71 15.29L2.84 16.96zM20.65 13.45A10.32 10.32 0 0 1 17.16 18.37L15.06 15.65A6.88 6.88 0 0 0 17.39 12.37zM14.78 19.74A10.32 10.32 0 0 1 6.06 19.34L7.65 16.29A6.88 6.88 0 0 0 13.47 16.57zM17.95 12.13L23 14.59L21.8 17.07L16.75 14.6zM9.67 17.46L7.76 22.74L5.16 21.8L7.09 16.52zM10.36 10.49L11.79 12.97L12.78 12.4L11.35 9.91zM13.31 11.7L18.47 20.64L17.77 21.04L12.61 12.1zM11.62 12.68L16.78 21.61L16.08 22.01L10.92 13.08zM18.07 19.94L18.47 20.64L16.08 22.01L15.68 21.31z"/></svg>Architecture</a></nav><nav class="views" aria-label="Views"><a href="../views.html">Curated views</a></nav><label class="scheme" hidden>Theme <select id="scheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div><nav class="containers" aria-label="Containers"><a href="../containers/playwright_rs.html">playwright-rs</a><a href="../containers/playwright_rs_fuzz.html">playwright-rs-fuzz</a><a href="../containers/playwright_rs_macros.html">playwright-rs-macros</a><a href="../containers/playwright_rs_site.html">playwright-rs-site</a><span aria-current="page">playwright-rs-site-e2e</span><a href="../containers/playwright_rs_trace.html">playwright-rs-trace</a><a href="../containers/xtask.html">xtask</a></nav></header>
+<main>
+<h1>playwright-rs-site-e2e</h1>
+<p class="meta">test crate · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/site-e2e"><code>crates/site-e2e</code></a></p>
+<figure class="view" data-viewer><div class="viewer-bar" hidden><span class="viewer-scale"></span><button type="button" data-viewer-zoom="out" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" data-viewer-zoom="in" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" data-viewer-mode="fit" aria-pressed="false">Fit</button><button type="button" data-viewer-mode="one" aria-pressed="false">1:1</button><button type="button" data-viewer-wide aria-pressed="false">Wide</button><button type="button" data-viewer-legend aria-pressed="true">Legend</button><button type="button" data-viewer-full>Fullscreen</button><span class="viewer-hint"></span></div><script type="application/json" class="viewer-edges">{"playwright_rs_site_e2e.tests->playwright_rs":[{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs","target_href":"../containers/playwright_rs.html","kind":"names","items":["PLAYWRIGHT_VERSION"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.api.launch_options","target_href":"../containers/playwright_rs.html#playwright_rs.api.launch_options","kind":"constructs","items":["LaunchOptions"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.assertions","target_href":"../containers/playwright_rs.html#playwright_rs.assertions","kind":"calls","items":["expect","expect_page"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.aria_snapshot","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.aria_snapshot","kind":"constructs","items":["AriaSnapshotMode","AriaSnapshotOptions"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.browser","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.browser","kind":"names","items":["Browser"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.browser_context.options","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.browser_context.options","kind":"constructs","items":["Viewport"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.har_options","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.har_options","kind":"constructs","items":["StartHarOptions"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.locator","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.locator","kind":"names","items":["Locator"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.page","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.page","kind":"names","items":["Page"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.playwright","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.playwright","kind":"calls","items":["Playwright"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.screencast","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.screencast","kind":"constructs","items":["ActionCursor","ScreencastStartOptions","ShowActionsOptions","ShowActionsStyle"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.screenshot","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.screenshot","kind":"constructs","items":["Animations","ScreenshotOptions"],"technology":null},{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs.protocol.tracing","target_href":"../containers/playwright_rs.html#playwright_rs.protocol.tracing","kind":"constructs","items":["TracingStartOptions","TracingStopOptions"],"technology":null}],"playwright_rs_site_e2e.tests->playwright_rs_trace":[{"source":"playwright_rs_site_e2e.tests","source_href":"../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests","target":"playwright_rs_trace.trace","target_href":"../containers/playwright_rs_trace.html#playwright_rs_trace.trace","kind":"calls","items":["open"],"technology":null}]}</script><div class="viewer-frame" role="group" aria-label="playwright-rs-site-e2e: diagram"><svg viewBox="0.00 0.00 788.00 593.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="c4" data-view="view_playwright_rs_site_e2e" role="img" aria-label="playwright-rs-site-e2e">
+<g id="view_playwright_rs_site_e2e-graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 578.3)">
+<g id="view_playwright_rs_site_e2e-clust1" class="cluster c4-k-container">
+
+<polygon fill="#722f24" stroke="#57130f" points="185.02,-289.75 185.02,-555.25 569.02,-555.25 569.02,-289.75 185.02,-289.75"/>
+<text xml:space="preserve" text-anchor="start" x="193.02" y="-541.8" font-family="Arial" font-weight="bold" font-size="11.00" fill="#ffffe5" fill-opacity="0.701961">PLAYWRIGHT&#45;RS&#45;SITE&#45;E2E</text>
+</g>
+
+<a href="../containers/playwright_rs_site_e2e.html#playwright_rs_site_e2e.tests"><g id="view_playwright_rs_site_e2e-node1" class="node c4-k-tests">
+<title>playwright_rs_site_e2e.tests</title>
+<polygon fill="#efe8e2" stroke="#c6c0ba" stroke-width="0" points="537.04,-501.75 217,-501.75 217,-321.75 537.04,-321.75 537.04,-501.75"/>
+<text xml:space="preserve" text-anchor="start" x="356.39" y="-404.62" font-family="Arial" font-size="20.00" fill="#4e4844">tests</text>
+</g></a>
+
+<a href="../containers/playwright_rs.html"><g id="view_playwright_rs_site_e2e-node2" class="node c4-k-container">
+<title>playwright_rs</title>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="320.04,-180 0,-180 0,0 320.04,0 320.04,-180"/>
+<text xml:space="preserve" text-anchor="start" x="103.4" y="-112.38" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs</text>
+<text xml:space="preserve" text-anchor="start" x="91.4" y="-91.88" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">library and binary crate</text>
+<text xml:space="preserve" text-anchor="start" x="31.02" y="-70.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">playwright: High&#45;level Rust bindings for</text>
+<text xml:space="preserve" text-anchor="start" x="92.9" y="-52.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">Microsoft Playwright</text>
+</g></a>
+
+<a href="../containers/playwright_rs_trace.html"><g id="view_playwright_rs_site_e2e-node3" class="node c4-k-container">
+<title>playwright_rs_trace</title>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="758.08,-180 429.96,-180 429.96,0 758.08,0 758.08,-180"/>
+<text xml:space="preserve" text-anchor="start" x="511.89" y="-139.38" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;trace</text>
+<text xml:space="preserve" text-anchor="start" x="558.77" y="-118.88" font-family="Arial" font-size="13.00" fill="#ffffe5" class="c4-muted">library crate</text>
+<text xml:space="preserve" text-anchor="start" x="457.52" y="-97.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">Programmatic parser for [Playwright][pw]</text>
+<text xml:space="preserve" text-anchor="start" x="550.14" y="-79.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">trace zip files</text>
+<text xml:space="preserve" text-anchor="start" x="450.02" y="-61.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">(trace formats v8 to v10, v9 from 0.2.0 and</text>
+<text xml:space="preserve" text-anchor="start" x="516.77" y="-43.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">v10 from 0.2.1; verified</text>
+<text xml:space="preserve" text-anchor="start" x="463.89" y="-25.62" font-family="Arial" font-size="15.00" fill="#ffffe5" class="c4-muted">against traces recorded by the bundled</text>
+</g></a>
+
+<g id="view_playwright_rs_site_e2e-edge1" class="edge" data-from="playwright_rs_site_e2e.tests" data-to="playwright_rs">
+<title>playwright_rs_site_e2e.tests → playwright_rs</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M316.86,-322.11C288.23,-279.92 253.95,-229.4 224.75,-186.38"/><path class="c4-hit" d="M316.86,-322.11C288.23,-279.92 253.95,-229.4 224.75,-186.38"/>
+<ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="222.54" cy="-183.13" rx="3" ry="3"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="275.03,-240 275.03,-261.75 440.03,-261.75 440.03,-240 275.03,-240" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="278.03" y="-246" font-family="Arial" font-size="14.00" fill="#c9c9c9">PLAYWRIGHT_VERSION</text>
+</g>
+
+<g id="view_playwright_rs_site_e2e-edge2" class="edge" data-from="playwright_rs_site_e2e.tests" data-to="playwright_rs_trace">
+<title>playwright_rs_site_e2e.tests → playwright_rs_trace</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M437.18,-322.11C465.46,-280.44 499.25,-230.65 528.21,-187.97"/><path class="c4-hit" d="M437.18,-322.11C465.46,-280.44 499.25,-230.65 528.21,-187.97"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="532.38,-181.83 530.96,-189.93 532.05,-183.2 528.58,-188.32 528.16,-188.04 527.75,-187.76 531.23,-182.64 525.37,-186.14 532.38,-181.83"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="492.03,-240 492.03,-261.75 528.03,-261.75 528.03,-240 492.03,-240" class="c4-label-bg"/>
+<text xml:space="preserve" text-anchor="start" x="495.03" y="-246" font-family="Arial" font-size="14.00" fill="#c9c9c9">open</text>
+</g>
+</g>
+</svg></div><div class="legend" role="group" aria-label="Legend"><ul><li><span class="legend-swatch c4-k-container"></span>crate</li><li><span class="legend-swatch c4-k-tests"></span>tests</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6"/><polygon points="26,2 35,6 26,10 29,6"/></svg>calls</li><li><svg class="legend-line" viewBox="0 0 36 12" width="27" height="9" aria-hidden="true"><line x1="1" y1="6" x2="26" y2="6" stroke-dasharray="1,3"/><circle cx="31" cy="6" r="3.5"/></svg>names</li></ul></div></figure>
+<h2>Modules</h2>
+<div class="modules"><ul>
+<li><a href="#playwright_rs_site_e2e.tests">tests</a></li>
+</ul>
+</div>
+<section id="playwright_rs_site_e2e.tests">
+<h2>tests <small>playwright_rs_site_e2e.tests</small></h2>
+<p class="meta"><span class="tag">tests</span> · <a href="https://github.com/padamson/playwright-rust/blob/main/crates/site-e2e/tests"><code>crates/site-e2e/tests</code></a></p>
+<h3>Uses</h3>
+<table><thead><tr><th>Kind</th><th>Target</th><th>Items</th><th>Technology</th></tr></thead><tbody>
+<tr><td>names</td><td><a href="../containers/playwright_rs.html">playwright_rs</a></td><td>PLAYWRIGHT_VERSION</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.api.launch_options">playwright_rs.api.launch_options</a></td><td>LaunchOptions</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs.html#playwright_rs.assertions">playwright_rs.assertions</a></td><td>expect, expect_page</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.aria_snapshot">playwright_rs.protocol.aria_snapshot</a></td><td>AriaSnapshotMode, AriaSnapshotOptions</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.browser">playwright_rs.protocol.browser</a></td><td>Browser</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.browser_context.options">playwright_rs.protocol.browser_context.options</a></td><td>Viewport</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.har_options">playwright_rs.protocol.har_options</a></td><td>StartHarOptions</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.locator">playwright_rs.protocol.locator</a></td><td>Locator</td><td></td></tr>
+<tr><td>names</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.page">playwright_rs.protocol.page</a></td><td>Page</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.playwright">playwright_rs.protocol.playwright</a></td><td>Playwright</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.screencast">playwright_rs.protocol.screencast</a></td><td>ActionCursor, ScreencastStartOptions, ShowActionsOptions, ShowActionsStyle</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.screenshot">playwright_rs.protocol.screenshot</a></td><td>Animations, ScreenshotOptions</td><td></td></tr>
+<tr><td>constructs</td><td><a href="../containers/playwright_rs.html#playwright_rs.protocol.tracing">playwright_rs.protocol.tracing</a></td><td>TracingStartOptions, TracingStopOptions</td><td></td></tr>
+<tr><td>calls</td><td><a href="../containers/playwright_rs_trace.html#playwright_rs_trace.trace">playwright_rs_trace.trace</a></td><td>open</td><td></td></tr>
+</tbody></table>
+</section>
+</main>
+<footer>Built with <a href="https://padamson.github.io/asbuilt/">asbuilt</a> v0.3.0</footer>
+</body>
+</html>
