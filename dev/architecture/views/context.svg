@@ -59,14 +59,14 @@
 <!-- playwright_rs_trace -->
 <g id="node7" class="node">
 <title>playwright_rs_trace</title>
-<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="338.5,-760 18.5,-760 18.5,-580 338.5,-580 338.5,-760"/>
-<text text-anchor="start" x="96" y="-718" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;trace</text>
-<text text-anchor="start" x="143" y="-697.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library crate</text>
-<text text-anchor="start" x="41.5" y="-678" font-family="Arial" font-size="15.00" fill="#ffffe5">Programmatic parser for [Playwright][pw]</text>
-<text text-anchor="start" x="134.5" y="-661" font-family="Arial" font-size="15.00" fill="#ffffe5">trace zip files</text>
-<text text-anchor="start" x="44.5" y="-644" font-family="Arial" font-size="15.00" fill="#ffffe5">(trace formats v8 and v9, v9 from 0.2.0;</text>
-<text text-anchor="start" x="105" y="-627" font-family="Arial" font-size="15.00" fill="#ffffe5">verified against traces</text>
-<text text-anchor="start" x="74.5" y="-610" font-family="Arial" font-size="15.00" fill="#ffffe5">recorded by the bundled driver,</text>
+<polygon fill="#ce422b" stroke="#a11309" stroke-width="0" points="343,-760 14,-760 14,-580 343,-580 343,-760"/>
+<text text-anchor="start" x="96.5" y="-718" font-family="Arial" font-size="20.00" fill="#fffffa">playwright&#45;rs&#45;trace</text>
+<text text-anchor="start" x="143.5" y="-697.6" font-family="Arial" font-size="13.00" fill="#ffffe5">library crate</text>
+<text text-anchor="start" x="42" y="-678" font-family="Arial" font-size="15.00" fill="#ffffe5">Programmatic parser for [Playwright][pw]</text>
+<text text-anchor="start" x="135" y="-661" font-family="Arial" font-size="15.00" fill="#ffffe5">trace zip files</text>
+<text text-anchor="start" x="34.5" y="-644" font-family="Arial" font-size="15.00" fill="#ffffe5">(trace formats v8 to v10, v9 from 0.2.0 and</text>
+<text text-anchor="start" x="101.5" y="-627" font-family="Arial" font-size="15.00" fill="#ffffe5">v10 from 0.2.1; verified</text>
+<text text-anchor="start" x="48.5" y="-610" font-family="Arial" font-size="15.00" fill="#ffffe5">against traces recorded by the bundled</text>
 </g>
 <!-- node_driver -->
 <g id="node8" class="node">
