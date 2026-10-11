@@ -590,7 +590,7 @@ function __wbg_get_imports() {
             console.warn(arg0, arg1);
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 237, ret: Externref, inner_ret: Some(Externref) }, mutable: false }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 213, ret: Externref, inner_ret: Some(Externref) }, mutable: false }) -> Externref`.
             const ret = makeClosure(arg0, arg1, wasm_bindgen_4f4491618736e760___convert__closures_____invoke___wasm_bindgen_4f4491618736e760___JsValue__wasm_bindgen_4f4491618736e760___JsValue__true_);
             return ret;
         },
