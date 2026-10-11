@@ -1,0 +1,77 @@
+[
+  {
+    "description": "Show the same browser test in another Playwright language beside its Rust version, the way to port a test to playwright-rs. Switches the page's comparison to that language and returns both versions.",
+    "input_schema": {
+      "properties": {
+        "language": {
+          "enum": [
+            "Python",
+            "Java",
+            ".NET"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "language"
+      ],
+      "type": "object"
+    },
+    "name": "compare_with"
+  },
+  {
+    "description": "How to add playwright-rs to a Rust project: the Cargo.toml dependencies for the version this page documents.",
+    "input_schema": {
+      "properties": {},
+      "type": "object"
+    },
+    "name": "get_install"
+  },
+  {
+    "description": "The Rust code sample one feature card shows (for a card with tabs, the tab it shows now), by an id list_features returns.",
+    "input_schema": {
+      "properties": {
+        "id": {
+          "description": "A feature id, such as \"locators\".",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "get_snippet"
+  },
+  {
+    "description": "The playwright-rs features this page shows, each with the id get_snippet takes, its title, and a one-line summary.",
+    "input_schema": {
+      "properties": {},
+      "type": "object"
+    },
+    "name": "list_features"
+  },
+  {
+    "description": "The versions of this page that can be opened, as the version switcher lists them, and which one is open.",
+    "input_schema": {
+      "properties": {},
+      "type": "object"
+    },
+    "name": "list_versions"
+  },
+  {
+    "description": "Open this page for another version of playwright-rs, as choosing it in the version switcher does. Takes a version list_versions returns, such as \"0.19.0\" or \"dev\". The page navigates away once it answers.",
+    "input_schema": {
+      "properties": {
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "type": "object"
+    },
+    "name": "open_version"
+  }
+]
