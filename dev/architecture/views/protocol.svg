@@ -2878,10 +2878,10 @@
 <!-- assertions&#45;&gt;evaluate_conversion -->
 <g id="edge65" class="edge">
 <title>assertions&#45;&gt;evaluate_conversion</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M34068.95,-5816.76C33411.91,-5844.16 30857.21,-5946.94 28755,-5980 24904.59,-6040.55 23941.39,-5982.72 20090.5,-5983.5 19855.59,-5983.55 3399.39,-6055.67 3177,-5980 3131.11,-5964.39 3087.3,-5934.97 3050.97,-5904.95"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M34068.95,-5816.76C33411.91,-5844.16 30857.21,-5946.94 28755,-5980 24900.14,-6040.62 23935.83,-5982.72 20080.5,-5983.5 19845.73,-5983.55 3399.26,-6055.62 3177,-5980 3131.11,-5964.39 3087.3,-5934.97 3050.97,-5904.95"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3045.21,-5900.13 3053.13,-5902.35 3048.4,-5902.15 3051.28,-5904.55 3050.96,-5904.94 3050.64,-5905.32 3047.76,-5902.92 3048.8,-5907.53 3045.21,-5900.13 3045.21,-5900.13"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="19969.5,-6010.5 19969.5,-6031.5 20090.5,-6031.5 20090.5,-6010.5 19969.5,-6010.5"/>
-<text text-anchor="start" x="19973" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">serialize_argument</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="19959.5,-6010.5 19959.5,-6031.5 20080.5,-6031.5 20080.5,-6010.5 19959.5,-6010.5"/>
+<text text-anchor="start" x="19963" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">serialize_argument</text>
 </g>
 <!-- assertions&#45;&gt;screenshot -->
 <g id="edge66" class="edge">
@@ -3082,10 +3082,11 @@
 <!-- tests&#45;&gt;credentials -->
 <g id="edge36" class="edge">
 <title>tests&#45;&gt;credentials</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M32135.81,-6128.9C32117.63,-6122.84 32099.12,-6117.65 32081,-6114 31447.83,-5986.43 21097.72,-6118.02 20455,-6054 20303.13,-6038.87 20269.9,-6002.82 20118,-5988 20092.88,-5985.55 12872.88,-5988.16 12849,-5980 12803.84,-5964.57 12760.74,-5935.66 12724.9,-5906.05"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M32135.81,-6128.9C32117.63,-6122.84 32099.12,-6117.65 32081,-6114 31447.28,-5986.32 21088.27,-6118.07 20445,-6054 20293.13,-6038.87 20259.9,-6002.82 20108,-5988 20082.91,-5985.55 12872.85,-5988.15 12849,-5980 12803.84,-5964.57 12760.74,-5935.66 12724.9,-5906.05"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="12724.73,-5905.9 12719.36,-5905.31 12717.84,-5900.12 12723.21,-5900.71 12724.73,-5905.9"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="20455,-6010.5 20455,-6031.5 20600,-6031.5 20600,-6010.5 20455,-6010.5"/>
-<text text-anchor="start" x="20458.5" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">CredentialsGetOptions</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="20445,-6003 20445,-6039 20611,-6039 20611,-6003 20445,-6003"/>
+<text text-anchor="start" x="20448" y="-6024.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">CredentialsCreateOptions,</text>
+<text text-anchor="start" x="20448" y="-6009.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">CredentialsGetOptions</text>
 </g>
 <!-- tests&#45;&gt;proxy -->
 <g id="edge37" class="edge">
@@ -3130,10 +3131,10 @@
 <!-- tests&#45;&gt;clock -->
 <g id="edge42" class="edge">
 <title>tests&#45;&gt;clock</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M32135.81,-6128.89C32117.63,-6122.83 32099.12,-6117.65 32081,-6114 31747.11,-6046.77 20160.58,-6056.46 19820,-6054 16747.05,-6031.81 15978.9,-6015.95 12906,-5988 12880.31,-5987.77 12005.25,-5988.51 11981,-5980 11936.58,-5964.42 11894.33,-5935.56 11859.21,-5906.04"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M32135.81,-6128.89C32117.63,-6122.83 32099.12,-6117.65 32081,-6114 31746.84,-6046.72 20150.86,-6056.46 19810,-6054 16741.5,-6031.83 15974.46,-6015.94 12906,-5988 12880.31,-5987.77 12005.25,-5988.51 11981,-5980 11936.58,-5964.42 11894.33,-5935.56 11859.21,-5906.04"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="11859.14,-5905.98 11853.76,-5905.34 11852.29,-5900.13 11857.66,-5900.77 11859.14,-5905.98"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="19820,-6010.5 19820,-6031.5 19943,-6031.5 19943,-6010.5 19820,-6010.5"/>
-<text text-anchor="start" x="19823.5" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ClockInstallOptions</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="19810,-6010.5 19810,-6031.5 19933,-6031.5 19933,-6010.5 19810,-6010.5"/>
+<text text-anchor="start" x="19813.5" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">ClockInstallOptions</text>
 </g>
 <!-- tests&#45;&gt;route_service -->
 <g id="edge43" class="edge">
@@ -3156,10 +3157,10 @@
 <!-- tests&#45;&gt;video -->
 <g id="edge45" class="edge">
 <title>tests&#45;&gt;video</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M32135.79,-6129.01C32117.61,-6122.93 32099.11,-6117.7 32081,-6114 31925.13,-6082.12 20786.09,-5988.99 20627,-5988 20607.75,-5987.88 15101.19,-5986.31 15083,-5980 15037.49,-5964.22 14994.29,-5934.41 14958.71,-5904.16"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M32135.79,-6129.01C32117.61,-6122.93 32099.11,-6117.7 32081,-6114 31925.28,-6082.15 20796.94,-5988.99 20638,-5988 20618.71,-5987.88 15101.22,-5986.32 15083,-5980 15037.49,-5964.22 14994.29,-5934.41 14958.71,-5904.16"/>
 <ellipse fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" cx="14956.24" cy="-5902.04" rx="3" ry="3"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="27699,-6010.5 27699,-6031.5 27740,-6031.5 27740,-6010.5 27699,-6010.5"/>
-<text text-anchor="start" x="27702.5" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Video</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="transparent" points="27703,-6010.5 27703,-6031.5 27744,-6031.5 27744,-6010.5 27703,-6010.5"/>
+<text text-anchor="start" x="27706.5" y="-6016.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Video</text>
 </g>
 <!-- tests&#45;&gt;web_socket -->
 <g id="edge46" class="edge">
