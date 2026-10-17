@@ -1,0 +1,11 @@
+/* The architecture pages (the asbuilt docs tree under architecture/) in
+   this site's palette: pale rust and the rust accent on a light page, the
+   site's ink in the dark. Linked by `[docs] stylesheet` in asbuilt.toml
+   after the tree's own stylesheets, so it restates the page tokens, which
+   the diagrams' group boxes and labels follow, and gives the edges the
+   site's warm grey. */
+:root { --bg: #fdf3ef; --fg: #2a1d15; --muted: #7a5c4c; --accent: #ce422b; --rule: #e9d4c8; --code: #fbe2d7; --c4-edge: #b39a8c; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1a1410; --fg: #fdf3ef; --muted: #c9a894; --accent: #f0a884; --rule: #3d2c22; --code: #3d2c22; --c4-edge: #7a655a; }
+}
+:root[data-theme="dark"] { --bg: #1a1410; --fg: #fdf3ef; --muted: #c9a894; --accent: #f0a884; --rule: #3d2c22; --code: #3d2c22; --c4-edge: #7a655a; }
