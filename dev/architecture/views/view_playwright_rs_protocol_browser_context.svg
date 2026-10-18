@@ -286,10 +286,12 @@
 <g id="node40" class="node">
 <title>route_params</title>
 <polygon fill="#ffffff" stroke="#d6d6d6" stroke-width="0" points="10031.83,-180 9696.21,-180 9696.21,0 10031.83,0 10031.83,-180"/>
-<text xml:space="preserve" text-anchor="start" x="9802.15" y="-111.88" font-family="Arial" font-size="20.00" fill="#5b5b5b">route_params</text>
-<text xml:space="preserve" text-anchor="start" x="9716.27" y="-89.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">Wire&#45;format builders for `Route` commands,</text>
-<text xml:space="preserve" text-anchor="start" x="9766.9" y="-71.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">kept pure so they can be unit</text>
-<text xml:space="preserve" text-anchor="start" x="9719.65" y="-53.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">tested and mutation tested without a driver.</text>
+<text xml:space="preserve" text-anchor="start" x="9802.15" y="-129.88" font-family="Arial" font-size="20.00" fill="#5b5b5b">route_params</text>
+<text xml:space="preserve" text-anchor="start" x="9716.27" y="-107.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">Wire&#45;format builders for `Route` commands,</text>
+<text xml:space="preserve" text-anchor="start" x="9777.77" y="-89.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">and the rule for whether a</text>
+<text xml:space="preserve" text-anchor="start" x="9716.65" y="-71.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">handler kept its route, kept pure so they can</text>
+<text xml:space="preserve" text-anchor="start" x="9772.9" y="-53.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">be unit tested and mutation</text>
+<text xml:space="preserve" text-anchor="start" x="9788.27" y="-35.12" font-family="Arial" font-size="15.00" fill="#6d6d6d">tested without a driver.</text>
 </g>
 <!-- download -->
 <g id="node41" class="node">
