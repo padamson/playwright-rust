@@ -88,7 +88,7 @@ jobs:
             ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.64.1-v4
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe # v2.87.27
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-nextest
 
@@ -164,7 +164,7 @@ jobs:
           esac
 
       - name: Install parse-changelog
-        uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe # v2.87.27
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: parse-changelog
 
@@ -201,7 +201,7 @@ jobs:
           toolchain: stable
 
       - name: Install cargo-semver-checks
-        uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe # v2.87.27
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-semver-checks
 
