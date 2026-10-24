@@ -271,8 +271,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.libc]]
-version = "0.2.190"
-when = "2026-10-02"
+version = "0.2.191"
+when = "2026-10-16"
 trusted-publisher = "github:rust-lang/libc"
 
 [[publisher.memchr]]
@@ -469,15 +469,22 @@ user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.toml_datetime]]
-version = "1.1.1+spec-1.1.0"
-when = "2026-03-31"
+version = "1.1.2+spec-1.1.0"
+when = "2026-10-08"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.toml_edit]]
+version = "0.25.17+spec-1.1.0"
+when = "2026-10-09"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.toml_parser]]
-version = "1.1.2+spec-1.1.0"
-when = "2026-04-01"
+version = "1.1.5+spec-1.1.0"
+when = "2026-10-09"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -2179,6 +2186,24 @@ criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.8.0"
 aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.bit-set]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.9.1"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.bit-set]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.9.1 -> 0.10.0"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.bit-set]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.0 -> 0.11.1"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.bit-vec]]
 who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2189,6 +2214,18 @@ aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/mai
 who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
 delta = "0.7.0 -> 0.8.0"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.bit-vec]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.9.1"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.bit-vec]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.9.1 -> 0.10.1"
 aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.block-buffer]]
@@ -2208,6 +2245,12 @@ aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/mai
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.2.1 -> 0.2.2"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.core_detect]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+version = "1.0.0"
 aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.crunchy]]

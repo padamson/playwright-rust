@@ -25,6 +25,18 @@ criteria = "safe-to-deploy"
 delta = "0.8.9 -> 0.9.1"
 notes = "Pulled in by flate2 1.1.10. The crate keeps #![forbid(unsafe_code)] (the only 'unsafe' hits are comments), has no build script, and adds no dependencies: serde goes default-features = false with alloc, and the simd-adler32 floor moves 0.3.3 -> 0.3.8. No fs/net/process/env access in either version. Deflate side: new TDEFLFlush variants (Partial, PartialOpt, SyncOpt, NoSync) and #[non_exhaustive] on the public enums; CompressorOxide::with_params clamps window_bits to 15 and level to 10, and the zlib header now derives CINFO from window_bits with saturating_sub; flush_block skips emitting an empty block unless finishing; the stored-block path stops feeding the hash chain; SMALL_DIST_EXTRA shrinks to 128 entries indexed by match_dist >> 2, which stays in bounds because the branch is guarded by match_dist < 512. Two assert!(lookahead_size >= len_to_move) become debug_assert!; that is an internal invariant, and every downstream dict index is masked by LZ_DICT_SIZE_MASK, so a violation could corrupt output but not escape bounds. Inflate side: Huffman table validation is stricter (rejects over-subscribed tables step by step, matching zlib inftrees.c) and the incomplete-table rule is restated per RFC 1951; decompress_with_limit adds an out_max that OutputBuffer computes with saturating_add and clamps to the slice length, and the back-reference bounds check now uses that limit. wasm32 boxes the LZ code buffer. Remaining changes are docs, const fn, and Clone derives."
 
+[[audits.proptest]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-run"
+delta = "1.11.0 -> 1.12.0"
+notes = "Dev-dependency. Migrates rand 0.9 -> 0.10 and rand_xorshift 0.4 -> 0.5, replaces rand_chacha with chacha20 (rng feature), bumps bit-set and bit-vec, and adds core_detect. The changes sit in test_runner/rng.rs (the new rand_core traits), the runner and its scoped panic hook, and the numeric and float samplers. No unsafe added, no build script, no new fs/net/process/env access."
+
+[[audits.rand_xorshift]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-run"
+delta = "0.4.0 -> 0.5.0"
+notes = "Dev-dependency via proptest. A mechanical port to the rand_core 0.10 traits: RngCore becomes TryRng with Infallible errors, the impls and le helpers become rand_core::utils, and the bincode dev-dependency becomes postcard. The generator's arithmetic is unchanged. No unsafe, no build script, no I/O."
+
 [[audits.rustls]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
@@ -90,6 +102,12 @@ who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "1.0.6 -> 1.0.10"
 notes = "Data-only: src/lib.rs trust-anchor constants follow Mozilla's store (20 roots removed including emSign ECC Root CA - G3 for RUSTSEC-2026-0381, 4 added: SECOM TLS ECC/RSA 2024, Telia EC/RSA TLS v3). No code lines changed; #![forbid(unsafe_code)] kept; no build script. MSRV 1.64 -> 1.71; dev-dep yasna 0.5 -> 0.6."
+
+[[audits.zip]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "9.0.4 -> 9.0.5"
+notes = "Hardening release. AES password verification compares in constant time. apply_extra_fields rejects an AES extra field when the header's method is not AES (99) or when a second one appears, and caches the name and comment CRCs. The ZIP64 extra field reader errors on a truncated field instead of reading past it, and reads a value only when the entry asks for ZIP64. has_overlapping_entries now also flags an entry that runs into the central directory. New opt-in header-consistency checks (ZipStreamReader::enforce_header_consistency, ZipReadOptions::enforce_header_consistency, ZipArchive::validate_header_consistency, by_name_with_options) compare each local header with its central directory entry; all default off, and the seeks they add restore the reader position. extract.rs casts the fchmodat mode to libc::mode_t for the BSDs. No unsafe, no build script, no new runtime dependencies (count_instructions is a dev-dependency), no new fs/net/process/env access."
 
 [[trusted.aho-corasick]]
 criteria = "safe-to-deploy"
@@ -505,6 +523,12 @@ criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
 start = "2022-10-21"
 end = "2027-05-16"
+
+[[trusted.toml_edit]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2021-09-13"
+end = "2027-10-24"
 
 [[trusted.toml_parser]]
 criteria = "safe-to-deploy"

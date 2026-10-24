@@ -49,6 +49,16 @@ criteria = "safe-to-deploy"
 version = "2.11.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.borsh]]
+version = "1.8.1"
+criteria = "safe-to-run"
+notes = "In the lockfile through bit-vec 0.10's optional borsh feature, which nothing in this workspace enables; never compiled in any feature configuration (cargo tree --workspace --all-features finds no path)."
+
+[[exemptions.borsh-derive]]
+version = "1.8.1"
+criteria = "safe-to-run"
+notes = "In the lockfile through bit-vec 0.10's optional borsh feature, which nothing in this workspace enables; never compiled in any feature configuration (cargo tree --workspace --all-features finds no path)."
+
 [[exemptions.byteorder-lite]]
 version = "0.1.0"
 criteria = "safe-to-deploy"
@@ -276,6 +286,11 @@ criteria = "safe-to-deploy"
 [[exemptions.ppv-lite86]]
 version = "0.2.21"
 criteria = "safe-to-deploy"
+
+[[exemptions.proc-macro-crate]]
+version = "3.5.0"
+criteria = "safe-to-run"
+notes = "In the lockfile through bit-vec 0.10's optional borsh feature, which nothing in this workspace enables; never compiled in any feature configuration (cargo tree --workspace --all-features finds no path)."
 
 [[exemptions.proptest]]
 version = "1.11.0"
