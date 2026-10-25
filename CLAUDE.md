@@ -255,9 +255,11 @@ The sandbox is on (user settings) and `.claude/settings.json` (tracked)
 carries this repo's additions: `git`, `gh`, `cargo nextest run`,
 `cargo run`, `scripts/mutants.sh`, and `prek` run outside it because they
 need credentials or the browser's Mach ports the sandbox hides; loopback
-is allowed for the test servers; and the `configd` Mach lookup lets
-`cargo vet`/`audit`/`deny` run sandboxed. Keep that file to the sandbox
-block. Personal permission allowlists go in the untracked
+is allowed for the test servers; the `configd` Mach lookup lets
+`cargo vet`/`audit`/`deny` run sandboxed; and the `trustd.agent` lookup
+lets `cargo audit` verify TLS through the macOS platform verifier, without
+which it cannot fetch its database (`OSStatus -26276`). Keep that file to
+the sandbox block. Personal permission allowlists go in the untracked
 `.claude/settings.local.json`. A session here never writes into a sibling
 checkout. Hooks are installed once per clone by hand, since `.git/hooks`
 is outside the sandbox's write set:

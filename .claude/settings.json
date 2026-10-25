@@ -3,7 +3,10 @@
     "network": {
       "allowLocalBinding": true,
       "allowedDomains": ["localhost", "127.0.0.1", "[::1]"],
-      "allowMachLookup": ["com.apple.SystemConfiguration.configd"]
+      "allowMachLookup": [
+        "com.apple.SystemConfiguration.configd",
+        "com.apple.trustd.agent"
+      ]
     },
     "excludedCommands": [
       "git *",
