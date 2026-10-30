@@ -108,8 +108,8 @@
 <!-- tests&#45;&gt;error -->
 <g id="edge7" class="edge">
 <title>tests&#45;&gt;error</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="1,5" d="M367.48,-1029.14C218.28,-866.84 -52.03,-518.03 133,-288 196.01,-209.66 464.6,-170.18 644.49,-152.16"/>
-<ellipse fill="none" stroke="#8d8d8d" stroke-width="2" cx="648.21" cy="-151.79" rx="3" ry="3"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" d="M367.48,-1029.14C218.28,-866.84 -52.03,-518.03 133,-288 195.76,-209.97 462.47,-170.49 642.35,-152.37"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="649.76,-151.64 642.63,-155.74 648.5,-152.27 642.35,-152.88 642.3,-152.38 642.25,-151.88 648.41,-151.27 641.96,-149.02 649.76,-151.64"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="108.49,-625.5 108.49,-647.25 178.99,-647.25 178.99,-625.5 108.49,-625.5"/>
 <text xml:space="preserve" text-anchor="start" x="111.49" y="-631.5" font-family="Arial" font-size="14.00" fill="#c9c9c9">TraceError</text>
 </g>
