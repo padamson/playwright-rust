@@ -21,6 +21,7 @@ thiserror = { workspace = true }
 # build planned in slice 6).
 # The flate2 backend alone decodes deflate; zip's `deflate` feature would
 # also pull zopfli, an encoder a read-only parser never calls.
-zip = { version = "9", default-features = false, features = [
+# 9.0.5 is the first release with `ZipArchive::validate_header_consistency`.
+zip = { version = "9.0.5", default-features = false, features = [
     "deflate-flate2-zlib-rs",
 ] }

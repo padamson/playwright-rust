@@ -326,6 +326,35 @@ fn a_future_trace_version_is_refused() {
 }
 
 #[test]
+fn a_disagreeing_local_header_is_refused_before_the_trace_is_read() {
+    // The tampered entry is one `open` never reads, and `trace.trace` does
+    // not start with `context-options`. Without the whole-archive check at
+    // the top of `open` (deleted, moved after the context is parsed, or
+    // replaced by checking entries as they are read) this archive returns
+    // `MalformedAction` instead.
+    let mut zip_bytes = build_synthetic_zip(&[r#"{"type":"before","callId":"call@1"}"#], Some(&[]));
+    let name = "trace.network";
+    let header_start = zip::ZipArchive::new(Cursor::new(&zip_bytes))
+        .expect("read the archive")
+        .by_name(name)
+        .expect("find the network entry")
+        .header_start() as usize;
+    // The name follows the local header's 30-byte fixed block.
+    let name_at = header_start + 30;
+    let name_end = name_at + name.len();
+    assert_eq!(&zip_bytes[name_at..name_end], name.as_bytes());
+    zip_bytes[name_end - 1] = b'x';
+
+    let Err(error) = TraceReader::open(Cursor::new(zip_bytes)) else {
+        panic!("an archive whose headers disagree must be refused");
+    };
+    assert!(
+        matches!(&error, TraceError::InconsistentArchive(_)),
+        "got {error:?}"
+    );
+}
+
+#[test]
 fn unknown_event_via_synthetic_zip() {
     // Forward-compat contract: events with a `type` we don't model
     // surface as `TraceEvent::Unknown` carrying the original payload,
@@ -664,37 +693,19 @@ fn compact_json(s: &str) -> String {
 /// `trace.trace` entry carries only the required `context-options`
 /// header so `TraceReader::open` succeeds.
 fn build_synthetic_network_zip(network_lines: &[&str]) -> Vec<u8> {
-    use std::io::Write as _;
-    use zip::CompressionMethod;
-    use zip::ZipWriter;
-    use zip::write::SimpleFileOptions;
-
-    let mut buf = Vec::new();
-    {
-        let cursor = Cursor::new(&mut buf);
-        let mut zip = ZipWriter::new(cursor);
-        let opts = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
-
-        zip.start_file("trace.trace", opts).expect("start trace");
-        zip.write_all(format!("{}\n", context_line(8)).as_bytes())
-            .expect("write trace");
-
-        zip.start_file("trace.network", opts)
-            .expect("start network");
-        for line in network_lines {
-            zip.write_all(line.as_bytes()).expect("write network line");
-            zip.write_all(b"\n").expect("write newline");
-        }
-
-        zip.finish().expect("finish zip");
-    }
-    buf
+    build_synthetic_zip(&[&context_line(8)], Some(network_lines))
 }
 
 /// Build a minimal `.trace.zip` containing a single `trace.trace` entry
 /// holding the given JSONL lines. Used for synthetic forward-compat
 /// tests; production code reads zips produced by Playwright itself.
 fn build_synthetic_trace(jsonl_lines: &[&str]) -> Vec<u8> {
+    build_synthetic_zip(jsonl_lines, None)
+}
+
+/// A `trace.trace` entry holding `trace_lines`, then a `trace.network`
+/// entry holding `network_lines` when given, one JSONL line each.
+fn build_synthetic_zip(trace_lines: &[&str], network_lines: Option<&[&str]>) -> Vec<u8> {
     use std::io::Write as _;
     use zip::CompressionMethod;
     use zip::ZipWriter;
@@ -705,10 +716,13 @@ fn build_synthetic_trace(jsonl_lines: &[&str]) -> Vec<u8> {
         let cursor = Cursor::new(&mut buf);
         let mut zip = ZipWriter::new(cursor);
         let opts = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
-        zip.start_file("trace.trace", opts).expect("start file");
-        for line in jsonl_lines {
-            zip.write_all(line.as_bytes()).expect("write line");
-            zip.write_all(b"\n").expect("write newline");
+        let entries = std::iter::once(("trace.trace", trace_lines))
+            .chain(network_lines.map(|lines| ("trace.network", lines)));
+        for (name, lines) in entries {
+            zip.start_file(name, opts).expect("start entry");
+            for line in lines {
+                writeln!(zip, "{line}").expect("write line");
+            }
         }
         zip.finish().expect("finish zip");
     }

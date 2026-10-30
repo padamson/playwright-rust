@@ -9,6 +9,7 @@ use crate::network::NetworkEntry;
 use std::io::{BufRead, BufReader, Read, Seek};
 use std::path::Path;
 use zip::ZipArchive;
+use zip::result::ZipError;
 
 const TRACE_ENTRY: &str = "trace.trace";
 const NETWORK_ENTRY: &str = "trace.network";
@@ -37,8 +38,26 @@ pub struct TraceReader<R: Read + Seek> {
 impl<R: Read + Seek> TraceReader<R> {
     /// Open a trace from any `Read + Seek` source. For the typical
     /// file-on-disk case prefer [`crate::open`].
+    ///
+    /// Every entry's local header is checked against the central directory
+    /// before anything is parsed. The check covers the archive as it stands
+    /// at open; later reads from the same source are not checked again.
+    ///
+    /// # Errors
+    ///
+    /// - [`TraceError::Zip`] when the source is not a readable zip archive.
+    /// - [`TraceError::InconsistentArchive`] when its headers disagree, or
+    ///   its entries repeat a name or overlap.
+    /// - [`TraceError::MissingEntry`] when it has no `trace.trace`, or that
+    ///   entry holds no events.
+    /// - [`TraceError::Json`] or [`TraceError::MalformedAction`] when the
+    ///   first event is not valid `context-options` JSON.
+    /// - [`TraceError::UnsupportedVersion`] for a trace format outside 8 to 10.
+    /// - [`TraceError::Io`] when reading the source fails.
     pub fn open(reader: R) -> Result<Self> {
         let mut zip = ZipArchive::new(reader)?;
+        zip.validate_header_consistency()
+            .map_err(consistency_error)?;
         let context = parse_context(&mut zip)?;
         if !SUPPORTED_VERSIONS.contains(&context.version) {
             return Err(TraceError::UnsupportedVersion {
@@ -147,6 +166,15 @@ impl<R: Read + Seek> TraceReader<R> {
     }
 }
 
+/// An I/O failure during the consistency pass says nothing about the
+/// archive's headers, so it surfaces like any other failed zip read.
+fn consistency_error(error: ZipError) -> TraceError {
+    match error {
+        ZipError::Io(_) => TraceError::Zip(error),
+        other => TraceError::InconsistentArchive(other),
+    }
+}
+
 fn parse_context<R: Read + Seek>(zip: &mut ZipArchive<R>) -> Result<ContextOptions> {
     let entry = zip
         .by_name(TRACE_ENTRY)
@@ -194,4 +222,30 @@ fn parse_context<R: Read + Seek>(zip: &mut ZipArchive<R>) -> Result<ContextOptio
 pub fn open<P: AsRef<Path>>(path: P) -> Result<TraceReader<std::fs::File>> {
     let file = std::fs::File::open(path)?;
     TraceReader::open(file)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_io_failure_during_the_consistency_pass_is_not_a_rejection() {
+        let error = consistency_error(ZipError::Io(std::io::Error::other("disk gone")));
+        assert!(
+            matches!(error, TraceError::Zip(ZipError::Io(_))),
+            "got {error:?}"
+        );
+    }
+
+    #[test]
+    fn a_header_mismatch_is_a_rejection() {
+        let error = consistency_error(ZipError::InvalidArchive("mismatch".into()));
+        assert!(
+            matches!(
+                error,
+                TraceError::InconsistentArchive(ZipError::InvalidArchive(_))
+            ),
+            "got {error:?}"
+        );
+    }
 }

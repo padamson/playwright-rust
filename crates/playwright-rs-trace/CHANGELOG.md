@@ -9,6 +9,10 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING: `TraceReader::open` refuses an archive whose local file headers disagree with its central directory**, and `TraceError` is now `#[non_exhaustive]`. Such an archive shows different contents to readers that trust different headers, and a trace is often a file someone else produced. The check is `zip`'s `validate_header_consistency()`, so `zip` 9.0.5 is now the minimum; traces written by the 1.64 driver and by the Python and Node clients pass it. A refused trace returns the new `TraceError::InconsistentArchive`. Code that matches `TraceError` exhaustively needs a wildcard arm.
+
 ## [0.2.2] - 2026-10-16
 
 ### Fixed
