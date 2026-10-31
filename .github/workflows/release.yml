@@ -192,6 +192,9 @@ jobs:
   semver-checks:
     name: Semver Compatibility
     runs-on: ubuntu-latest
+    # rustdoc never runs the driver, so skip its download.
+    env:
+      PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 

@@ -18,6 +18,11 @@ name: Dependabot auto-merge
 # files. Its Client ID and private key are Dependabot secrets, the only
 # secrets a Dependabot-triggered run can read. It must not be on the
 # ruleset's bypass list, or its merges would skip the required checks.
+#
+# The one exception is a PR that edits this file, which is merged by hand.
+# A pull_request run takes the workflow and its action pins from the PR's
+# merge ref, so a bump of create-github-app-token would otherwise run the
+# new release with the App's private key before anyone reviewed it.
 
 on: pull_request
 
@@ -31,7 +36,29 @@ jobs:
     # opened the PR, the actor is who acted last. A human push to a
     # Dependabot branch skips this job instead of failing at the mint step.
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' }}
+    permissions:
+      contents: read
     steps:
+      # The files come from the event's own base and head SHAs, the commit
+      # this run's workflow was loaded from, not from the PR as it stands
+      # now: a force-push between the two would otherwise check the wrong
+      # commit. They are read into a variable first, so a failed `gh` call
+      # fails the job instead of passing an empty list to the match. The
+      # failure is deliberate: a red check on the PR is what says it waits
+      # on a person.
+      - name: Leave a PR that edits this workflow for a hand merge
+        run: |
+          files="$(gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq '.files[].filename')"
+          if printf '%s\n' "$files" | grep -qxF .github/workflows/dependabot-auto-merge.yml; then
+            echo "::error::This PR edits dependabot-auto-merge.yml. Review the bump and merge it by hand."
+            exit 1
+          fi
+        env:
+          REPO: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+
       - name: Mint a token for the merge App
         id: app-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0

@@ -80,9 +80,41 @@ jobs:
     - name: Run cargo vet
       run: cargo vet
 
-  # Semver compatibility is checked in release.yml, where it can gate the
-  # publish. This workflow never triggers on tag pushes, so a tag-gated job
-  # here would silently never run.
+  # The semver gate is the job in release.yml, which blocks the publish. This
+  # one runs the same check on every PR and push to main, so a break shows
+  # up before the release commit and its tag are public. It is deliberately
+  # not a required check: between releases Cargo.toml still carries the last
+  # released version, so red means the next release needs a bigger bump than
+  # planned, not that the change is wrong. playwright-rs-macros is left out
+  # because a proc-macro crate has no library API to compare.
+  semver-preview:
+    name: Semver preview
+    runs-on: ubuntu-latest
+    # rustdoc never runs the driver, so skip its download.
+    env:
+      PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+      with:
+        toolchain: stable
+
+    # Both the current tree and the crates.io baseline are built for rustdoc
+    # on every run; the cache carries both under target/.
+    - name: Cache Cargo
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      with:
+        shared-key: semver-preview
+
+    - name: Install cargo-semver-checks
+      uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+      with:
+        tool: cargo-semver-checks
+
+    - name: Check semver against the last release
+      run: cargo semver-checks check-release -p playwright-rs -p playwright-rs-trace
 
   mutation-testing:
     name: Mutation Testing (full)
