@@ -79,6 +79,12 @@ criteria = "safe-to-deploy"
 delta = "3.4.1 -> 3.4.2"
 notes = "No unsafe, no build script, no new deps beyond ureq-proto 0.6.3. Request-level configs whose connection settings differ from the Agent's (IP family, TCP_NODELAY, buffer sizes, User-Agent since it goes into proxy CONNECT, or any TLS field) now bypass the pool both ways: Config::can_share_pool_with and TlsConfig::can_share_pool_with destructure exhaustively so a new field forces a decision, TLS client certs, specific root sets and rustls crypto providers compare by Arc identity so independently built credentials never share a connection, and a bypassing connection gets a Weak::new() pool handle so it is neither borrowed from nor returned to the pool. This closes a path where a per-request TLS override could be served by a connection established under the Agent's TLS settings. TCP connect moves on to the next resolved address on HostUnreachable, NetworkUnreachable and AddrNotAvailable (plus WSAEACCES on Windows) in addition to ConnectionRefused, and reports the last real error instead of a synthesized refusal; other io errors still stop. The disable_verification(true) and client-cert constructions in the diff are all under cfg(test) against a synthetic transport."
 
+[[audits.ureq]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "3.4.2 -> 3.5.0"
+notes = "No unsafe (the crate is forbid(unsafe_code)), no build script, and no fs, env or process use added. The socks dependency is replaced by an in-tree SOCKS4/4A/5 client behind the socks-proxy feature: replies are fixed-size read_exact, the bound address is read into a 257-byte buffer that covers the largest length, and lengths are checked before the u8 casts. Agent::shutdown marks the pool closed and calls TcpStream::shutdown on every live connection through Weak handles registered under the pool lock (TcpTransport now holds an Arc<TcpStream>). New per-read and per-write timeouts. TransportAdapter deducts elapsed time, so a TLS, CONNECT or SOCKS handshake no longer restarts its budget on each read. A global or per-call timeout during the 100-continue wait now returns an error instead of sending the body. Socket reads interrupted by EINTR retry with the remaining timeout. Proxy userinfo is percent-decoded once (and encoded by ProxyBuilder) and splits at the first colon, per RFC 3986. A native-tls-no-default feature separates native-tls from its default roots. The rustls minimum moves to 0.23.46 and ureq-proto to 0.6.5. The rest is docs and tests (io_timeout_tests, shutdown_tests, tests/socks.rs, tests/native_tls.rs)."
+
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
@@ -96,6 +102,12 @@ who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.2 -> 0.6.4"
 notes = "No unsafe, no build script, no new deps. Redirect Location joining gains the RFC 3986 network-path case: a Location starting with // takes the base's scheme and its own authority, failing with BadLocationHeader when the base has no scheme or the result does not parse, so a scheme-relative redirect no longer resolves as a root-relative path on the old host. ArrayVec gains Clone, PartialEq/Eq over the active prefix, Default, and a try_push that returns CapacityError instead of indexing past the array; push itself is unchanged and now documents its panic. CapacityError is exported doc(hidden). Everything else is unit tests."
+
+[[audits.ureq-proto]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.6.4 -> 0.6.5"
+notes = "No unsafe, no build script, no new deps. Adds client::header_raw, which appends a header through http's Builder::header, so names and values get the same validation (CR, LF and NUL rejected, covered by tests), and records the caller's name casing in a HeaderCasing request extension keyed by the lowercased name and its index among same-name values. AmendedRequest::all_headers writes that casing when the extension is present and the normal names otherwise. Protocol checks still match case-insensitively: Host and Content-Length duplicates are refused, and a redirect still strips Authorization and Cookie whatever their casing, as tests show. The two unwraps follow a successful builder.header call and an insert just above. The rest is unit tests and version metadata."
 
 [[audits.webpki-roots]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
