@@ -869,6 +869,63 @@ async fn test_locator_focus_and_blur() {
     server.shutdown();
 }
 
+/// `is_focused()` and `to_be_focused()` take any Playwright selector, not only
+/// plain CSS: a role locator and `nth()` used to fail as an invalid selector,
+/// because the selector went to `document.querySelectorAll`.
+#[tokio::test]
+async fn test_locator_is_focused_with_playwright_selectors() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/focus_blur.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+
+    use playwright_rs::{AriaRole, GetByRoleOptions, expect};
+
+    let second_input = page.locator("input").nth(1);
+    second_input.focus().await.expect("Failed to focus input2");
+    assert!(
+        second_input
+            .is_focused()
+            .await
+            .expect("is_focused() should accept an nth() locator"),
+        "nth(1) should be focused"
+    );
+    assert!(
+        !page
+            .locator("input")
+            .nth(0)
+            .is_focused()
+            .await
+            .expect("is_focused() should accept an nth() locator"),
+        "nth(0) should not be focused"
+    );
+
+    let button = page.get_by_role(
+        AriaRole::Button,
+        Some(GetByRoleOptions::default().name("Button").exact(true)),
+    );
+    button.focus().await.expect("Failed to focus the button");
+    expect(button)
+        .to_be_focused()
+        .await
+        .expect("to_be_focused() should accept a role locator");
+
+    // A selector that matches nothing is not focused, rather than an error.
+    assert!(
+        !page
+            .locator("#no-such-element")
+            .is_focused()
+            .await
+            .expect("is_focused() on a missing element should be Ok(false)"),
+        "A missing element should not be focused"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
 // ============================================================================
 // press_sequentially() Method
 // ============================================================================

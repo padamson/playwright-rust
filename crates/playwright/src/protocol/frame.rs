@@ -1323,24 +1323,23 @@ impl Frame {
             value: serde_json::Value,
         }
 
-        // Use JavaScript to check if the element is the active element
-        // The script queries the DOM and returns true/false
-        let script = r#"selector => {
-                const elements = document.querySelectorAll(selector);
-                if (elements.length === 0) return false;
-                const element = elements[0];
-                return document.activeElement === element;
-            }"#;
-
+        // `evalOnSelectorAll` resolves the selector on the server, so every
+        // Playwright selector works (`internal:role=…`, `>> nth=1`, text
+        // selectors), not only plain CSS. Not `evalOnSelector`: that throws when
+        // nothing matches, and a missing element is simply not focused, which
+        // lets `to_be_focused` keep retrying until it appears. The first match
+        // is the one checked, as before.
         let params = serde_json::json!({
-            "expression": script,
+            "selector": selector,
+            "expression": "ee => ee.length > 0 && ee[0] === document.activeElement",
+            "isFunction": true,
             "arg": {
-                "value": {"s": selector},
+                "value": {"v": "null"},
                 "handles": []
             }
         });
 
-        let result: EvaluateResult = self.channel().send("evaluateExpression", params).await?;
+        let result: EvaluateResult = self.channel().send("evalOnSelectorAll", params).await?;
 
         // Playwright protocol returns booleans as {"b": true} or {"b": false}
         if let serde_json::Value::Object(map) = &result.value
