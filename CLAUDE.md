@@ -269,6 +269,39 @@ cargo install prek
 prek install --overwrite   # replaces any legacy pre-commit hook
 ```
 
+## Manual checks
+
+What a session cannot check and the person reviewing the work can. A
+hand-off before a commit names each one that applies, as its command and
+what a pass looks like; CI is the backstop, not the plan.
+
+**From a plain terminal** (the sandbox blocks these):
+
+- Any change under `crates/site/` or `crates/site-e2e/`:
+  `crates/site/preview.sh`. It renders the architecture tree, builds the
+  site, runs the `site-e2e` tests (which launch Chromium, and Chromium dies
+  in the sandbox), and then serves the page with hot reload. A pass is
+  every test green. It needs `trunk`, `asbuilt`, Node, and Graphviz on
+  `PATH`, and Chromium installed once with
+  `cargo run -p playwright-rs --features cli -- install chromium`.
+- A new public API's rustdoc: `cargo doc -p playwright-rs --open`, since
+  `open` is blocked in the sandbox.
+
+**Not from a session at all**, changed on github.com or crates.io: the
+`main` and `release tags` rulesets (the latter covers `v*`, `macros-v*`,
+and `trace-v*`, admin bypass only), the merge App's Dependabot secrets,
+Dependabot alerts and security updates, the Pages source, and each crate's
+Trusted Publisher.
+
+**By eye:**
+
+- A walkthrough change: the PNGs `preview.sh` writes to
+  `crates/site/public/receipts/`, one distinct outcome per step, legible.
+- Prose a reader will act on: the CHANGELOG entry, a README section, and
+  the shipped skill. `cargo xtask verify-agent-docs` compiles the skill's
+  code and checks the names it gives; nothing checks that its prose is
+  still true.
+
 ## Mutation testing
 
 `scripts/mutants.sh` wraps `cargo mutants --in-diff`, scoping mutation
