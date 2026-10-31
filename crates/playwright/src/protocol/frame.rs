@@ -2613,21 +2613,25 @@ impl Frame {
     /// Used for assertions that are auto-retried server-side (e.g. `to.match.aria`).
     /// Returns `Ok(())` when the assertion passes, or an error containing the
     /// server-supplied `errorMessage` when the assertion fails or times out.
+    /// `expected_value` is `None` for a state expression such as `to.be.focused`,
+    /// which takes no argument.
     pub(crate) async fn frame_expect(
         &self,
         selector: &str,
         expression: &str,
-        expected_value: serde_json::Value,
+        expected_value: Option<serde_json::Value>,
         is_not: bool,
         timeout_ms: f64,
     ) -> Result<()> {
-        let params = serde_json::json!({
+        let mut params = serde_json::json!({
             "selector": selector,
             "expression": expression,
-            "expectedValue": expected_value,
             "isNot": is_not,
             "timeout": timeout_ms
         });
+        if let Some(expected_value) = expected_value {
+            params["expectedValue"] = expected_value;
+        }
 
         // Playwright 1.61 changed the `expect` channel method: it returns no
         // result on success and reports a failed assertion as a protocol error

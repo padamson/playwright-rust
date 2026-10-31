@@ -926,6 +926,38 @@ async fn test_locator_is_focused_with_playwright_selectors() {
     server.shutdown();
 }
 
+#[tokio::test]
+async fn is_focused_checks_the_first_of_several_matches() {
+    let server = TestServer::start().await;
+    let (_pw, browser, page) = crate::common::setup().await;
+
+    page.goto(&format!("{}/focus_blur.html", server.url()), None)
+        .await
+        .expect("Failed to navigate");
+    let inputs = page.locator("input");
+
+    page.locator("#input1")
+        .focus()
+        .await
+        .expect("Failed to focus input1");
+    assert!(
+        inputs.is_focused().await.expect("is_focused() failed"),
+        "The first input is focused"
+    );
+
+    page.locator("#input2")
+        .focus()
+        .await
+        .expect("Failed to focus input2");
+    assert!(
+        !inputs.is_focused().await.expect("is_focused() failed"),
+        "Only the second input is focused"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
 // ============================================================================
 // press_sequentially() Method
 // ============================================================================

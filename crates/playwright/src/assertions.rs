@@ -661,42 +661,20 @@ impl Expectation {
 
     /// Asserts that the element is focused (currently has focus).
     ///
-    /// This assertion will retry until the element becomes focused or timeout.
+    /// The Playwright server retries the check until the element becomes
+    /// focused or the timeout expires. The locator is strict: if it matches
+    /// more than one element, the assertion fails with a strict mode violation
+    /// rather than checking the first match.
     ///
-    /// See: <https://playwright.dev/docs/test-assertions#locator-assertions-to-be-focused>
+    /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-focused>
     pub async fn to_be_focused(self) -> Result<()> {
-        let start = std::time::Instant::now();
         let selector = self.locator.selector().to_string();
+        let timeout_ms = self.timeout.as_millis() as f64;
 
-        loop {
-            let is_focused = self.locator.is_focused().await?;
-
-            // Check if condition matches (with negation support)
-            let matches = if self.negate { !is_focused } else { is_focused };
-
-            if matches {
-                return Ok(());
-            }
-
-            // Check timeout
-            if start.elapsed() >= self.timeout {
-                let message = if self.negate {
-                    format!(
-                        "Expected element '{}' NOT to be focused, but it was focused after {:?}",
-                        selector, self.timeout
-                    )
-                } else {
-                    format!(
-                        "Expected element '{}' to be focused, but it was not focused after {:?}",
-                        selector, self.timeout
-                    )
-                };
-                return Err(crate::error::Error::AssertionTimeout(message));
-            }
-
-            // Wait before next poll
-            tokio::time::sleep(self.poll_interval).await;
-        }
+        self.locator
+            .frame()
+            .frame_expect(&selector, "to.be.focused", None, self.negate, timeout_ms)
+            .await
     }
 
     /// Asserts that the element has the specified attribute set to the given value.
@@ -1037,7 +1015,7 @@ impl Expectation {
             .frame_expect(
                 &selector,
                 "to.match.aria",
-                expected_value,
+                Some(expected_value),
                 self.negate,
                 timeout_ms,
             )
@@ -1387,7 +1365,7 @@ impl PageExpectation {
             .frame_expect(
                 ":root",
                 "to.match.aria",
-                expected_value,
+                Some(expected_value),
                 self.negate,
                 timeout_ms,
             )

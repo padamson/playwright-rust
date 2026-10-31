@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING: a route handler makes one decision.** Once a handler calls `route.fallback()`, a second `fallback()` and any `fulfill()`, `continue_()`, or `abort()` from that handler fail with "Route is already handled!", as in Playwright's other clients. They used to succeed, so a handler that fell back could still answer the request itself, and the next handler never saw it. A later handler answers a request an earlier one fell back on as before, and `fetch()` still allows either decision after it. A handler that returns the refusal as its error has its request aborted.
 - **Bundled Playwright driver is now 1.64.1** (was 1.64.0), with the same browser builds. It fixes a Chromium regression that reached any page or context with a route registered, even one that matched nothing: a credentialed cross-origin `fetch()` that needed a preflight and was redirected failed with "Failed to fetch". The protocol spec is unchanged between the two tags.
 - **BREAKING (`trace` feature): `playwright_rs::trace::open` refuses a trace whose zip headers disagree**, and `playwright_rs::trace::TraceError` is now `#[non_exhaustive]` with a new `InconsistentArchive` variant. This comes from the next playwright-rs-trace release, whose changelog has the details.
+- **BREAKING: `to_be_focused()` is strict, and the server retries it.** It now sends Playwright's `to.be.focused` expectation, as the other clients do, so a locator that matches several elements fails with a strict mode violation (`Error::AssertionFailed`) instead of checking the first match. The other state assertions (`to_be_visible()`, `to_be_enabled()`, and the rest) were already strict. `with_poll_interval()` no longer affects it.
 
 ### Deprecated
 
@@ -38,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - **Bumped transitive `rustls-webpki` 0.103.15 → 0.103.16 ([RUSTSEC-2026-0382](https://rustsec.org/advisories/RUSTSEC-2026-0382)) and `webpki-roots` 1.0.6 → 1.0.10 ([RUSTSEC-2026-0381](https://rustsec.org/advisories/RUSTSEC-2026-0381))** in the workspace lockfile and in the excluded site-e2e and fuzz lockfiles. Both let a certificate chain through emSign intermediates whose private keys are now public: the bundled roots included `emSign ECC Root CA - G3`, and verification did not reject the distrusted intermediates. `webpki-roots` is the trust store for the build script's driver download and, with the `rustls-tls-webpki-roots` feature, for `connect()` over `wss://`; `rustls-webpki` verifies every rustls connection. 1.0.10 also drops 19 other roots Mozilla no longer trusts; the driver still downloads from `nodejs.org` and `registry.npmjs.org` with it. A downstream project picks up the fix with `cargo update -p rustls-webpki -p webpki-roots@1`.
+
+### Known Issues
+
+- **Firefox does not launch on macOS 27 when a real Firefox has been installed.** It exits at once with "Could not find profile folder". The bundled Firefox 157 reads the real Firefox's `~/Library/Application Support/Firefox`, which macOS 27 protects, so the launch is denied unless the terminal or editor running it has Full Disk Access; granting that is the workaround. Firefox 158 fixes it and arrives with the Playwright 1.65 driver. Tracked in [#182](https://github.com/padamson/playwright-rust/issues/182).
 
 ## [0.20.1] - 2026-10-16
 

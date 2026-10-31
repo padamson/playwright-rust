@@ -524,6 +524,51 @@ async fn to_be_focused_retries_until_the_input_is_focused() {
     server.shutdown();
 }
 
+#[tokio::test]
+async fn to_be_focused_times_out_when_never_focused() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    root_page_with(&page, &server, &text_input("never-focused-input", None)).await;
+
+    let result = expect(page.locator("#never-focused-input"))
+        .with_timeout(std::time::Duration::from_millis(500))
+        .to_be_focused()
+        .await;
+
+    assert!(
+        matches!(result, Err(playwright_rs::Error::AssertionTimeout(_))),
+        "An unfocused input should time out as an assertion, got: {result:?}"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
+#[tokio::test]
+async fn to_be_focused_is_strict_when_several_elements_match() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let server = TestServer::start().await;
+    let two_inputs = format!(
+        "{{ {} }} {{ {} }}",
+        text_input("first-input", Some(0)),
+        text_input("second-input", None)
+    );
+    root_page_with(&page, &server, &two_inputs).await;
+
+    let result = expect(page.locator("input"))
+        .with_timeout(std::time::Duration::from_millis(500))
+        .to_be_focused()
+        .await;
+
+    assert!(
+        matches!(&result, Err(playwright_rs::Error::AssertionFailed(message)) if message.contains("strict mode violation")),
+        "Two matching inputs should be a strict mode violation, got: {result:?}"
+    );
+
+    browser.close().await.expect("Failed to close browser");
+    server.shutdown();
+}
+
 // ============================================================================
 // Cross-browser Smoke Test
 // ============================================================================
