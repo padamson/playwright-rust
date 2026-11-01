@@ -227,7 +227,7 @@ jobs:
       shell: bash
       run: |
         set -o pipefail
-        cargo nextest run --workspace --all-features --profile ci --test-threads=1 2>&1 | tee nextest-main.log
+        cargo nextest run --workspace --all-features --profile ci 2>&1 | tee nextest-main.log
 
     - name: Run stress tests (Windows)
       if: runner.os == 'Windows'
@@ -235,7 +235,7 @@ jobs:
       shell: bash
       run: |
         set -o pipefail
-        cargo nextest run --workspace --profile ci --run-ignored ignored-only --test-threads=1 2>&1 | tee nextest-stress.log
+        cargo nextest run --workspace --profile ci --run-ignored ignored-only 2>&1 | tee nextest-stress.log
 
     # Runs even when a test failed, so a red job still names whatever else
     # was flaky, and is skipped when the job died before any test ran.
