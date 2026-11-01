@@ -48,7 +48,7 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 async-trait = "0.1"
 tracing = "0.1"
-parking_lot = "0.12"
+parking_lot = "0.13"
 base64 = "0.23"
 bytes = "1.11.1"
 regex = "1.10"
