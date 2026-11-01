@@ -301,7 +301,7 @@ pub const DEFAULT_LAUNCH_TIMEOUT_MS: f64 = 180000.0;
 pub use error::{Error, Result};
 
 // Re-export assertions API
-pub use assertions::{PageExpectation, expect, expect_page};
+pub use assertions::{Expectation, PageExpectation, expect, expect_page};
 
 // Screenshot-diff types are gated on the optional feature. (`Animations` is
 // always available via the protocol re-export below; it is shared with

@@ -899,9 +899,9 @@ impl Frame {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::InvalidArgument`](crate::error::Error::InvalidArgument)
+    /// Returns [`Error::InvalidArgument`]
     /// at once for a malformed pattern (an unmatched or nested brace), and
-    /// [`Error::Timeout`](crate::error::Error::Timeout) if no matching URL is
+    /// [`Error::Timeout`] if no matching URL is
     /// reached in time.
     ///
     /// Playwright's protocol doesn't expose `waitForURL` as a server-side command —

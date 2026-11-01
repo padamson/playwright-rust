@@ -102,6 +102,10 @@ playwright-rs-trace = { version = "0.3.0", path = "../playwright-rs-trace" }
 [target.'cfg(windows)'.dev-dependencies]
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef"] }
 
+[lints.rust]
+# A public type with no public path gets no page on docs.rs.
+unnameable_types = "warn"
+
 [build-dependencies]
 # The default assembly location is the user cache (ADR 0007); the same
 # crate resolves it at runtime and in the cli, so the three agree.

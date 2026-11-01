@@ -119,6 +119,10 @@ fn normalize_whitespace(s: &str) -> String {
 }
 
 /// Expectation wraps a locator and provides assertion methods with auto-retry.
+///
+/// Created by [`expect`].
+///
+/// See: <https://playwright.dev/docs/api/class-locatorassertions>
 pub struct Expectation {
     locator: Locator,
     timeout: Duration,

@@ -1287,7 +1287,7 @@ impl Locator {
     /// Rust-only: Playwright's other clients have no `isFocused`. A locator that
     /// matches nothing is not focused, and when it matches several elements the
     /// first one is checked. For a strict, auto-retrying check, use
-    /// `expect(locator).to_be_focused()` (see [`expect`](crate::expect)).
+    /// [`Expectation::to_be_focused`](crate::Expectation::to_be_focused).
     ///
     /// See: <https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-focused>
     #[tracing::instrument(level = "debug", skip_all, fields(selector = %self.selector))]
