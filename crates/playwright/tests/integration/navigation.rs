@@ -8,33 +8,42 @@ use std::time::Duration;
 
 #[tokio::test]
 async fn test_page_navigation_methods() {
+    let server = TestServer::start().await;
+    let button_url = format!("{}/button.html", server.url());
+    // localhost is a different site from 127.0.0.1, so moving between the two
+    // crosses origins and makes Chromium swap renderer processes.
+    let other_site = server.url().replace("127.0.0.1", "localhost");
+    let index_url = format!("{}/", other_site);
+    let redirect_url = format!("{}/redirect", other_site);
     let (_pw, browser, page) = crate::common::setup().await;
 
     // Test 1: Basic goto navigation
     let response = page
-        .goto("https://example.com", None)
+        .goto(&button_url, None)
         .await
         .expect("Failed to navigate")
-        .expect("Expected a response from https://example.com");
+        .expect("Expected a response from /button.html");
 
     assert!(response.ok(), "Response should be successful");
     assert_eq!(response.status(), 200, "Status should be 200");
-    assert_eq!(response.url(), "https://example.com/");
-    assert_eq!(page.url(), "https://example.com/");
+    assert_eq!(response.url(), button_url);
+    assert_eq!(page.url(), button_url);
 
     tracing::info!("✓ Basic navigation successful");
 
     // Test 2: Get page title
     let title = page.title().await.expect("Failed to get title");
-    assert_eq!(title, "Example Domain");
+    assert_eq!(title, "Button Test");
     tracing::info!("✓ Page title: {}", title);
 
-    // Test 3: URL tracking across navigations
-    // Navigate to second URL (rust-lang.org redirects to remove www)
-    page.goto("https://www.rust-lang.org", None)
+    // Test 3: URL tracking across navigations, through a redirect
+    let response = page
+        .goto(&redirect_url, None)
         .await
-        .expect("Failed to navigate");
-    assert_eq!(page.url(), "https://rust-lang.org/");
+        .expect("Failed to navigate")
+        .expect("Expected a response from /redirect");
+    assert_eq!(response.url(), index_url);
+    assert_eq!(page.url(), index_url);
     tracing::info!("✓ URL tracking works correctly");
 
     // Test 4: Navigate with options
@@ -43,13 +52,13 @@ async fn test_page_navigation_methods() {
         .wait_until(WaitUntil::DomContentLoaded);
 
     let response = page
-        .goto("https://example.com", Some(options))
+        .goto(&button_url, Some(options))
         .await
         .expect("Failed to navigate with options")
-        .expect("Expected a response from https://example.com");
+        .expect("Expected a response from /button.html");
 
     assert!(response.ok());
-    assert_eq!(page.url(), "https://example.com/");
+    assert_eq!(page.url(), button_url);
     tracing::info!("✓ Navigation with options successful");
 
     // Test 5: Page reload
@@ -57,11 +66,11 @@ async fn test_page_navigation_methods() {
         .reload(None)
         .await
         .expect("Failed to reload page")
-        .expect("Expected a response from https://example.com");
+        .expect("Expected a response from /button.html");
 
     assert!(response.ok());
     assert_eq!(response.status(), 200);
-    assert_eq!(page.url(), "https://example.com/");
+    assert_eq!(page.url(), button_url);
     tracing::info!("✓ Page reload successful");
 
     // Test 6: Reload with options
@@ -73,17 +82,17 @@ async fn test_page_navigation_methods() {
         .reload(Some(options))
         .await
         .expect("Failed to reload page")
-        .expect("Expected a response from https://example.com");
+        .expect("Expected a response from /button.html");
 
     assert!(response.ok());
-    assert_eq!(page.url(), "https://example.com/");
+    assert_eq!(page.url(), button_url);
     tracing::info!("✓ Page reload with options successful");
 
     // Test 7: Navigate to second page, then go_back
-    page.goto("https://www.rust-lang.org", None)
+    page.goto(&redirect_url, None)
         .await
-        .expect("Failed to navigate to rust-lang.org");
-    assert_eq!(page.url(), "https://rust-lang.org/");
+        .expect("Failed to navigate to /redirect");
+    assert_eq!(page.url(), index_url);
 
     let response = page
         .go_back(None)
@@ -91,7 +100,7 @@ async fn test_page_navigation_methods() {
         .expect("Failed to go back")
         .expect("Expected a response when going back");
     assert_eq!(response.status(), 200);
-    assert_eq!(page.url(), "https://example.com/");
+    assert_eq!(page.url(), button_url);
     tracing::info!("✓ go_back() navigated to previous page");
 
     // Test 8: go_forward to return
@@ -101,12 +110,13 @@ async fn test_page_navigation_methods() {
         .expect("Failed to go forward")
         .expect("Expected a response when going forward");
     assert_eq!(response.status(), 200);
-    assert_eq!(page.url(), "https://rust-lang.org/");
+    assert_eq!(page.url(), index_url);
     tracing::info!("✓ go_forward() navigated to next page");
 
     // Cleanup
     page.close().await.expect("Failed to close page");
     browser.close().await.expect("Failed to close browser");
+    server.shutdown();
 }
 
 // ============================================================================
@@ -115,6 +125,9 @@ async fn test_page_navigation_methods() {
 
 #[tokio::test]
 async fn test_multiple_pages_independent_urls() {
+    let server = TestServer::start().await;
+    let index_url = format!("{}/", server.url());
+    let button_url = format!("{}/button.html", server.url());
     let (_pw, browser, page1) = crate::common::setup().await;
     let page2 = browser.new_page().await.expect("Failed to create page 2");
 
@@ -124,17 +137,16 @@ async fn test_multiple_pages_independent_urls() {
 
     // Navigate to different URLs
     page1
-        .goto("https://example.com", None)
+        .goto(&index_url, None)
         .await
         .expect("Failed to navigate page 1");
     page2
-        .goto("https://www.rust-lang.org", None)
+        .goto(&button_url, None)
         .await
         .expect("Failed to navigate page 2");
 
-    // Verify URLs are independent (rust-lang.org redirects to remove www)
-    assert_eq!(page1.url(), "https://example.com/");
-    assert_eq!(page2.url(), "https://rust-lang.org/");
+    assert_eq!(page1.url(), index_url);
+    assert_eq!(page2.url(), button_url);
 
     tracing::info!("✓ Multiple pages have independent URLs");
 
@@ -142,6 +154,7 @@ async fn test_multiple_pages_independent_urls() {
     page1.close().await.expect("Failed to close page 1");
     page2.close().await.expect("Failed to close page 2");
     browser.close().await.expect("Failed to close browser");
+    server.shutdown();
 }
 
 // ============================================================================
@@ -155,6 +168,9 @@ async fn test_cross_browser_smoke() {
     // Smoke test to verify navigation works in Firefox and WebKit
     // (Rust bindings use the same protocol layer for all browsers,
     //  so we don't need exhaustive cross-browser testing for each method)
+
+    let server = TestServer::start().await;
+    let index_url = format!("{}/", server.url());
 
     let playwright = Playwright::launch()
         .await
@@ -170,18 +186,18 @@ async fn test_cross_browser_smoke() {
     let firefox_page = firefox.new_page().await.expect("Failed to create page");
 
     let response = firefox_page
-        .goto("https://example.com", None)
+        .goto(&index_url, None)
         .await
         .expect("Failed to navigate")
-        .expect("Expected a response from https://example.com");
+        .expect("Expected a response from the test server");
 
     assert!(response.ok(), "Response should be successful");
     assert_eq!(response.status(), 200, "Status should be 200");
-    assert_eq!(response.url(), "https://example.com/");
-    assert_eq!(firefox_page.url(), "https://example.com/");
+    assert_eq!(response.url(), index_url);
+    assert_eq!(firefox_page.url(), index_url);
 
     let title = firefox_page.title().await.expect("Failed to get title");
-    assert_eq!(title, "Example Domain");
+    assert_eq!(title, "Test Index");
 
     tracing::info!("✓ Firefox navigation successful");
 
@@ -201,18 +217,18 @@ async fn test_cross_browser_smoke() {
     let webkit_page = webkit.new_page().await.expect("Failed to create page");
 
     let response = webkit_page
-        .goto("https://example.com", None)
+        .goto(&index_url, None)
         .await
         .expect("Failed to navigate")
-        .expect("Expected a response from https://example.com");
+        .expect("Expected a response from the test server");
 
     assert!(response.ok(), "Response should be successful");
     assert_eq!(response.status(), 200, "Status should be 200");
-    assert_eq!(response.url(), "https://example.com/");
-    assert_eq!(webkit_page.url(), "https://example.com/");
+    assert_eq!(response.url(), index_url);
+    assert_eq!(webkit_page.url(), index_url);
 
     let title = webkit_page.title().await.expect("Failed to get title");
-    assert_eq!(title, "Example Domain");
+    assert_eq!(title, "Test Index");
 
     tracing::info!("✓ WebKit navigation successful");
 
@@ -221,6 +237,7 @@ async fn test_cross_browser_smoke() {
         .await
         .expect("Failed to close WebKit page");
     webkit.close().await.expect("Failed to close WebKit");
+    server.shutdown();
 }
 
 // ============================================================================

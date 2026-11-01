@@ -202,9 +202,8 @@ async fn test_api_response_server_addr_and_security_details() {
         assert!(addr.port > 0, "if present, server port should be set");
     }
 
-    // HTTPS should populate both accessors (the populated case, matching the
-    // `page.goto("https://example.com", ...)` precedent used elsewhere in
-    // this suite for real-network TLS coverage).
+    // HTTPS should populate both accessors. The test server speaks only plain
+    // HTTP, so the populated case needs a real TLS site.
     let https_response: APIResponse = ctx
         .get("https://example.com", None)
         .await
