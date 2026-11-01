@@ -131,6 +131,7 @@ async fn test_launch_with_headless_option() {
 }
 
 #[tokio::test]
+#[ignore = "launches Firefox and WebKit; runs in CI's --run-ignored lane"]
 async fn test_launch_all_three_browsers() {
     crate::common::init_tracing();
     tracing::debug!("[TEST] test_launch_all_three_browsers: Starting");

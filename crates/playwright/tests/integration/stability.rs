@@ -1118,6 +1118,7 @@ async fn test_graceful_shutdown_explicit_close() {
 // ============================================================================
 
 #[tokio::test]
+#[ignore = "launches Firefox; runs in CI's --run-ignored lane"]
 async fn test_graceful_shutdown_multiple_browsers() {
     crate::common::init_tracing();
     tracing::info!("\n=== Testing Graceful Shutdown: Multiple Browsers ===\n");
