@@ -9,6 +9,8 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-01
+
 ### Changed
 
 - **BREAKING: `TraceReader::open` refuses an archive whose local file headers disagree with its central directory**, and `TraceError` is now `#[non_exhaustive]`. Such an archive shows different contents to readers that trust different headers, and a trace is often a file someone else produced. The check is `zip`'s `validate_header_consistency()`, so `zip` 9.0.5 is now the minimum; traces written by the 1.64 driver and by the Python and Node clients pass it. A refused trace returns the new `TraceError::InconsistentArchive`. Code that matches `TraceError` exhaustively needs a wildcard arm.
@@ -106,7 +108,8 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   the deterministic test fixture under `tests/fixtures/`. New
   `.cargo/config.toml` aliases `cargo xtask`.
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/trace-v0.2.2...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/trace-v0.3.0...HEAD
+[0.3.0]: https://github.com/padamson/playwright-rust/compare/trace-v0.2.2...trace-v0.3.0
 [0.2.2]: https://github.com/padamson/playwright-rust/compare/trace-v0.2.1...trace-v0.2.2
 [0.2.1]: https://github.com/padamson/playwright-rust/compare/trace-v0.2.0...trace-v0.2.1
 [0.2.0]: https://github.com/padamson/playwright-rust/compare/trace-v0.1.3...trace-v0.2.0
