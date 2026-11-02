@@ -58,10 +58,10 @@ CUT = "(Cut to fit GitHub's size limit; the run log has the full report.)"
 TREE = re.compile(r"^(?:## |==> )(.*)$")
 ITEM = re.compile(r"^(?:error|warning)\[[a-z-]+\]: .*$|RUSTSEC-\d{4}-\d{4}")
 
-# The report section, matched whole: the fence that fenced() chose and
-# the same fence closing it, so a triage note that quotes either marker
-# is not taken for the report.
-SECTION = re.compile(re.escape(START) + r"\n(`{3,})\n.*?\n\1\n" + re.escape(END), re.S)
+# A marker counts only as a whole line, so a triage note that quotes one
+# inline is not taken for the report's edge.
+START_LINE = re.compile(rf"^{re.escape(START)}$", re.M)
+END_LINE = re.compile(rf"^{re.escape(END)}$", re.M)
 
 
 def entries(text):
@@ -126,21 +126,37 @@ def section(report, room):
     return f"{START}\n{fenced(report)}\n{END}"
 
 
+def report_span(old):
+    """Where the report section sits in `old`, or None: the last start
+    marker before the last end marker, whatever lies between, so a report
+    someone reshaped (wrapped in <details>, a fence line deleted) is
+    replaced rather than left under a second one."""
+    ends = list(END_LINE.finditer(old))
+    if not ends:
+        return None
+    starts = list(START_LINE.finditer(old, 0, ends[-1].start()))
+    return (starts[-1].start(), ends[-1].end()) if starts else None
+
+
 def render(old, report):
     """The new body, the findings resolved and new since the old one, and
     the status line."""
-    match = SECTION.search(old)
+    span = report_span(old)
     if not old.strip():
         before, old_section, after = INTRO, "", FOOTER
-    elif match:
-        before, old_section, after = old[: match.start()], match.group(), old[match.end() :]
+    elif span:
+        before, old_section, after = old[: span[0]], old[span[0] : span[1]], old[span[1] :]
     else:
         before, old_section, after = old.rstrip("\n") + "\n\n", "", "\n"
     new = section(report, LIMIT - len(before) - len(after))
     if new == old_section:
         return old, set(), set(), "unchanged"
-    was, now = findings(old_section), findings(new)
-    return before + new + after, was - now, now - was, "refreshed" if was == now else "changed"
+    was, shown, live = findings(old_section), findings(new), findings(report)
+    # Resolved means gone from the whole report, not pushed past the cut.
+    # New means shown: one past the cut cannot be told from one that was
+    # always there.
+    resolved, found = was - live, shown - was
+    return before + new + after, resolved, found, "changed" if resolved or found else "refreshed"
 
 
 def comment(resolved, new, run_url):

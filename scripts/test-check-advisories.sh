@@ -216,6 +216,26 @@ commented() {
     contains "$1" "$work/comment.txt" "$2"
 }
 
+# lacks NAME FILE TEXT: FILE exists and does not contain TEXT.
+lacks() {
+    if [ ! -f "$2" ]; then
+        fail "$1: $(basename "$2") was not written"
+    elif grep -qF -- "$3" "$2"; then
+        fail "$1: $(basename "$2") contained '$3'" "$2"
+    else
+        echo "ok: $1"
+    fi
+}
+
+# one_report NAME: the body holds exactly one report section.
+one_report() {
+    if [ "$(grep -c -- '<!-- advisory-report -->' "$work/body.txt")" -eq 1 ]; then
+        echo "ok: $1"
+    else
+        fail "$1: the body holds more than one report" "$work/body.txt"
+    fi
+}
+
 # GitHub counts characters, not bytes, and the report's box drawing is
 # multibyte.
 chars() {
@@ -252,6 +272,12 @@ many() {
             print l
         }
     }' "$work/fx/deny-hit.out"
+}
+
+# notes N: N lines of triage notes.
+notes() {
+    awk -v n="$1" 'BEGIN { for (i = 1; i <= n; i++)
+        printf "Triage note %d: still waiting on an upstream release of this crate.\n", i }'
 }
 
 # audit_report LOCK...: the checker's report when only the named lockfiles
@@ -305,15 +331,18 @@ commented "and the comment names that lockfile" "cargo audit --file crates/site/
 
 printf 'Note: the report ends at <!-- /advisory-report -->.\n\n%s\n' "$(cat "$work/opened.txt")" > "$work/quoted.txt"
 render "$work/quoted.txt" "$work/report.txt"
-if [ "$status_out" = unchanged ] && [ "$(grep -c -- '<!-- advisory-report -->' "$work/body.txt")" -eq 1 ]; then
-    echo "ok: an end marker quoted above the report does not duplicate it"
-else
-    fail "an end marker quoted above the report duplicated it ($status_out)" "$work/body.txt"
-fi
+rendered "an end marker quoted above the report does not duplicate it" unchanged "RUSTSEC-2025-0141"
+one_report "and the body holds one report"
 
 printf 'Note: <!-- advisory-report --> marks the report; keep this note.\n\n%s\n' "$(cat "$work/opened.txt")" > "$work/quoted-start.txt"
 render "$work/quoted-start.txt" "$work/more.txt"
 rendered "a start marker quoted above the report is not taken for it" changed "marks the report; keep this note."
+
+# Both markers kept around a report someone reshaped by hand.
+awk '{ print } /^<!-- advisory-report -->$/ { print "<details>"; print "" }' "$work/opened.txt" > "$work/reshaped.txt"
+render "$work/reshaped.txt" "$work/report.txt"
+rendered "a reshaped report between intact markers is replaced, not duplicated" refreshed "RUSTSEC-2025-0141"
+one_report "and holds one report, not two"
 
 sed 's/^error\[unmaintained\]: Bincode is unmaintained$/error[unmaintained]: ``` @someone/' "$work/fx/deny-hit.out" > "$work/backticks.txt"
 render "$work/opened.txt" "$work/backticks.txt"
@@ -336,15 +365,33 @@ cp "$work/body.txt" "$work/big-opened.txt"
 render "$work/big-opened.txt" "$work/big.txt"
 rendered "and the same report again leaves the issue alone" unchanged "RUSTSEC-2025-0300"
 
-{ awk 'BEGIN { for (i = 0; i < 3500; i++) printf "Triage note. "; print "" }'; cat "$work/opened.txt"; } > "$work/long-notes.txt"
+{ notes 600; cat "$work/opened.txt"; } > "$work/long-notes.txt"
 render "$work/long-notes.txt" "$work/big.txt"
 fits "triage notes count toward the limit"
 
 many 1000 > "$work/huge.txt"
 render "$work/empty.txt" "$work/huge.txt"
 fits "findings alone past the limit are cut at a line"
+cp "$work/body.txt" "$work/huge-opened.txt"
 render "$work/opened.txt" "$work/huge.txt"
 commented "a comment past the limit is cut and says so" "more not shown)"
+
+# A new finding at the front pushes the last ones past the cut; they are
+# still live, so nothing is announced as resolved.
+cat "$work/one-lock.txt" "$work/huge.txt" > "$work/huge-more.txt"
+render "$work/huge-opened.txt" "$work/huge-more.txt"
+rendered "a new finding in a cut report is a change" changed "RUSTSEC-2021-0003"
+commented "and the comment names it" "RUSTSEC-2021-0003"
+lacks "and findings pushed past the cut are not called resolved" "$work/comment.txt" "Resolved:"
+
+# Notes that leave no room for a single finding, on a body GitHub still
+# accepts: the findings are live, so this is no change, whatever the body
+# can show.
+{ notes 870; cat "$work/opened.txt"; } > "$work/longer-notes.txt"
+render "$work/longer-notes.txt" "$work/report.txt"
+rendered "notes too long to leave room for the report do not resolve its findings" refreshed "Triage note 870:"
+fits "and the body still fits"
+lacks "and shows no finding" "$work/body.txt" "RUSTSEC-2025-0141"
 
 if [ "$failures" -ne 0 ]; then
     echo "$failures check(s) failed"
