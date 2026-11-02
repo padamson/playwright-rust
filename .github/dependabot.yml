@@ -80,8 +80,14 @@ updates:
     # cargo-vet lag argument does not apply to actions.
     cooldown:
       default-days: 7
-    # One PR for the week's action bumps, same cascade rationale as cargo.
+    # One PR for the week's action bumps, same cascade rationale as cargo,
+    # except create-github-app-token, the one action dependabot-auto-merge.yml
+    # runs. Its bump gets a PR of its own, which that workflow holds for a
+    # hand merge from its first push; inside the group it would hold every
+    # other bump with it, or join a group PR already set to auto-merge.
     groups:
       actions:
         patterns:
           - "*"
+        exclude-patterns:
+          - "actions/create-github-app-token"
