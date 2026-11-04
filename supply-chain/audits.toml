@@ -1,125 +1,101 @@
 
 # cargo-vet audits file
 
-[[audits.base64]]
-who = "Paul Adamson <paul.adamson.01@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "0.22.1 -> 0.23.1"
-notes = "Delta is edition/MSRV housekeeping plus the new simd-unsafe feature (on by default): AVX2/NEON base64 kernels (Mula-Lemire algorithm) selected via runtime CPU feature detection. All unsafe is confined to src/engine/simd.rs intrinsics with loop-guard bounds checks before every load/store; invalid input falls back to the scalar decoder for exact error reporting. No new dependencies, no build script, no fs/net/process/env access. SIMD engines run the same property-test suite as the scalar engine."
-
 [[audits.dirs]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "6.0.0 -> 7.0.0"
-notes = "One source change, in src/win.rs: preference_dir on Windows now returns the roaming AppData folder (known_folder_roaming_app_data) instead of the local one, matching its documentation and the directories crate; every other function is untouched. This crate calls only cache_dir, which is unchanged on every platform. The rest of the delta is packaging: the repository URL moves from GitHub to codeberg.org, the maintenance badge leaves Cargo.toml, README links follow. No unsafe, no build script, no dependency changes."
+notes = "Windows preference_dir now uses roaming AppData; otherwise packaging."
 
 [[audits.http-range-header]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-run"
 delta = "0.3.1 -> 0.4.2"
-notes = "Dev-dependency via tower-http's fs feature. Pure parser refactor: the string-message error and its with_error_cause feature become a Copy enum, two split helpers become str::split_once, file-size subtractions become saturating_sub, and the range types go pub. No unsafe, no dependencies, no build script, no I/O."
+notes = "Parser refactor with saturating file-size arithmetic. No unsafe or I/O."
 
 [[audits.miniz_oxide]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.8.9 -> 0.9.1"
-notes = "Pulled in by flate2 1.1.10. The crate keeps #![forbid(unsafe_code)] (the only 'unsafe' hits are comments), has no build script, and adds no dependencies: serde goes default-features = false with alloc, and the simd-adler32 floor moves 0.3.3 -> 0.3.8. No fs/net/process/env access in either version. Deflate side: new TDEFLFlush variants (Partial, PartialOpt, SyncOpt, NoSync) and #[non_exhaustive] on the public enums; CompressorOxide::with_params clamps window_bits to 15 and level to 10, and the zlib header now derives CINFO from window_bits with saturating_sub; flush_block skips emitting an empty block unless finishing; the stored-block path stops feeding the hash chain; SMALL_DIST_EXTRA shrinks to 128 entries indexed by match_dist >> 2, which stays in bounds because the branch is guarded by match_dist < 512. Two assert!(lookahead_size >= len_to_move) become debug_assert!; that is an internal invariant, and every downstream dict index is masked by LZ_DICT_SIZE_MASK, so a violation could corrupt output but not escape bounds. Inflate side: Huffman table validation is stricter (rejects over-subscribed tables step by step, matching zlib inftrees.c) and the incomplete-table rule is restated per RFC 1951; decompress_with_limit adds an out_max that OutputBuffer computes with saturating_add and clamps to the slice length, and the back-reference bounds check now uses that limit. wasm32 boxes the LZ code buffer. Remaining changes are docs, const fn, and Clone derives."
+notes = "Stricter Huffman table validation and a new output limit. Still forbid(unsafe_code)."
 
 [[audits.proptest]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-run"
 delta = "1.11.0 -> 1.12.0"
-notes = "Dev-dependency. Migrates rand 0.9 -> 0.10 and rand_xorshift 0.4 -> 0.5, replaces rand_chacha with chacha20 (rng feature), bumps bit-set and bit-vec, and adds core_detect. The changes sit in test_runner/rng.rs (the new rand_core traits), the runner and its scoped panic hook, and the numeric and float samplers. No unsafe added, no build script, no new fs/net/process/env access."
-
-[[audits.rand_xorshift]]
-who = "Paul Adamson <paul.adamson.01@gmail.com>"
-criteria = "safe-to-run"
-delta = "0.4.0 -> 0.5.0"
-notes = "Dev-dependency via proptest. A mechanical port to the rand_core 0.10 traits: RngCore becomes TryRng with Infallible errors, the impls and le helpers become rand_core::utils, and the bincode dev-dependency becomes postcard. The generator's arithmetic is unchanged. No unsafe, no build script, no I/O."
+notes = "Port to rand 0.10; an unsafe static mut becomes a OnceLock."
 
 [[audits.rustls]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.23.42 -> 0.23.43"
-notes = "Defensive hardening release. Threads Protocol (Tcp/Quic) through supports_version and find_cipher_suite so a QUIC connection cannot negotiate a TLS1.2-only suite. Replaces two attacker-reachable subtractions on handshake input with saturating_sub (encoding_for_binder_signing, and the server TLS1.3 binder plaintext slice), removing a panic path on a malformed ClientHello. Replaces an as-cast multiply on session ticket age with checked conversion. No new unsafe, no new ambient capabilities, no I/O changes."
+notes = "Hardens cipher-suite selection and handshake length arithmetic. No new unsafe."
 
 [[audits.rustls]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.23.43 -> 0.23.44"
-notes = "SignatureScheme::algorithm() now returns Option so schemes with no TLS1.2 SignatureAlgorithm (ML-DSA) are filtered out of the TLS1.2 ClientHello signature_schemes, CertificateRequest handling and server-side client-auth verify schemes; a ServerKeyExchange signed with such a scheme is rejected with an IllegalParameter alert, and verify_tls12_signature rejects it up front, where 0.23.43 fell through as Unknown(0). Adds ML-DSA signing keys under aws-lc-rs (PqdsaSigningKey, signature length checked against the algorithm). On ECH rejection the client now authenticates the outer public_name per RFC 9849 instead of the inner name. PayloadU24 gains a cardinality marker so a zero-length OCSP response is rejected at decode. SSLKEYLOGFILE is now created with mode 0o600 on Unix, the only ambient-capability change and a tightening. No new unsafe."
+notes = "Keeps ML-DSA out of TLS 1.2, plus ECH and OCSP fixes. No new unsafe."
 
 [[audits.rustls]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.23.44 -> 0.23.45"
-notes = "Fix for RUSTSEC-2026-0285. HandshakeDeframer::is_aligned now reports aligned only when no handshake span is pending, complete or partial, and ConnectionCore records that after every handshake message it takes, so a handshake message packed into the same record as a key change is rejected as RFC 8446 section 5.1 requires. Server HelloRetryRequest hardening per RFC 9846: the second ClientHello must keep the retried cipher suite and may not withdraw a PSK offer, and TLS 1.2 is no longer offered after a retry (two new PeerMisbehaved variants, each with a unit test). Private keys handed to KeyProvider::load_private_key are wrapped in Zeroizing. No unsafe, no new dependencies."
+notes = "Fix for RUSTSEC-2026-0285 and HelloRetryRequest hardening. No unsafe."
 
 [[audits.rustls-webpki]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.103.13 -> 0.103.15"
-notes = "Promotes ML-DSA-44/65/87 verification from the aws-lc-rs-unstable feature to plain aws-lc-rs (aws-lc-rs 1.14 -> 1.18 now ships them as stable) and drops the per-algorithm in_fips_submission flag, so fips() reports aws-lc-rs's own FIPS mode; base64 0.22 -> 0.23. The one logic edit is find_serial in crl/types.rs rewritten with ? for the same control flow. No unsafe, no build script, no new ambient capabilities."
+notes = "ML-DSA moves from the unstable aws-lc-rs feature to the stable one. No unsafe."
 
 [[audits.ureq]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "3.3.0 -> 3.4.0"
-notes = "No new unsafe (the crate has none in either version), no build script, no new ambient capabilities. The TLS delta is two lines: rustls.rs and native_tls.rs switch .host() to .host_bare() so RFC 3986 bracketed IPv6 literals are stripped before use as SNI/ServerName, which rustls rejects in bracketed form; host_bare strips only a leading [ and trailing ], leaving DNS and IPv4 authorities untouched, and is covered by new unit tests. Remaining changes match the changelog: HTTPS CONNECT proxy support and canonical Basic auth scheme for CONNECT (connect.rs), a max_idle_age pooling fix, sealing RequestExt, and rustls-platform-verifier 0.6 -> 0.7. One disable_verification(true) is added but sits inside #[cfg(test)] behind the private _test/_ring features, exercising the new proxy path against a self-signed fixture; it is not reachable from shipped code."
+notes = "HTTPS CONNECT proxy support and an IPv6 SNI fix. No unsafe; disable_verification only in tests."
 
 [[audits.ureq]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "3.4.0 -> 3.4.1"
-notes = 'No unsafe, no build script, no new deps beyond ureq-proto 0.6.2. The TLS handshake now completes inside connect() (rustls complete_io; native-tls drops its LazyStream deferral) so timeout_connect covers it. Timeout budgets: each phase starts from the latest completed predecessor instead of chaining every earlier phase, and an already-expired budget fails in Connection::transmit_output/maybe_await_input instead of getting a per-call socket grace period. The pool refuses to reuse a connection with unconsumed buffered input (server sent more than Content-Length), which closes a response-desync path. read_json buffers bodies whose Content-Length is under a third of the read limit and parses from the slice, still bounded by that limit. The std::net::TcpListener use is a cfg(not(feature = "_test")) unit test on 127.0.0.1; disable_verification(true) appears only under cfg(test).'
-
-[[audits.ureq]]
-who = "Paul Adamson <paul.adamson.01@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "3.4.1 -> 3.4.2"
-notes = "No unsafe, no build script, no new deps beyond ureq-proto 0.6.3. Request-level configs whose connection settings differ from the Agent's (IP family, TCP_NODELAY, buffer sizes, User-Agent since it goes into proxy CONNECT, or any TLS field) now bypass the pool both ways: Config::can_share_pool_with and TlsConfig::can_share_pool_with destructure exhaustively so a new field forces a decision, TLS client certs, specific root sets and rustls crypto providers compare by Arc identity so independently built credentials never share a connection, and a bypassing connection gets a Weak::new() pool handle so it is neither borrowed from nor returned to the pool. This closes a path where a per-request TLS override could be served by a connection established under the Agent's TLS settings. TCP connect moves on to the next resolved address on HostUnreachable, NetworkUnreachable and AddrNotAvailable (plus WSAEACCES on Windows) in addition to ConnectionRefused, and reports the last real error instead of a synthesized refusal; other io errors still stop. The disable_verification(true) and client-cert constructions in the diff are all under cfg(test) against a synthetic transport."
-
-[[audits.ureq]]
-who = "Paul Adamson <paul.adamson.01@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "3.4.2 -> 3.5.0"
-notes = "No unsafe (the crate is forbid(unsafe_code)), no build script, and no fs, env or process use added. The socks dependency is replaced by an in-tree SOCKS4/4A/5 client behind the socks-proxy feature: replies are fixed-size read_exact, the bound address is read into a 257-byte buffer that covers the largest length, and lengths are checked before the u8 casts. Agent::shutdown marks the pool closed and calls TcpStream::shutdown on every live connection through Weak handles registered under the pool lock (TcpTransport now holds an Arc<TcpStream>). New per-read and per-write timeouts. TransportAdapter deducts elapsed time, so a TLS, CONNECT or SOCKS handshake no longer restarts its budget on each read. A global or per-call timeout during the 100-continue wait now returns an error instead of sending the body. Socket reads interrupted by EINTR retry with the remaining timeout. Proxy userinfo is percent-decoded once (and encoded by ProxyBuilder) and splits at the first colon, per RFC 3986. A native-tls-no-default feature separates native-tls from its default roots. The rustls minimum moves to 0.23.46 and ureq-proto to 0.6.5. The rest is docs and tests (io_timeout_tests, shutdown_tests, tests/socks.rs, tests/native_tls.rs)."
+notes = "Timeout and connection-pool fixes, including a response-desync fix. No unsafe."
 
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.6.1"
-notes = "No source changes whatsoever. The delta is a newly added LICENSE-APACHE.txt (which accounts for nearly all of the reported line count), packaging metadata, and a base64 0.22.1 -> 0.23.1 dependency bump that is already audited in this file."
+notes = "No source changes."
 
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.1 -> 0.6.2"
-notes = "Hardening of received-header parsing; no unsafe, no new deps. Content-Length is read from every header line as a comma list: each element must be plain digits (a sign, inner whitespace, an empty element or u64 overflow is BadContentLengthHeader) and repeated values must agree, differing values are TooManyContentLengthHeaders, with no first- or last-wins. Outgoing requests and responses reject a signed or list-valued Content-Length before it reaches the wire. A status code below 100 from httparse is now HttpParseFail instead of an unwrap panic, or unwrap_or_default's bogus 200 on the partial-response path. The partial-response header scan stops on an empty name rather than an empty value, so a Location after an empty header is no longer dropped. Connection and Expect token matching is comma-list and ASCII case-insensitive per RFC 9110."
+notes = "Stricter Content-Length and status-code parsing. No unsafe."
 
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.2 -> 0.6.4"
-notes = "No unsafe, no build script, no new deps. Redirect Location joining gains the RFC 3986 network-path case: a Location starting with // takes the base's scheme and its own authority, failing with BadLocationHeader when the base has no scheme or the result does not parse, so a scheme-relative redirect no longer resolves as a root-relative path on the old host. ArrayVec gains Clone, PartialEq/Eq over the active prefix, Default, and a try_push that returns CapacityError instead of indexing past the array; push itself is unchanged and now documents its panic. CapacityError is exported doc(hidden). Everything else is unit tests."
+notes = "Scheme-relative redirect fix and a non-panicking ArrayVec::try_push. No unsafe."
 
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.4 -> 0.6.5"
-notes = "No unsafe, no build script, no new deps. Adds client::header_raw, which appends a header through http's Builder::header, so names and values get the same validation (CR, LF and NUL rejected, covered by tests), and records the caller's name casing in a HeaderCasing request extension keyed by the lowercased name and its index among same-name values. AmendedRequest::all_headers writes that casing when the extension is present and the normal names otherwise. Protocol checks still match case-insensitively: Host and Content-Length duplicates are refused, and a redirect still strips Authorization and Cookie whatever their casing, as tests show. The two unwraps follow a successful builder.header call and an insert just above. The rest is unit tests and version metadata."
+notes = "Adds header_raw, validated through http's header builder. No unsafe."
 
 [[audits.webpki-roots]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "1.0.6 -> 1.0.10"
-notes = "Data-only: src/lib.rs trust-anchor constants follow Mozilla's store (20 roots removed including emSign ECC Root CA - G3 for RUSTSEC-2026-0381, 4 added: SECOM TLS ECC/RSA 2024, Telia EC/RSA TLS v3). No code lines changed; #![forbid(unsafe_code)] kept; no build script. MSRV 1.64 -> 1.71; dev-dep yasna 0.5 -> 0.6."
+notes = "Only root certificate updates from Mozilla's store."
 
 [[audits.zip]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "9.0.4 -> 9.0.5"
-notes = "Hardening release. AES password verification compares in constant time. apply_extra_fields rejects an AES extra field when the header's method is not AES (99) or when a second one appears, and caches the name and comment CRCs. The ZIP64 extra field reader errors on a truncated field instead of reading past it, and reads a value only when the entry asks for ZIP64. has_overlapping_entries now also flags an entry that runs into the central directory. New opt-in header-consistency checks (ZipStreamReader::enforce_header_consistency, ZipReadOptions::enforce_header_consistency, ZipArchive::validate_header_consistency, by_name_with_options) compare each local header with its central directory entry; all default off, and the seeks they add restore the reader position. extract.rs casts the fchmodat mode to libc::mode_t for the BSDs. No unsafe, no build script, no new runtime dependencies (count_instructions is a dev-dependency), no new fs/net/process/env access."
+notes = "Hardening: stricter extra-field parsing and new read-only header consistency checks. No unsafe."
 
 [[trusted.aho-corasick]]
 criteria = "safe-to-deploy"
@@ -372,7 +348,7 @@ criteria = "safe-to-deploy"
 trusted-publisher = "github:rust-lang/libc"
 start = "2026-10-02"
 end = "2027-10-10"
-notes = "libc moved to crates.io trusted publishing with 0.2.190; the user-id trust entry for rust-lang-owner no longer matches its releases"
+notes = "Moved to crates.io trusted publishing at 0.2.190."
 
 [[trusted.memchr]]
 criteria = "safe-to-deploy"
@@ -439,6 +415,18 @@ criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-03-30"
 end = "2027-05-16"
+
+[[trusted.rustls]]
+criteria = "safe-to-deploy"
+user-id = 2751 # Joe Birr-Pixton (ctz)
+start = "2019-04-02"
+end = "2027-11-04"
+
+[[trusted.rustls]]
+criteria = "safe-to-deploy"
+user-id = 4556
+start = "2022-05-18"
+end = "2027-11-04"
 
 [[trusted.ryu]]
 criteria = "safe-to-deploy"
@@ -595,6 +583,12 @@ criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-06-09"
 end = "2027-05-16"
+
+[[trusted.webpki-roots]]
+criteria = "safe-to-deploy"
+user-id = 2751 # Joe Birr-Pixton (ctz)
+start = "2019-07-21"
+end = "2027-11-04"
 
 [[trusted.windows-sys]]
 criteria = "safe-to-deploy"

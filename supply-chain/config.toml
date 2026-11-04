@@ -45,6 +45,10 @@ criteria = "safe-to-deploy"
 version = "0.5.6"
 criteria = "safe-to-deploy"
 
+[[exemptions.base64]]
+version = "0.23.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.bitflags]]
 version = "2.11.0"
 criteria = "safe-to-deploy"
@@ -52,12 +56,12 @@ criteria = "safe-to-deploy"
 [[exemptions.borsh]]
 version = "1.8.1"
 criteria = "safe-to-run"
-notes = "In the lockfile through bit-vec 0.10's optional borsh feature, which nothing in this workspace enables; never compiled in any feature configuration (cargo tree --workspace --all-features finds no path)."
+notes = "Never compiled: reachable only through bit-vec's unused borsh feature."
 
 [[exemptions.borsh-derive]]
 version = "1.8.1"
 criteria = "safe-to-run"
-notes = "In the lockfile through bit-vec 0.10's optional borsh feature, which nothing in this workspace enables; never compiled in any feature configuration (cargo tree --workspace --all-features finds no path)."
+notes = "Never compiled: reachable only through bit-vec's unused borsh feature."
 
 [[exemptions.byteorder-lite]]
 version = "0.1.0"
@@ -290,7 +294,7 @@ criteria = "safe-to-deploy"
 [[exemptions.proc-macro-crate]]
 version = "3.5.0"
 criteria = "safe-to-run"
-notes = "In the lockfile through bit-vec 0.10's optional borsh feature, which nothing in this workspace enables; never compiled in any feature configuration (cargo tree --workspace --all-features finds no path)."
+notes = "Never compiled: reachable only through bit-vec's unused borsh feature."
 
 [[exemptions.proptest]]
 version = "1.11.0"
@@ -308,6 +312,10 @@ criteria = "safe-to-deploy"
 version = "6.0.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.rand_xorshift]]
+version = "0.5.0"
+criteria = "safe-to-run"
+
 [[exemptions.redox_syscall]]
 version = "0.5.18"
 criteria = "safe-to-deploy"
@@ -322,10 +330,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rustix]]
 version = "1.1.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.rustls]]
-version = "0.23.42"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-native-certs]]
@@ -444,6 +448,10 @@ criteria = "safe-to-deploy"
 version = "3.3.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.ureq]]
+version = "3.5.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.ureq-proto]]
 version = "0.6.0"
 criteria = "safe-to-deploy"
@@ -487,14 +495,6 @@ criteria = "safe-to-run"
 [[exemptions.web-sys]]
 version = "0.3.95"
 criteria = "safe-to-run"
-
-[[exemptions.webpki-roots]]
-version = "0.26.11"
-criteria = "safe-to-deploy"
-
-[[exemptions.webpki-roots]]
-version = "1.0.6"
-criteria = "safe-to-deploy"
 
 [[exemptions.winapi-i686-pc-windows-gnu]]
 version = "0.4.0"

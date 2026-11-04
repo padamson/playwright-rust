@@ -40,40 +40,47 @@ header comment says `# cargo-vet imports lock`.
 
 Dependabot PRs that bump external crates often surface "missing
 [safe-to-deploy]" or "missing [safe-to-run]" failures from
-`cargo vet`. Resolve by either:
-
-- Running `cargo vet diff <crate> <old> <new>` and `cargo vet certify`
-  to record an explicit audit (preferred for small, reviewable diffs),
-  **or**
-- Adding an exemption in `supply-chain/config.toml` (acceptable for
-  well-known crates with negligible delta — match the existing
-  exemption style).
+`cargo vet`. Who read the diff decides how each one is settled. An audit
+is recorded under the certifying developer's name and is imported by
+anyone who trusts this repository's `audits.toml`, so it is their
+attestation to every importer: record one only for a diff that developer
+read. A review done only by an agent session is not that, however
+thorough; it goes in as a plain exemption, and the commit message says
+the review was a session's. An exemption stays local to this repo, so no
+importer relies on it. A later read can turn the exemption into an
+audit.
 
 ### Clearing a vet failure, step by step
 
 Run `cargo vet` without `--locked` first. With `--locked` it cannot
 refresh `imports.lock`, so it misses the publisher trust and imported
 audits for the new versions and reports crates CI does not. Then settle
-each crate it lists one of three ways:
+each crate it lists, trying these in order:
 
-- **Delta audit**, for a diff you can read. Record it with
+- **Trust**, when vet says an imported audit set already trusts the
+  crate's publisher (`cargo vet trust <crate> <publisher>`). This is a
+  decision about the publisher, not a code review, and the cheapest
+  honest answer when it applies.
+- **Exemption**, when the certifying developer has not read the diff.
+  Two kinds:
+  - A plain one, `cargo vet add-exemption <crate> <version> --criteria
+    <criteria>`, no notes, for a crate a session reviewed and the
+    developer did not; the commit message says so.
+  - One with notes, when there is a reason no review applies. The common
+    case is a crate that sits in `Cargo.lock` but is never compiled:
+    Cargo records an optional dependency even when no feature turns it
+    on, and vet checks the lockfile. Prove it with
+    `cargo tree --workspace --all-features -i <crate> -e all --target all`
+    ("nothing to print" means no build reaches it), then add the
+    exemption at `safe-to-run` with `--notes "..."` naming the dependency
+    that drags it in.
+- **Delta audit**, only for a diff the certifying developer read. Hand it
+  over first (below); then record it with
   `cargo vet certify <crate> <old> <new> --criteria <criteria>
   --accept-all --notes "..."`. Leave `--who` off: vet then records the
   auditor from the certifying developer's `git config user.name` and
-  `user.email`. The notes say what
-  changed and what was checked, in the style of the existing
-  `[[audits.*]]` entries.
-- **Trust**, when vet says the project already trusts the crate's
-  publisher (`cargo vet trust <crate> <publisher>`). This is a decision
-  about the publisher, not a code review.
-- **Exemption with notes**, when no review applies. The common case is a
-  crate that sits in `Cargo.lock` but is never compiled: Cargo records an
-  optional dependency even when no feature turns it on, and vet checks
-  the lockfile. Prove it with
-  `cargo tree --workspace --all-features -i <crate> -e all --target all`
-  ("nothing to print" means no build reaches it), then
-  `cargo vet add-exemption <crate> <version> --criteria safe-to-run
-  --notes "..."`, naming the dependency that drags it in.
+  `user.email`. The notes say what changed and what was checked, in the
+  style of the existing `[[audits.*]]` entries.
 
 `cargo vet prune` also drops exemptions that imported audits now cover,
 which reaches past the crates the PR touched. Leave it out of a
@@ -83,9 +90,10 @@ Dependabot branch and is squashed into the merge.
 ### Handing the audits over for review
 
 An audit is recorded under the git identity of the developer who
-certifies it, so it is their attestation, and it does not get committed
-until they have reviewed it. Make the review something they can copy and
-paste, item by item:
+certifies it, so it is their attestation, and it is not recorded until
+they have read the diff; a session's reading, summarized however well,
+does not stand in for theirs. Make the review something they can copy
+and paste, item by item:
 
 - **Each audit**: the diff command, `cargo vet diff <crate> <old> <new>`
   (Sourcegraph in a browser; `--mode local` for the terminal), or a
@@ -98,7 +106,9 @@ paste, item by item:
 - **Each trust**: say it is a policy call with nothing to read, and name
   the crates the same publisher is already trusted for.
 - **Each exemption**: the `cargo tree` command above, or whatever proves
-  its stated reason.
+  its stated reason. A plain exemption for a session-only review has
+  nothing to prove; name it as one, so the developer can read the diff
+  and certify instead if they choose.
 
 ## Security advisories (`cargo audit` failures)
 
