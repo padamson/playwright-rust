@@ -49,7 +49,8 @@ thiserror = { workspace = true }
 async-trait = "0.1"
 tracing = "0.1"
 parking_lot = "0.12"
-base64 = "0.23"
+# Without simd-unsafe: general_purpose::STANDARD never calls the SIMD kernels.
+base64 = { version = "0.23", default-features = false, features = ["std"] }
 bytes = "1.11.1"
 regex = "1.10"
 tokio-tungstenite = { version = "0.30" }
