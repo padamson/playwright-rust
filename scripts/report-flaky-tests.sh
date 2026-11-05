@@ -83,10 +83,12 @@ for log in $present; do
     runs=$((runs + 1))
 
     # A run's own summary counts its flaky tests: "9 tests run: 9 passed
-    # (1 flaky), 0 skipped". The parenthetical is absent when none were, and
-    # `|| true` keeps that from taking the script down under `pipefail`.
+    # (1 flaky), 0 skipped", or "(1 flaky, 2 leaky)" when tests also leaked.
+    # The count is absent when none were, and `|| true` keeps that from
+    # taking the script down under `pipefail`.
     count=$(printf '%s\n' "$text" |
-        grep -oE '\([0-9]+ flaky\)' |
+        grep -E '^[[:space:]]*Summary \[' |
+        grep -oE '[0-9]+ flaky' |
         grep -oE '[0-9]+' |
         awk '{ total += $1 } END { print total + 0 }' || true)
     expected=$((expected + count))

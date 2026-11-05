@@ -48,6 +48,12 @@ cat > "$work/padded-counter.log" <<'LOG'
      FLAKY 2/2 [   2.037s] ( 753/1077) playwright-rs::integration navigation::test_page_navigation_methods
 LOG
 
+# nextest folds leaky tests into the same parenthetical. From a Windows job.
+cat > "$work/flaky-and-leaky.log" <<'LOG'
+     Summary [ 310.931s] 1089 tests run: 1089 passed (1 flaky, 2 leaky), 60 skipped
+   FLAKY 2/2 [   6.766s] ( 567/1089) playwright-rs::integration connection::test_connect_over_cdp_real_chrome
+LOG
+
 cat > "$work/malformed.log" <<'LOG'
 error: could not compile `playwright-rs`
 LOG
@@ -96,6 +102,8 @@ check "names the flaky test" 0 \
     "playwright-rs::probe probe_fails_once_then_passes" "$work/with-flake.log"
 check "names a flaky test whose counter is padded" 0 \
     "playwright-rs::integration navigation::test_page_navigation_methods" "$work/padded-counter.log"
+check "names a flaky test in a run that also leaked" 0 \
+    "playwright-rs::integration connection::test_connect_over_cdp_real_chrome" "$work/flaky-and-leaky.log"
 check "warns for the annotation" 0 \
     "::warning title=Flaky test::" "$work/with-flake.log"
 check "clean run reports none" 0 \
