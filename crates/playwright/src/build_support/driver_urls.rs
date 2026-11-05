@@ -1,4 +1,5 @@
-// Pure platform-mapping and URL construction for driver acquisition.
+// Pure platform mapping, URL construction, and pinned artifact digests for
+// driver acquisition.
 //
 // The prebuilt driver zips died with the azureedge CDN, so the driver is
 // assembled from two artifacts: the `playwright-core` npm tarball and a
@@ -10,6 +11,78 @@
 /// Playwright release's own pin for `PLAYWRIGHT_VERSION` (playwright-python
 /// commits it as `NODE_VERSION` at the matching tag).
 const NODE_VERSION: &str = "24.21.0";
+
+/// npm's `dist.integrity` for the pinned `playwright-core` tarball, with the
+/// version it belongs to: `npm view playwright-core@<version> dist.integrity`.
+const NPM_CORE_INTEGRITY: (&str, &str) = (
+    "1.64.1",
+    "sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==",
+);
+
+/// SHA-256 of each Node dist archive, per Node triple, with the Node version
+/// they belong to, from `https://nodejs.org/dist/v<version>/SHASUMS256.txt`.
+const NODE_ARCHIVE_SHA256: (&str, [(&str, &str); 6]) = (
+    "24.21.0",
+    [
+        (
+            "darwin-x64",
+            "1462cb3b3046b815cf8ea436d3da450ec1a9f11dac7e5a46b0ada5305d7e8097",
+        ),
+        (
+            "darwin-arm64",
+            "bed7eea5325e1108f32ce5228ddd6a5f0f08a499ee42aa7442aea583702f6057",
+        ),
+        (
+            "linux-x64",
+            "6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff",
+        ),
+        (
+            "linux-arm64",
+            "724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5",
+        ),
+        (
+            "win-x64",
+            "158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541",
+        ),
+        (
+            "win-arm64",
+            "8779b1bde1d39f8d420e3b57aa657b39891af434d3de44a919044cec06785921",
+        ),
+    ],
+);
+
+/// The digest a downloaded artifact must have before it is unpacked, in
+/// the form its publisher prints it.
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PinnedDigest {
+    /// An npm `dist.integrity`: `sha512-` and the base64 digest.
+    Sha512Integrity(&'static str),
+    /// Lowercase hex, as `SHASUMS256.txt` prints it.
+    Sha256Hex(&'static str),
+}
+
+/// The pinned digest of the `playwright-core` tarball, or `None` when the pin
+/// belongs to a different driver version.
+#[allow(dead_code)]
+fn npm_core_digest(driver_version: &str) -> Option<PinnedDigest> {
+    let (version, sri) = NPM_CORE_INTEGRITY;
+    (version == driver_version).then_some(PinnedDigest::Sha512Integrity(sri))
+}
+
+/// The pinned digest of a Node dist archive, or `None` when the pins belong
+/// to a different Node version or name no such triple.
+#[allow(dead_code)]
+fn node_archive_digest(node_version: &str, triple: &str) -> Option<PinnedDigest> {
+    let (version, archives) = NODE_ARCHIVE_SHA256;
+    if version != node_version {
+        return None;
+    }
+    archives
+        .iter()
+        .find(|(t, _)| *t == triple)
+        .map(|(_, hex)| PinnedDigest::Sha256Hex(hex))
+}
 
 /// Playwright platform identifier for an (os, arch) pair, e.g.
 /// `("macos", "aarch64")` → `mac-arm64`. `None` for unsupported pairs.
@@ -189,6 +262,37 @@ mod driver_urls_tests {
                 "/c/playwright-rust/1.63.0/playwright-1.63.0-mac-arm64-node{NODE_VERSION}"
             ))
         );
+    }
+
+    #[test]
+    fn every_node_triple_has_a_pinned_sha256() {
+        for (_, _, _, triple) in ALL {
+            let Some(PinnedDigest::Sha256Hex(hex)) = node_archive_digest(NODE_VERSION, triple)
+            else {
+                panic!("no pinned SHA-256 for the {triple} Node archive");
+            };
+            assert_eq!(hex.len(), 64, "{triple}: {hex}");
+            assert!(
+                hex.bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)),
+                "{triple}: {hex}"
+            );
+        }
+        assert_eq!(node_archive_digest(NODE_VERSION, "solaris-x64"), None);
+        assert_eq!(node_archive_digest("0.0.0", "linux-x64"), None);
+    }
+
+    #[test]
+    fn the_pinned_driver_has_an_npm_integrity() {
+        let Some(PinnedDigest::Sha512Integrity(sri)) =
+            npm_core_digest(env!("PLAYWRIGHT_DRIVER_VERSION"))
+        else {
+            panic!("no pinned integrity for the pinned playwright-core");
+        };
+        let b64 = sri.strip_prefix("sha512-").expect(sri);
+        assert_eq!(b64.len(), 88, "{sri}");
+        assert!(b64.ends_with("=="), "{sri}");
+        assert_eq!(npm_core_digest("0.0.0"), None);
     }
 
     #[test]

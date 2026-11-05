@@ -4,8 +4,9 @@
 // is unchanged (see ADR 0006).
 //
 // `include!`d by `build.rs` and the cli binary — the two places that acquire
-// a driver. Effectful (ureq / zip / flate2 / tar); the pure mapping lives in
-// `driver_urls.rs`, included below, and is unit-tested from the lib suite.
+// a driver. Effectful (ureq / sha2 / zip / flate2 / tar); the pure mapping
+// and the pinned digests live in `driver_urls.rs`, included below, and are
+// unit-tested from the lib suite.
 
 include!("driver_urls.rs");
 
@@ -47,6 +48,18 @@ fn assemble_driver(
     let triple = node_triple(platform).ok_or_else(|| {
         io::Error::other(format!("unsupported driver platform: {platform}"))
     })?;
+    let npm_digest = npm_core_digest(driver_version).ok_or_else(|| {
+        io::Error::other(format!(
+            "no pinned digest for playwright-core {driver_version}; update \
+             NPM_CORE_INTEGRITY in driver_urls.rs"
+        ))
+    })?;
+    let node_digest = node_archive_digest(NODE_VERSION, triple).ok_or_else(|| {
+        io::Error::other(format!(
+            "no pinned digest for the Node {NODE_VERSION} {triple} archive; update \
+             NODE_ARCHIVE_SHA256 in driver_urls.rs"
+        ))
+    })?;
 
     let parent = driver_dir
         .parent()
@@ -66,13 +79,15 @@ fn assemble_driver(
     std::fs::create_dir_all(&tmp)?;
 
     let result = (|| {
-        extract_npm_package(&http_get(&npm_core_url(driver_version))?, &tmp)?;
-        extract_node_binary(
-            &http_get(&node_archive_url(NODE_VERSION, triple))?,
-            NODE_VERSION,
-            triple,
-            &tmp,
-        )?;
+        let npm_url = npm_core_url(driver_version);
+        let tgz = http_get(&npm_url)?;
+        verify_digest(&npm_url, &tgz, npm_digest)?;
+        extract_npm_package(&tgz, &tmp)?;
+
+        let node_url = node_archive_url(NODE_VERSION, triple);
+        let archive = http_get(&node_url)?;
+        verify_digest(&node_url, &archive, node_digest)?;
+        extract_node_binary(&archive, NODE_VERSION, triple, &tmp)?;
 
         // The layout contract the runtime launch path depends on.
         for required in [
@@ -154,6 +169,37 @@ fn http_get(url: &str) -> std::io::Result<Vec<u8>> {
         .limit(u64::MAX)
         .read_to_vec()
         .map_err(|e| io::Error::other(format!("reading {url} failed: {e}")))
+}
+
+/// Fails unless `bytes` hash to `expected`, so nothing is unpacked from a
+/// download that differs from what its publisher released.
+#[allow(dead_code)]
+fn verify_digest(url: &str, bytes: &[u8], expected: PinnedDigest) -> std::io::Result<()> {
+    use base64::Engine as _;
+    use sha2::Digest as _;
+
+    let (expected, actual) = match expected {
+        PinnedDigest::Sha512Integrity(sri) => (
+            sri,
+            format!(
+                "sha512-{}",
+                base64::engine::general_purpose::STANDARD.encode(sha2::Sha512::digest(bytes))
+            ),
+        ),
+        PinnedDigest::Sha256Hex(hex) => (
+            hex,
+            sha2::Sha256::digest(bytes)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect(),
+        ),
+    };
+    if actual != expected {
+        return Err(std::io::Error::other(format!(
+            "download of {url} does not match its pinned digest: expected {expected}, got {actual}"
+        )));
+    }
+    Ok(())
 }
 
 /// Extracts the npm tarball's `package/` subtree into `dest/package/`.
@@ -251,4 +297,42 @@ fn extract_node_binary(
         )));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod driver_assembly_tests {
+    use super::*;
+
+    const ABC_SHA256: &str = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    const ABC_SHA512: &str =
+        "sha512-3a81oZNherrMQXNJriBBMRLm+k6JqX6iCp7u5ktV05ohkpkqJ0/BqDa6PCOj/uu9RU1EI2Q86A4qmslPpUyknw==";
+
+    #[test]
+    fn a_download_matching_its_pin_is_accepted() {
+        verify_digest("https://x/a", b"abc", PinnedDigest::Sha256Hex(ABC_SHA256)).unwrap();
+        verify_digest("https://x/a", b"abc", PinnedDigest::Sha512Integrity(ABC_SHA512)).unwrap();
+    }
+
+    #[test]
+    fn a_download_that_differs_from_its_pin_is_refused() {
+        for (pin, expected, actual) in [
+            (
+                PinnedDigest::Sha256Hex(ABC_SHA256),
+                ABC_SHA256,
+                "a52d159f262b2c6ddb724a61840befc36eb30c88877a4030b65cbe86298449c9",
+            ),
+            (
+                PinnedDigest::Sha512Integrity(ABC_SHA512),
+                ABC_SHA512,
+                "sha512-GphAwnpc8i2rBgzdioPaKw+8sa61LU+dOJS2OQg+IFpas/avrushuOmbXg/pPar6q+7ydNpdbq3MnbNuW29kxA==",
+            ),
+        ] {
+            let err = verify_digest("https://x/a.tgz", b"abd", pin)
+                .unwrap_err()
+                .to_string();
+            assert!(err.contains("https://x/a.tgz"), "{err}");
+            assert!(err.contains(expected), "{err}");
+            assert!(err.contains(actual), "{err}");
+        }
+    }
 }

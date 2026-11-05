@@ -203,6 +203,7 @@ pursued it is its own ADR, not a fix for this outage.
 | npm / nodejs.org transient outage or move | Fresh build fails | Low | Fail loudly with the attempted URL; document `PLAYWRIGHT_DRIVER_CACHE_DIR` / `PLAYWRIGHT_DRIVER_PATH` escape hatches; consider a mirror fallback |
 | `NODE_VERSION` drifts from Playwright's pin | Subtle driver/runtime mismatch | Medium | Extend `xtask verify-driver-version` to also assert the Node pin; source it from Playwright's release |
 | Assembled layout subtly differs from the old zip | Runtime `ServerNotFound` | Low | Assert the `node` + `package/cli.js` paths exist at the end of `build.rs`; the integration suite launching a real browser is the end-to-end check |
+| An artifact on npm or nodejs.org is replaced | Arbitrary code runs at every browser launch | Low | Added 2026-11-05: `driver_urls.rs` pins npm's `dist.integrity` and Node's `SHASUMS256.txt` digests, and the assembler refuses a download that differs before unpacking it |
 
 ---
 

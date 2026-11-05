@@ -39,6 +39,7 @@ cli = [
     "dep:zip",
     "dep:flate2",
     "dep:tar",
+    "dep:sha2",
 ]
 
 [dependencies]
@@ -76,6 +77,7 @@ zip = { version = "9", optional = true, default-features = false, features = ["d
 # the Node dist archive on non-Windows) — see ADR 0006.
 flate2 = { version = "1", optional = true }
 tar = { version = "0.4", optional = true }
+sha2 = { version = "0.11", optional = true, default-features = false }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -128,6 +130,10 @@ zip = { version = "9", default-features = false, features = ["deflate"] }
 # archive (the driver is assembled from those two artifacts — ADR 0006).
 flate2 = "1"
 tar = "0.4"
+# Both downloads are checked against digests pinned in driver_urls.rs before
+# they are unpacked; base64 renders npm's `sha512-` integrity form.
+sha2 = { version = "0.11", default-features = false }
+base64 = { version = "0.23", default-features = false, features = ["std"] }
 
 [package.metadata.docs.rs]
 # Pin nightly to avoid generic-array 0.14 breakage (doc_auto_cfg removed in Rust 1.92)

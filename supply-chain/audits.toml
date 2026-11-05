@@ -458,6 +458,12 @@ trusted-publisher = "github:RustCrypto/hashes"
 start = "2026-03-27"
 end = "2027-07-18"
 
+[[trusted.sha2]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:RustCrypto/hashes"
+start = "2026-03-25"
+end = "2027-11-05"
+
 [[trusted.syn]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)

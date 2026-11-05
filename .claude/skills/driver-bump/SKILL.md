@@ -80,6 +80,14 @@ with `build.rs`, so run it after the edit and fix what it names. As of
 1.64.1 the set is:
 
 - `crates/playwright/build.rs` (`PLAYWRIGHT_VERSION`)
+- `crates/playwright/src/build_support/driver_urls.rs`: `NPM_CORE_INTEGRITY`,
+  the version and its `npm view playwright-core@<version> dist.integrity`.
+  The assembler refuses a download that does not match, and the unit tests
+  fail until the pin names the new version. When `NODE_VERSION` moves too,
+  replace `NODE_ARCHIVE_SHA256`'s version and all six rows from that
+  release's `SHASUMS256.txt`, after
+  `gpgv --keyring pubring.kbx SHASUMS256.txt.sig SHASUMS256.txt` passes with
+  the keyring from `nodejs/release-keys` (`gpg/pubring.kbx`).
 - `crates/playwright/tests/playwright_version_test.rs`
 - `crates/playwright/src/protocol/root.rs`: the note that the
   `sdkLanguage` enum was re-checked. Re-check it (it has never had `rust`)
