@@ -211,10 +211,6 @@ criteria = "safe-to-deploy"
 version = "0.8.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.lock_api]]
-version = "0.4.14"
-criteria = "safe-to-deploy"
-
 [[exemptions.matchit]]
 version = "0.8.4"
 criteria = "safe-to-deploy"
@@ -253,14 +249,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.openssl-sys]]
 version = "0.9.116"
-criteria = "safe-to-deploy"
-
-[[exemptions.parking_lot]]
-version = "0.12.5"
-criteria = "safe-to-deploy"
-
-[[exemptions.parking_lot_core]]
-version = "0.9.12"
 criteria = "safe-to-deploy"
 
 [[exemptions.pin-project-lite]]
@@ -319,6 +307,11 @@ criteria = "safe-to-run"
 [[exemptions.redox_syscall]]
 version = "0.5.18"
 criteria = "safe-to-deploy"
+
+[[exemptions.redox_syscall]]
+version = "0.9.5"
+criteria = "safe-to-deploy"
+notes = "Built only for target_os = redox, through parking_lot_core; no target we ship compiles it."
 
 [[exemptions.redox_users]]
 version = "0.5.2"

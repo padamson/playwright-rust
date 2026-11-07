@@ -275,6 +275,13 @@ version = "0.2.191"
 when = "2026-10-16"
 trusted-publisher = "github:rust-lang/libc"
 
+[[publisher.lock_api]]
+version = "0.5.0"
+when = "2026-10-21"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
 [[publisher.memchr]]
 version = "2.8.0"
 when = "2026-02-06"
@@ -295,6 +302,20 @@ when = "2025-10-21"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
+
+[[publisher.parking_lot]]
+version = "0.13.0"
+when = "2026-10-21"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
+[[publisher.parking_lot_core]]
+version = "0.10.0"
+when = "2026-10-21"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
 
 [[publisher.prettyplease]]
 version = "0.2.37"
