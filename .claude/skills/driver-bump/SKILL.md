@@ -113,6 +113,9 @@ CHANGELOGs, plans and the site's feature cards.
 
 - `cargo xtask verify-driver-version`, `sync-protocol-spec --check`,
   `verify-protocol-methods`, `verify-changelog-links`
+- `scripts/check-driver-digests.sh`, which compares the new pins with what
+  npm and nodejs.org publish (it needs both hosts, so outside the sandbox
+  or with them allowed)
 - The default lane and doctests locally; the Firefox, WebKit and stress
   lanes (`--run-ignored ignored-only`) locally on a minor bump, since a
   browser build changed
