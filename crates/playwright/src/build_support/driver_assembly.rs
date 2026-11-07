@@ -42,20 +42,20 @@ fn assemble_driver(
     driver_dir: &std::path::Path,
     driver_version: &str,
     platform: &str,
-) -> std::io::Result<()> {
+) -> Result<(), AssemblyError> {
     use std::io;
 
     let triple = node_triple(platform).ok_or_else(|| {
         io::Error::other(format!("unsupported driver platform: {platform}"))
     })?;
     let npm_digest = npm_core_digest(driver_version).ok_or_else(|| {
-        io::Error::other(format!(
+        AssemblyError::Pin(format!(
             "no pinned digest for playwright-core {driver_version}; update \
              NPM_CORE_INTEGRITY in driver_urls.rs"
         ))
     })?;
     let node_digest = node_archive_digest(NODE_VERSION, triple).ok_or_else(|| {
-        io::Error::other(format!(
+        AssemblyError::Pin(format!(
             "no pinned digest for the Node {NODE_VERSION} {triple} archive; update \
              NODE_ARCHIVE_SHA256 in driver_urls.rs"
         ))
@@ -78,7 +78,7 @@ fn assemble_driver(
     let _ = std::fs::remove_dir_all(&tmp);
     std::fs::create_dir_all(&tmp)?;
 
-    let result = (|| {
+    let result = (|| -> Result<(), AssemblyError> {
         let npm_url = npm_core_url(driver_version);
         let tgz = http_get(&npm_url)?;
         verify_digest(&npm_url, &tgz, npm_digest)?;
@@ -98,7 +98,8 @@ fn assemble_driver(
                 return Err(io::Error::other(format!(
                     "assembled driver is missing {}",
                     required.display()
-                )));
+                ))
+                .into());
             }
         }
         Ok(())
@@ -125,7 +126,7 @@ fn assemble_driver(
             let _ = std::fs::remove_dir_all(&tmp);
             Ok(())
         }
-        Err(e) => Err(e),
+        Err(e) => Err(e.into()),
     }
 }
 
@@ -172,9 +173,10 @@ fn http_get(url: &str) -> std::io::Result<Vec<u8>> {
 }
 
 /// Fails unless `bytes` hash to `expected`, so nothing is unpacked from a
-/// download that differs from what its publisher released.
+/// download that differs from what its publisher released. The comparison
+/// is `check_digest`'s, in `driver_urls.rs`, where cargo-mutants reaches it.
 #[allow(dead_code)]
-fn verify_digest(url: &str, bytes: &[u8], expected: PinnedDigest) -> std::io::Result<()> {
+fn verify_digest(url: &str, bytes: &[u8], expected: PinnedDigest) -> Result<(), AssemblyError> {
     use base64::Engine as _;
     use sha2::Digest as _;
 
@@ -194,12 +196,7 @@ fn verify_digest(url: &str, bytes: &[u8], expected: PinnedDigest) -> std::io::Re
                 .collect(),
         ),
     };
-    if actual != expected {
-        return Err(std::io::Error::other(format!(
-            "download of {url} does not match its pinned digest: expected {expected}, got {actual}"
-        )));
-    }
-    Ok(())
+    check_digest(url, expected, &actual)
 }
 
 /// Extracts the npm tarball's `package/` subtree into `dest/package/`.
@@ -327,12 +324,27 @@ mod driver_assembly_tests {
                 "sha512-GphAwnpc8i2rBgzdioPaKw+8sa61LU+dOJS2OQg+IFpas/avrushuOmbXg/pPar6q+7ydNpdbq3MnbNuW29kxA==",
             ),
         ] {
-            let err = verify_digest("https://x/a.tgz", b"abd", pin)
-                .unwrap_err()
-                .to_string();
-            assert!(err.contains("https://x/a.tgz"), "{err}");
+            let err = verify_digest("https://x/a.tgz", b"abd", pin).unwrap_err();
+            assert!(matches!(err, AssemblyError::Pin(_)), "{err:?}");
+            let err = err.to_string();
             assert!(err.contains(expected), "{err}");
             assert!(err.contains(actual), "{err}");
         }
+    }
+
+    #[test]
+    fn a_driver_version_without_a_pin_is_a_pin_failure() {
+        let dir = std::path::Path::new("/nonexistent/playwright-driver");
+        let err = assemble_driver(dir, "0.0.0", "mac-arm64").unwrap_err();
+        assert!(matches!(err, AssemblyError::Pin(_)), "{err:?}");
+        assert!(err.to_string().contains("NPM_CORE_INTEGRITY"), "{err}");
+    }
+
+    #[test]
+    fn an_unsupported_platform_is_not_a_pin_failure() {
+        let dir = std::path::Path::new("/nonexistent/playwright-driver");
+        let err = assemble_driver(dir, env!("PLAYWRIGHT_DRIVER_VERSION"), "solaris").unwrap_err();
+        assert!(matches!(err, AssemblyError::Other(_)), "{err:?}");
+        assert!(err.to_string().contains("solaris"), "{err}");
     }
 }

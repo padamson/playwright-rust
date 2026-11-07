@@ -62,6 +62,47 @@ enum PinnedDigest {
     Sha256Hex(&'static str),
 }
 
+/// Why a driver could not be assembled.
+#[allow(dead_code)]
+#[derive(Debug)]
+enum AssemblyError {
+    /// A download with no pinned digest, or one that does not match it: the
+    /// artifact or the pins changed, so the build script fails the build.
+    Pin(String),
+    /// A network, filesystem, archive, or platform failure, after which the
+    /// build script warns and builds without a driver.
+    Other(std::io::Error),
+}
+
+impl std::fmt::Display for AssemblyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Pin(message) => f.write_str(message),
+            Self::Other(error) => error.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for AssemblyError {}
+
+impl From<std::io::Error> for AssemblyError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Other(error)
+    }
+}
+
+/// Fails with [`AssemblyError::Pin`] unless a download's digest, in the form
+/// its publisher prints it, is the one pinned for it.
+#[allow(dead_code)]
+fn check_digest(url: &str, expected: &str, actual: &str) -> Result<(), AssemblyError> {
+    if actual == expected {
+        return Ok(());
+    }
+    Err(AssemblyError::Pin(format!(
+        "download of {url} does not match its pinned digest: expected {expected}, got {actual}"
+    )))
+}
+
 /// The pinned digest of the `playwright-core` tarball, or `None` when the pin
 /// belongs to a different driver version.
 #[allow(dead_code)]
@@ -293,6 +334,28 @@ mod driver_urls_tests {
         assert_eq!(b64.len(), 88, "{sri}");
         assert!(b64.ends_with("=="), "{sri}");
         assert_eq!(npm_core_digest("0.0.0"), None);
+    }
+
+    #[test]
+    fn a_digest_that_matches_its_pin_passes() {
+        check_digest("https://x/a.tgz", "sha512-abc", "sha512-abc").unwrap();
+    }
+
+    #[test]
+    fn a_digest_that_differs_from_its_pin_is_a_pin_failure() {
+        let err = check_digest("https://x/a.tgz", "sha512-abc", "sha512-abd").unwrap_err();
+        assert!(matches!(err, AssemblyError::Pin(_)), "{err:?}");
+        let message = err.to_string();
+        for part in ["https://x/a.tgz", "expected sha512-abc", "got sha512-abd"] {
+            assert!(message.contains(part), "{message}");
+        }
+    }
+
+    #[test]
+    fn an_io_error_is_not_a_pin_failure_and_reads_as_itself() {
+        let err = AssemblyError::from(std::io::Error::other("download failed"));
+        assert!(matches!(err, AssemblyError::Other(_)), "{err:?}");
+        assert_eq!(err.to_string(), "download failed");
     }
 
     #[test]

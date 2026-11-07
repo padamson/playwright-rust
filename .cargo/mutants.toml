@@ -34,7 +34,13 @@ examine_globs = [
     "crates/playwright/src/protocol/browser_context/events.rs",
     "crates/playwright/src/protocol/in_flight.rs",
     "crates/playwright/src/protocol/route_handlers.rs",
+    "crates/playwright/src/build_support/driver_urls.rs",
 ]
+
+# No mutant launches a browser, so no build needs the driver. Here rather
+# than in each caller, so a bare `cargo mutants` skips it too: driver_urls.rs
+# is in scope, and a mutant that moves its cache path would download it again.
+additional_cargo_args = ["--config", "env.PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD=\"1\""]
 
 # The unit tests plus every test binary that runs without a browser. The
 # browser suites (`integration`, `sigint_termios`) are left out by target

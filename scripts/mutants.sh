@@ -45,12 +45,6 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
-# Mutation testing runs the unit tests and the browser-free test binaries
-# only (see .cargo/mutants.toml), never a browser, so skip the ~42 MB
-# Playwright driver download build.rs would otherwise do in every scratch
-# build.
-export PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD=1
-
 # Incremental is disabled globally (.cargo/config.toml) because it bloated
 # target/ with no payoff for normal builds, but cargo-mutants rebuilds once
 # per mutant and genuinely benefits from it, so re-enable it for mutation runs.

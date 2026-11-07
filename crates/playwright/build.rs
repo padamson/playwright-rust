@@ -23,6 +23,10 @@
 //!   compile-only jobs (e.g. the MSRV `cargo check`) that never launch a
 //!   browser, saving a ~90 MB fetch.
 //!
+//! A download that fails (offline, an outage) warns and builds without a
+//! driver, so launch reports `ServerNotFound`. A download that does not
+//! match its pinned digest fails the build.
+//!
 //! `$OUT_DIR` is the fallback for a process with no resolvable home
 //! directory. Cargo's convention is that build scripts write only there;
 //! this one writes to the cache on purpose, and the trade is recorded in
@@ -103,7 +107,13 @@ fn main() {
             set_present_env_vars(&driver_dir, platform, source);
             watch(&[&node_exe, &cli_js]);
         }
-        Err(e) => {
+        Err(AssemblyError::Pin(message)) => {
+            println!("cargo::error=Playwright driver not assembled: {message}");
+            println!(
+                "cargo::error=If you supply your own driver (PLAYWRIGHT_DRIVER_PATH, or playwright from npm), set PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD=1 to skip this download."
+            );
+        }
+        Err(AssemblyError::Other(e)) => {
             // Compile anyway (same shape as the skip path): the runtime
             // resolution chain can still find a driver via PLAYWRIGHT_DRIVER_PATH
             // or an npm-installed playwright, and a build without one fails at
