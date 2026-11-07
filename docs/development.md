@@ -5,7 +5,7 @@ start at the [README](../README.md) and [docs.rs](https://docs.rs/playwright-rs)
 
 ## Prerequisites
 
-- Rust 1.88+
+- Rust 1.95+
 - [cargo-nextest](https://nexte.st/): `cargo install cargo-nextest`
 - [asbuilt](https://github.com/padamson/asbuilt), which the pre-commit hook
   runs, at the release `asbuilt.toml` pins:

@@ -9,6 +9,10 @@ and this crate adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Changed
+
+- **MSRV is now Rust 1.95** (was 1.88), following the workspace, which moved for playwright-rs's parking_lot 0.13. Nothing in this crate needs it.
+
 ## [0.3.0] - 2026-11-01
 
 ### Changed

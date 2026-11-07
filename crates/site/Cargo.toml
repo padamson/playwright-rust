@@ -6,7 +6,7 @@
 name = "playwright-rs-site"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.95"
 license = "Apache-2.0"
 authors = ["Paul Adamson"]
 repository = "https://github.com/padamson/playwright-rust"
