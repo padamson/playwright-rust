@@ -129,8 +129,10 @@ impl Root {
                 "initialize",
                 serde_json::json!({
                     // See this method's rustdoc for why this is not "rust".
-                    // Validator enum last confirmed against playwright@1.64.1.
+                    // Validator enum last confirmed against playwright@1.65.0.
                     "sdkLanguage": "python"
+                    // `supportsLoneSurrogates` stays unset: serde_json rejects
+                    // a lone surrogate escape, so the driver must replace them.
                 }),
             )
             .await

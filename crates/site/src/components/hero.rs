@@ -6,7 +6,7 @@ use super::links::{ARCHITECTURE, CRATES_IO, DOCS_RS, GITHUB};
 // Playwright driver bundled by the latest crates.io release vs. by main HEAD.
 // Bump these at release time, alongside the install version (snippets/install.toml).
 const PLAYWRIGHT_RELEASED: &str = "1.64.0";
-const PLAYWRIGHT_DEV: &str = "1.64.1";
+const PLAYWRIGHT_DEV: &str = "1.65.0";
 
 #[component]
 pub fn Hero() -> impl IntoView {

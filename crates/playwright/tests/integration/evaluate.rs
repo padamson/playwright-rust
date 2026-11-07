@@ -145,3 +145,19 @@ async fn a_regex_comes_back_as_its_literal() {
     assert_eq!(regex, "/ab+c/gi");
     browser.close().await.expect("close");
 }
+
+#[tokio::test]
+async fn a_lone_surrogate_arrives_as_a_replacement_character() {
+    let (_pw, browser, page) = crate::common::setup().await;
+    let text: String = page
+        .evaluate("() => 'a\\uD800b'", None::<&()>)
+        .await
+        .expect("evaluate a string with a lone surrogate");
+    assert_eq!(text, "a\u{FFFD}b");
+    let after: i32 = page
+        .evaluate("() => 1 + 1", None::<&()>)
+        .await
+        .expect("the connection survives");
+    assert_eq!(after, 2);
+    browser.close().await.expect("close");
+}

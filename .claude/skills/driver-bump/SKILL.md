@@ -77,7 +77,7 @@ Then sort what you found:
 
 `cargo xtask verify-driver-version` lists every reference that disagrees
 with `build.rs`, so run it after the edit and fix what it names. As of
-1.64.1 the set is:
+1.65.0 the set is:
 
 - `crates/playwright/build.rs` (`PLAYWRIGHT_VERSION`)
 - `crates/playwright/src/build_support/driver_urls.rs`: `NPM_CORE_INTEGRITY`,

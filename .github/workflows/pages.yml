@@ -115,8 +115,8 @@ jobs:
           path: |
             ~/.cache/ms-playwright
             ~/.cache/playwright-rust
-          key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.64.1-v5
-          restore-keys: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.64.1-v5
+          key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
+          restore-keys: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
 
       - name: Format + lint site crates
         run: |

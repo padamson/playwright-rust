@@ -31,7 +31,7 @@
 use std::env;
 use std::path::{Path, PathBuf};
 
-const PLAYWRIGHT_VERSION: &str = "1.64.1";
+const PLAYWRIGHT_VERSION: &str = "1.65.0";
 
 // Download + assembly logic shared with the cli binary (`src/bin/
 // playwright_rs.rs`); pulls in the pure URL/platform mapping from

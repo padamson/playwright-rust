@@ -500,7 +500,11 @@ impl BrowserType {
     ///
     /// # Arguments
     /// * `endpoint_url` - A CDP endpoint URL (e.g., `http://localhost:9222` or
-    ///   `ws://localhost:9222/devtools/browser/...`)
+    ///   `ws://localhost:9222/devtools/browser/...`), or a browser channel name
+    ///   such as `chrome` or `msedge` to connect to that browser with remote
+    ///   debugging enabled in its default user data directory. On Linux the
+    ///   driver looks for that directory in `CHROME_USER_DATA_DIR` when set,
+    ///   then under `CHROME_CONFIG_HOME`, `XDG_CONFIG_HOME`, or `~/.config`.
     /// * `options` - Optional connection options.
     ///
     /// # Errors

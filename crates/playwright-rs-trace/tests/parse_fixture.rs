@@ -22,7 +22,7 @@ const BASIC_V9_FIXTURE: &[u8] = include_bytes!("fixtures/basic-v9.trace.zip");
 /// anchors this to `build.rs`'s `PLAYWRIGHT_VERSION`, so bumping the driver
 /// without regenerating the fixture fails a gate instead of quietly leaving
 /// the parser untested against the format it will actually meet.
-const FIXTURE_DRIVER: &str = "playwright@1.64.1";
+const FIXTURE_DRIVER: &str = "playwright@1.65.0";
 
 fn open_basic() -> TraceReader<Cursor<&'static [u8]>> {
     TraceReader::open(Cursor::new(BASIC_FIXTURE)).expect("open basic fixture")
@@ -32,7 +32,7 @@ fn open_basic() -> TraceReader<Cursor<&'static [u8]>> {
 fn opens_basic_fixture_and_reads_context() {
     let reader = open_basic();
     let ctx = reader.context();
-    assert_eq!(ctx.version, 10, "playwright@1.64.1 writes trace v10");
+    assert_eq!(ctx.version, 10, "playwright@1.65.0 writes trace v10");
     assert_eq!(ctx.browser_name, "chromium");
     let expected_driver = FIXTURE_DRIVER
         .strip_prefix("playwright@")
