@@ -1,10 +1,10 @@
-/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.3.5 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
     --spacing: 0.25rem;
@@ -56,7 +56,7 @@
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
     tab-size: 4;
-    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji');
+    font-family: var(--default-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji');
     font-feature-settings: var(--default-font-feature-settings, normal);
     font-variation-settings: var(--default-font-variation-settings, normal);
     -webkit-tap-highlight-color: transparent;
@@ -108,7 +108,7 @@
     border-color: inherit;
     border-collapse: collapse;
   }
-  :-moz-focusring {
+  :-moz-focusring:where(:not(iframe)) {
     outline: auto;
   }
   progress {
@@ -204,7 +204,7 @@
     margin-inline: auto;
   }
   .mt-1 {
-    margin-top: calc(var(--spacing) * 1);
+    margin-top: var(--spacing);
   }
   .mt-3 {
     margin-top: calc(var(--spacing) * 3);
@@ -294,7 +294,7 @@
     flex: 1;
   }
   .transform {
-    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+    transform: var(--tw-rotate-x, ) var(--tw-rotate-y, ) var(--tw-rotate-z, ) var(--tw-skew-x, ) var(--tw-skew-y, );
   }
   .resize {
     resize: both;
@@ -318,7 +318,7 @@
     justify-content: center;
   }
   .gap-1 {
-    gap: calc(var(--spacing) * 1);
+    gap: var(--spacing);
   }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
@@ -485,7 +485,7 @@
     padding-block: calc(var(--spacing) * 0.5);
   }
   .py-1 {
-    padding-block: calc(var(--spacing) * 1);
+    padding-block: var(--spacing);
   }
   .py-1\.5 {
     padding-block: calc(var(--spacing) * 1.5);
@@ -620,87 +620,59 @@
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
-  .hover\:border-rust-500 {
-    &:hover {
-      @media (hover: hover) {
-        border-color: var(--color-rust-500);
+  @media (hover: hover) {
+    .hover\:border-rust-500:hover {
+      border-color: var(--color-rust-500);
+    }
+    .hover\:bg-rust-600:hover {
+      background-color: var(--color-rust-600);
+    }
+    .hover\:text-rust-50\/80:hover {
+      color: color-mix(in srgb, #fdf3ef 80%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:text-rust-50\/80:hover {
+        color: color-mix(in oklab, var(--color-rust-50) 80%, transparent);
       }
     }
-  }
-  .hover\:bg-rust-600 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-rust-600);
+    .hover\:text-rust-50\/85:hover {
+      color: color-mix(in srgb, #fdf3ef 85%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:text-rust-50\/85:hover {
+        color: color-mix(in oklab, var(--color-rust-50) 85%, transparent);
       }
     }
-  }
-  .hover\:text-rust-50\/80 {
-    &:hover {
-      @media (hover: hover) {
-        color: color-mix(in srgb, #fdf3ef 80%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          color: color-mix(in oklab, var(--color-rust-50) 80%, transparent);
-        }
-      }
+    .hover\:text-rust-300:hover {
+      color: var(--color-rust-300);
+    }
+    .hover\:text-rust-500:hover {
+      color: var(--color-rust-500);
     }
   }
-  .hover\:text-rust-50\/85 {
-    &:hover {
-      @media (hover: hover) {
-        color: color-mix(in srgb, #fdf3ef 85%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          color: color-mix(in oklab, var(--color-rust-50) 85%, transparent);
-        }
-      }
-    }
+  .disabled\:opacity-40:disabled {
+    opacity: 40%;
   }
-  .hover\:text-rust-300 {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-rust-300);
-      }
-    }
-  }
-  .hover\:text-rust-500 {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-rust-500);
-      }
-    }
-  }
-  .disabled\:opacity-40 {
-    &:disabled {
-      opacity: 40%;
-    }
-  }
-  .sm\:grid-cols-3 {
-    @media (width >= 40rem) {
+  @media (width >= 40rem) {
+    .sm\:grid-cols-3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-  }
-  .sm\:text-6xl {
-    @media (width >= 40rem) {
+    .sm\:text-6xl {
       font-size: var(--text-6xl);
       line-height: var(--tw-leading, var(--text-6xl--line-height));
     }
   }
-  .md\:sticky {
-    @media (width >= 48rem) {
+  @media (width >= 48rem) {
+    .md\:sticky {
       position: sticky;
     }
-  }
-  .md\:top-6 {
-    @media (width >= 48rem) {
+    .md\:top-6 {
       top: calc(var(--spacing) * 6);
     }
-  }
-  .md\:grid-cols-2 {
-    @media (width >= 48rem) {
+    .md\:grid-cols-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-  }
-  .md\:items-start {
-    @media (width >= 48rem) {
+    .md\:items-start {
       align-items: flex-start;
     }
   }
@@ -851,7 +823,7 @@
   initial-value: 0 0 #0000;
 }
 @layer properties {
-  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: block))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
       --tw-rotate-x: initial;
       --tw-rotate-y: initial;
