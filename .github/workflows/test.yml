@@ -280,6 +280,11 @@ jobs:
       shell: bash
       run: scripts/test-check-advisories.sh
 
+    - name: Verify the release gate requires vet, deny and audit
+      if: runner.os == 'Linux'
+      shell: bash
+      run: scripts/test-require-supply-chain-checks.sh
+
     - name: Verify agent-integration doc snippets
       run: cargo xtask verify-agent-docs
 

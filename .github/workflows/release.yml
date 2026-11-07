@@ -125,9 +125,51 @@ jobs:
           FLAKY_REPORT_LABEL: ${{ matrix.target }}
         run: scripts/report-flaky-tests.sh nextest-main.log
 
+  # vet, deny and audit run in security.yml on the push to main, which a tag
+  # push does not trigger. Rather than run them a second time here, both
+  # publishing jobs wait on this check that the tagged commit is on main and
+  # that they passed on it, so a tag on a red or unmerged commit publishes
+  # nothing. It waits for the test matrix, which outlasts Security &
+  # Quality, so a tag pushed right after the commit is not refused for
+  # being early.
+  supply-chain-gates:
+    name: Supply-chain gates passed
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      checks: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # A pull request's checks are reported on its head commit but test the
+      # merge, and a dispatched run can test any branch, so passing checks
+      # alone do not show that the commit is the one main tested. "behind"
+      # or "identical" means main contains it.
+      - name: Require the tagged commit to be on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          status=$(gh api "repos/$REPO/compare/refs/heads/main...$SHA" --jq .status)
+          case "$status" in
+            behind|identical) echo "ok    $SHA is on main" ;;
+            *) echo "::error::$SHA is not on main ($status). Tag a commit that main's CI has tested."; exit 1 ;;
+          esac
+
+      - name: Require vet, deny and audit to have passed on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          gh api --paginate "repos/$REPO/commits/$SHA/check-runs?per_page=100" > check-runs.json
+          scripts/require-supply-chain-checks.sh check-runs.json
+
   create-release:
     name: Create GitHub Release
-    needs: [test, semver-checks]
+    needs: [test, semver-checks, supply-chain-gates]
     runs-on: ubuntu-latest
     permissions:
       contents: write # create the release and upload its assets
@@ -226,7 +268,7 @@ jobs:
 
   publish-crates:
     name: Publish to crates.io
-    needs: [test, semver-checks]
+    needs: [test, semver-checks, supply-chain-gates]
     runs-on: ubuntu-latest
     # Scoped to this job, not the workflow: only publishing needs to mint an
     # OIDC token, and `id-token: write` is what lets a job request one.

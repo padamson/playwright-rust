@@ -169,7 +169,12 @@ git push origin main
 # 3. Watch CI — Test on linux/mac/windows + Security & Quality
 gh run watch  # or check the Actions tab in GitHub
 
-# 4. Only after ALL required checks are green, create and push the tag
+# 4. Only after ALL required checks are green, create and push the tag.
+#    release.yml's supply-chain-gates job enforces part of this: publishing
+#    fails unless the tagged commit is on main and vet, deny and audit
+#    passed on it. The job runs after the test matrix, so Security &
+#    Quality has normally finished by then; if it had not, re-run the
+#    failed jobs once it has.
 #    Tag prefix maps to crate (see workspace table at top of file):
 #      v0.13.0          → playwright-rs
 #      macros-v0.1.1    → playwright-rs-macros

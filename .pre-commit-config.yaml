@@ -218,6 +218,14 @@ repos:
         pass_filenames: false
         files: ^scripts/(check-advisories\.sh|test-check-advisories\.sh|audit-lockfiles\.sh|advisory-issue-body\.py)$
 
+      - id: supply-chain-gate-decides
+        name: release gate still requires vet, deny and audit
+        description: the gate runs only on a release tag, so a regression would surface at the next release
+        entry: scripts/test-require-supply-chain-checks.sh
+        language: system
+        pass_filenames: false
+        files: ^scripts/(require|test-require)-supply-chain-checks\.sh$
+
       - id: external-lockfiles-current
         name: out-of-workspace lockfiles current
         description: site, site-e2e and fuzz sit outside the workspace, so their lockfiles go stale when workspace deps move
