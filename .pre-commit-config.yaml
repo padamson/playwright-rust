@@ -174,15 +174,15 @@ repos:
         # Only run when dependency files change (not on every Rust file edit)
         files: (Cargo\.toml|Cargo\.lock)$
 
-      # 7. License & dependency check (same as CI: cargo deny check)
+      # 7. License & dependency check (same as CI: scripts/deny-lockfiles.sh)
       - id: cargo-deny
         name: cargo deny
         description: Check licenses, bans, and source restrictions
-        entry: cargo deny check
+        entry: scripts/deny-lockfiles.sh --locked
         language: system
         pass_filenames: false
         # Only run when dependency or deny config files change
-        files: (Cargo\.toml|Cargo\.lock|deny\.toml)$
+        files: (Cargo\.toml|Cargo\.lock|deny\.toml|scripts/deny-lockfiles\.sh)$
 
       # 8. Supply chain review (same as CI: cargo vet)
       - id: cargo-vet

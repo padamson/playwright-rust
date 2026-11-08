@@ -5,9 +5,9 @@
 # issue from the report.
 #
 # It reads the trees the gates read, and no others, so the monitor never
-# reports something no gate fails on. `cargo deny check` (security.yml)
-# covers the workspace and fails on unmaintained crates as well as
-# vulnerabilities. scripts/audit-lockfiles.sh covers all four lockfiles and
+# reports something no gate fails on. scripts/deny-lockfiles.sh
+# (security.yml) checks advisories in the workspace only, and fails on
+# unmaintained crates as well as vulnerabilities. scripts/audit-lockfiles.sh covers all four lockfiles and
 # fails on vulnerabilities only. Pointing cargo deny at crates/site instead
 # would flag three unmaintained crates in syntect's build tree that no gate
 # fails on and that have no fix.

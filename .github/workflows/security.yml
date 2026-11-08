@@ -53,7 +53,7 @@ jobs:
         tool: cargo-deny
 
     - name: Run cargo deny
-      run: cargo deny check
+      run: scripts/deny-lockfiles.sh
 
   supply-chain:
     name: Supply Chain Review

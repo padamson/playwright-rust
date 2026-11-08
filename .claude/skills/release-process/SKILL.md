@@ -27,7 +27,7 @@ cargo xtask verify-agent-docs           # skill compiles and names every feature
 cargo xtask verify-site-snippets
 cargo xtask sync-protocol-spec --check  # vendored spec is the pinned driver's
 cargo xtask verify-protocol-methods     # every method the crate sends is in that spec
-cargo vet && cargo deny check && cargo audit
+cargo vet && scripts/deny-lockfiles.sh && cargo audit
 ```
 
 `cargo audit` fetches the RustSec database over git, which the Claude Code
@@ -130,7 +130,7 @@ table above; the workflow is otherwise identical.
    - `cargo nextest run --workspace`
    - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
    - `cargo test --doc --workspace`
-   - `cargo audit && cargo deny check && cargo vet`
+   - `cargo audit && scripts/deny-lockfiles.sh && cargo vet`
    - **Dry-run the publish**: `cargo publish --dry-run -p <crate>` —
      catches packaging issues (missing files, license check, README
      path) before the irreversible real `cargo publish`. Pass

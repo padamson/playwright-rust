@@ -1,6 +1,6 @@
 # cargo-deny configuration for playwright-rust
 #
-# Run: cargo deny check
+# Run: scripts/deny-lockfiles.sh (the workspace and the excluded trees)
 # Docs: https://embarkstudios.github.io/cargo-deny/
 
 [graph]
@@ -34,7 +34,10 @@ allow = [
     "CDLA-Permissive-2.0",  # Community Data License Agreement (permissive)
 ]
 confidence-threshold = 0.8
-exceptions = []
+exceptions = [
+    # Bundles LLVM's libFuzzer; only the fuzz tree uses it, and nothing ships it
+    { allow = ["NCSA"], crate = "libfuzzer-sys" },
+]
 
 [licenses.private]
 ignore = false
@@ -44,6 +47,9 @@ registries = []
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# site-e2e and fuzz take playwright-rs by path; a published crate's normal
+# and build dependencies are still denied
+allow-wildcard-paths = true
 highlight = "all"
 workspace-default-features = "allow"
 external-default-features = "allow"

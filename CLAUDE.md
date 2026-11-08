@@ -75,6 +75,8 @@ consequences worth knowing before they cost you time:
   cargo entry lists all four lockfile directories, so routine bumps reach
   them, and `scripts/audit-lockfiles.sh` (CI and pre-commit) runs
   `cargo audit` against each lockfile rather than the root alone.
+  `scripts/deny-lockfiles.sh` does the same for deny's bans, licenses, and
+  sources. A new excluded tree goes into both scripts and the lockfile hook.
 
   **`crates/playwright/fuzz` has the same shape** (its own excluded
   workspace, its own lockfile, a path dep on `playwright-rs`) and is covered
