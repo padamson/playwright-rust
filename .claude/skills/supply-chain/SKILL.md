@@ -82,10 +82,32 @@ each crate it lists, trying these in order:
   `user.email`. The notes say what changed and what was checked, in the
   style of the existing `[[audits.*]]` entries.
 
-`cargo vet prune` also drops exemptions that imported audits now cover,
-which reaches past the crates the PR touched. Leave it out of a
-Dependabot fix and run it as its own change. The fix commit goes onto the
-Dependabot branch and is squashed into the merge.
+### Where the fix lands: `main`, never the Dependabot branch
+
+A commit on Dependabot's branch is lost the moment the PR is recreated:
+Dependabot stops rebasing a PR someone else has pushed to, and
+`@dependabot recreate` force-pushes over it. So the fix is its own commit
+on `main`, and the PR picks it up by rebase:
+
+1. On `main`, bring in the PR's dependency changes without committing
+   them: `git fetch origin pull/<N>/head`, then
+   `git diff HEAD...FETCH_HEAD -- '*Cargo.lock' '*Cargo.toml' | git apply`.
+   Three dots take the PR's own changes, from where it branched, so
+   anything `main` changed since stays. If the apply fails, the PR is
+   behind `main` where it matters: comment `@dependabot rebase` first.
+2. Run `cargo vet` and settle each crate as above. Every entry goes in
+   *alongside* the old version's, never replacing it.
+3. Put `main`'s files back,
+   `git checkout HEAD -- '*Cargo.lock' '*Cargo.toml'`, and run `cargo vet`
+   again: it must pass on `main`'s own graph.
+   Entries for versions `main` does not have yet are fine there; vet only
+   warns that they could be pruned.
+4. Commit only `supply-chain/`, push, and comment `@dependabot rebase` on
+   the PR. The rebase is Dependabot's own push, so its checks re-run with
+   the new store and `dependabot-auto-merge.yml` merges it once they pass.
+5. After the merge, `cargo vet prune` as its own change. It drops the old
+   versions' entries, and also exemptions that imported audits now cover,
+   which reaches past the crates the PR touched, so it never rides the fix.
 
 ### Handing the audits over for review
 
