@@ -50,6 +50,16 @@ the review was a session's. An exemption stays local to this repo, so no
 importer relies on it. A later read can turn the exemption into an
 audit.
 
+The same export works against you when an audit goes away. Removing or
+narrowing one (replacing it with an exemption, or lowering its criteria)
+takes that coverage away from every importer, and their `cargo vet` goes
+red at its next run with nothing failing here. Audits, wildcard audits,
+and trusts export; exemptions and policies don't. Before such a change
+lands, find the importers with
+`gh search code "playwright-rust/main/supply-chain/audits.toml"`, check
+whether each one's tree has the crate, and tell its maintainers. The
+commit message names each audit removed or narrowed.
+
 ### Clearing a vet failure, step by step
 
 Run `cargo vet` without `--locked` first. With `--locked` it cannot
