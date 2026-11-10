@@ -164,17 +164,7 @@ repos:
         pass_filenames: false
         files: ^skills/
 
-      # 6. Security audit (same as CI: cargo audit)
-      - id: cargo-audit
-        name: cargo audit
-        description: Check dependencies for known vulnerabilities
-        entry: scripts/audit-lockfiles.sh
-        language: system
-        pass_filenames: false
-        # Only run when dependency files change (not on every Rust file edit)
-        files: (Cargo\.toml|Cargo\.lock)$
-
-      # 7. License & dependency check (same as CI: scripts/deny-lockfiles.sh)
+      # 6. License & dependency check (same as CI: scripts/deny-lockfiles.sh)
       - id: cargo-deny
         name: cargo deny
         description: Check licenses, bans, and source restrictions
@@ -184,7 +174,7 @@ repos:
         # Only run when dependency or deny config files change
         files: (Cargo\.toml|Cargo\.lock|deny\.toml|scripts/deny-lockfiles\.sh)$
 
-      # 8. Supply chain review (same as CI: cargo vet)
+      # 7. Supply chain review (same as CI: cargo vet)
       - id: cargo-vet
         name: cargo vet
         description: Verify dependency supply chain audits
@@ -209,14 +199,6 @@ repos:
         language: system
         pass_filenames: false
         files: ^scripts/(report|test-report)-flaky-tests\.sh$
-
-      - id: advisory-checker-classifies-output
-        name: advisory checker still tells a hit from a broken tool
-        description: the advisory monitor runs on a schedule nobody watches, so a misclassification is silent
-        entry: scripts/test-check-advisories.sh
-        language: system
-        pass_filenames: false
-        files: ^scripts/(check-advisories\.sh|test-check-advisories\.sh|audit-lockfiles\.sh|advisory-issue-body\.py)$
 
       - id: supply-chain-gate-decides
         name: release gate still requires vet, deny and audit
@@ -243,3 +225,11 @@ repos:
     rev: v0.3.0
     hooks:
       - id: asbuilt-check
+
+  # `--locked all`, unlike CI's `root`, so a stale excluded lock fails here
+  # instead of being rewritten mid-commit.
+  - repo: https://github.com/padamson/cargo-lockpatrol
+    rev: 40075b2231e33e8f0a6d08f39acd0691e1f3efba  # frozen: v0.1.1
+    hooks:
+      - id: cargo-lockpatrol
+        args: [--locked, all]

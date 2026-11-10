@@ -1,6 +1,6 @@
 ---
 name: supply-chain
-description: Procedure for keeping playwright-rust's cargo audit / cargo deny / cargo vet checks green when bumping the project's own version, when external crates change, and when a security advisory drops.
+description: Procedure for keeping playwright-rust's cargo deny / cargo-lockpatrol / cargo vet checks green when bumping the project's own version, when external crates change, and when a security advisory drops.
 metadata:
   internal: true
 ---
@@ -9,12 +9,13 @@ metadata:
 
 The project uses three complementary supply-chain tools:
 
-- **`cargo audit`** — vulnerability advisories from RustSec
+- **cargo-lockpatrol** — RustSec advisories, through `cargo deny check
+  advisories`, in every tracked `Cargo.lock` (the Security Audit job)
 - **`cargo deny`** — license, duplicate, and source policy
 - **`cargo vet`** — explicit audit chain for every dependency
 
 All three run in CI on every push and every dependabot PR. Treat their
-output as load-bearing — a real `cargo audit` failure is a security
+output as load-bearing — a real advisory failure is a security
 advisory and warrants a patch release; a `cargo vet` failure usually
 means an audit chain needs re-stitching after a version change.
 
@@ -142,7 +143,7 @@ and paste, item by item:
   nothing to prove; name it as one, so the developer can read the diff
   and certify instead if they choose.
 
-## Security advisories (`cargo audit` failures)
+## Security advisories (Security Audit failures)
 
 A new `RUSTSEC-YYYY-NNNN` advisory against a transitive dependency
 warrants a patch release even if functional behavior is unchanged. The
@@ -151,8 +152,13 @@ version, plus a CHANGELOG `### Security` entry referencing the
 advisory.
 
 Advisories usually arrive as a `security-advisory` issue before they turn
-a gate red. `advisory-monitor.yml` runs `scripts/check-advisories.sh`
-daily, which runs the advisory half of the `cargo deny` and `cargo audit`
-gates against the same trees, and keeps one issue open while either finds
-something. The issue body has the triage steps, including which ignore
-list each gate reads.
+a gate red. `advisory-monitor.yml` runs the cargo-lockpatrol action daily,
+the same check as the Security Audit gate over the same four lockfiles,
+and keeps one issue open while it finds something. The action rewrites the
+body on every run, so triage goes in the issue's comments. An advisory
+with no fix is accepted in `deny.toml`'s `[advisories] ignore`, the one
+list, with a `reason` that names the tree and the path that reaches it;
+an entry there applies to all four trees.
+
+Locally, `prek run cargo-lockpatrol --all-files` runs the gate the way the
+hook does, with `--locked all`. It needs cargo-deny on `PATH`.

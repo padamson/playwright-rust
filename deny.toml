@@ -1,6 +1,6 @@
 # cargo-deny configuration for playwright-rust
 #
-# Run: scripts/deny-lockfiles.sh (the workspace and the excluded trees)
+# Run: scripts/deny-lockfiles.sh; advisories: prek run cargo-lockpatrol --all-files
 # Docs: https://embarkstudios.github.io/cargo-deny/
 
 [graph]
@@ -10,9 +10,14 @@ no-default-features = false
 [output]
 feature-depth = 1
 
-# Advisory database checks (same as cargo audit, but integrated)
+# cargo-lockpatrol applies these to all four lockfiles; only crates/site
+# reaches them.
 [advisories]
-ignore = []
+ignore = [
+    { id = "RUSTSEC-2025-0141", reason = "bincode, unmaintained: crates/site build-dependency of syntect, never in the bundle; no fix" },
+    { id = "RUSTSEC-2024-0320", reason = "yaml-rust, unmaintained: crates/site build-dependency of syntect, never in the bundle; no fix" },
+    { id = "RUSTSEC-2024-0436", reason = "paste, unmaintained: proc-macro under leptos in crates/site, compile time only; no fix" },
+]
 
 # License compliance — we are Apache-2.0, so all deps must be compatible
 [licenses]

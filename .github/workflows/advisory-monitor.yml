@@ -1,12 +1,7 @@
 name: Security Advisory Monitor
 
-# Daily check for newly published RustSec advisories, decoupled from push
-# cadence. Advisories are published by the world, not by a commit: the
-# Security & Quality gates would go red on the next push or on Saturday's
-# schedule, and this turns the same finding into an issue with triage
-# instructions first (scripts/check-advisories.sh says which checks it
-# mirrors). On a hit a single tracking issue is opened and kept current;
-# when the tree is clean again it is closed.
+# Daily run of the Security Audit gate's check, so an advisory published
+# between pushes becomes a tracking issue before it turns a gate red.
 
 on:
   schedule:
@@ -31,10 +26,6 @@ jobs:
     permissions:
       contents: read
       issues: write # open, update and close the tracking issue
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      ISSUE_TITLE: "Security: new dependency advisory detected"
-      ISSUE_LABEL: security-advisory
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -43,107 +34,16 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install cargo-deny and cargo-audit
+      - name: Install cargo-deny
         uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
         with:
-          tool: cargo-deny,cargo-audit
+          tool: cargo-deny
 
-      # Exit codes are documented in the script. A broken check fails the
-      # job, at the end when a hit beside it still needs filing.
-      - name: Check advisories
-        id: check
-        shell: bash
-        run: |
-          code=0
-          scripts/check-advisories.sh > "$RUNNER_TEMP/report.txt" || code=$?
-          cat "$RUNNER_TEMP/report.txt"
-          case "$code" in
-            0) echo "has_new=false" >> "$GITHUB_OUTPUT" ;;
-            1) echo "has_new=true" >> "$GITHUB_OUTPUT" ;;
-            3) echo "has_new=true" >> "$GITHUB_OUTPUT"
-               echo "broken=true" >> "$GITHUB_OUTPUT" ;;
-            *) echo "::error::the advisory check broke without reporting an advisory; the monitor itself needs fixing"
-               exit "$code" ;;
-          esac
-
-      # The plain list endpoint, filtered by label and title. `--search`
-      # would go through the search index, which lags creation by minutes
-      # and can miss the issue the previous run just opened.
-      - name: Find the tracking issue
-        id: find
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh issue list \
-            --state open \
-            --label "$ISSUE_LABEL" \
-            --json number,title,body \
-            --jq '[.[] | select(.title == env.ISSUE_TITLE)][0] // {}' \
-            > "$RUNNER_TEMP/issue.json"
-          jq -j '.body // ""' "$RUNNER_TEMP/issue.json" > "$RUNNER_TEMP/old.txt"
-          echo "number=$(jq -r '.number // ""' "$RUNNER_TEMP/issue.json")" >> "$GITHUB_OUTPUT"
-
-      # scripts/advisory-issue-body.py rewrites only the report section of
-      # the body and says whether the findings changed. The report reaches
-      # it as a file, never through `${{ }}` interpolation: advisory text is
-      # community-authored and could otherwise be evaluated by the shell.
-      # A partial report (one check broke) opens an issue when there is
-      # none, but never overwrites an open one: that would drop the broken
-      # tree's findings and comment twice, now and when it recovers. The
-      # failed job is the signal until then.
-      - name: Open or update the tracking issue
-        if: steps.check.outputs.has_new == 'true'
-        env:
-          EXISTING: ${{ steps.find.outputs.number }}
-          BROKEN: ${{ steps.check.outputs.broken }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -n "$EXISTING" ] && [ "$BROKEN" = true ]; then
-            echo "Partial report; leaving tracking issue #$EXISTING as it is"
-            exit 0
-          fi
-          status="$(scripts/advisory-issue-body.py "$RUNNER_TEMP/old.txt" "$RUNNER_TEMP/report.txt" "$RUNNER_TEMP/body.txt" "$RUNNER_TEMP/comment.txt")"
-          if [ -z "$EXISTING" ]; then
-            echo "Opening tracking issue"
-            gh label create "$ISSUE_LABEL" \
-              --description "Tracks newly published dependency advisories awaiting triage" \
-              --color B60205 2>/dev/null || true
-            gh issue create \
-              --title "$ISSUE_TITLE" \
-              --label "$ISSUE_LABEL" \
-              --body-file "$RUNNER_TEMP/body.txt"
-            exit 0
-          fi
-          case "$status" in
-            changed)
-              echo "Findings changed; updating tracking issue #$EXISTING"
-              gh issue edit "$EXISTING" --body-file "$RUNNER_TEMP/body.txt"
-              gh issue comment "$EXISTING" --body-file "$RUNNER_TEMP/comment.txt"
-              ;;
-            refreshed)
-              echo "Same findings, new report text; refreshing tracking issue #$EXISTING"
-              gh issue edit "$EXISTING" --body-file "$RUNNER_TEMP/body.txt"
-              ;;
-            unchanged)
-              echo "Tracking issue #$EXISTING already carries this report"
-              ;;
-          esac
-
-      - name: Close the tracking issue
-        if: steps.check.outputs.has_new == 'false' && steps.find.outputs.number != ''
-        env:
-          EXISTING: ${{ steps.find.outputs.number }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Advisories clean; closing tracking issue #$EXISTING"
-          gh issue close "$EXISTING" \
-            --comment "The advisory checks are clean again. Closing automatically."
-
-      - name: Fail on a broken check
-        if: steps.check.outputs.broken == 'true'
-        run: |
-          echo "::error::one advisory check broke while the other found something; see the Check advisories log"
-          exit 1
+      # Triage goes in comments: the action rewrites the body each run.
+      - name: Check advisories and keep the tracking issue current
+        uses: padamson/cargo-lockpatrol@40075b2231e33e8f0a6d08f39acd0691e1f3efba # v0.1.1
+        # Pinned so a change to the action's defaults still finds the issue.
+        with:
+          issue: "true"
+          issue-title: "Security: new dependency advisory detected"
+          issue-label: security-advisory

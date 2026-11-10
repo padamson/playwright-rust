@@ -27,13 +27,16 @@ cargo xtask verify-agent-docs           # skill compiles and names every feature
 cargo xtask verify-site-snippets
 cargo xtask sync-protocol-spec --check  # vendored spec is the pinned driver's
 cargo xtask verify-protocol-methods     # every method the crate sends is in that spec
-cargo vet && scripts/deny-lockfiles.sh && cargo audit
+cargo vet && scripts/deny-lockfiles.sh
+prek run cargo-lockpatrol --all-files   # advisories, every lockfile, --locked all
 ```
 
-`cargo audit` fetches the RustSec database over git, which the Claude Code
-sandbox blocks; a "couldn't fetch advisory database" there is the sandbox,
-not an advisory. CI's Security & Quality job on the same commit is the
-authoritative run in that case.
+Run `prek` on a line of its own. In a Claude Code session it runs outside
+the sandbox only as a command's first token; anywhere else it is sandboxed
+and fails cloning or building the hook. A stale excluded lockfile fails it
+as broken (exit 2), since the hook passes `--locked all`;
+`scripts/check-external-lockfiles.sh` names the tree and the refresh
+command.
 
 Then check the cross-crate couplings that a bump makes bite. Step 4 below
 lists the dependency lines that move together; confirm each is at the
@@ -135,7 +138,13 @@ table above; the workflow is otherwise identical.
    - `cargo nextest run --workspace`
    - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
    - `cargo test --doc --workspace`
-   - `cargo audit && scripts/deny-lockfiles.sh && cargo vet`
+   - `scripts/check-external-lockfiles.sh`: a version bump leaves
+     `crates/site-e2e/Cargo.lock` and `crates/playwright/fuzz/Cargo.lock`
+     behind the path dependency. Refresh each tree it names with the
+     command it prints, and stage those lockfiles with the bump, since the
+     next two lines and the commit hooks run `--locked`.
+   - `scripts/deny-lockfiles.sh --locked && cargo vet`
+   - `prek run cargo-lockpatrol --all-files`, on its own line
    - **Dry-run the publish**: `cargo publish --dry-run -p <crate>` —
      catches packaging issues (missing files, license check, README
      path) before the irreversible real `cargo publish`. Pass
@@ -165,7 +174,8 @@ yank. Always validate on CI before tagging.
 git add Cargo.toml Cargo.lock crates/<crate>/Cargo.toml \
         crates/<crate>/CHANGELOG.md \
         supply-chain/imports.lock supply-chain/config.toml
-# (also stage README.md if you bumped the main crate's minor version)
+# (also stage README.md if you bumped the main crate's minor version, and
+# any excluded crate's Cargo.lock that step 9 refreshed)
 git commit -m "Bump <crate> to <prefix>vX.Y.Z"
 
 # 2. Push the COMMIT first (no tag yet)

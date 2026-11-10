@@ -73,10 +73,12 @@ consequences worth knowing before they cost you time:
   the commits that cause it, with the refresh command. Nothing breaks
   meanwhile; no CI job uses `--locked` against these crates. Dependabot's
   cargo entry lists all four lockfile directories, so routine bumps reach
-  them, and `scripts/audit-lockfiles.sh` (CI and pre-commit) runs
-  `cargo audit` against each lockfile rather than the root alone.
-  `scripts/deny-lockfiles.sh` does the same for deny's bans, licenses, and
-  sources. A new excluded tree goes into both scripts and the lockfile hook.
+  them, and cargo-lockpatrol (the Security Audit job, the advisory
+  monitor, and a pre-commit hook) checks advisories in every tracked
+  lockfile rather than the root alone, against `deny.toml`'s one ignore
+  list. `scripts/deny-lockfiles.sh` runs deny's bans, licenses, and sources
+  over each tree. A new excluded tree goes into that script and the
+  lockfile hook; lockpatrol finds its lockfile through git.
 
   **`crates/playwright/fuzz` has the same shape** (its own excluded
   workspace, its own lockfile, a path dep on `playwright-rs`) and is covered
@@ -109,7 +111,7 @@ one skill.
 
 Load these when the task touches their domain:
 
-- **supply-chain** — `cargo audit` / `cargo deny` / `cargo vet`
+- **supply-chain** — `cargo deny` / cargo-lockpatrol / `cargo vet`
   workflow. Read before bumping our own version, before resolving a
   dependabot PR's vet failures, or when a `RUSTSEC-*` advisory drops.
 - **doctest-conventions** — `no_run` doctests with hidden scaffolding;
@@ -258,9 +260,10 @@ carries this repo's additions: `git`, `gh`, `cargo nextest run`,
 `cargo run`, `scripts/mutants.sh`, and `prek` run outside it because they
 need credentials or the browser's Mach ports the sandbox hides; loopback
 is allowed for the test servers; the `configd` Mach lookup lets
-`cargo vet`/`audit`/`deny` run sandboxed; and the `trustd.agent` lookup
-lets `cargo audit` verify TLS through the macOS platform verifier, without
-which it cannot fetch its database (`OSStatus -26276`). Keep that file to
+`cargo vet`/`deny` run sandboxed; and the `trustd.agent` lookup stays for
+tools that verify TLS through the macOS platform verifier, which otherwise
+fail with `OSStatus -26276` (`cargo audit` did; whether `cargo deny`'s
+advisory fetch needs it is untested). Keep that file to
 the sandbox block. Personal permission allowlists go in the untracked
 `.claude/settings.local.json`. A session here never writes into a sibling
 checkout. Hooks are installed once per clone by hand, since `.git/hooks`

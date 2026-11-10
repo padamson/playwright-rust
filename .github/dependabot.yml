@@ -43,7 +43,8 @@ updates:
     # `serde_core =<same version>` exactly, so it cannot move on its own, which
     # a single-dependency update appears unable to satisfy. Scoped to the one
     # version that trips it, so later serde releases stay eligible. Tracked in
-    # issue #131; `cargo audit` still covers serde advisories meanwhile.
+    # issue #131; the Security Audit gate still covers serde advisories
+    # meanwhile.
     ignore:
       - dependency-name: "serde"
         versions: ["1.0.229"]
@@ -91,3 +92,19 @@ updates:
           - "*"
         exclude-patterns:
           - "actions/create-github-app-token"
+
+  # Only cargo-lockpatrol: every other hook bump would auto-merge code that
+  # runs unsandboxed at the next commit, so those stay hand bumps.
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "04:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    # Names are full repo URLs.
+    allow:
+      - dependency-name: "*padamson/cargo-lockpatrol*"

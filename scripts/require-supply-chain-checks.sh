@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Fails unless cargo vet, cargo deny, and cargo audit (security.yml's Supply
-# Chain Review, License & Dependency Check, and Security Audit jobs) passed
+# Fails unless cargo vet, cargo deny, and cargo-lockpatrol's advisory check
+# (security.yml's Supply Chain Review, License & Dependency Check, and
+# Security Audit jobs) passed
 # on a commit. release.yml runs it before publishing, beside a check that
 # the commit is on main, so a tag on a commit where one of them failed or
 # never ran publishes nothing.
