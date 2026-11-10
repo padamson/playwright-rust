@@ -61,6 +61,12 @@ criteria = "safe-to-deploy"
 delta = "3.4.0 -> 3.4.1"
 notes = "Timeout and connection-pool fixes, including a response-desync fix. No unsafe."
 
+[[audits.ureq]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "3.5.0 -> 3.5.1"
+notes = "Cookie header sends only name and value; macOS timeout-setter fix; ureq-proto 0.7.1. No unsafe."
+
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
@@ -84,6 +90,12 @@ who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.4 -> 0.6.5"
 notes = "Adds header_raw, validated through http's header builder. No unsafe."
+
+[[audits.ureq-proto]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.6.5 -> 0.7.1"
+notes = "Connection-reuse and transfer-encoding fixes in client and server state machines. No unsafe."
 
 [[audits.webpki-roots]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
@@ -246,6 +258,12 @@ criteria = "safe-to-deploy"
 user-id = 980 # Sebastian Thiel (Byron)
 start = "2023-08-15"
 end = "2027-04-11"
+
+[[trusted.flate2]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:rust-lang/flate2-rs"
+start = "2026-11-06"
+end = "2027-11-10"
 
 [[trusted.futures-core]]
 criteria = "safe-to-deploy"

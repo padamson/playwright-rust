@@ -197,7 +197,8 @@ criteria = "safe-to-deploy"
 
 [[exemptions.js-sys]]
 version = "0.3.95"
-criteria = "safe-to-run"
+criteria = "safe-to-deploy"
+notes = "Built only for wasm32, through zip's getrandom wasm_js feature; no target we ship compiles it."
 
 [[exemptions.libredox]]
 version = "0.1.16"
@@ -421,6 +422,10 @@ criteria = "safe-to-run"
 version = "0.12.3"
 criteria = "safe-to-deploy"
 
+[[exemptions.typed-path]]
+version = "0.13.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.typenum]]
 version = "1.20.0"
 criteria = "safe-to-deploy"
@@ -455,19 +460,23 @@ criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen]]
 version = "0.2.118"
-criteria = "safe-to-run"
+criteria = "safe-to-deploy"
+notes = "Built only for wasm32, through zip's getrandom wasm_js feature; no target we ship compiles it."
 
 [[exemptions.wasm-bindgen-macro]]
 version = "0.2.118"
-criteria = "safe-to-run"
+criteria = "safe-to-deploy"
+notes = "Built only for wasm32, through zip's getrandom wasm_js feature; no target we ship compiles it."
 
 [[exemptions.wasm-bindgen-macro-support]]
 version = "0.2.118"
-criteria = "safe-to-run"
+criteria = "safe-to-deploy"
+notes = "Built only for wasm32, through zip's getrandom wasm_js feature; no target we ship compiles it."
 
 [[exemptions.wasm-bindgen-shared]]
 version = "0.2.118"
-criteria = "safe-to-run"
+criteria = "safe-to-deploy"
+notes = "Built only for wasm32, through zip's getrandom wasm_js feature; no target we ship compiles it."
 
 [[exemptions.web-sys]]
 version = "0.3.95"
@@ -523,6 +532,14 @@ criteria = "safe-to-deploy"
 
 [[exemptions.zip]]
 version = "9.0.4"
+criteria = "safe-to-deploy"
+
+[[exemptions.zip]]
+version = "9.3.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.zlib-rs]]
+version = "0.6.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.zopfli]]
