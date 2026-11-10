@@ -55,7 +55,8 @@ concurrency:
 jobs:
   deploy:
     name: Build, dogfood-gate, and deploy
-    runs-on: ubuntu-latest
+    # Pinned to the image the Graphviz package below is built for.
+    runs-on: ubuntu-26.04
     permissions:
       contents: write # push to gh-pages (read-only on a pull request, which deploys nothing)
     steps:
@@ -146,19 +147,19 @@ jobs:
         # Graphviz's own Ubuntu package, pinned by checksum: Ubuntu's apt ships
         # 2.43 (2020), whose spline router fails ("triangulation failed") on
         # layouts a current release draws. The package is built per Ubuntu
-        # release, so a runner image move needs a new URL and checksum.
+        # release, so a change to the job's runs-on needs a new URL and checksum.
         # Bounded: a contended apt blocks rather than failing (see quiesce-apt.sh).
         timeout-minutes: 15
         env:
           GRAPHVIZ_VERSION: 15.1.1
-          GRAPHVIZ_SHA256: 02c70b9d42149f5e2ba0e3882643b22904720de50a0a3da84a30b8f32e8a1497
+          GRAPHVIZ_SHA256: 291bf778a7c9c582805b29997f3dfb06b966c16bf952eaeafe7f4dc5dc9aaf4e
         run: |
           . /etc/os-release
-          if [ "$VERSION_ID" != "24.04" ]; then
-            echo "::error::The pinned Graphviz package is for Ubuntu 24.04, but the runner is $VERSION_ID; update its URL and checksum."
+          if [ "$VERSION_ID" != "26.04" ]; then
+            echo "::error::The pinned Graphviz package is for Ubuntu 26.04, but the runner is $VERSION_ID; update its URL and checksum."
             exit 1
           fi
-          curl -fsSL -o graphviz.deb "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${GRAPHVIZ_VERSION}/ubuntu_24.04_graphviz-${GRAPHVIZ_VERSION}-cmake.deb"
+          curl -fsSL -o graphviz.deb "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${GRAPHVIZ_VERSION}/ubuntu_26.04_graphviz-${GRAPHVIZ_VERSION}-cmake.deb"
           echo "${GRAPHVIZ_SHA256}  graphviz.deb" | sha256sum -c -
           # The package declares no dependencies; these are the system
           # libraries its own libraries link against, Pango's included, so
