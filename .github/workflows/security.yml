@@ -31,7 +31,7 @@ jobs:
         toolchain: stable
 
     - name: Install cargo-deny
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-deny
 
@@ -50,7 +50,7 @@ jobs:
         toolchain: stable
 
     - name: Install cargo-deny
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-deny
 
@@ -111,7 +111,7 @@ jobs:
         shared-key: semver-preview
 
     - name: Install cargo-semver-checks
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-semver-checks
 
@@ -149,14 +149,14 @@ jobs:
         shared-key: mutants
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-nextest
 
     # Prebuilt binary — `cargo install` fails when a cache restore
     # leaves an existing binary in ~/.cargo/bin/.
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-mutants
 
@@ -191,7 +191,7 @@ jobs:
         toolchain: nightly
 
     - name: Install cargo-fuzz
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-fuzz
 
@@ -279,12 +279,12 @@ jobs:
         shared-key: mutants-diff
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-nextest
 
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-mutants
 
@@ -352,7 +352,7 @@ jobs:
         shared-key: cli-install
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-nextest
 
