@@ -50,6 +50,11 @@ Three publishable crates, each with its own CHANGELOG and tag prefix:
 | `playwright-rs-macros` | `crates/playwright-rs-macros/`    | `crates/playwright-rs-macros/CHANGELOG.md`         | `macros-vX.Y.Z`|
 | `playwright-rs-trace`  | `crates/playwright-rs-trace/`     | `crates/playwright-rs-trace/CHANGELOG.md`          | `trace-vX.Y.Z` |
 
+A new crate or tag prefix also goes into the `release tags` ruleset, the
+`release` environment's deployment policies, and a Trusted Publisher on
+crates.io naming that environment. All three are set on the web, not in
+the tree, so nothing fails until the first publish does.
+
 The top-level `CHANGELOG.md` is an **index file**, not a changelog —
 release notes are generated per-crate from each crate's own CHANGELOG.
 
@@ -236,7 +241,12 @@ The workflow handles all three tag prefixes (`v*`, `macros-v*`,
    tag, gated by `startsWith(github.ref_name, '<prefix>')`. Failure
    aborts the workflow (no `continue-on-error`); the release tag
    stays in place but the publish didn't happen, so re-running with
-   the same tag after fixing the issue is safe.
+   the same tag after fixing the issue is safe. The job runs in the
+   `release` environment, which only the three tag patterns can deploy
+   to, and each crate's Trusted Publisher names it. A re-run uses the
+   tagged commit's `release.yml`, so a tag on a commit from before the
+   job named the environment gets a token crates.io refuses; cut a new
+   patch tag instead.
 
 The workflow is library-only: no binary artifacts are built, archived,
 or attested. If a CLI is ever shipped, add a separate binary-release

@@ -291,9 +291,10 @@ what a pass looks like; CI is the backstop, not the plan.
 
 **Not from a session at all**, changed on github.com or crates.io: the
 `main` and `release tags` rulesets (the latter covers `v*`, `macros-v*`,
-and `trace-v*`, admin bypass only), the merge App's Dependabot secrets,
-Dependabot alerts and security updates, the Pages source, and each crate's
-Trusted Publisher.
+and `trace-v*`, admin bypass only), the `release` environment (the same
+three patterns as tag deployment policies, no branches), the merge App's
+Dependabot secrets, Dependabot alerts and security updates, the Pages
+source, and each crate's Trusted Publisher, which names that environment.
 
 **By eye:**
 

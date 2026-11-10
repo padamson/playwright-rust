@@ -1,5 +1,7 @@
 name: Release
 
+# A tag pattern added here also goes into the `release tags` ruleset and
+# the `release` environment's deployment policies.
 on:
   push:
     tags:
@@ -270,6 +272,9 @@ jobs:
     name: Publish to crates.io
     needs: [test, semver-checks, supply-chain-gates]
     runs-on: ubuntu-latest
+    # Only release tags can deploy here, and the crates.io publisher names
+    # this environment, so a copy of this file run from a branch can't publish.
+    environment: release
     # Scoped to this job, not the workflow: only publishing needs to mint an
     # OIDC token, and `id-token: write` is what lets a job request one.
     permissions:
@@ -284,9 +289,10 @@ jobs:
           toolchain: stable
 
       # Trusted publishing: exchange a GitHub OIDC token for a crates.io token
-      # scoped to this repo + workflow and valid for minutes, instead of holding
-      # a long-lived CARGO_REGISTRY_TOKEN that works from anywhere and never
-      # expires. The action's post step revokes it when the job ends.
+      # scoped to this repo, workflow and environment and valid for minutes,
+      # instead of holding a long-lived CARGO_REGISTRY_TOKEN that works from
+      # anywhere and never expires. The action's post step revokes it when
+      # the job ends.
       #
       # This replaces a soft "skip if the secret is missing" guard. That guard
       # would now be actively harmful: with the secret gone it would skip every
