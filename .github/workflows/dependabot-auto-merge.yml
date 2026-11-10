@@ -47,21 +47,24 @@ jobs:
     steps:
       # The files come from the base and head SHAs the event recorded, not
       # from the PR as it stands now, so a force-push after the event
-      # cannot change what is checked. A failed `gh` call fails the step
-      # (bash -e) rather than leaving an empty list. The compare lists at
-      # most 300 files, so a list that long may have left this one out and
-      # is held too. A renamed file counts under its old name as well. The
-      # failure is deliberate and not a required check: a red check of
-      # this name on the PR is what says it waits on a person.
+      # cannot change what is checked. Each value is assigned before it is
+      # tested, since bash -e does not stop on a command inside an `if`: a
+      # failed `gh` or `jq` call fails the step, and the tests hold on
+      # anything but a clean pass. The compare lists at most 300 files, so
+      # a list that long may have left this one out and is held too. A
+      # renamed file counts under its old name as well. The failure is
+      # deliberate and not a required check: a red check of this name on
+      # the PR is what says it waits on a person.
       - name: Fail when the PR edits dependabot-auto-merge.yml
         run: |
           files="$(gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq '{count: (.files | length), names: [.files[] | .filename, (.previous_filename // empty)]}')"
-          count="$(jq -e '.count' <<<"$files")"
-          if [ "$count" -ge 300 ]; then
+          count="$(jq '.count' <<<"$files")"
+          edits="$(jq 'any(.names[]; . == ".github/workflows/dependabot-auto-merge.yml")' <<<"$files")"
+          if ! [ "$count" -lt 300 ]; then
             echo "::error::The compare lists 300 files, its limit, so it may leave out dependabot-auto-merge.yml. Review the PR and merge it by hand."
             exit 1
           fi
-          if jq -e 'any(.names[]; . == ".github/workflows/dependabot-auto-merge.yml")' <<<"$files" >/dev/null; then
+          if [ "$edits" != false ]; then
             echo "::error::This PR edits dependabot-auto-merge.yml. Review the bump and merge it by hand."
             exit 1
           fi
