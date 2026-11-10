@@ -295,6 +295,8 @@ and `trace-v*`, admin bypass only), the `release` environment (the same
 three patterns as tag deployment policies, no branches), the merge App's
 Dependabot secrets, Dependabot alerts and security updates, the Pages
 source, and each crate's Trusted Publisher, which names that environment.
+"Require trusted publishing for all new versions" is ticked on all three
+crates, so a hand `cargo publish` is refused until it is unticked.
 
 **By eye:**
 
