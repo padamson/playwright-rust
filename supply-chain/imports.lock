@@ -162,11 +162,9 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.flate2]]
-version = "1.1.10"
-when = "2026-08-28"
-user-id = 980
-user-login = "Byron"
-user-name = "Sebastian Thiel"
+version = "1.1.11"
+when = "2026-11-06"
+trusted-publisher = "github:rust-lang/flate2-rs"
 
 [[publisher.futures-core]]
 version = "0.3.34"
@@ -2156,46 +2154,6 @@ delta = "2.5.0 -> 2.6.1"
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.7.1"
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@divviup.org>"
-criteria = "safe-to-deploy"
-version = "0.4.0"
-notes = """
-zlib-rs uses unsafe Rust for invoking compiler intrinsics (i.e. SIMD), eschewing bounds checks, along the FFI boundary, and for interacting with pointers sourced from C. I have extensively reviewed and fuzzed the unsafe code. All findings from that work have been resolved as of version 0.4.0. To the best of my ability, I believe it's free of any serious security problems.
-
-zlib-rs does not require any external dependencies.
-"""
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "0.4.0 -> 0.4.1"
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "0.4.1 -> 0.4.2"
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@letsencrypt.org>"
-criteria = "safe-to-deploy"
-delta = "0.4.2 -> 0.5.0"
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@letsencrypt.org>"
-criteria = "safe-to-deploy"
-delta = "0.5.0 -> 0.5.1"
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@letsencrypt.org>"
-criteria = "safe-to-deploy"
-delta = "0.5.1 -> 0.5.2"
-
-[[audits.isrg.audits.zlib-rs]]
-who = "Ameer Ghani <inahga@letsencrypt.org>"
-criteria = "safe-to-deploy"
-delta = "0.5.2 -> 0.6.3"
 
 [[audits.mozilla.wildcard-audits.unicode-xid]]
 who = "Manish Goregaokar <manishsmail@gmail.com>"

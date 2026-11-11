@@ -306,10 +306,6 @@ version = "0.5.0"
 criteria = "safe-to-run"
 
 [[exemptions.redox_syscall]]
-version = "0.5.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.redox_syscall]]
 version = "0.9.5"
 criteria = "safe-to-deploy"
 notes = "Built only for target_os = redox, through parking_lot_core; no target we ship compiles it."
@@ -419,10 +415,6 @@ version = "0.3.23"
 criteria = "safe-to-run"
 
 [[exemptions.typed-path]]
-version = "0.12.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.typed-path]]
 version = "0.13.0"
 criteria = "safe-to-deploy"
 
@@ -528,10 +520,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.zerovec-derive]]
 version = "0.11.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.zip]]
-version = "9.0.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.zip]]
