@@ -169,6 +169,12 @@ user-id = 156764 # Justin W Smith (justsmth)
 start = "2022-11-09"
 end = "2027-07-24"
 
+[[trusted.axum]]
+criteria = "safe-to-deploy"
+user-id = 6741 # Alice Ryhl (Darksonn)
+start = "2026-04-14"
+end = "2027-11-13"
+
 [[trusted.block-buffer]]
 criteria = "safe-to-deploy"
 trusted-publisher = "github:RustCrypto/utils"
@@ -223,6 +229,12 @@ user-id = 6743 # Ed Page (epage)
 start = "2022-04-15"
 end = "2027-05-16"
 
+[[trusted.cmake]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2022-10-29"
+end = "2027-11-13"
+
 [[trusted.colorchoice]]
 criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
@@ -235,6 +247,18 @@ user-id = 267 # Tony Arcieri (tarcieri)
 start = "2020-08-04"
 end = "2027-07-18"
 
+[[trusted.crossbeam-deque]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-12"
+end = "2027-11-13"
+
+[[trusted.crossbeam-utils]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-12"
+end = "2027-11-13"
+
 [[trusted.crypto-common]]
 criteria = "safe-to-deploy"
 trusted-publisher = "github:RustCrypto/traits"
@@ -246,6 +270,12 @@ criteria = "safe-to-deploy"
 trusted-publisher = "github:RustCrypto/traits"
 start = "2026-02-12"
 end = "2027-07-18"
+
+[[trusted.fastrand]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2021-04-24"
+end = "2027-11-13"
 
 [[trusted.filetime]]
 criteria = "safe-to-deploy"
@@ -264,6 +294,12 @@ criteria = "safe-to-deploy"
 trusted-publisher = "github:rust-lang/flate2-rs"
 start = "2026-11-06"
 end = "2027-11-10"
+
+[[trusted.futures-channel]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-05"
+end = "2027-11-13"
 
 [[trusted.futures-core]]
 criteria = "safe-to-deploy"
@@ -300,6 +336,12 @@ criteria = "safe-to-deploy"
 user-id = 55123 # rust-lang-owner
 start = "2023-01-06"
 end = "2027-07-25"
+
+[[trusted.hashbrown]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2025-04-30"
+end = "2027-11-13"
 
 [[trusted.http]]
 criteria = "safe-to-deploy"
@@ -343,6 +385,48 @@ user-id = 359 # Sean McArthur (seanmonstar)
 start = "2022-01-15"
 end = "2027-05-16"
 
+[[trusted.icu_collections]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2022-09-27"
+end = "2027-11-13"
+
+[[trusted.icu_locale_core]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2025-02-26"
+end = "2027-11-13"
+
+[[trusted.icu_normalizer]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-04-29"
+end = "2027-11-13"
+
+[[trusted.icu_normalizer_data]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2023-10-03"
+end = "2027-11-13"
+
+[[trusted.icu_properties]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2022-01-31"
+end = "2027-11-13"
+
+[[trusted.icu_properties_data]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2023-10-03"
+end = "2027-11-13"
+
+[[trusted.icu_provider]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2022-01-31"
+end = "2027-11-13"
+
 [[trusted.is_terminal_polyfill]]
 criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
@@ -354,6 +438,12 @@ criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-05-02"
 end = "2027-05-23"
+
+[[trusted.jobserver]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2024-07-23"
+end = "2027-11-13"
 
 [[trusted.libc]]
 criteria = "safe-to-deploy"
@@ -367,6 +457,18 @@ trusted-publisher = "github:rust-lang/libc"
 start = "2026-10-02"
 end = "2027-10-10"
 notes = "Moved to crates.io trusted publishing at 0.2.190."
+
+[[trusted.linux-raw-sys]]
+criteria = "safe-to-deploy"
+user-id = 6825 # Dan Gohman (sunfishcode)
+start = "2021-06-12"
+end = "2027-11-13"
+
+[[trusted.litemap]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-02-23"
+end = "2027-11-13"
 
 [[trusted.lock_api]]
 criteria = "safe-to-deploy"
@@ -386,6 +488,12 @@ user-id = 359 # Sean McArthur (seanmonstar)
 start = "2019-09-09"
 end = "2027-05-16"
 
+[[trusted.mio]]
+criteria = "safe-to-deploy"
+user-id = 6025 # Thomas de Zeeuw (Thomasdezeeuw)
+start = "2019-12-17"
+end = "2027-11-13"
+
 [[trusted.once_cell_polyfill]]
 criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
@@ -403,6 +511,12 @@ criteria = "safe-to-deploy"
 user-id = 2915 # Amanieu d'Antras (Amanieu)
 start = "2019-05-04"
 end = "2027-11-07"
+
+[[trusted.potential_utf]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2024-11-23"
+end = "2027-11-13"
 
 [[trusted.prettyplease]]
 criteria = "safe-to-deploy"
@@ -452,6 +566,12 @@ user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-03-30"
 end = "2027-05-16"
 
+[[trusted.rustix]]
+criteria = "safe-to-deploy"
+user-id = 6825 # Dan Gohman (sunfishcode)
+start = "2021-10-29"
+end = "2027-11-13"
+
 [[trusted.rustls]]
 criteria = "safe-to-deploy"
 user-id = 2751 # Joe Birr-Pixton (ctz)
@@ -469,6 +589,12 @@ criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-05-02"
 end = "2027-05-23"
+
+[[trusted.scopeguard]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2020-02-16"
+end = "2027-11-13"
 
 [[trusted.serde_json]]
 criteria = "safe-to-deploy"
@@ -499,6 +625,18 @@ criteria = "safe-to-deploy"
 trusted-publisher = "github:RustCrypto/hashes"
 start = "2026-03-25"
 end = "2027-11-05"
+
+[[trusted.slab]]
+criteria = "safe-to-deploy"
+user-id = 6741 # Alice Ryhl (Darksonn)
+start = "2021-10-13"
+end = "2027-11-13"
+
+[[trusted.socket2]]
+criteria = "safe-to-deploy"
+user-id = 6025 # Thomas de Zeeuw (Thomasdezeeuw)
+start = "2020-09-09"
+end = "2027-11-13"
 
 [[trusted.syn]]
 criteria = "safe-to-deploy"
@@ -536,11 +674,23 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-10-09"
 end = "2027-05-23"
 
+[[trusted.tinystr]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-01-14"
+end = "2027-11-13"
+
 [[trusted.tokio]]
 criteria = "safe-to-deploy"
 user-id = 6741 # Alice Ryhl (Darksonn)
 start = "2020-12-25"
 end = "2027-07-18"
+
+[[trusted.tokio-macros]]
+criteria = "safe-to-deploy"
+user-id = 6741 # Alice Ryhl (Darksonn)
+start = "2020-10-26"
+end = "2027-11-13"
 
 [[trusted.tokio-tungstenite]]
 criteria = "safe-to-deploy"
@@ -620,11 +770,23 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2021-10-02"
 end = "2027-05-23"
 
+[[trusted.url]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-02-18"
+end = "2027-11-13"
+
 [[trusted.walkdir]]
 criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-06-09"
 end = "2027-05-16"
+
+[[trusted.wasi]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2020-06-03"
+end = "2027-11-13"
 
 [[trusted.webpki-roots]]
 criteria = "safe-to-deploy"
@@ -697,6 +859,54 @@ criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
 start = "2023-02-22"
 end = "2027-05-16"
+
+[[trusted.writeable]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-11-01"
+end = "2027-11-13"
+
+[[trusted.yoke]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-05-01"
+end = "2027-11-13"
+
+[[trusted.yoke-derive]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-07-02"
+end = "2027-11-13"
+
+[[trusted.zerofrom]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2022-04-06"
+end = "2027-11-13"
+
+[[trusted.zerofrom-derive]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2022-04-06"
+end = "2027-11-13"
+
+[[trusted.zerotrie]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2023-10-03"
+end = "2027-11-13"
+
+[[trusted.zerovec]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-04-19"
+end = "2027-11-13"
+
+[[trusted.zerovec-derive]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-12-11"
+end = "2027-11-13"
 
 [[trusted.zmij]]
 criteria = "safe-to-deploy"
