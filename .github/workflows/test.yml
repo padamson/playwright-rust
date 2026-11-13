@@ -18,6 +18,7 @@ jobs:
   skill-version:
     name: Skill version guard
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # The pre-commit hook of the same name is per-clone and opt-in, so a
     # hookless clone or a --no-verify commit would ship a skill edit without
     # the version bump that installed consumers key their updates on. Same
@@ -40,6 +41,7 @@ jobs:
   architecture-model:
     name: Architecture model
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # docs/architecture/model.c4 is generated from the crates by asbuilt, so
     # the only way it goes stale is for nobody to re-run the survey. `check`
     # needs cargo and the source tree, nothing else, so it gets its own job
@@ -76,6 +78,7 @@ jobs:
   msrv:
     name: MSRV Check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Compile-only — never launches a browser, so skip the driver download.
     env:
       PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
@@ -152,6 +155,7 @@ jobs:
       uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
       with:
         tool: cargo-nextest
+        fallback: none
 
     - name: Check formatting
       run: cargo fmt --all -- --check

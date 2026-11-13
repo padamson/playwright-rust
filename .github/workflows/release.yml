@@ -24,6 +24,7 @@ jobs:
   test:
     name: Test ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -93,6 +94,7 @@ jobs:
         uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
         with:
           tool: cargo-nextest
+          fallback: none
 
       - name: Build
         run: cargo build --verbose
@@ -138,6 +140,7 @@ jobs:
     name: Supply-chain gates passed
     needs: [test]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       checks: read
       contents: read
@@ -173,6 +176,7 @@ jobs:
     name: Create GitHub Release
     needs: [test, semver-checks, supply-chain-gates]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write # create the release and upload its assets
     steps:
@@ -211,6 +215,7 @@ jobs:
         uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
         with:
           tool: parse-changelog
+          fallback: none
 
       - name: Generate Release Notes
         run: parse-changelog ${{ steps.resolve.outputs.changelog }} ${{ steps.resolve.outputs.version }} > release_notes.md
@@ -236,6 +241,7 @@ jobs:
   semver-checks:
     name: Semver Compatibility
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     # rustdoc never runs the driver, so skip its download.
     env:
       PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
@@ -251,6 +257,7 @@ jobs:
         uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
         with:
           tool: cargo-semver-checks
+          fallback: none
 
       # Compares the just-bumped local version against the last version
       # published to crates.io and fails if the bump is too small for the
@@ -272,6 +279,7 @@ jobs:
     name: Publish to crates.io
     needs: [test, semver-checks, supply-chain-gates]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Only release tags can deploy here, and the crates.io publisher names
     # this environment, so a copy of this file run from a branch can't publish.
     environment: release

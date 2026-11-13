@@ -38,6 +38,7 @@ jobs:
   hold:
     name: Hold a PR that edits this workflow
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # Only Dependabot's own PRs, never anyone else's: Dependabot wrote the
     # PR (the actor alone is whoever acted last) and made this push. The
     # merge job needs this one, so it is skipped whenever this is.
@@ -78,6 +79,7 @@ jobs:
     name: Enable auto-merge
     needs: hold
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       # The only action this workflow runs. Any action added here goes in
       # dependabot.yml's exclude-patterns too, or its bump joins the

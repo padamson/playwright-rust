@@ -65,11 +65,11 @@ repos:
         types: [rust]
         pass_filenames: false
 
-      # 4. Run tests (same as CI: cargo nextest run)
+      # 4. Run tests (CI's main test step; its stress step runs ignored tests)
       - id: cargo-nextest
         name: cargo nextest run
         description: Run unit and integration tests with nextest
-        entry: cargo nextest run --workspace
+        entry: cargo nextest run --workspace --all-features
         language: system
         types: [rust]
         pass_filenames: false
