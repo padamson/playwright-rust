@@ -908,6 +908,12 @@ user-id = 1139 # Manish Goregaokar (Manishearth)
 start = "2021-12-11"
 end = "2027-11-13"
 
+[[trusted.zip]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:zip-rs/zip2"
+start = "2025-07-09"
+end = "2027-11-14"
+
 [[trusted.zmij]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)

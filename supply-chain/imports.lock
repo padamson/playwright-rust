@@ -1003,6 +1003,11 @@ user-id = 1139
 user-login = "Manishearth"
 user-name = "Manish Goregaokar"
 
+[[publisher.zip]]
+version = "9.3.0"
+when = "2026-11-03"
+trusted-publisher = "github:zip-rs/zip2"
+
 [[publisher.zmij]]
 version = "1.0.21"
 when = "2026-02-12"
