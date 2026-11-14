@@ -594,8 +594,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.syn]]
-version = "3.0.9"
-when = "2026-10-12"
+version = "3.0.10"
+when = "2026-11-09"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -1004,8 +1004,8 @@ user-login = "Manishearth"
 user-name = "Manish Goregaokar"
 
 [[publisher.zip]]
-version = "9.3.0"
-when = "2026-11-03"
+version = "9.4.1"
+when = "2026-11-06"
 trusted-publisher = "github:zip-rs/zip2"
 
 [[publisher.zmij]]
