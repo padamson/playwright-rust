@@ -91,7 +91,7 @@ jobs:
             ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
         with:
           tool: cargo-nextest
           fallback: none
@@ -212,7 +212,7 @@ jobs:
           esac
 
       - name: Install parse-changelog
-        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
         with:
           tool: parse-changelog
           fallback: none
@@ -221,7 +221,7 @@ jobs:
         run: parse-changelog ${{ steps.resolve.outputs.changelog }} ${{ steps.resolve.outputs.version }} > release_notes.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
           name: ${{ steps.resolve.outputs.crate }} ${{ steps.resolve.outputs.version }}
           body_path: release_notes.md
@@ -254,7 +254,7 @@ jobs:
           toolchain: stable
 
       - name: Install cargo-semver-checks
-        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
         with:
           tool: cargo-semver-checks
           fallback: none
