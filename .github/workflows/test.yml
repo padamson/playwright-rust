@@ -63,7 +63,7 @@ jobs:
 
     - name: Verify the architecture model matches the code
       id: asbuilt
-      uses: padamson/asbuilt@e6e78558a1478c5243538e0b1adacd3815bd5c2d # v0.3.1
+      uses: padamson/asbuilt@490c44ca7324493182f6c907a09315ca768ce416 # v0.4.0
 
     # asbuilt pins LikeC4, so its version keys the npm cache.
     - name: Cache the pinned LikeC4 package

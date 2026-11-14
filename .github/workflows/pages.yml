@@ -55,7 +55,8 @@ concurrency:
 jobs:
   deploy:
     name: Build, dogfood-gate, and deploy
-    # Pinned to the image the Graphviz package below is built for.
+    # A named image: the asbuilt action pins Graphviz per Ubuntu release and
+    # falls back to apt's old one, with only a warning, on a release it lacks.
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
@@ -143,38 +144,11 @@ jobs:
       # The architecture section: `asbuilt docs` renders the committed model's
       # views with LikeC4 (Node, pinned inside asbuilt) and Graphviz, and
       # writes the HTML tree into public/architecture/, which Trunk's copy-dir
-      # carries into both builds below. The action runs `check` first, so a
-      # stale model fails with its diff; `docs` prints none.
-      - name: Install Graphviz
-        # Graphviz's own Ubuntu package, pinned by checksum: Ubuntu's apt ships
-        # 2.43 (2020), whose spline router fails ("triangulation failed") on
-        # layouts a current release draws. The package is built per Ubuntu
-        # release, so a change to the job's runs-on needs a new URL and checksum.
-        # Bounded: a contended apt blocks rather than failing (see quiesce-apt.sh).
-        timeout-minutes: 15
-        env:
-          GRAPHVIZ_VERSION: 15.1.1
-          GRAPHVIZ_SHA256: 291bf778a7c9c582805b29997f3dfb06b966c16bf952eaeafe7f4dc5dc9aaf4e
-        run: |
-          . /etc/os-release
-          if [ "$VERSION_ID" != "26.04" ]; then
-            echo "::error::The pinned Graphviz package is for Ubuntu 26.04, but the runner is $VERSION_ID; update its URL and checksum."
-            exit 1
-          fi
-          curl -fsSL -o graphviz.deb "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${GRAPHVIZ_VERSION}/ubuntu_26.04_graphviz-${GRAPHVIZ_VERSION}-cmake.deb"
-          echo "${GRAPHVIZ_SHA256}  graphviz.deb" | sha256sum -c -
-          # The package declares no dependencies; these are the system
-          # libraries its own libraries link against, Pango's included, so
-          # labels are measured with real fonts rather than estimated.
-          sudo apt-get update
-          sudo apt-get install -y libexpat1 libltdl7 zlib1g \
-            libcairo2 libglib2.0-0t64 libpango-1.0-0 libpangocairo-1.0-0 fonts-liberation \
-            ./graphviz.deb
-          rm graphviz.deb
-
+      # carries into both builds below. The first use runs `check`, so a stale
+      # model fails with its diff; `docs` prints none.
       - name: Install asbuilt and check the architecture model
         id: asbuilt
-        uses: padamson/asbuilt@e6e78558a1478c5243538e0b1adacd3815bd5c2d # v0.3.1
+        uses: padamson/asbuilt@490c44ca7324493182f6c907a09315ca768ce416 # v0.4.0
 
       - name: Cache the pinned LikeC4 package
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -182,10 +156,16 @@ jobs:
           path: ~/.npm
           key: ${{ runner.os }}-npm-likec4-${{ steps.asbuilt.outputs.version }}-v1
 
+      # For `docs` the action installs Graphviz's own pinned package, with apt.
+      # Bounded: a contended apt blocks rather than failing (see quiesce-apt.sh).
       - name: Write the architecture section
-        run: |
-          node --version && dot -V
-          asbuilt docs -o crates/site/public/architecture
+        timeout-minutes: 15
+        uses: padamson/asbuilt@490c44ca7324493182f6c907a09315ca768ce416 # v0.4.0
+        with:
+          command: docs -o crates/site/public/architecture
+
+      - name: Show the render toolchain
+        run: node --version && dot -V
 
       # Dogfood gate: a canonical root-served dev build the binding can drive.
       # SITE_VERSION=dev so the switcher's dev-banner assertion holds; public-url

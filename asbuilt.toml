@@ -6,7 +6,7 @@
 # so any other refuses to run and names the install line. CI installs from
 # this pin (the padamson/asbuilt action reads it), so a bump is this line and
 # a re-survey in the same commit.
-asbuilt = "0.3.0"
+asbuilt = "0.4.0"
 
 [output]
 path = "docs/architecture/model.c4"
