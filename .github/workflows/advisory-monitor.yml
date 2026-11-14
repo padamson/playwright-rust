@@ -42,7 +42,7 @@ jobs:
 
       # Triage goes in comments: the action rewrites the body each run.
       - name: Check advisories and keep the tracking issue current
-        uses: padamson/cargo-lockpatrol@40075b2231e33e8f0a6d08f39acd0691e1f3efba # v0.1.1
+        uses: padamson/cargo-lockpatrol@e791845e4a03af540c2348755c3695041cdd54fd # v0.2.0
         # Pinned so a change to the action's defaults still finds the issue.
         with:
           issue: "true"

@@ -229,7 +229,7 @@ repos:
   # `--locked all`, unlike CI's `root`, so a stale excluded lock fails here
   # instead of being rewritten mid-commit.
   - repo: https://github.com/padamson/cargo-lockpatrol
-    rev: 40075b2231e33e8f0a6d08f39acd0691e1f3efba  # frozen: v0.1.1
+    rev: e791845e4a03af540c2348755c3695041cdd54fd  # frozen: v0.2.0
     hooks:
       - id: cargo-lockpatrol
         args: [--locked, all]

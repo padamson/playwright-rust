@@ -158,7 +158,18 @@ and keeps one issue open while it finds something. The action rewrites the
 body on every run, so triage goes in the issue's comments. An advisory
 with no fix is accepted in `deny.toml`'s `[advisories] ignore`, the one
 list, with a `reason` that names the tree and the path that reaches it;
-an entry there applies to all four trees.
+an entry there applies to all four trees. An entry that no tree reaches any
+more fails the gate, the monitor, and the hook (`unused-ignored-advisory =
+"deny"`: exit 4, or 5 beside a finding): delete it. That happens with no
+commit here when RustSec withdraws an advisory, and the monitor's red
+scheduled run is then the only signal, since its issue closes.
+
+When a Dependabot bump is what drops the last crate an entry covers, its PR
+fails the same way, and unlike a vet entry the fix cannot go in alongside:
+deleting the entry on `main` first fails `main`, which still reaches the
+crate. Take that bump by hand instead. Apply the PR's lockfile diff on `main`
+(step 1 of "Where the fix lands"), delete the entry, and commit both
+together. Dependabot closes its PR once `main` has the versions.
 
 Locally, `prek run cargo-lockpatrol --all-files` runs the gate the way the
 hook does, with `--locked all`. It needs cargo-deny on `PATH`.

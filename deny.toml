@@ -11,8 +11,11 @@ no-default-features = false
 feature-depth = 1
 
 # cargo-lockpatrol applies these to all four lockfiles; only crates/site
-# reaches them.
+# reaches them. An entry no lockfile reaches fails the check. Nothing else
+# may check advisories against this file: a bare `cargo deny check` at the
+# root fails on all three entries.
 [advisories]
+unused-ignored-advisory = "deny"
 ignore = [
     { id = "RUSTSEC-2025-0141", reason = "bincode, unmaintained: crates/site build-dependency of syntect, never in the bundle; no fix" },
     { id = "RUSTSEC-2024-0320", reason = "yaml-rust, unmaintained: crates/site build-dependency of syntect, never in the bundle; no fix" },

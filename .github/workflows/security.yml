@@ -40,7 +40,7 @@ jobs:
         fallback: none
 
     - name: Check advisories in every lockfile
-      uses: padamson/cargo-lockpatrol@40075b2231e33e8f0a6d08f39acd0691e1f3efba # v0.1.1
+      uses: padamson/cargo-lockpatrol@e791845e4a03af540c2348755c3695041cdd54fd # v0.2.0
 
   deny:
     name: License & Dependency Check
