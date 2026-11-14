@@ -34,7 +34,7 @@ jobs:
         toolchain: stable
 
     - name: Install cargo-deny
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-deny
         fallback: none
@@ -55,7 +55,7 @@ jobs:
         toolchain: stable
 
     - name: Install cargo-deny
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-deny
         fallback: none
@@ -119,7 +119,7 @@ jobs:
         shared-key: semver-preview
 
     - name: Install cargo-semver-checks
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-semver-checks
         fallback: none
@@ -161,7 +161,7 @@ jobs:
         shared-key: mutants
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-nextest
         fallback: none
@@ -169,7 +169,7 @@ jobs:
     # Prebuilt binary — `cargo install` fails when a cache restore
     # leaves an existing binary in ~/.cargo/bin/.
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-mutants
         fallback: none
@@ -297,13 +297,13 @@ jobs:
         shared-key: mutants-diff
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-nextest
         fallback: none
 
     - name: Install cargo-mutants
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-mutants
         fallback: none
@@ -373,7 +373,7 @@ jobs:
         shared-key: cli-install
 
     - name: Install cargo-nextest
-      uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
+      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
       with:
         tool: cargo-nextest
         fallback: none
