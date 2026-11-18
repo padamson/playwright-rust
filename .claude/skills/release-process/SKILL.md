@@ -303,7 +303,18 @@ pipeline rather than bolting onto this workflow.
    and a failed publish would leave `main` advertising a release nobody
    can install. Keep it in the "cut, awaiting tag" phrasing until the
    publish is verified in steps 1-2, then flip it in one commit.
-6. **Update tracking issues** if this release closes any
+6. **Close the issues this release was promised to.** A promise to close
+   on release usually sits in a comment ("ships in 0.21.0, I'll close this
+   when it's on crates.io"), not in a label or milestone, so search the
+   text, which covers comments:
+
+       gh search issues --repo padamson/playwright-rust --state open "X.Y.Z"
+       gh search issues --repo padamson/playwright-rust --state open "next release"
+
+   For each hit whose work is in the tag (`git merge-base --is-ancestor
+   <sha> vX.Y.Z`), comment what shipped, with the SHAs, and close it.
+   After 0.21.0, an issue promised to it stayed open for four days because
+   this step only said "update tracking issues".
 7. **Reconcile the parked backlog.** Anything this release shipped that
    was parked as a refactor, a deferred follow-up or a measured item gets
    its body deleted and a ledger row added where it was parked, in this
