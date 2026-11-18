@@ -323,14 +323,18 @@ keeps the loop fast enough to use while the test is still warm.
 ./scripts/mutants.sh -- --jobs 4     # pass extra cargo-mutants args
 ```
 
-CI runs the per-diff variant on every push and PR
-(`mutation-testing-diff` in [`security.yml`](.github/workflows/security.yml)).
-The full-codebase job (`mutation-testing`) runs on the weekly
-Saturday cron and on demand via `workflow_dispatch` — kept on a cadence
-so test-quality drift across files outside the recent diff still gets
-caught. Release tags are **not** a trigger: `security.yml` filters
-`on.push` to branches, which excludes tag pushes entirely. Dispatch a
-run manually if you want full coverage before cutting a release.
+CI gets both runs from the `mutation` job in
+[`security.yml`](.github/workflows/security.yml), which calls `mutation.yml`
+in `padamson/rust-ci-workflows`: the per-diff variant on every push and PR,
+and the full sweep, sharded, on the weekly Saturday cron and on
+demand via `workflow_dispatch`, kept on a cadence so test-quality drift
+across files outside the recent diff still gets caught. The CI diff job
+computes its own diff and runs `cargo mutants --in-diff` directly, not
+`scripts/mutants.sh`, so anything the script sets up for a build goes in
+the call's `setup:` input too. Release tags are **not** a trigger:
+`security.yml` filters `on.push` to branches, which excludes tag pushes
+entirely. Dispatch a run manually if you want full coverage before cutting
+a release.
 
 Scope is set by [`.cargo/mutants.toml`](.cargo/mutants.toml)
 (`examine_globs` lists the files that get mutated at all; `exclude_re`

@@ -127,62 +127,29 @@ jobs:
     - name: Check semver against the last release
       run: cargo semver-checks check-release -p playwright-rs -p playwright-rs-trace
 
-  mutation-testing:
-    name: Mutation Testing (full)
+  # Sharded because the unsharded sweep took 322 of a job's 360 minutes. CI
+  # does not run scripts/mutants.sh, so its CARGO_INCREMENTAL=1 goes in
+  # `setup`.
+  mutation:
+    uses: padamson/rust-ci-workflows/.github/workflows/mutation.yml@bc82a9327da289a29ae5f0c32b0cd94786e0d1f9 # v0.1.0
+    with:
+      shards: 4
+      setup: echo "CARGO_INCREMENTAL=1" >> "$GITHUB_ENV"
+
+  # The hook of the same name is per-clone. Not in the mutation call's
+  # `setup`, which the diff job skips when no .rs file changed.
+  mutants-test-targets:
+    name: Mutation kill set
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    # GitHub's ceiling for a hosted job. The sweep took 322 minutes on
-    # 2026-11-07, so it needs sharding before it grows much more.
-    timeout-minutes: 360
-    # Full-codebase run is too slow for every push; per-PR coverage is
-    # handled by mutation-testing-diff. This workflow does not trigger on
-    # tag pushes (`on.push` filters to branches), so release tags are not
-    # a trigger here — dispatch manually if a run is wanted before a tag.
-    if: >
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch'
-
-    # Re-enable incremental (off globally): cargo-mutants rebuilds once per
-    # mutant and benefits from it. The driver download is skipped in
-    # .cargo/mutants.toml.
-    env:
-      CARGO_INCREMENTAL: "1"
-
+    timeout-minutes: 5
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
       with:
-        toolchain: stable
+        persist-credentials: false
 
-    - name: Cache Cargo
-      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      with:
-        shared-key: mutants
-
-    - name: Install cargo-nextest
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-nextest
-        fallback: none
-
-    # Prebuilt binary — `cargo install` fails when a cache restore
-    # leaves an existing binary in ~/.cargo/bin/.
-    - name: Install cargo-mutants
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-mutants
-        fallback: none
-
-    - name: Run mutation testing
-      run: cargo mutants
-
-    - name: Upload mutation report
-      if: always()
-      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-      with:
-        name: mutation-report
-        path: mutants.out/
+    - name: Check the mutation kill set names every test binary
+      run: ./scripts/check-mutants-test-targets.sh
 
   fuzz-smoke:
     name: Fuzz smoke (protocol parsers)
@@ -268,80 +235,6 @@ jobs:
       with:
         name: fuzz-artifacts
         path: crates/playwright/fuzz/artifacts/
-
-  mutation-testing-diff:
-    name: Mutation Testing (diff)
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    # Per-push variant via `cargo mutants --in-diff`.
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
-
-    # See the full job above — same rationale.
-    env:
-      CARGO_INCREMENTAL: "1"
-
-    steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      with:
-        # Need history beyond HEAD so `git diff` can reach the diff base.
-        fetch-depth: 0
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-      with:
-        toolchain: stable
-
-    - name: Cache Cargo
-      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      with:
-        shared-key: mutants-diff
-
-    - name: Install cargo-nextest
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-nextest
-        fallback: none
-
-    - name: Install cargo-mutants
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-mutants
-        fallback: none
-
-    # PR: merge base against target branch.
-    # Push: parent of HEAD (`before` SHA), when git can actually reach it.
-    # Two cases where it can't, both of which must fall back to HEAD~1
-    # rather than fail the job: the first push to a branch reports
-    # before = 000...0, and a force-push reports the commit it just
-    # replaced, which no longer exists on the remote (so `fetch-depth: 0`
-    # does not bring it in either). Probing reachability covers both.
-    - name: Compute diff base
-      id: base
-      shell: bash
-      run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "ref=origin/${{ github.base_ref }}" >> $GITHUB_OUTPUT
-        elif git cat-file -e "${{ github.event.before }}^{commit}" 2>/dev/null; then
-          echo "ref=${{ github.event.before }}" >> $GITHUB_OUTPUT
-        else
-          echo "unreachable base ${{ github.event.before }}; mutating HEAD alone"
-          echo "ref=HEAD~1" >> $GITHUB_OUTPUT
-        fi
-
-    # The hook of the same name is per-clone; a hookless clone would
-    # otherwise land a test binary that the mutation runs never execute.
-    - name: Check the mutation kill set names every test binary
-      run: ./scripts/check-mutants-test-targets.sh
-
-    - name: Run mutation testing on diff
-      run: ./scripts/mutants.sh ${{ steps.base.outputs.ref }}
-
-    - name: Upload mutation report
-      if: always()
-      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-      with:
-        name: mutation-report-diff
-        path: mutants.out/
 
   cli-install:
     name: CLI installer (weekly)
