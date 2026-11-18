@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-11-18
+
 ### Changed
 
 - **Bundled Playwright driver is now 1.65.1** (was 1.65.0), which moves Chromium to 159. Firefox and WebKit are unchanged, and the protocol spec is identical across both tags.
@@ -1014,7 +1016,8 @@ Public-API type-consistency sweep — within the crate, the same conceptual quan
   - Playwright returns null for data URLs and `about:blank` (valid behavior, not an error)
   - Migration: `page.goto("https://example.com").await?.expect("response")` or use `if let Some(response) = page.goto(...).await? { ... }`
 
-[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/padamson/playwright-rust/compare/v0.21.1...HEAD
+[0.21.1]: https://github.com/padamson/playwright-rust/compare/v0.21.0...v0.21.1
 [0.21.0]: https://github.com/padamson/playwright-rust/compare/v0.20.1...v0.21.0
 [0.20.1]: https://github.com/padamson/playwright-rust/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/padamson/playwright-rust/compare/v0.19.0...v0.20.0
