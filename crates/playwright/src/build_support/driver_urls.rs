@@ -10,43 +10,43 @@
 /// Node.js runtime bundled with the driver. Must match the upstream
 /// Playwright release's own pin for `PLAYWRIGHT_VERSION` (playwright-python
 /// commits it as `NODE_VERSION` at the matching tag).
-const NODE_VERSION: &str = "26.13.0";
+const NODE_VERSION: &str = "26.13.1";
 
 /// npm's `dist.integrity` for the pinned `playwright-core` tarball, with the
 /// version it belongs to: `npm view playwright-core@<version> dist.integrity`.
 const NPM_CORE_INTEGRITY: (&str, &str) = (
-    "1.65.0",
-    "sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==",
+    "1.65.1",
+    "sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==",
 );
 
 /// SHA-256 of each Node dist archive, per Node triple, with the Node version
 /// they belong to, from `https://nodejs.org/dist/v<version>/SHASUMS256.txt`.
 const NODE_ARCHIVE_SHA256: (&str, [(&str, &str); 6]) = (
-    "26.13.0",
+    "26.13.1",
     [
         (
             "darwin-x64",
-            "525c9b29bb0263d687de60a4cec0e2a6db876a8eb032369e5795eca71e7c358e",
+            "82bb96078a24ca50b9c9a38f2379e6be6d87171fcd400fc14c8934b3bce96e2f",
         ),
         (
             "darwin-arm64",
-            "d38bd5e5a2ddce6bbb5ce45e46e208337da4d51fffe611e567fd32073d6439f6",
+            "aec2514ea1ceb2ba52455e9ec65986f6749a06dd759e5db2a72e6889668c9735",
         ),
         (
             "linux-x64",
-            "5848553868b402d3fabb5b09270649977780a390f832155721025a08b5104455",
+            "518674de2b621728a5e4486f5fb3b7d2900bb3cc4aa97969edaa463db99f9778",
         ),
         (
             "linux-arm64",
-            "439e9c438acdf6a6ffe47418da709153d66c4bed812e30a473faacb107dd2791",
+            "80a330b35415382878df18d41afbd106ea89bfb3be0087d6608e289a14c5cc7d",
         ),
         (
             "win-x64",
-            "dcc60d59a0746999f99064a01c020445d54d84228c691cdbf25b49ac3b59150a",
+            "e2edda75bfb089654705cf65a13b58933bfd5f57148e8ebda916f58a2474f1f7",
         ),
         (
             "win-arm64",
-            "a9427139595156ef484e1fb08957676e09d4232368dd1743a2a9f93f3d241b14",
+            "181ebe431b90787113a9e4fc80d38ce86d37888a353a0386de44d2872e48cb97",
         ),
     ],
 );

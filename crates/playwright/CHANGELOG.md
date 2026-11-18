@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Bundled Playwright driver is now 1.65.1** (was 1.65.0), which moves Chromium to 159. Firefox and WebKit are unchanged, and the protocol spec is identical across both tags.
+
+### Security
+
+- **The bundled Node runtime is 26.13.1** (was 26.13.0), a Node security release whose TLS and HTTP/2 fixes reach the driver's own connections, such as `APIRequestContext` requests.
+
 ## [0.21.0] - 2026-11-14
 
 ### Added

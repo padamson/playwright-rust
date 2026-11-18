@@ -136,9 +136,9 @@ jobs:
           ~/.cache/playwright-rust
           ~/Library/Caches/ms-playwright
           ~/Library/Caches/playwright-rust
-        key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
+        key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.1-v5
         restore-keys: |
-          ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
+          ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.1-v5
 
     - name: Cache Playwright driver and browsers (Windows)
       if: runner.os == 'Windows'
@@ -147,9 +147,9 @@ jobs:
         path: |
           ~\AppData\Local\ms-playwright
           ~\AppData\Local\playwright-rust
-        key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
+        key: ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.1-v5
         restore-keys: |
-          ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.0-v5
+          ${{ runner.os }}-${{ steps.image.outputs.os }}-playwright-browsers-1.65.1-v5
 
     - name: Install cargo-nextest
       uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
