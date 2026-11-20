@@ -67,6 +67,12 @@ criteria = "safe-to-deploy"
 delta = "3.5.0 -> 3.5.1"
 notes = "Cookie header sends only name and value; macOS timeout-setter fix; ureq-proto 0.7.1. No unsafe."
 
+[[audits.ureq]]
+who = "Paul Adamson <paul.adamson.01@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "3.5.1 -> 3.5.2"
+notes = "Body limit applies after decoding and allows exact-size bodies; retry on NetworkDown. No unsafe."
+
 [[audits.ureq-proto]]
 who = "Paul Adamson <paul.adamson.01@gmail.com>"
 criteria = "safe-to-deploy"
