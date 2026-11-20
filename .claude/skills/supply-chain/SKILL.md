@@ -10,7 +10,8 @@ metadata:
 The project uses three complementary supply-chain tools:
 
 - **cargo-lockpatrol** — RustSec advisories, through `cargo deny check
-  advisories`, in every tracked `Cargo.lock` (the Security Audit job)
+  advisories`, in every tracked `Cargo.lock` (a step of the
+  `supply-chain / License & Dependency Check` job)
 - **`cargo deny`** — license, duplicate, and source policy
 - **`cargo vet`** — explicit audit chain for every dependency
 
@@ -18,6 +19,24 @@ All three run in CI on every push and every dependabot PR. Treat their
 output as load-bearing — a real advisory failure is a security
 advisory and warrants a patch release; a `cargo vet` failure usually
 means an audit chain needs re-stitching after a version change.
+
+CI runs them through the shared `supply-chain.yml` in
+`padamson/rust-ci-workflows`, so its cargo-vet is whatever that repo's
+`taiki-e/install-action` pin serves (0.10.3 at `v0.2.0`). cargo-vet
+refuses a store written by a newer version, so a local copy ahead of CI's
+turns the gate red after the next `cargo vet` here. Check
+`cargo vet --version` before writing to `supply-chain/`; if it is ahead,
+install CI's version locally or bump the pin there.
+
+The gate's other tool pins live there too (cargo-deny, cargo-lockpatrol,
+cargo-semver-checks for the preview), and move only when this repo takes
+a new `rust-ci-workflows` release. The pins that stay here, which
+Dependabot moves on its own schedule, are the cargo-lockpatrol hook `rev`,
+the one in `advisory-monitor.yml`, and `release.yml`'s cargo-semver-checks.
+So the hook or the monitor can briefly disagree with the gate about the
+same `deny.toml`, and a green semver preview can meet a newer lint at tag
+time. When that happens, compare the two versions before suspecting the
+change.
 
 ## When bumping our own version
 
@@ -143,7 +162,7 @@ and paste, item by item:
   nothing to prove; name it as one, so the developer can read the diff
   and certify instead if they choose.
 
-## Security advisories (Security Audit failures)
+## Security advisories (advisory failures in the deny job)
 
 A new `RUSTSEC-YYYY-NNNN` advisory against a transitive dependency
 warrants a patch release even if functional behavior is unchanged. The
@@ -153,7 +172,7 @@ advisory.
 
 Advisories usually arrive as a `security-advisory` issue before they turn
 a gate red. `advisory-monitor.yml` runs the cargo-lockpatrol action daily,
-the same check as the Security Audit gate over the same four lockfiles,
+the same check as the deny job's advisory step over the same four lockfiles,
 and keeps one issue open while it finds something. The action rewrites the
 body on every run, so triage goes in the issue's comments. An advisory
 with no fix is accepted in `deny.toml`'s `[advisories] ignore`, the one

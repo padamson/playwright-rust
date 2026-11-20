@@ -164,7 +164,7 @@ repos:
         pass_filenames: false
         files: ^skills/
 
-      # 6. License & dependency check (same as CI: scripts/deny-lockfiles.sh)
+      # 6. License & dependency check (the trees CI's deny-manifests lists, all --locked)
       - id: cargo-deny
         name: cargo deny
         description: Check licenses, bans, and source restrictions
@@ -200,13 +200,13 @@ repos:
         pass_filenames: false
         files: ^scripts/(report|test-report)-flaky-tests\.sh$
 
-      - id: supply-chain-gate-decides
-        name: release gate still requires vet, deny and audit
-        description: the gate runs only on a release tag, so a regression would surface at the next release
-        entry: scripts/test-require-supply-chain-checks.sh
+      - id: excluded-trees-listed
+        name: every out-of-workspace tree is in the deny and Dependabot lists
+        description: a tree missing from a list is skipped by that gate without a word
+        entry: scripts/check-excluded-trees.sh
         language: system
         pass_filenames: false
-        files: ^scripts/(require|test-require)-supply-chain-checks\.sh$
+        files: (Cargo\.lock|^\.github/workflows/(security|release)\.yml|^\.github/dependabot\.yml|^scripts/check-excluded-trees\.sh)$
 
       - id: external-lockfiles-current
         name: out-of-workspace lockfiles current

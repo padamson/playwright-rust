@@ -23,7 +23,9 @@
 set -uo pipefail
 
 status=0
-for manifest in crates/site crates/site-e2e crates/playwright/fuzz; do
+# Every tracked Cargo.lock below the root is one of these trees.
+for lockfile in $(git ls-files '*/Cargo.lock'); do
+  manifest=$(dirname "$lockfile")
   if ! cargo metadata --manifest-path "$manifest/Cargo.toml" --locked --format-version 1 \
        >/dev/null 2>&1; then
     echo "stale lockfile: $manifest/Cargo.lock is behind the workspace."

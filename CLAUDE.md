@@ -73,12 +73,17 @@ consequences worth knowing before they cost you time:
   the commits that cause it, with the refresh command. Nothing breaks
   meanwhile; no CI job uses `--locked` against these crates. Dependabot's
   cargo entry lists all four lockfile directories, so routine bumps reach
-  them, and cargo-lockpatrol (the Security Audit job, the advisory
+  them, and cargo-lockpatrol (inside the shared deny job, the advisory
   monitor, and a pre-commit hook) checks advisories in every tracked
   lockfile rather than the root alone, against `deny.toml`'s one ignore
-  list. `scripts/deny-lockfiles.sh` runs deny's bans, licenses, and sources
-  over each tree. A new excluded tree goes into that script and the
-  lockfile hook; lockpatrol finds its lockfile through git.
+  list. Deny's bans, licenses, and sources run over each tree too: in CI
+  through the `deny-manifests` input of the shared `supply-chain.yml` call
+  (in `security.yml` and `release.yml`), and locally through
+  `scripts/deny-lockfiles.sh`. A new excluded tree goes into both
+  `deny-manifests` lists and Dependabot's `directories`, and
+  `scripts/check-excluded-trees.sh` (a hook and a `test.yml` step) fails
+  until it is in all three; the scripts and lockpatrol find its lockfile
+  through git.
 
   **`crates/playwright/fuzz` has the same shape** (its own excluded
   workspace, its own lockfile, a path dep on `playwright-rs`) and is covered

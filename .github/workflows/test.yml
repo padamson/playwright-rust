@@ -279,10 +279,12 @@ jobs:
       shell: bash
       run: scripts/test-report-flaky-tests.sh
 
-    - name: Verify the release gate requires vet, deny and audit
+    # Mirrors the pre-commit hook: the tag-time gate would skip an unlisted
+    # tree in silence, and the next release is a late place to find out.
+    - name: Verify every out-of-workspace tree is in the deny and Dependabot lists
       if: runner.os == 'Linux'
       shell: bash
-      run: scripts/test-require-supply-chain-checks.sh
+      run: scripts/check-excluded-trees.sh
 
     - name: Verify agent-integration doc snippets
       run: cargo xtask verify-agent-docs

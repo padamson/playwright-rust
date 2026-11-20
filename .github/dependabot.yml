@@ -43,7 +43,7 @@ updates:
     # `serde_core =<same version>` exactly, so it cannot move on its own, which
     # a single-dependency update appears unable to satisfy. Scoped to the one
     # version that trips it, so later serde releases stay eligible. Tracked in
-    # issue #131; the Security Audit gate still covers serde advisories
+    # issue #131; the deny gate's advisory check still covers serde
     # meanwhile.
     ignore:
       - dependency-name: "serde"

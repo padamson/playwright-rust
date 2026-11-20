@@ -1,6 +1,6 @@
 name: Security Advisory Monitor
 
-# Daily run of the Security Audit gate's check, so an advisory published
+# Daily run of the deny job's advisory check, so an advisory published
 # between pushes becomes a tracking issue before it turns a gate red.
 
 on:

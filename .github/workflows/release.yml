@@ -129,28 +129,14 @@ jobs:
           FLAKY_REPORT_LABEL: ${{ matrix.target }}
         run: scripts/report-flaky-tests.sh nextest-main.log
 
-  # vet, deny and audit run in security.yml on the push to main, which a tag
-  # push does not trigger. Rather than run them a second time here, both
-  # publishing jobs wait on this check that the tagged commit is on main and
-  # that they passed on it, so a tag on a red or unmerged commit publishes
-  # nothing. It waits for the test matrix, which outlasts Security &
-  # Quality, so a tag pushed right after the commit is not refused for
-  # being early.
-  supply-chain-gates:
-    name: Supply-chain gates passed
-    needs: [test]
+  # A pull request's checks are reported on its head commit but test the
+  # merge, and a dispatched run can test any branch, so a tag is published
+  # only from a commit main contains. "behind" or "identical" means it does.
+  on-main:
+    name: Tagged commit is on main
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions:
-      checks: read
-      contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      # A pull request's checks are reported on its head commit but test the
-      # merge, and a dispatched run can test any branch, so passing checks
-      # alone do not show that the commit is the one main tested. "behind"
-      # or "identical" means main contains it.
       - name: Require the tagged commit to be on main
         env:
           GH_TOKEN: ${{ github.token }}
@@ -163,18 +149,22 @@ jobs:
             *) echo "::error::$SHA is not on main ($status). Tag a commit that main's CI has tested."; exit 1 ;;
           esac
 
-      - name: Require vet, deny and audit to have passed on this commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          SHA: ${{ github.sha }}
-        run: |
-          gh api --paginate "repos/$REPO/commits/$SHA/check-runs?per_page=100" > check-runs.json
-          scripts/require-supply-chain-checks.sh check-runs.json
+  # cargo deny (with cargo-lockpatrol's advisories) and cargo vet on the
+  # tagged commit, at the pin and with the excluded trees security.yml uses;
+  # nothing publishes unless they pass. They read advisories and imported
+  # audits when this job runs, so a re-run reads them again.
+  supply-chain-gates:
+    name: Supply-chain gates
+    uses: padamson/rust-ci-workflows/.github/workflows/supply-chain.yml@07d9be408f21f565a66488d6931b1a39b3f872e0 # v0.2.0
+    with:
+      deny-manifests: |
+        crates/site
+        crates/site-e2e
+        crates/playwright/fuzz
 
   create-release:
     name: Create GitHub Release
-    needs: [test, semver-checks, supply-chain-gates]
+    needs: [test, semver-checks, on-main, supply-chain-gates]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -277,7 +267,7 @@ jobs:
 
   publish-crates:
     name: Publish to crates.io
-    needs: [test, semver-checks, supply-chain-gates]
+    needs: [test, semver-checks, on-main, supply-chain-gates]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Only release tags can deploy here, and the crates.io publisher names

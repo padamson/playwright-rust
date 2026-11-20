@@ -19,119 +19,31 @@ permissions:
   contents: read
 
 jobs:
-  # The main ruleset and scripts/require-supply-chain-checks.sh require
-  # this job by name.
-  audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-      with:
-        toolchain: stable
-
-    - name: Install cargo-deny
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-deny
-        fallback: none
-
-    - name: Check advisories in every lockfile
-      uses: padamson/cargo-lockpatrol@e791845e4a03af540c2348755c3695041cdd54fd # v0.2.0
-
-  deny:
-    name: License & Dependency Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-      with:
-        toolchain: stable
-
-    - name: Install cargo-deny
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-deny
-        fallback: none
-
-    - name: Run cargo deny
-      run: scripts/deny-lockfiles.sh
-
+  # deny and vet, reported as `supply-chain / License & Dependency Check`
+  # and `supply-chain / Supply Chain Review`; the main ruleset requires both.
+  # cargo-lockpatrol's advisory check runs inside the deny job. The trees
+  # outside the workspace keep their own lockfiles, so deny checks each one
+  # too; scripts/deny-lockfiles.sh and release.yml carry the same list.
   supply-chain:
-    name: Supply Chain Review
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+    uses: padamson/rust-ci-workflows/.github/workflows/supply-chain.yml@07d9be408f21f565a66488d6931b1a39b3f872e0 # v0.2.0
+    with:
+      deny-manifests: |
+        crates/site
+        crates/site-e2e
+        crates/playwright/fuzz
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-      with:
-        toolchain: stable
-
-    # Built from crates.io on purpose: install-action serves GitHub release
-    # binaries, and cargo-vet's newest release with binaries is 0.10.0, which
-    # cannot parse the audits file that 0.10.2 (crates.io) writes. No cache
-    # step here, so the restored-binary failure `cargo install` has elsewhere
-    # does not apply. `--locked` builds against cargo-vet's own Cargo.lock.
-    # No version pin on purpose: Dependabot cannot bump a `run:` line, and
-    # cargo-vet refuses a store written by a newer version, so a pinned CI
-    # copy older than a contributor's local one goes red.
-    - name: Install cargo-vet
-      run: cargo install cargo-vet --locked
-
-    - name: Run cargo vet
-      run: cargo vet
-
-  # The semver gate is the job in release.yml, which blocks the publish. This
-  # one runs the same check on every PR and push to main, so a break shows
-  # up before the release commit and its tag are public. It is deliberately
-  # not a required check: between releases Cargo.toml still carries the last
-  # released version, so red means the next release needs a bigger bump than
-  # planned, not that the change is wrong. playwright-rs-macros is left out
-  # because a proc-macro crate has no library API to compare.
+  # The early signal for release.yml's semver gate; not a required check.
+  # rustdoc never runs the driver, so build.rs skips its download.
   semver-preview:
-    name: Semver preview
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # rustdoc never runs the driver, so skip its download.
-    env:
-      PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD: "1"
-    steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-      with:
-        toolchain: stable
-
-    # Both the current tree and the crates.io baseline are built for rustdoc
-    # on every run; the cache carries both under target/.
-    - name: Cache Cargo
-      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      with:
-        shared-key: semver-preview
-
-    - name: Install cargo-semver-checks
-      uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
-      with:
-        tool: cargo-semver-checks
-        fallback: none
-
-    - name: Check semver against the last release
-      run: cargo semver-checks check-release -p playwright-rs -p playwright-rs-trace
+    uses: padamson/rust-ci-workflows/.github/workflows/semver-preview.yml@07d9be408f21f565a66488d6931b1a39b3f872e0 # v0.2.0
+    with:
+      setup: echo "PLAYWRIGHT_SKIP_DRIVER_DOWNLOAD=1" >> "$GITHUB_ENV"
 
   # Sharded because the unsharded sweep took 322 of a job's 360 minutes. CI
   # does not run scripts/mutants.sh, so its CARGO_INCREMENTAL=1 goes in
   # `setup`.
   mutation:
-    uses: padamson/rust-ci-workflows/.github/workflows/mutation.yml@bc82a9327da289a29ae5f0c32b0cd94786e0d1f9 # v0.1.0
+    uses: padamson/rust-ci-workflows/.github/workflows/mutation.yml@07d9be408f21f565a66488d6931b1a39b3f872e0 # v0.2.0
     with:
       shards: 4
       setup: echo "CARGO_INCREMENTAL=1" >> "$GITHUB_ENV"

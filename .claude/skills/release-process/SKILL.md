@@ -185,11 +185,9 @@ git push origin main
 gh run watch  # or check the Actions tab in GitHub
 
 # 4. Only after ALL required checks are green, create and push the tag.
-#    release.yml's supply-chain-gates job enforces part of this: publishing
-#    fails unless the tagged commit is on main and vet, deny and audit
-#    passed on it. The job runs after the test matrix, so Security &
-#    Quality has normally finished by then; if it had not, re-run the
-#    failed jobs once it has.
+#    release.yml enforces part of this: publishing fails unless the tagged
+#    commit is on main (the on-main job), and its supply-chain-gates job
+#    runs deny, advisories and vet again on the tagged commit itself.
 #    Tag prefix maps to crate (see workspace table at top of file):
 #      v0.13.0          → playwright-rs
 #      macros-v0.1.1    → playwright-rs-macros
@@ -236,18 +234,36 @@ The workflow handles all three tag prefixes (`v*`, `macros-v*`,
 
 1. Runs the test suite on linux/macOS/windows as a final pre-publish
    gate (always, regardless of tag prefix).
-2. **Resolves the tag** — `Resolve crate, changelog, and version from
+2. **Gates the publish** alongside the tests. `on-main` refuses a tag on a
+   commit main does not contain, `semver-checks` compares against
+   crates.io, and `supply-chain-gates` (the shared `supply-chain.yml`)
+   runs deny, advisories and vet on the tagged commit. That last one reads
+   advisories and imported audits as they are at tag time, so an advisory
+   published after main went green can stop a release main passed. Nothing
+   has published at that point, so the version is still unused, but the
+   tag points at the failed commit and the fix is a new commit on main
+   (the supply-chain skill's advisory section). Two ways out, and which
+   one is the repo admin's call, since the `release tags` ruleset lets
+   only an admin delete a tag:
+   - move the tag: the admin deletes it (`git push origin
+     :refs/tags/<prefix>vX.Y.Z`, `git tag -d <prefix>vX.Y.Z`) and tags
+     the fixed commit once main is green on it. No second bump, and the
+     CHANGELOG entry stands. The default, because no release, crate or
+     site snapshot was ever made from the old tag.
+   - cut the next patch: a second bump commit with its own CHANGELOG
+     entry, leaving the dead tag in place. Needs no admin.
+3. **Resolves the tag** — `Resolve crate, changelog, and version from
    tag` step parses `${GITHUB_REF#refs/tags/}` and routes:
    - `macros-v*` → `playwright-rs-macros` + `crates/playwright-rs-macros/CHANGELOG.md`
    - `trace-v*` → `playwright-rs-trace` + `crates/playwright-rs-trace/CHANGELOG.md`
    - `v*` → `playwright-rs` + `crates/playwright/CHANGELOG.md`
-3. **Generates release notes** from the resolved CHANGELOG via
+4. **Generates release notes** from the resolved CHANGELOG via
    `parse-changelog <CHANGELOG> <VERSION>` — the **per-crate
    CHANGELOG is the single source of truth** for release notes; no
    manual paste needed.
-4. **Creates the GitHub Release** with `name = "<crate> <version>"`
+5. **Creates the GitHub Release** with `name = "<crate> <version>"`
    and the body from the parsed CHANGELOG section.
-5. **Publishes to crates.io** — exactly one publish step fires per
+6. **Publishes to crates.io** — exactly one publish step fires per
    tag, gated by `startsWith(github.ref_name, '<prefix>')`. Failure
    aborts the workflow (no `continue-on-error`); the release tag
    stays in place but the publish didn't happen, so re-running with
