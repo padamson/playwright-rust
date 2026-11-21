@@ -32,23 +32,275 @@ fn is_escaped(c: char) -> bool {
 #[cfg(verus_only)]
 verus! {
 
-pub open spec fn spec_is_escaped(c: char) -> bool {
+spec fn spec_is_escaped(c: char) -> bool {
     c == '$' || c == '^' || c == '+' || c == '.' || c == '*' || c == '(' || c == ')'
         || c == '|' || c == '\\' || c == '?' || c == '{' || c == '}' || c == '['
         || c == ']'
+}
+
+/// `c` as a literal in the pattern: escaped exactly when the driver escapes it.
+spec fn literal(c: char) -> Seq<char> {
+    if spec_is_escaped(c) { seq!['\\', c] } else { seq![c] }
+}
+
+/// The index of the last `*` in the run of them that starts at `i`.
+spec fn star_run_end(g: Seq<char>, i: int) -> int
+    decreases g.len() - i,
+{
+    if 0 <= i && i + 1 < g.len() && g[i + 1] == '*' {
+        star_run_end(g, i + 1)
+    } else {
+        i
+    }
+}
+
+/// The pattern for `g[i..]` appended to `acc`, one glob token at a time,
+/// reading from inside a group when `in_group`.
+spec fn translate_from(g: Seq<char>, i: int, in_group: bool, acc: Seq<char>) -> Option<Seq<char>>
+    decreases g.len() - i,
+    via translate_from_decreases
+{
+    if i < 0 || i >= g.len() {
+        if in_group { None } else { Some(acc.push('$')) }
+    } else if g[i] == '\\' && i + 1 < g.len() {
+        translate_from(g, i + 2, in_group, acc + literal(g[i + 1]))
+    } else if g[i] == '*' {
+        let j = star_run_end(g, i);
+        if j == i {
+            translate_from(g, i + 1, in_group, acc + seq!['(', '[', '^', '/', ']', '*', ')'])
+        } else if j + 1 < g.len() && g[j + 1] == '/' {
+            let piece = if i > 0 && g[i - 1] == '/' {
+                seq!['(', '(', '.', '+', '/', ')', '|', ')']
+            } else {
+                seq!['(', '.', '*', '/', ')']
+            };
+            translate_from(g, j + 2, in_group, acc + piece)
+        } else {
+            translate_from(g, j + 1, in_group, acc + seq!['(', '.', '*', ')'])
+        }
+    } else if g[i] == '{' {
+        if in_group { None } else { translate_from(g, i + 1, true, acc.push('(')) }
+    } else if g[i] == '}' {
+        if in_group { translate_from(g, i + 1, false, acc.push(')')) } else { None }
+    } else if g[i] == ',' {
+        if in_group {
+            translate_from(g, i + 1, in_group, acc.push('|'))
+        } else {
+            translate_from(g, i + 1, in_group, acc + seq!['\\', ','])
+        }
+    } else {
+        translate_from(g, i + 1, in_group, acc + literal(g[i]))
+    }
+}
+
+/// The whole pattern for `g`.
+spec fn translate(g: Seq<char>) -> Option<Seq<char>> {
+    translate_from(g, 0, false, seq!['^'])
+}
+
+/// Whether the braces in `g[i..]` close without nesting, reading from inside
+/// a group when `in_group` and skipping each escaped char.
+spec fn braces_ok_from(g: Seq<char>, i: int, in_group: bool) -> bool
+    decreases g.len() - i,
+{
+    if i < 0 || i >= g.len() {
+        !in_group
+    } else if g[i] == '\\' && i + 1 < g.len() {
+        braces_ok_from(g, i + 2, in_group)
+    } else if g[i] == '{' {
+        !in_group && braces_ok_from(g, i + 1, true)
+    } else if g[i] == '}' {
+        in_group && braces_ok_from(g, i + 1, false)
+    } else {
+        braces_ok_from(g, i + 1, in_group)
+    }
+}
+
+spec fn braces_ok(g: Seq<char>) -> bool {
+    braces_ok_from(g, 0, false)
+}
+
+proof fn lemma_star_run_end(g: Seq<char>, i: int)
+    requires
+        0 <= i < g.len(),
+    ensures
+        i <= star_run_end(g, i) < g.len(),
+        forall|m: int| i < m <= star_run_end(g, i) ==> g[m] == '*',
+        star_run_end(g, i) + 1 < g.len() ==> g[star_run_end(g, i) + 1] != '*',
+    decreases g.len() - i,
+{
+    if i + 1 < g.len() && g[i + 1] == '*' {
+        lemma_star_run_end(g, i + 1);
+    }
+}
+
+#[verifier::decreases_by]
+proof fn translate_from_decreases(g: Seq<char>, i: int, in_group: bool, acc: Seq<char>) {
+    if 0 <= i < g.len() {
+        lemma_star_run_end(g, i);
+    }
+}
+
+/// Chars that are not `\`, `{` or `}` leave the brace check unchanged.
+proof fn lemma_braces_skip(g: Seq<char>, i: int, k: int, in_group: bool)
+    requires
+        0 <= i <= k <= g.len(),
+        forall|m: int| i <= m < k ==> g[m] != '\\' && g[m] != '{' && g[m] != '}',
+    ensures
+        braces_ok_from(g, i, in_group) == braces_ok_from(g, k, in_group),
+    decreases k - i,
+{
+    if i < k {
+        lemma_braces_skip(g, i + 1, k, in_group);
+    }
+}
+
+/// The translation of `g[i..]` fails exactly when its braces are malformed,
+/// and when it succeeds it ends in `$`.
+proof fn lemma_translate_from(g: Seq<char>, i: int, in_group: bool, acc: Seq<char>)
+    requires
+        0 <= i <= g.len(),
+    ensures
+        translate_from(g, i, in_group, acc) is None <==> !braces_ok_from(g, i, in_group),
+        translate_from(g, i, in_group, acc) matches Some(t)
+            ==> t.len() > acc.len() && t.last() == '$' && (acc.len() > 0 ==> t[0] == acc[0]),
+    decreases g.len() - i,
+{
+    if i < g.len() {
+        if g[i] == '\\' && i + 1 < g.len() {
+            lemma_translate_from(g, i + 2, in_group, acc + literal(g[i + 1]));
+        } else if g[i] == '*' {
+            lemma_star_run_end(g, i);
+            let j = star_run_end(g, i);
+            if j == i {
+                lemma_translate_from(g, i + 1, in_group, acc + seq!['(', '[', '^', '/', ']', '*', ')']);
+            } else if j + 1 < g.len() && g[j + 1] == '/' {
+                let piece = if i > 0 && g[i - 1] == '/' {
+                    seq!['(', '(', '.', '+', '/', ')', '|', ')']
+                } else {
+                    seq!['(', '.', '*', '/', ')']
+                };
+                lemma_braces_skip(g, i, j + 2, in_group);
+                lemma_translate_from(g, j + 2, in_group, acc + piece);
+            } else {
+                lemma_braces_skip(g, i, j + 1, in_group);
+                lemma_translate_from(g, j + 1, in_group, acc + seq!['(', '.', '*', ')']);
+            }
+        } else if g[i] == '{' {
+            if !in_group {
+                lemma_translate_from(g, i + 1, true, acc.push('('));
+            }
+        } else if g[i] == '}' {
+            if in_group {
+                lemma_translate_from(g, i + 1, false, acc.push(')'));
+            }
+        } else if g[i] == ',' {
+            lemma_translate_from(g, i + 1, in_group, if in_group { acc.push('|') } else { acc + seq!['\\', ','] });
+        } else {
+            lemma_translate_from(g, i + 1, in_group, acc + literal(g[i]));
+        }
+    }
+}
+
+/// [`literal`] of each char of `s[i..]`, in order.
+spec fn literals_from(s: Seq<char>, i: int) -> Seq<char>
+    decreases s.len() - i,
+{
+    if i < 0 || i >= s.len() {
+        seq![]
+    } else {
+        literal(s[i]) + literals_from(s, i + 1)
+    }
+}
+
+/// Whether `c` is glob syntax when it is not escaped.
+spec fn is_glob_syntax(c: char) -> bool {
+    c == '\\' || c == '*' || c == '{' || c == '}' || c == ','
+}
+
+/// `s` with a backslash before each char.
+spec fn quote(s: Seq<char>) -> Seq<char> {
+    Seq::new(2 * s.len(), |k: int| if k % 2 == 0 { '\\' } else { s[k / 2] })
+}
+
+proof fn lemma_plain_from(g: Seq<char>, i: int, acc: Seq<char>)
+    requires
+        0 <= i <= g.len(),
+        forall|m: int| i <= m < g.len() ==> !is_glob_syntax(#[trigger] g[m]),
+    ensures
+        translate_from(g, i, false, acc) == Some(acc + literals_from(g, i) + seq!['$']),
+    decreases g.len() - i,
+{
+    if i < g.len() {
+        lemma_plain_from(g, i + 1, acc + literal(g[i]));
+        assert(acc + literal(g[i]) + literals_from(g, i + 1) =~= acc + literals_from(g, i));
+    } else {
+        assert(acc + literals_from(g, i) + seq!['$'] =~= acc.push('$'));
+    }
+}
+
+/// A glob without glob syntax comes out as its chars, each as [`literal`].
+proof fn lemma_plain(g: Seq<char>)
+    requires
+        forall|m: int| 0 <= m < g.len() ==> !is_glob_syntax(#[trigger] g[m]),
+    ensures
+        translate(g) == Some(seq!['^'] + literals_from(g, 0) + seq!['$']),
+{
+    lemma_plain_from(g, 0, seq!['^']);
+}
+
+proof fn lemma_quoted_from(s: Seq<char>, m: int, acc: Seq<char>)
+    requires
+        0 <= m <= s.len(),
+    ensures
+        translate_from(quote(s), 2 * m, false, acc) == Some(acc + literals_from(s, m) + seq!['$']),
+    decreases s.len() - m,
+{
+    let q = quote(s);
+    if m < s.len() {
+        assert(q[2 * m] == '\\');
+        assert(q[2 * m + 1] == s[m]);
+        lemma_quoted_from(s, m + 1, acc + literal(s[m]));
+        assert(acc + literal(s[m]) + literals_from(s, m + 1) =~= acc + literals_from(s, m));
+    } else {
+        assert(acc + literals_from(s, m) + seq!['$'] =~= acc.push('$'));
+    }
+}
+
+/// Escaping every char of any text, glob syntax included, gives the text
+/// back, each char as [`literal`].
+proof fn lemma_quoted(s: Seq<char>)
+    ensures
+        translate(quote(s)) == Some(seq!['^'] + literals_from(s, 0) + seq!['$']),
+{
+    lemma_quoted_from(s, 0, seq!['^']);
 }
 
 } // verus!
 
 #[cfg_attr(verus_only, verus_spec(
     ensures
-        final(out)@ == old(out)@ + (if spec_is_escaped(c) { seq!['\\', c] } else { seq![c] })
+        final(out)@ == old(out)@ + literal(c)
 ))]
 fn push_escaped(out: &mut Vec<char>, c: char) {
     if is_escaped(c) {
         out.push('\\');
     }
     out.push(c);
+}
+
+/// `extend_from_slice`, whose vstd spec is per element, stated as the
+/// concatenation the proofs work in.
+#[cfg_attr(verus_only, verus_spec(
+    ensures
+        final(out)@ == old(out)@ + s@
+))]
+fn push_all(out: &mut Vec<char>, s: &[char]) {
+    out.extend_from_slice(s);
+    #[cfg(verus_only)]
+    proof! {
+        assert(out@ =~= old(out)@ + s@);
+    }
 }
 
 /// Translates a Playwright URL glob into an anchored regex pattern.
@@ -73,9 +325,25 @@ pub(crate) fn glob_to_regex_pattern(glob: &str) -> Option<String> {
 ///
 /// The loop follows the driver's index by index, including its reads of
 /// `glob[i - 1]` and `glob[i + 1]`, so the two can be compared line for line.
-/// Verus checks every index against the bounds and that each loop ends.
-#[cfg_attr(verus_only, verus_spec)]
+/// Verus checks every index against the bounds, that each loop ends, that
+/// the output is the spec `translate`, and that it fails exactly when
+/// `braces_ok` does. `translate` restates this loop a token at a time, so
+/// `lemma_plain` and `lemma_quoted` pin down what it does with literal text
+/// without repeating it.
+#[cfg_attr(verus_only, verus_spec(r =>
+    ensures
+        match translate(glob@) {
+            Some(p) => r matches Some(v) && v@ == p,
+            None => r is None,
+        },
+        r is None <==> !braces_ok(glob@),
+        r matches Some(v) ==> v@[0] == '^' && v@.last() == '$',
+))]
 fn glob_to_regex_chars(glob: &[char]) -> Option<Vec<char>> {
+    #[cfg(verus_only)]
+    proof! {
+        lemma_translate_from(glob@, 0, false, seq!['^']);
+    }
     let mut out: Vec<char> = Vec::with_capacity(glob.len());
     out.push('^');
     let mut in_group = false;
@@ -84,6 +352,8 @@ fn glob_to_regex_chars(glob: &[char]) -> Option<Vec<char>> {
     #[cfg_attr(verus_only, verus_spec(
         invariant
             i <= glob.len(),
+            translate_from(glob@, i as int, in_group, out@) == translate(glob@),
+            translate(glob@) is None <==> !braces_ok(glob@),
         decreases glob.len() - i
     ))]
     while i < glob.len() {
@@ -99,6 +369,7 @@ fn glob_to_regex_chars(glob: &[char]) -> Option<Vec<char>> {
             #[cfg_attr(verus_only, verus_spec(
                 invariant
                     i <= j < glob.len(),
+                    star_run_end(glob@, i as int) == star_run_end(glob@, j as int),
                 decreases glob.len() - j
             ))]
             while j + 1 < glob.len() && glob[j + 1] == '*' {
@@ -110,16 +381,16 @@ fn glob_to_regex_chars(glob: &[char]) -> Option<Vec<char>> {
                 if i + 1 < glob.len() && glob[i + 1] == '/' {
                     if char_before_is_slash {
                         // `/**/` also matches zero directories.
-                        out.extend_from_slice(&['(', '(', '.', '+', '/', ')', '|', ')']);
+                        push_all(&mut out, &['(', '(', '.', '+', '/', ')', '|', ')']);
                     } else {
-                        out.extend_from_slice(&['(', '.', '*', '/', ')']);
+                        push_all(&mut out, &['(', '.', '*', '/', ')']);
                     }
                     i += 1;
                 } else {
-                    out.extend_from_slice(&['(', '.', '*', ')']);
+                    push_all(&mut out, &['(', '.', '*', ')']);
                 }
             } else {
-                out.extend_from_slice(&['(', '[', '^', '/', ']', '*', ')']);
+                push_all(&mut out, &['(', '[', '^', '/', ']', '*', ')']);
             }
         } else if c == '{' {
             if in_group {
@@ -138,7 +409,7 @@ fn glob_to_regex_chars(glob: &[char]) -> Option<Vec<char>> {
                 out.push('|');
             } else {
                 // Needs no escape, but the driver escapes it.
-                out.extend_from_slice(&['\\', ',']);
+                push_all(&mut out, &['\\', ',']);
             }
         } else {
             // A trailing lone backslash lands here, as in the driver, and
@@ -945,6 +1216,8 @@ mod tests {
             (r"\**", r"^\*([^/]*)$"),
             ("$.(|)?[]^+", r"^\$\.\(\|\)\?\[\]\^\+$"),
             ("a{b}c,d", r"^a(b)c\,d$"),
+            (r"\{a\}", r"^\{a\}$"),
+            (r"{a\}b}", r"^(a\}b)$"),
         ] {
             assert_eq!(
                 super::glob_to_regex_pattern(glob).as_deref(),

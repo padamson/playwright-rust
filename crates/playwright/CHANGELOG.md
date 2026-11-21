@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A `verus` feature, used only to verify the crate.** The repository's `scripts/verus.sh` turns it on to check the URL glob translation behind `Page::route`, `BrowserContext::route`, and `wait_for_url` with [Verus](https://github.com/verus-lang/verus); so far, that its indexing stays in bounds and every loop ends. Turning the feature on in a normal build compiles vstd and changes nothing else.
+- **A `verus` feature, used only to verify the crate.** The repository's `scripts/verus.sh` turns it on to check the URL glob translation behind `Page::route`, `BrowserContext::route`, and `wait_for_url` with [Verus](https://github.com/verus-lang/verus): that its indexing stays in bounds and every loop ends, that it rejects a pattern exactly when its braces nest or do not close (escaped braces aside), and that every literal character comes out escaped exactly when it is in the escape set copied from the driver. Turning the feature on in a normal build compiles vstd and changes nothing else.
 
 ## [0.21.1] - 2026-11-18
 
