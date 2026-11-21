@@ -292,6 +292,8 @@ const NON_API_FEATURES: &[&str] = &[
     "rustls-tls-webpki-roots",
     "ring",
     "aws-lc",
+    // Only `cargo verus verify` turns it on, to prove the glob translation.
+    "verus",
 ];
 
 /// Assert the shipped skill still names every capability the crate exposes.

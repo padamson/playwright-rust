@@ -65,6 +65,18 @@ additional_cargo_test_args = [
 # Exclude mutations that are only testable via integration tests (require Playwright server)
 # or represent serde_json limitations (cannot distinguish special float behavior).
 exclude_re = [
+    # glob.rs, glob_to_regex_chars: these stall a loop, which a test can only
+    # see as a timeout. Column 11 is the outer loop's `i += 1`, column 19 the
+    # star run's `j += 1` (as `-=` it moves `i` back through `i = j`, so the
+    # outer loop repeats), and column 15 the escape skip's `i += 1`, whose `*=`
+    # tests catch. Verus rejects each one as source (its `decreases` check
+    # fails), so none can land while scripts/verus.sh passes. Keyed on
+    # column, which survives line shifts; a new `+=` at one of these columns
+    # in that function would be excluded too, so check this list when adding
+    # one.
+    "glob\\.rs:\\d+:(11|19): replace \\+= with [-*]= in glob_to_regex_chars",
+    "glob\\.rs:\\d+:15: replace \\+= with -= in glob_to_regex_chars",
+
     # driver.rs: the pure helpers (install_args, tee) and the env-override
     # resolution (resolve_driver, try_driver_path_env, try_node_cli_env, which
     # take an environment lookup and are tested against a tempdir) are

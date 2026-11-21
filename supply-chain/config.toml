@@ -30,6 +30,7 @@ url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/
 
 [policy.playwright-rs]
 audit-as-crates-io = false
+dependency-criteria = { vstd = "safe-to-run" }
 
 [policy.playwright-rs-macros]
 audit-as-crates-io = false
@@ -341,6 +342,30 @@ criteria = "safe-to-deploy"
 [[exemptions.version_check]]
 version = "0.9.5"
 criteria = "safe-to-deploy"
+
+[[exemptions.verus_builtin]]
+version = "0.0.0-2026-11-01-0251"
+criteria = "safe-to-run"
+
+[[exemptions.verus_builtin_macros]]
+version = "0.0.0-2026-11-01-0251"
+criteria = "safe-to-run"
+
+[[exemptions.verus_prettyplease]]
+version = "0.0.0-2026-11-01-0251"
+criteria = "safe-to-run"
+
+[[exemptions.verus_state_machines_macros]]
+version = "0.0.0-2026-11-01-0251"
+criteria = "safe-to-run"
+
+[[exemptions.verus_syn]]
+version = "0.0.0-2026-11-01-0251"
+criteria = "safe-to-run"
+
+[[exemptions.vstd]]
+version = "0.0.0-2026-11-01-0251"
+criteria = "safe-to-run"
 
 [[exemptions.wasm-bindgen]]
 version = "0.2.118"

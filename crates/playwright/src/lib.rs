@@ -255,6 +255,16 @@
 //!     .init();
 //! ```
 
+// Verus loop invariants are attributes on a `while`, which rustc treats as an
+// expression attribute. Only Verus sets this cfg, and it builds on a toolchain
+// that allows the gate.
+#![cfg_attr(verus_only, feature(proc_macro_hygiene))]
+
+// Only Verus reads vstd; naming it here keeps cargo's `unused_dependencies`
+// lint (warn by default) quiet in the --all-features builds.
+#[cfg(feature = "verus")]
+use vstd as _;
+
 // Internal modules (exposed for integration tests)
 #[doc(hidden)]
 pub mod server;

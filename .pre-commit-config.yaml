@@ -208,6 +208,14 @@ repos:
         pass_filenames: false
         files: (Cargo\.lock|^\.github/workflows/(security|release)\.yml|^\.github/dependabot\.yml|^scripts/check-excluded-trees\.sh)$
 
+      - id: verus-verify
+        name: verus proofs of the glob translation
+        description: installs the pinned Verus release on first use
+        entry: scripts/verus.sh --hook
+        language: system
+        pass_filenames: false
+        files: ^(crates/playwright/src/protocol/glob\.rs|scripts/verus\.sh)$
+
       - id: external-lockfiles-current
         name: out-of-workspace lockfiles current
         description: site, site-e2e and fuzz sit outside the workspace, so their lockfiles go stale when workspace deps move
