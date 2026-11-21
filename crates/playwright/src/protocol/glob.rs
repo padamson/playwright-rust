@@ -107,6 +107,8 @@ pub(crate) fn glob_to_regex_pattern(glob: &str) -> Option<String> {
                 out.push(')');
             }
             ',' if in_group => out.push('|'),
+            // Needs no escape, but the driver escapes it.
+            ',' => out.push_str(r"\,"),
             other => push_escaped(&mut out, other),
         }
         previous = Some(c);
@@ -889,5 +891,34 @@ mod tests {
         // Pins the escape lookahead bound: reading past it panics.
         assert!(glob_match(r"a\", r"a\"));
         assert!(!glob_match(r"a\", "a"));
+    }
+
+    // Expected strings are the driver's own output for each glob (its
+    // `globToRegexPattern` at v1.65.1, run in Node). Matching tests cannot
+    // tell `\,` from `,`; this can.
+    #[test]
+    fn translates_to_the_drivers_exact_pattern() {
+        for (glob, driver) in [
+            ("a,b", r"^a\,b$"),
+            ("{a,b}", "^(a|b)$"),
+            (r"a\,b", "^a,b$"),
+            ("**/*.{png,jpg}", r"^(.*/)([^/]*)\.(png|jpg)$"),
+            ("/**/x", "^/((.+/)|)x$"),
+            ("a**/b", "^a(.*/)b$"),
+            ("a**", "^a(.*)$"),
+            ("*", "^([^/]*)$"),
+            (r"a\", r"^a\\$"),
+            (r"\**", r"^\*([^/]*)$"),
+            ("$.(|)?[]^+", r"^\$\.\(\|\)\?\[\]\^\+$"),
+            ("a{b}c,d", r"^a(b)c\,d$"),
+            (r"\{a\}", r"^\{a\}$"),
+            (r"{a\}b}", r"^(a\}b)$"),
+        ] {
+            assert_eq!(
+                super::glob_to_regex_pattern(glob).as_deref(),
+                Some(driver),
+                "{glob}"
+            );
+        }
     }
 }
