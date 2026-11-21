@@ -75,6 +75,29 @@ jobs:
     - name: Validate the architecture model and its curated views
       run: asbuilt validate
 
+  verus:
+    name: Verus proofs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The proofs in protocol/glob.rs run under Verus's own toolchain, not the
+    # stable one the other jobs use.
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+    - name: Cache Cargo
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      with:
+        key: verus-${{ hashFiles('scripts/verus.sh') }}
+
+    - name: Cache the pinned Verus release
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ~/.cache/verus
+        key: ${{ runner.os }}-verus-${{ hashFiles('scripts/verus.sh') }}
+
+    - name: Verify
+      run: scripts/verus.sh
+
   msrv:
     name: MSRV Check
     runs-on: ubuntu-latest

@@ -351,6 +351,20 @@ edits before the commit exists.
 
 Install once: `cargo install cargo-mutants`.
 
+## Verus proofs
+
+The glob translation in `crates/playwright/src/protocol/glob.rs` carries
+[Verus](https://github.com/verus-lang/verus) specs. `scripts/verus.sh` runs
+them, installing the pinned Verus release and its toolchain on first use;
+the `verus-verify` hook and the `Verus proofs` job in `test.yml` call it.
+Specs are attributes behind `cfg(verus_only)`, which only Verus sets, and
+vstd is an optional dependency behind the `verus` feature, so normal builds
+and downstream users compile none of it. The `vstd` pin in the crate's
+`Cargo.toml` moves with `VERUS_VERSION` in the script, by hand (Dependabot
+ignores it). `.cargo/mutants.toml` excludes the mutants that stall a loop
+in that file: a test sees them only as timeouts, and Verus rejects each one
+as source.
+
 ## Versioning
 
 `0.x.y` while pre-1.0; API may evolve. `1.0.0` when the gates in

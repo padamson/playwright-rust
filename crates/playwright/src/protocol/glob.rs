@@ -10,17 +10,42 @@
 // a pattern the two read differently means a route event nobody answers and
 // a request that hangs until it times out.
 
-/// Characters the driver escapes when translating a glob to a regex.
-///
-/// Kept as the driver's exact set rather than deferring to `regex::escape`,
-/// because `{`, `}` and `,` are glob syntax here (alternation) and must not
-/// be escaped, and because a wider set would silently diverge.
-const ESCAPED_CHARS: [char; 14] = [
-    '$', '^', '+', '.', '*', '(', ')', '|', '\\', '?', '{', '}', '[', ']',
-];
+#[cfg(verus_only)]
+use vstd::prelude::*;
 
-fn push_escaped(out: &mut String, c: char) {
-    if ESCAPED_CHARS.contains(&c) {
+/// Whether the driver escapes `c` when translating a glob to a regex.
+///
+/// Kept as the driver's exact set (`escapedChars`) rather than deferring to
+/// `regex::escape`, because `{`, `}` and `,` are glob syntax here
+/// (alternation) and must not be escaped, and because a wider set would
+/// silently diverge.
+#[cfg_attr(verus_only, verus_spec(r =>
+    ensures r == spec_is_escaped(c)
+))]
+fn is_escaped(c: char) -> bool {
+    matches!(
+        c,
+        '$' | '^' | '+' | '.' | '*' | '(' | ')' | '|' | '\\' | '?' | '{' | '}' | '[' | ']'
+    )
+}
+
+#[cfg(verus_only)]
+verus! {
+
+pub open spec fn spec_is_escaped(c: char) -> bool {
+    c == '$' || c == '^' || c == '+' || c == '.' || c == '*' || c == '(' || c == ')'
+        || c == '|' || c == '\\' || c == '?' || c == '{' || c == '}' || c == '['
+        || c == ']'
+}
+
+} // verus!
+
+#[cfg_attr(verus_only, verus_spec(
+    ensures
+        final(out)@ == old(out)@ + (if spec_is_escaped(c) { seq!['\\', c] } else { seq![c] })
+))]
+fn push_escaped(out: &mut Vec<char>, c: char) {
+    if is_escaped(c) {
         out.push('\\');
     }
     out.push(c);
@@ -40,76 +65,87 @@ fn push_escaped(out: &mut String, c: char) {
 /// Returns `None` for a malformed pattern (nested `{`, unmatched `}` or `{`),
 /// which the driver rejects by throwing.
 pub(crate) fn glob_to_regex_pattern(glob: &str) -> Option<String> {
-    let mut out = String::with_capacity(glob.len() + 2);
+    let glob: Vec<char> = glob.chars().collect();
+    glob_to_regex_chars(&glob).map(|pattern| pattern.into_iter().collect())
+}
+
+/// [`glob_to_regex_pattern`] over chars, which is the part Verus proves.
+///
+/// The loop follows the driver's index by index, including its reads of
+/// `glob[i - 1]` and `glob[i + 1]`, so the two can be compared line for line.
+/// Verus checks every index against the bounds and that each loop ends.
+#[cfg_attr(verus_only, verus_spec)]
+fn glob_to_regex_chars(glob: &[char]) -> Option<Vec<char>> {
+    let mut out: Vec<char> = Vec::with_capacity(glob.len());
     out.push('^');
-
     let mut in_group = false;
-    // The driver indexes the glob directly and reads `glob[i - 1]` for the
-    // character before a `*` run. Walking with an iterator instead means
-    // carrying that character forward, which costs one variable and makes an
-    // off-by-one or a non-advancing loop impossible to write.
-    let mut previous: Option<char> = None;
-    let mut chars = glob.chars().peekable();
+    let mut i: usize = 0;
 
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            // A trailing lone backslash has nothing to escape, so it is
-            // literal; the driver reaches the same place via its `i + 1 <
-            // length` guard falling through to the default branch.
-            let literal = chars.next().unwrap_or('\\');
-            push_escaped(&mut out, literal);
-            previous = Some(literal);
-            continue;
-        }
-
-        if c == '*' {
-            let char_before = previous;
-            // Consume the rest of the run with a bounded construct rather
-            // than a `while peek() == '*'`: an exhausted iterator yields
-            // `None` forever, so a loop keyed on that comparison can spin
-            // rather than end. `next_if_eq` stops the moment it does not
-            // match, which cannot.
-            let crosses_segments = std::iter::from_fn(|| chars.next_if_eq(&'*')).count() > 0;
-
-            if crosses_segments && chars.peek() == Some(&'/') {
-                chars.next();
-                if char_before == Some('/') {
-                    // `/**/` also matches zero directories.
-                    out.push_str("((.+/)|)");
+    #[cfg_attr(verus_only, verus_spec(
+        invariant
+            i <= glob.len(),
+        decreases glob.len() - i
+    ))]
+    while i < glob.len() {
+        let c = glob[i];
+        if c == '\\' && i + 1 < glob.len() {
+            i += 1;
+            push_escaped(&mut out, glob[i]);
+        } else if c == '*' {
+            let char_before_is_slash = i > 0 && glob[i - 1] == '/';
+            // The rest of the run of stars, read ahead with `j` so `i` is
+            // seen to move only forward.
+            let mut j = i;
+            #[cfg_attr(verus_only, verus_spec(
+                invariant
+                    i <= j < glob.len(),
+                decreases glob.len() - j
+            ))]
+            while j + 1 < glob.len() && glob[j + 1] == '*' {
+                j += 1;
+            }
+            let crosses_segments = j > i;
+            i = j;
+            if crosses_segments {
+                if i + 1 < glob.len() && glob[i + 1] == '/' {
+                    if char_before_is_slash {
+                        // `/**/` also matches zero directories.
+                        out.extend_from_slice(&['(', '(', '.', '+', '/', ')', '|', ')']);
+                    } else {
+                        out.extend_from_slice(&['(', '.', '*', '/', ')']);
+                    }
+                    i += 1;
                 } else {
-                    out.push_str("(.*/)");
+                    out.extend_from_slice(&['(', '.', '*', ')']);
                 }
-                previous = Some('/');
             } else {
-                if crosses_segments {
-                    out.push_str("(.*)");
-                } else {
-                    out.push_str("([^/]*)");
-                }
-                previous = Some('*');
+                out.extend_from_slice(&['(', '[', '^', '/', ']', '*', ')']);
             }
-            continue;
+        } else if c == '{' {
+            if in_group {
+                return None;
+            }
+            in_group = true;
+            out.push('(');
+        } else if c == '}' {
+            if !in_group {
+                return None;
+            }
+            in_group = false;
+            out.push(')');
+        } else if c == ',' {
+            if in_group {
+                out.push('|');
+            } else {
+                // Needs no escape, but the driver escapes it.
+                out.extend_from_slice(&['\\', ',']);
+            }
+        } else {
+            // A trailing lone backslash lands here, as in the driver, and
+            // comes out escaped.
+            push_escaped(&mut out, c);
         }
-
-        match c {
-            '{' => {
-                if in_group {
-                    return None;
-                }
-                in_group = true;
-                out.push('(');
-            }
-            '}' => {
-                if !in_group {
-                    return None;
-                }
-                in_group = false;
-                out.push(')');
-            }
-            ',' if in_group => out.push('|'),
-            other => push_escaped(&mut out, other),
-        }
-        previous = Some(c);
+        i += 1;
     }
 
     if in_group {
@@ -889,5 +925,32 @@ mod tests {
         // Pins the escape lookahead bound: reading past it panics.
         assert!(glob_match(r"a\", r"a\"));
         assert!(!glob_match(r"a\", "a"));
+    }
+
+    // Expected strings are the driver's own output for each glob (its
+    // `globToRegexPattern` at v1.65.1, run in Node). Matching tests cannot
+    // tell `\,` from `,`; this can.
+    #[test]
+    fn translates_to_the_drivers_exact_pattern() {
+        for (glob, driver) in [
+            ("a,b", r"^a\,b$"),
+            ("{a,b}", "^(a|b)$"),
+            (r"a\,b", "^a,b$"),
+            ("**/*.{png,jpg}", r"^(.*/)([^/]*)\.(png|jpg)$"),
+            ("/**/x", "^/((.+/)|)x$"),
+            ("a**/b", "^a(.*/)b$"),
+            ("a**", "^a(.*)$"),
+            ("*", "^([^/]*)$"),
+            (r"a\", r"^a\\$"),
+            (r"\**", r"^\*([^/]*)$"),
+            ("$.(|)?[]^+", r"^\$\.\(\|\)\?\[\]\^\+$"),
+            ("a{b}c,d", r"^a(b)c\,d$"),
+        ] {
+            assert_eq!(
+                super::glob_to_regex_pattern(glob).as_deref(),
+                Some(driver),
+                "{glob}"
+            );
+        }
     }
 }

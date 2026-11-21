@@ -48,6 +48,10 @@ updates:
     ignore:
       - dependency-name: "serde"
         versions: ["1.0.229"]
+      # vstd has to match the Verus release scripts/verus.sh pins, so it moves
+      # by hand with that release; verus_* are vstd's exact-pinned siblings.
+      - dependency-name: "vstd"
+      - dependency-name: "verus_*"
     # Grouping keeps the weekly run to as few PRs as possible. Every cargo PR
     # edits Cargo.lock, so two open cargo PRs conflict the moment one merges
     # and the second must rebase and re-run CI; with N PRs the auto-merge

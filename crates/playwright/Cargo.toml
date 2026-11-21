@@ -41,6 +41,8 @@ cli = [
     "dep:tar",
     "dep:sha2",
 ]
+# Only for scripts/verus.sh; a normal build with it compiles vstd and uses none of it.
+verus = ["dep:vstd"]
 
 [dependencies]
 tokio = { workspace = true }
@@ -78,6 +80,8 @@ zip = { version = "9", optional = true, default-features = false, features = ["d
 flate2 = { version = "1", optional = true }
 tar = { version = "0.4", optional = true }
 sha2 = { version = "0.11", optional = true, default-features = false }
+# Pinned with VERUS_VERSION in scripts/verus.sh.
+vstd = { version = "=0.0.0-2026-11-01-0251", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -108,6 +112,11 @@ winapi = { version = "0.3", features = ["processthreadsapi", "psapi", "minwindef
 [lints.rust]
 # A public type with no public path gets no page on docs.rs.
 unnameable_types = "warn"
+# Set by Verus during verification, never by cargo.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(verus_only)"] }
+
+[package.metadata.verus]
+verify = true
 
 [build-dependencies]
 # The default assembly location is the user cache (ADR 0007); the same
