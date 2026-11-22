@@ -271,6 +271,10 @@ jobs:
         cargo fmt --manifest-path crates/site-e2e/Cargo.toml -- --check
         cargo clippy --manifest-path crates/site-e2e/Cargo.toml --all-targets -- -D warnings
 
+    - name: Check each crate requires its siblings at their current versions
+      if: runner.os == 'Linux'
+      run: scripts/check-sibling-reqs.sh
+
     - name: Generate documentation
       env:
         RUSTDOCFLAGS: "-D rustdoc::broken-intra-doc-links"

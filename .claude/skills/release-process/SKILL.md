@@ -232,9 +232,24 @@ If CI fails on `main` after the version-bump commit:
 The workflow handles all three tag prefixes (`v*`, `macros-v*`,
 `trace-v*`) with one routed pipeline:
 
-1. Runs the test suite on linux/macOS/windows as a final pre-publish
+1. **Checks the release references** first (`release-refs`), and the
+   tests and semver check wait on it. It resolves the tag:
+   - `macros-v*` → `playwright-rs-macros` + `crates/playwright-rs-macros/CHANGELOG.md`
+   - `trace-v*` → `playwright-rs-trace` + `crates/playwright-rs-trace/CHANGELOG.md`
+   - `v*` → `playwright-rs` + `crates/playwright/CHANGELOG.md`
+
+   Then it fails if that crate's `Cargo.toml` is not at the tag's
+   version, if its CHANGELOG has no section for that version, or if a
+   publishable crate requires a sibling at anything but the sibling's
+   full current version. The last check is a backstop:
+   `scripts/check-sibling-reqs.sh` runs in the pre-commit hook and
+   `test.yml`, so a missed line fails the bump commit. It holds on every
+   commit, so a macros-only release still needs `playwright-rs`'s line on
+   macros moved. It covers only part of step 4 of the bump above: the
+   trace dev-dependency line and `xtask`'s line are not checked.
+2. **Runs the test suite** on linux/macOS/windows as a final pre-publish
    gate (always, regardless of tag prefix).
-2. **Gates the publish** alongside the tests. `on-main` refuses a tag on a
+3. **Gates the publish** alongside the tests. `on-main` refuses a tag on a
    commit main does not contain, `semver-checks` compares against
    crates.io, and `supply-chain-gates` (the shared `supply-chain.yml`)
    runs deny, advisories and vet on the tagged commit. That last one reads
@@ -252,19 +267,14 @@ The workflow handles all three tag prefixes (`v*`, `macros-v*`,
      site snapshot was ever made from the old tag.
    - cut the next patch: a second bump commit with its own CHANGELOG
      entry, leaving the dead tag in place. Needs no admin.
-3. **Resolves the tag** — `Resolve crate, changelog, and version from
-   tag` step parses `${GITHUB_REF#refs/tags/}` and routes:
-   - `macros-v*` → `playwright-rs-macros` + `crates/playwright-rs-macros/CHANGELOG.md`
-   - `trace-v*` → `playwright-rs-trace` + `crates/playwright-rs-trace/CHANGELOG.md`
-   - `v*` → `playwright-rs` + `crates/playwright/CHANGELOG.md`
 4. **Generates release notes** from the resolved CHANGELOG via
    `parse-changelog <CHANGELOG> <VERSION>` — the **per-crate
    CHANGELOG is the single source of truth** for release notes; no
    manual paste needed.
 5. **Creates the GitHub Release** with `name = "<crate> <version>"`
    and the body from the parsed CHANGELOG section.
-6. **Publishes to crates.io** — exactly one publish step fires per
-   tag, gated by `startsWith(github.ref_name, '<prefix>')`. Failure
+6. **Publishes to crates.io** — `cargo publish -p` on the crate
+   `release-refs` resolved, so each tag publishes exactly one. Failure
    aborts the workflow (no `continue-on-error`); the release tag
    stays in place but the publish didn't happen, so re-running with
    the same tag after fixing the issue is safe. The job runs in the
@@ -359,5 +369,5 @@ pipeline rather than bolting onto this workflow.
   are pushed back-to-back without a wait
 - **Pushing the wrong prefix** — `vX.Y.Z` always means `playwright-rs`;
   `macros-vX.Y.Z` is the macros crate; `trace-vX.Y.Z` is the trace
-  crate. The `release.yml` "Resolve crate, changelog, and version from
-  tag" step rejects unknown prefixes
+  crate. The `release-refs` job rejects unknown prefixes, and a tag
+  whose crate is not at its version

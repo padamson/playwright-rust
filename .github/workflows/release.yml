@@ -5,10 +5,8 @@ name: Release
 on:
   push:
     tags:
-      # Per-crate tag prefixes — the create-release and publish-crates
-      # jobs route to the right CHANGELOG / cargo package based on the
-      # prefix. See `crates/<crate>/CHANGELOG.md` for each crate's
-      # release notes; the top-level CHANGELOG.md is an index.
+      # Per-crate tag prefixes, which release-refs routes to a crate and its
+      # CHANGELOG. The top-level CHANGELOG.md is an index.
       - 'v*'           # playwright-rs
       - 'macros-v*'    # playwright-rs-macros
       - 'trace-v*'     # playwright-rs-trace
@@ -21,8 +19,77 @@ permissions:
   contents: read
 
 jobs:
+  # The hand-written version numbers, checked before the tests and the
+  # semver check start. A mistake here fails the release in under a minute,
+  # instead of after the tests have run on every platform. Also resolves
+  # which crate the tag releases, the one routing table the later jobs read.
+  release-refs:
+    name: Release references
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      crate: ${{ steps.resolve.outputs.crate }}
+      changelog: ${{ steps.resolve.outputs.changelog }}
+      version: ${{ steps.resolve.outputs.version }}
+      has-lib: ${{ steps.resolve.outputs.has-lib }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # The runner's own cargo may lag the manifests; test.yml and the hook
+      # run the same checks on stable.
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+
+      # A tag whose crate is not at the tag's version is a release whose
+      # Cargo.toml bump was forgotten. `cargo publish` would refuse it, but
+      # create-release runs beside the publish and would still make the
+      # GitHub Release, and semver-checks would compare the old version with
+      # itself and pass. A CHANGELOG with no section for the version is the
+      # mirror image: parse-changelog fails in create-release while the crate
+      # publishes.
+      - name: Resolve the tag and check its crate's version and CHANGELOG
+        id: resolve
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF_NAME" in
+            macros-v*) crate=playwright-rs-macros prefix=macros-v changelog=crates/playwright-rs-macros/CHANGELOG.md ;;
+            trace-v*)  crate=playwright-rs-trace  prefix=trace-v  changelog=crates/playwright-rs-trace/CHANGELOG.md ;;
+            v*)        crate=playwright-rs        prefix=v        changelog=crates/playwright/CHANGELOG.md ;;
+            *) echo "::error::unknown tag pattern: $GITHUB_REF_NAME"; exit 1 ;;
+          esac
+          version=${GITHUB_REF_NAME#"$prefix"}
+          package=$(cargo metadata --no-deps --format-version 1 \
+                      | jq -c --arg c "$crate" '.packages[] | select(.name == $c)')
+          actual=$(jq -r .version <<< "$package")
+          if [ "$actual" != "$version" ]; then
+            echo "::error::$crate is at $actual, but the tag says $version; bump its Cargo.toml"
+            exit 1
+          fi
+          if ! grep -qF "## [$version]" "$changelog"; then
+            echo "::error::$changelog has no section for $version"
+            exit 1
+          fi
+          # A proc-macro crate has no library API for semver-checks to compare.
+          has_lib=$(jq '[.targets[].kind[]] | any(. == "lib" or . == "rlib")' <<< "$package")
+          {
+            echo "crate=$crate"
+            echo "changelog=$changelog"
+            echo "version=$version"
+            echo "has-lib=$has_lib"
+          } >> "$GITHUB_OUTPUT"
+
+      # On every tag, not only the crate being released; also a commit-time
+      # check, so this is the backstop.
+      - name: Check each crate requires its siblings at their current versions
+        run: scripts/check-sibling-reqs.sh
+
   test:
     name: Test ${{ matrix.target }}
+    needs: [release-refs]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
@@ -164,42 +231,13 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [test, semver-checks, on-main, supply-chain-gates]
+    needs: [release-refs, test, semver-checks, on-main, supply-chain-gates]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write # create the release and upload its assets
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      # Resolve which crate this release tag is for, which CHANGELOG to
-      # extract notes from, and the bare version string. Three tag
-      # patterns are recognised — see the `on.push.tags` block above.
-      - name: Resolve crate, changelog, and version from tag
-        id: resolve
-        run: |
-          REF="${GITHUB_REF#refs/tags/}"
-          case "$REF" in
-            macros-v*)
-              echo "crate=playwright-rs-macros" >> "$GITHUB_OUTPUT"
-              echo "changelog=crates/playwright-rs-macros/CHANGELOG.md" >> "$GITHUB_OUTPUT"
-              echo "version=${REF#macros-v}" >> "$GITHUB_OUTPUT"
-              ;;
-            trace-v*)
-              echo "crate=playwright-rs-trace" >> "$GITHUB_OUTPUT"
-              echo "changelog=crates/playwright-rs-trace/CHANGELOG.md" >> "$GITHUB_OUTPUT"
-              echo "version=${REF#trace-v}" >> "$GITHUB_OUTPUT"
-              ;;
-            v*)
-              echo "crate=playwright-rs" >> "$GITHUB_OUTPUT"
-              echo "changelog=crates/playwright/CHANGELOG.md" >> "$GITHUB_OUTPUT"
-              echo "version=${REF#v}" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "Unknown tag pattern: $REF" >&2
-              exit 1
-              ;;
-          esac
 
       - name: Install parse-changelog
         uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
@@ -208,12 +246,15 @@ jobs:
           fallback: none
 
       - name: Generate Release Notes
-        run: parse-changelog ${{ steps.resolve.outputs.changelog }} ${{ steps.resolve.outputs.version }} > release_notes.md
+        env:
+          CHANGELOG: ${{ needs.release-refs.outputs.changelog }}
+          VERSION: ${{ needs.release-refs.outputs.version }}
+        run: parse-changelog "$CHANGELOG" "$VERSION" > release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
-          name: ${{ steps.resolve.outputs.crate }} ${{ steps.resolve.outputs.version }}
+          name: ${{ needs.release-refs.outputs.crate }} ${{ needs.release-refs.outputs.version }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -225,11 +266,12 @@ jobs:
   # with publishing, reporting breakage after the crate was already on
   # crates.io. As a `needs:` of create-release and publish-crates it
   # blocks both, so a bad bump leaves no GitHub Release behind either.
-  # No `needs:` — the API comparison is independent of the test matrix, so
-  # running them in parallel surfaces a bad bump in a couple of minutes
-  # instead of after the full cross-platform run.
+  # Needs only release-refs, not the test matrix, so it runs beside the
+  # tests and surfaces a bad bump in a couple of minutes instead of after
+  # the full cross-platform run.
   semver-checks:
     name: Semver Compatibility
+    needs: [release-refs]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # rustdoc never runs the driver, so skip its download.
@@ -243,7 +285,10 @@ jobs:
         with:
           toolchain: stable
 
+      # Both skipped for a crate with no library target (the proc-macro
+      # crate), which has no API to compare.
       - name: Install cargo-semver-checks
+        if: needs.release-refs.outputs.has-lib == 'true'
         uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
         with:
           tool: cargo-semver-checks
@@ -251,23 +296,16 @@ jobs:
 
       # Compares the just-bumped local version against the last version
       # published to crates.io and fails if the bump is too small for the
-      # API change. Routed per tag prefix so a trace release doesn't check
-      # the main crate.
+      # API change. Only the crate the tag releases is checked.
       - name: Check semver compatibility
-        run: |
-          case "${GITHUB_REF#refs/tags/}" in
-            macros-v*)
-              echo "playwright-rs-macros is a proc-macro crate with no library" \
-                   "target, so there is no API surface to compare. Skipping."
-              ;;
-            trace-v*) cargo semver-checks check-release -p playwright-rs-trace ;;
-            v*)       cargo semver-checks check-release -p playwright-rs ;;
-            *)        echo "Unknown tag pattern: ${GITHUB_REF#refs/tags/}" >&2; exit 1 ;;
-          esac
+        if: needs.release-refs.outputs.has-lib == 'true'
+        env:
+          CRATE: ${{ needs.release-refs.outputs.crate }}
+        run: cargo semver-checks check-release -p "$CRATE"
 
   publish-crates:
     name: Publish to crates.io
-    needs: [test, semver-checks, on-main, supply-chain-gates]
+    needs: [release-refs, test, semver-checks, on-main, supply-chain-gates]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Only release tags can deploy here, and the crates.io publisher names
@@ -301,32 +339,10 @@ jobs:
         id: auth
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1
 
-      # Each tag prefix publishes exactly one crate. Independent
-      # versioning means a coordinated release pushes multiple tags
-      # in dependency order:
-      #
-      #   1. macros-vX.Y.Z  (if macros bumped this cycle)
-      #   2. trace-vX.Y.Z   (if trace bumped this cycle)
-      #   3. vX.Y.Z         (always, for the main crate)
-      #
-      # Wait ~30s between tags so the crates.io index propagates before
-      # the next publish runs. If neither macros nor trace bumped this
-      # cycle, just push the `v*` tag — the existing published versions
-      # already satisfy `playwright-rs`'s dep constraints.
-      - name: Publish playwright-rs-macros
-        if: startsWith(github.ref_name, 'macros-v')
-        run: cargo publish -p playwright-rs-macros
+      # One crate per tag; a coordinated release pushes its tags in
+      # dependency order (the release-process skill has the sequence).
+      - name: Publish ${{ needs.release-refs.outputs.crate }}
+        run: cargo publish -p "$CRATE"
         env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-
-      - name: Publish playwright-rs-trace
-        if: startsWith(github.ref_name, 'trace-v')
-        run: cargo publish -p playwright-rs-trace
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-
-      - name: Publish playwright-rs
-        if: startsWith(github.ref_name, 'v')
-        run: cargo publish -p playwright-rs
-        env:
+          CRATE: ${{ needs.release-refs.outputs.crate }}
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

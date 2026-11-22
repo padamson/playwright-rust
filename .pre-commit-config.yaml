@@ -184,6 +184,14 @@ repos:
         # Only run when dependency or supply-chain config files change
         files: (Cargo\.toml|Cargo\.lock|^supply-chain/)
 
+      - id: sibling-reqs
+        name: each crate requires its siblings at their current versions
+        description: a stale sibling line otherwise fails only on the release tag
+        entry: scripts/check-sibling-reqs.sh
+        language: system
+        pass_filenames: false
+        files: (Cargo\.toml|^scripts/check-sibling-reqs\.sh)$
+
       - id: mutants-test-targets
         name: mutation kill set names every test binary
         description: a browser-free test binary missing from .cargo/mutants.toml kills nothing
