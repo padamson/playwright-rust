@@ -98,8 +98,8 @@ user-login = "Lokathor"
 user-name = "Lokathor"
 
 [[publisher.bytes]]
-version = "1.12.1"
-when = "2026-07-08"
+version = "1.12.2"
+when = "2026-11-17"
 user-id = 6741
 user-login = "Darksonn"
 user-name = "Alice Ryhl"
@@ -199,6 +199,13 @@ user-name = "Alex Crichton"
 version = "1.1.11"
 when = "2026-11-06"
 trusted-publisher = "github:rust-lang/flate2-rs"
+
+[[publisher.form_urlencoded]]
+version = "1.2.3"
+when = "2026-11-20"
+user-id = 1139
+user-login = "Manishearth"
+user-name = "Manish Goregaokar"
 
 [[publisher.futures-channel]]
 version = "0.3.32"
@@ -488,22 +495,22 @@ when = "2026-04-13"
 trusted-publisher = "github:rust-random/rand_core"
 
 [[publisher.regex]]
-version = "1.13.1"
-when = "2026-07-15"
+version = "1.13.2"
+when = "2026-11-18"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.regex-automata]]
-version = "0.4.16"
-when = "2026-07-15"
+version = "0.4.19"
+when = "2026-11-18"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.regex-syntax]]
-version = "0.8.11"
-when = "2026-06-09"
+version = "0.8.12"
+when = "2026-11-18"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
@@ -762,8 +769,8 @@ user-login = "Manishearth"
 user-name = "Manish Goregaokar"
 
 [[publisher.url]]
-version = "2.5.8"
-when = "2026-01-05"
+version = "2.5.9"
+when = "2026-11-20"
 user-id = 1139
 user-login = "Manishearth"
 user-name = "Manish Goregaokar"
@@ -2521,24 +2528,6 @@ aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/mai
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.1 -> 0.3.3"
-aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.form_urlencoded]]
-who = "Valentin Gosu <valentin.gosu@gmail.com>"
-criteria = "safe-to-deploy"
-version = "1.2.0"
-aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.form_urlencoded]]
-who = "Valentin Gosu <valentin.gosu@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "1.2.0 -> 1.2.1"
-aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.form_urlencoded]]
-who = "edgul <ed.guloien@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "1.2.1 -> 1.2.2"
 aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.idna]]

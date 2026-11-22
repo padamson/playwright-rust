@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **`url` 2.5.9 in the lockfile** (was 2.5.8), for [RUSTSEC-2026-0592](https://rustsec.org/advisories/RUSTSEC-2026-0592): `Url::origin()` overflows the stack on nested `blob:` URLs. playwright-rs calls it only on URLs the caller writes (route and `wait_for_url` patterns, and `to_have_url`'s expected URL, resolved against `base_url`), never on a URL a page supplies. The crate's requirement already admits 2.5.9, so a downstream project takes the fix with `cargo update -p url`.
+
 ## [0.21.1] - 2026-11-18
 
 ### Changed

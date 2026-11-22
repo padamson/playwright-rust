@@ -301,6 +301,12 @@ trusted-publisher = "github:rust-lang/flate2-rs"
 start = "2026-11-06"
 end = "2027-11-10"
 
+[[trusted.form_urlencoded]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-02-19"
+end = "2027-11-22"
+
 [[trusted.futures-channel]]
 criteria = "safe-to-deploy"
 user-id = 33035 # Taiki Endo (taiki-e)
