@@ -60,11 +60,14 @@ recipe for a red check; the tool's own docs have the rest.
 consequences worth knowing before they cost you time:
 
 - **Workspace-wide commands miss them.** `cargo fmt`/`clippy --workspace`
-  and `cargo nextest run --workspace` never reach these crates; only the
-  per-manifest steps in [`pages.yml`](.github/workflows/pages.yml) do. After
-  touching either crate, run those four commands (`--manifest-path
-  crates/site{,-e2e}/Cargo.toml`, plus `--target wasm32-unknown-unknown`
-  for `site`) rather than trusting a green workspace run.
+  and `cargo nextest run --workspace` never reach these crates. Each has a
+  prek hook for its fmt and clippy, and
+  [`pages.yml`](.github/workflows/pages.yml) runs both; `test.yml` also
+  lints `site-e2e`, which a change to `playwright-rs` can break. Their
+  tests run only in `pages.yml`, which a push to `main` triggers only
+  through their own paths. After touching either crate, run its tests by hand
+  (`--manifest-path crates/site{,-e2e}/Cargo.toml`) rather than trusting a
+  green workspace run.
 - **They carry their own `Cargo.lock`.** `site-e2e` depends on
   `playwright-rs` by path, so a workspace dependency change silently
   staleness its lockfile, which then refreshes the next time anyone runs a
@@ -87,7 +90,8 @@ consequences worth knowing before they cost you time:
 
   **`crates/playwright/fuzz` has the same shape** (its own excluded
   workspace, its own lockfile, a path dep on `playwright-rs`) and is covered
-  by the same hook. It drifts worse than the site crates because nothing
+  by the same lockfile hook, with a lint hook of its own and a lint step in
+  `test.yml`. It drifts worse than the site crates because nothing
   routine touches it: it sat on `playwright-rs` 0.13.0 until 0.15.1 before
   anyone noticed.
 

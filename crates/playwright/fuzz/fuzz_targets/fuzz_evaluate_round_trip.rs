@@ -3,21 +3,21 @@
 use libfuzzer_sys::fuzz_target;
 use serde_json::Value;
 
-/// Differential fuzz of the evaluate conversion: `parse_result` must be the
-/// left inverse of `serialize_argument`.
-///
-/// The other targets in this directory assert only that the parsers do not
-/// panic. That is a weak oracle for a pure transform: a conversion can be
-/// completely wrong without ever panicking, and silently hand the caller
-/// corrupted data. This one holds the pair to something real, so it fails on
-/// wrongness rather than only on crashes.
-///
-/// `tests/properties.rs` asserts the same invariant over generated values.
-/// This reaches shapes a generator biases away from, but only because the
-/// corpus outlives the run: `seeds/fuzz_evaluate_round_trip/` is committed
-/// and CI caches the grown `corpus/` between runs. Without both, the leading
-/// `from_slice` rejects most random bytes and a 60s budget rediscovers
-/// roughly what the property test already covers.
+// Differential fuzz of the evaluate conversion: `parse_result` must be the
+// left inverse of `serialize_argument`.
+//
+// The other targets in this directory assert only that the parsers do not
+// panic. That is a weak oracle for a pure transform: a conversion can be
+// completely wrong without ever panicking, and silently hand the caller
+// corrupted data. This one holds the pair to something real, so it fails on
+// wrongness rather than only on crashes.
+//
+// `tests/properties.rs` asserts the same invariant over generated values.
+// This reaches shapes a generator biases away from, but only because the
+// corpus outlives the run: `seeds/fuzz_evaluate_round_trip/` is committed
+// and CI caches the grown `corpus/` between runs. Without both, the leading
+// `from_slice` rejects most random bytes and a 60s budget rediscovers
+// roughly what the property test already covers.
 fuzz_target!(|data: &[u8]| {
     let Ok(value) = serde_json::from_slice::<Value>(data) else {
         return;

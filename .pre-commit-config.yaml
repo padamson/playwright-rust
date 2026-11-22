@@ -220,6 +220,34 @@ repos:
         # such a commit touches neither path.
         files: ^(Cargo\.toml|Cargo\.lock|crates/playwright/Cargo\.toml)$
 
+      # fmt and clippy for the crates outside the workspace, which `--all` and
+      # `--workspace` skip without a word. site-e2e and fuzz depend on
+      # playwright-rs by path, so its source fires them too. `--locked`, and
+      # after the lockfile hook, so a stale lockfile gets that hook's message
+      # instead of a rewrite mid-commit. The site lints for wasm and needs
+      # `rustup target add wasm32-unknown-unknown`.
+      - id: site-fmt-clippy
+        name: fmt + clippy (crates/site)
+        entry: bash -c 'cargo fmt --manifest-path crates/site/Cargo.toml && cargo clippy --manifest-path crates/site/Cargo.toml --locked --target wasm32-unknown-unknown --all-targets -- -D warnings'
+        language: system
+        pass_filenames: false
+        files: ^crates/site/.*(\.rs|Cargo\.(toml|lock))$
+
+      - id: site-e2e-fmt-clippy
+        name: fmt + clippy (crates/site-e2e)
+        entry: bash -c 'cargo fmt --manifest-path crates/site-e2e/Cargo.toml && cargo clippy --manifest-path crates/site-e2e/Cargo.toml --locked --all-targets -- -D warnings'
+        language: system
+        pass_filenames: false
+        files: ^(crates/site-e2e/.*(\.rs|Cargo\.(toml|lock))$|crates/playwright/(src/|build\.rs$|Cargo\.toml$)|crates/playwright-rs-(macros|trace)/(src/|Cargo\.toml$)|Cargo\.toml$)
+
+      # No trace sources: fuzz builds playwright-rs without that feature.
+      - id: fuzz-fmt-clippy
+        name: fmt + clippy (crates/playwright/fuzz)
+        entry: bash -c 'cargo fmt --manifest-path crates/playwright/fuzz/Cargo.toml && cargo clippy --manifest-path crates/playwright/fuzz/Cargo.toml --locked --all-targets -- -D warnings'
+        language: system
+        pass_filenames: false
+        files: ^(crates/playwright/(fuzz/.*(\.rs|Cargo\.(toml|lock))$|src/|build\.rs$|Cargo\.toml$)|crates/playwright-rs-macros/(src/|Cargo\.toml$)|Cargo\.toml$)
+
   # `rev` picks the hook definition; the binary is the release asbuilt.toml pins.
   - repo: https://github.com/padamson/asbuilt
     rev: v0.4.0

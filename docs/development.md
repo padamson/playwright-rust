@@ -11,6 +11,8 @@ start at the [README](../README.md) and [docs.rs](https://docs.rs/playwright-rs)
   runs, at the release `asbuilt.toml` pins:
   `cargo install asbuilt --version <pinned> --locked`. Any other release
   refuses to run and prints the exact command.
+- For work on `crates/site`, the wasm target its lint hook builds for:
+  `rustup target add wasm32-unknown-unknown`.
 
 No system Node.js is needed for the normal build: the build script downloads
 the pinned Playwright driver together with its own Node runtime. (With

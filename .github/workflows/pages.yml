@@ -10,8 +10,9 @@ name: Pages
 # Each run regenerates /versions.json (the dropdown manifest) + the root
 # redirect to the latest release. Deploys only if the playwright-rs dogfood
 # test passes against the built output. The site crates are excluded from the
-# root workspace, so this is the only workflow that builds/tests them, and
-# the pull-request trigger is what makes it a check. Dependabot bumps these
+# root workspace, so this is the only workflow that tests them (test.yml
+# lints site-e2e, nothing more), and the pull-request trigger is what makes
+# it a check. Dependabot bumps these
 # crates' lockfiles and its PRs auto-merge once main's required checks pass,
 # and a merge made with the GitHub token triggers no workflow, so without
 # this a site-breaking bump merges itself and nothing runs here until the

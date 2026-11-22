@@ -256,14 +256,20 @@ jobs:
     - name: Build all examples
       run: cargo build --package playwright-rs --examples
 
-    # The fuzz crate is its own excluded workspace, so `--workspace` never
-    # reaches it and the only job that builds it is the weekly fuzz run. A
-    # target that stops compiling because the API it calls moved would sit
-    # broken until then. Checking is enough and works on stable; actually
-    # running the fuzzer still needs nightly and stays weekly.
-    - name: Check fuzz targets compile
+    # fuzz and site-e2e sit outside the workspace, so `--all` and
+    # `--workspace` never reach them, and both depend on playwright-rs by
+    # path: a change here can break them while the weekly fuzz run and
+    # pages.yml, which a push triggers only on the site's paths, stay quiet.
+    # Clippy compiles them on stable; actually running the fuzzer still
+    # needs nightly and stays weekly. The site itself has no such
+    # dependency, so pages.yml covers it.
+    - name: Format and lint the crates that depend on this one by path
       if: runner.os == 'Linux'
-      run: cargo check --manifest-path crates/playwright/fuzz/Cargo.toml --all-targets
+      run: |
+        cargo fmt --manifest-path crates/playwright/fuzz/Cargo.toml -- --check
+        cargo clippy --manifest-path crates/playwright/fuzz/Cargo.toml --all-targets -- -D warnings
+        cargo fmt --manifest-path crates/site-e2e/Cargo.toml -- --check
+        cargo clippy --manifest-path crates/site-e2e/Cargo.toml --all-targets -- -D warnings
 
     - name: Generate documentation
       env:
