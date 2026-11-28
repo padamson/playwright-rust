@@ -580,9 +580,9 @@ dependencies = [
 
 [[package]]
 name = "gloo-net"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6420f887c48417e9e86c6cf61274eb231830cccc100e49613f7952e269a1fe1"
+checksum = "ca0d014b3eb3645bf8e44000afb0ed0faf33b42bec5f463fa9d233b7da45feac"
 dependencies = [
  "gloo-utils 0.3.0",
  "http",
@@ -1135,7 +1135,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 name = "playwright-rs-site"
 version = "0.1.0"
 dependencies = [
- "gloo-net 0.7.0",
+ "gloo-net 0.8.0",
  "js-sys",
  "leptos",
  "serde",
